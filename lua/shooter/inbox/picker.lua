@@ -194,11 +194,12 @@ function M.import_actions(actions_to_import, source_filepath)
       end
     end
 
-    local shot_lines = {
-      '',
-      '## shot ' .. highest,
-      shot_content,
-    }
+    -- Build shot lines with proper formatting
+    local shot_lines = { '', '## shot ' .. highest }
+    -- Split content into individual lines
+    for line in shot_content:gmatch('[^\n]*') do
+      table.insert(shot_lines, line)
+    end
 
     vim.api.nvim_buf_set_lines(bufnr, insert_line - 1, insert_line - 1, false, shot_lines)
     added = added + 1
