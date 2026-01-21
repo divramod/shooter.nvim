@@ -104,8 +104,8 @@ function M.list_open_shots(opts)
   end
 
   local filename = vim.fn.fnamemodify(target_file, ':t')
-  local title = is_current and 'Open Shots (Tab/Space=select, c=clear, 1-4=send, h=hide, q=quit)'
-    or 'Open Shots: ' .. filename .. ' (Tab/Space=select, c=clear, 1-4=send, h=hide, q=quit)'
+  local title = is_current and 'Open Shots (Tab/Space=select, n=new, c=clear, 1-4=send, h=hide, q=quit)'
+    or 'Open Shots: ' .. filename .. ' (Tab/Space=select, n=new, c=clear, 1-4=send, h=hide, q=quit)'
 
   local picker_instance = pickers.new(opts, {
     prompt_title = title,
@@ -177,6 +177,13 @@ function M.list_open_shots(opts)
         -- Refresh display to remove selection markers
         picker:refresh(picker.finder, { reset_prompt = false })
         utils.echo('Selection cleared')
+      end)
+
+      -- 'n' creates new shots file (like <space>n)
+      map('n', 'n', function()
+        helpers.clear_selection(target_file)
+        actions.close(prompt_bufnr)
+        vim.cmd('ShooterCreate')
       end)
 
       return true

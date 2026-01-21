@@ -27,9 +27,9 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 
 | Term | Description |
 |------|-------------|
-| **Prompts File** | The markdown file you edit in Neovim containing multiple shots (e.g., `20260118_0516_feature.md`) |
-| **Shot** | A numbered work item within a prompts file (e.g., `## shot 5`) |
-| **Shot File** | The file sent to Claude via `@filepath` syntax, saved to `~/.config/shooter.nvim/history/` |
+| **Shots File** | The markdown file you edit in Neovim containing multiple shots (e.g., `20260118_0516_feature.md`) |
+| **Shot** | A numbered work item within a shots file (e.g., `## shot 5`) |
+| **Shot History File** | The file sent to Claude via `@filepath` syntax, saved to `~/.config/shooter.nvim/history/` |
 | **Context File** | Global or project-specific instructions injected with each shot |
 
 ## Features
@@ -108,7 +108,7 @@ use {
 
 ## Quick Start
 
-1. **Create a new shooter file**:
+1. **Create a new shots file**:
    ```
    :ShooterCreate
    ```
@@ -145,7 +145,7 @@ use {
 
 | Command | Description |
 |---------|-------------|
-| `:ShooterCreate` | Create new shooter file |
+| `:ShooterCreate` | Create new shots file |
 | `:ShooterList` | Telescope picker for all files |
 | `:ShooterOpenShots` | List open shots in current file |
 | `:ShooterHelp` | Show help |
@@ -189,7 +189,7 @@ All keybindings use `<space>` prefix (customizable):
 
 | Key | Action |
 |-----|--------|
-| `<space>n` | Create new file |
+| `<space>n` | Create new shots file |
 | `<space>o` | Open shots picker |
 | `<space>t` | Telescope file list |
 | `<space>l` | Open last file |
@@ -411,7 +411,7 @@ sound = {
 2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-global.md` to customize AI instructions
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
-5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability. The shot file is saved to `~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-NNNN.md`. Note: This won't show blue like typed input in Claude Code, but Claude outputs the content at the start of each response for transparency.
+5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability. The shot history file is saved to `~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-NNNN-<timestamp>.md`. Note: This won't show blue like typed input in Claude Code, but Claude outputs the content at the start of each response for transparency.
 6. **Sound notifications**: Enable `sound.enabled = true` to hear a sound when shots are sent
 
 ## Troubleshooting

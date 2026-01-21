@@ -22,9 +22,9 @@ CORE COMMANDS:
   n     New               Create new shooter file
   N     New in Repo       Create new file in another repo (picker)
   o     Open Shots        Telescope picker for open shots (with multi-select)
-                          In telescope: Tab/Space = select, c = clear selection
-                            1-4 = send to claude, Enter = jump to shot
-                            h = hide (keeps selection), q = quit (clears selection)
+                          In telescope: Tab/Space = select, n = new shots file
+                            c = clear selection, 1-4 = send to claude
+                            Enter = jump to shot, h = hide, q = quit
   s     New Shot          Add new shot at top of current file
   t     Telescope         Telescope picker for shot files (current repo)
                           In telescope (normal mode):
