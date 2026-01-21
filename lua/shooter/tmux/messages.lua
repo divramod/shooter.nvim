@@ -105,11 +105,9 @@ function M.build_multishot_message(bufnr, shot_list)
 %s
 
 # Shooter global context (%s)
-
 %s
 
 # Shooter project context (%s)
-
 %s]],
     vars.shot_nums,
     vars.file_title,
