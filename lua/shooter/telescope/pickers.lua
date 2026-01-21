@@ -120,8 +120,9 @@ function M.list_open_shots(opts)
       map('n', '<C-n>', actions.move_selection_next)
       map('n', '<C-p>', actions.move_selection_previous)
 
-      -- Close with Ctrl-c in normal mode
+      -- Close with Ctrl-c or q in normal mode
       map('n', '<C-c>', actions.close)
+      map('n', 'q', actions.close)
 
       -- Space toggles selection AND moves to next line (like Tab)
       map('n', '<space>', function()
