@@ -16,6 +16,9 @@ CORE COMMANDS:
   h     Help              Show this help message
   i     History           Open shot history for current repo (Oil)
   l     Last              Open last edited shooter file
+  M     Munition          Import tasks from inbox files as new shots
+                          First pick inbox file, then select tasks (- [ ] or # headers)
+                          Multi-select with Tab/Space, Enter imports and deletes from source
   n     New               Create new shooter file
   N     New in Repo       Create new file in another repo (picker)
   o     Open Shots        Telescope picker for open shots (with multi-select)

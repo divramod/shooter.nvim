@@ -130,6 +130,15 @@ M.defaults = {
     -- Direct paths to git repos (e.g., {'~/my-special-repo'})
     direct_paths = {},
   },
+
+  -- Inbox configuration for "get munition" task import
+  inbox = {
+    -- Directories containing markdown inbox files (e.g., {'~/art/me/inbox'})
+    search_dirs = {},
+
+    -- Direct paths to markdown inbox files (e.g., {'~/art/me/me.md'})
+    direct_paths = {},
+  },
 }
 
 -- Current configuration (will be merged with user config)

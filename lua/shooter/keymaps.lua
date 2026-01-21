@@ -50,6 +50,9 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'N', ':ShooterCreateInRepo<cr>',
     vim.tbl_extend('force', opts, { desc = 'New in other repo' }))
 
+  vim.keymap.set('n', prefix .. 'M', ':ShooterMunition<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Get munition (import inbox tasks)' }))
+
   vim.keymap.set('n', prefix .. 'o', ':ShooterOpenShots<cr>',
     vim.tbl_extend('force', opts, { desc = 'Open shots picker' }))
 

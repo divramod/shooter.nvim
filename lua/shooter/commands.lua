@@ -161,6 +161,10 @@ function M.setup()
     require('shooter.core.repos').create_in_repo_picker()
   end, { desc = 'Create shot file in any configured repo' })
 
+  vim.api.nvim_create_user_command('ShooterMunition', function()
+    require('shooter.inbox.picker').show_file_picker()
+  end, { desc = 'Import tasks from inbox files as new shots' })
+
   -- Analytics commands
   vim.api.nvim_create_user_command('ShooterAnalyticsGlobal', function()
     require('shooter.analytics').show_global()
