@@ -157,6 +157,10 @@ function M.setup()
     vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
   end, { desc = 'Edit shooter.nvim config file' })
 
+  vim.api.nvim_create_user_command('ShooterCreateInRepo', function()
+    require('shooter.core.repos').create_in_repo_picker()
+  end, { desc = 'Create shot file in any configured repo' })
+
   -- Analytics commands
   vim.api.nvim_create_user_command('ShooterAnalyticsGlobal', function()
     require('shooter.analytics').show_global()

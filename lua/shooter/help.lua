@@ -17,6 +17,7 @@ CORE COMMANDS:
   i     History           Open shot history for current repo (Oil)
   l     Last              Open last edited shooter file
   n     New               Create new shooter file
+  N     New in Repo       Create new file in another repo (picker)
   o     Open Shots        Telescope picker for open shots (with multi-select)
                           In telescope: Tab/Space = select, c = clear selection
                             1-4 = send to claude, Enter = jump to shot

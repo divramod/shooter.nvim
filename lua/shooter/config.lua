@@ -121,6 +121,15 @@ M.defaults = {
     -- Volume (0.0 to 1.0)
     volume = 0.5,
   },
+
+  -- Repository configuration for cross-repo shot creation
+  repos = {
+    -- Directories to search for git repos (e.g., {'~/cod', '~/projects'})
+    search_dirs = {},
+
+    -- Direct paths to git repos (e.g., {'~/my-special-repo'})
+    direct_paths = {},
+  },
 }
 
 -- Current configuration (will be merged with user config)
