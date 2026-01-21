@@ -7,16 +7,14 @@ local keys = require('shooter.tmux.keys')
 local M = {}
 
 -- Prepare escape sequences for tmux send-keys
+-- Simplified: just ensure we're in insert mode without aggressive clearing
 function M.prepare_escape_sequences(pane_id)
   local cmd_parts = {
-    string.format("tmux send-keys -t %s Escape Escape Escape", pane_id),
-    "sleep 0.1",
-    string.format("tmux send-keys -t %s C-c", pane_id),
-    "sleep 0.1",
-    string.format("tmux send-keys -t %s C-u", pane_id),
-    "sleep 0.1",
-    string.format("tmux send-keys -t %s Escape Escape i", pane_id),
-    "sleep 0.1",
+    -- Just press Escape and then 'i' to enter insert mode
+    string.format("tmux send-keys -t %s Escape", pane_id),
+    "sleep 0.05",
+    string.format("tmux send-keys -t %s i", pane_id),
+    "sleep 0.05",
   }
   return table.concat(cmd_parts, " && ")
 end
@@ -75,20 +73,16 @@ function M.write_to_tempfile(text)
 end
 
 -- Build tmux send command (paste mode)
+-- Skip escape sequences - just paste directly and press Enter
 function M.build_send_command(pane_id, tmpfile, delay, include_escape_prep)
-  include_escape_prep = include_escape_prep == nil and true or include_escape_prep
   local cmd_parts = {}
 
-  if include_escape_prep then
-    table.insert(cmd_parts, M.prepare_escape_sequences(pane_id))
-    -- Extra delay after escape sequences to ensure mode switch completes
-    table.insert(cmd_parts, "sleep 0.2")
-  end
-
+  -- Load text into tmux buffer and paste it directly
   table.insert(cmd_parts, string.format("tmux load-buffer %s", tmpfile))
-  -- Use -p for bracketed paste mode to prevent line-by-line interpretation
-  table.insert(cmd_parts, string.format("tmux paste-buffer -p -t %s", pane_id))
+  table.insert(cmd_parts, string.format("tmux paste-buffer -t %s", pane_id))
+  -- Wait for paste to complete
   table.insert(cmd_parts, string.format("sleep %.1f", delay))
+  -- Press Enter twice to submit
   table.insert(cmd_parts, string.format("tmux send-keys -t %s Enter", pane_id))
   table.insert(cmd_parts, "sleep 0.1")
   table.insert(cmd_parts, string.format("tmux send-keys -t %s Enter", pane_id))
@@ -154,10 +148,10 @@ function M.send_multishot_to_pane(pane_id, text)
     return false, err, 0
   end
 
-  -- Use -p for bracketed paste mode to prevent line-by-line interpretation
+  -- Direct paste without escape sequences
   local cmd = string.format(
-    "tmux send-keys -t %s Escape Escape i && sleep 0.2 && tmux load-buffer %s && tmux paste-buffer -p -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
-    pane_id, tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
+    "tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
+    tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
   )
 
   local success, cmd_err = M.execute_tmux_command(cmd)
