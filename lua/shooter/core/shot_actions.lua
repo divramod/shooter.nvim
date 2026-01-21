@@ -185,6 +185,24 @@ function M.delete_last_shot()
   -- Delete the range
   utils.set_buf_lines(bufnr, shot_start - 1, shot_end, {})
 
+  -- Ensure blank line after title if next line is a shot header
+  local new_lines = utils.get_buf_lines(bufnr, 0, -1)
+  local title_line = nil
+  for i, line in ipairs(new_lines) do
+    if line:match('^#%s+[^#]') then
+      title_line = i
+      break
+    end
+  end
+
+  if title_line and title_line < #new_lines then
+    local next_line = new_lines[title_line + 1]
+    if next_line and next_line:match('^##%s+x?%s*shot') then
+      -- No blank line between title and first shot, insert one
+      utils.set_buf_lines(bufnr, title_line, title_line, { '' })
+    end
+  end
+
   utils.echo('Deleted shot ' .. max_shot)
 end
 
