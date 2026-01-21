@@ -60,17 +60,20 @@ function M.create_claude_pane()
   return pane_id, nil
 end
 
--- Check if a pane is running Claude (by checking foreground process)
+-- Check if a pane is running Claude (by checking it's no longer a shell)
+-- When Claude starts, it replaces the shell process, so we detect Claude
+-- by checking the pane is NOT running zsh/bash anymore
 function M.is_pane_running_claude(pane_id)
   local cmd = shell.get_pane_command(pane_id)
   if not cmd then
     return false
   end
-  -- Match "claude", "node", or version pattern like "2.1.14"
-  -- Claude sets its process title to its version number
-  return cmd:match('^claude')
-    or cmd:match('^node')
-    or cmd:match('^%d+%.%d+')  -- Version pattern: 2.1.14, 3.0.0, etc.
+  -- If it's still a shell, Claude hasn't started yet
+  if shell.is_shell_pane(pane_id) then
+    return false
+  end
+  -- Not a shell anymore = something else started (presumably Claude)
+  return true
 end
 
 -- Wait for Claude to be ready in a pane (check foreground process)
