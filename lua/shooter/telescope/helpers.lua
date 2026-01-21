@@ -138,13 +138,22 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
     return
   end
 
+  -- Add matching entries to multi-selection
+  if not picker._multi then return end
+
+  local count = 0
   for entry in manager:iter() do
     if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
-      -- Use internal _multi:add instead of add_selection (which expects row number)
-      if picker._multi and picker._multi.add then
-        picker._multi:add(entry)
-      end
+      picker._multi:add(entry)
+      count = count + 1
     end
+  end
+
+  -- Refresh the picker display to show selection markers
+  if count > 0 then
+    local row = picker:get_selection_row()
+    picker:get_status_updater(picker.prompt_bufnr, picker.results_bufnr)()
+    picker.highlighter:hi_multiselect(row, picker._multi:is_selected(picker:get_selection()))
   end
 end
 
