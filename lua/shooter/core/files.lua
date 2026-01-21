@@ -57,9 +57,14 @@ function M.get_current_file_or_folder_path()
   end
 end
 
+-- Helper: Get prompts directory path
+function M.get_prompts_dir()
+  return utils.cwd() .. '/' .. config.get('paths.prompts_root')
+end
+
 -- Helper: Check if path is in prompts folder
 function M.is_in_prompts_folder(path)
-  local prompts_path = utils.cwd() .. '/' .. config.get('paths.prompts_root')
+  local prompts_path = M.get_prompts_dir()
   return path:find(prompts_path, 1, true) ~= nil
 end
 
@@ -175,6 +180,11 @@ function M.find_last_file()
   end
 
   return result:gsub('%s+$', '')  -- Trim trailing whitespace
+end
+
+-- Alias for find_last_file (used by commands.lua)
+function M.get_last_edited_file()
+  return M.find_last_file()
 end
 
 return M
