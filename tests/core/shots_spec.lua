@@ -54,12 +54,12 @@ describe('shots module', function()
 
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
       assert.is_truthy(result:match('^## x shot 1'))
-      assert.is_truthy(result:match('%d%d%d%d%d%d%d%d_%d%d%d%d'))
+      assert.is_truthy(result:match('%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d'))
     end)
 
     it('updates timestamp on already executed shot', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
-      local lines = {'## x shot 1 (20260120_1200)', 'content'}
+      local lines = {'## x shot 1 (2026-01-20 12:00:00)', 'content'}
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
       shots.mark_shot_executed(bufnr, 1)
@@ -67,7 +67,7 @@ describe('shots module', function()
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
       assert.is_truthy(result:match('^## x shot 1'))
       -- Should have new timestamp, not old one
-      assert.is_falsy(result:match('20260120_1200'))
+      assert.is_falsy(result:match('2026%-01%-20 12:00:00'))
     end)
   end)
 

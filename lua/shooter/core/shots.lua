@@ -145,9 +145,9 @@ function M.mark_shot_executed(bufnr, header_line)
   -- Check if already marked with x
   if line:match(config.get('patterns.executed_shot_header')) then
     -- Already has x, just update/add timestamp
-    if line:match('%(%d+_%d+%)') then
+    if line:match('%(%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d%)') then
       -- Replace existing timestamp
-      line = line:gsub('%(%d+_%d+%)', '(' .. timestamp .. ')')
+      line = line:gsub('%(%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d%)', '(' .. timestamp .. ')')
     else
       -- Add timestamp at end
       line = line .. ' (' .. timestamp .. ')'
@@ -160,7 +160,12 @@ function M.mark_shot_executed(bufnr, header_line)
   end
 
   utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
-  vim.cmd('write')
+
+  -- Only write if buffer has a filename
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  if bufname ~= '' then
+    vim.cmd('write')
+  end
 end
 
 -- Parse shot header to extract shot number
