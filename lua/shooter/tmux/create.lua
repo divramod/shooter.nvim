@@ -55,40 +55,26 @@ function M.create_claude_pane()
   return pane_id, nil
 end
 
--- Wait for Claude to be ready in a pane (check for process)
+-- Check if a pane is running Claude (by checking foreground process)
+function M.is_pane_running_claude(pane_id)
+  local cmd = shell.get_pane_command(pane_id)
+  if not cmd then
+    return false
+  end
+  -- Match "claude" or "node" (Claude CLI runs as node process)
+  return cmd:match('^claude') or cmd:match('^node')
+end
+
+-- Wait for Claude to be ready in a pane (check foreground process)
 -- Returns true when ready, false on timeout
 function M.wait_for_claude(pane_id, timeout_ms)
   timeout_ms = timeout_ms or 10000  -- Default 10 seconds
   local start = vim.loop.now()
 
   while (vim.loop.now() - start) < timeout_ms do
-    -- Get the TTY of the pane
-    local handle = io.popen(string.format("tmux display -p -t %s '#{pane_tty}' 2>/dev/null", pane_id))
-    if handle then
-      local tty = handle:read("*l")
-      handle:close()
-
-      if tty then
-        local tty_num = tty:match("ttys(%d+)")
-        if tty_num then
-          -- Check if Claude is running on this TTY
-          -- macOS ps shows "s009" format, tmux shows "/dev/ttys009"
-          -- So grep for anything ending in "s" + tty_num (matches s009, ttys009)
-          local ps_handle = io.popen(string.format(
-            "ps aux | grep '[c]laude' | awk '{print $7}' | grep -q 's%s$' && echo 'yes'",
-            tty_num
-          ))
-          if ps_handle then
-            local result = ps_handle:read("*l")
-            ps_handle:close()
-            if result == "yes" then
-              return true
-            end
-          end
-        end
-      end
+    if M.is_pane_running_claude(pane_id) then
+      return true
     end
-
     -- Wait a bit before checking again
     vim.loop.sleep(500)
   end
