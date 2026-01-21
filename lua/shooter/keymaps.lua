@@ -148,9 +148,15 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'Q', ':ShooterQueueView<cr>',
     vim.tbl_extend('force', opts, { desc = 'View queue' }))
 
-  -- Resend latest shot commands (1-4)
+  -- Pane visibility toggle (1-4) - lowercase r
   for i = 1, 4 do
-    vim.keymap.set('n', prefix .. 'r' .. tostring(i), ':ShooterResend' .. i .. '<cr>',
+    vim.keymap.set('n', prefix .. 'r' .. tostring(i), ':ShooterPaneToggle' .. i .. '<cr>',
+      vim.tbl_extend('force', opts, { desc = 'Toggle pane ' .. i .. ' visibility' }))
+  end
+
+  -- Resend latest shot commands (1-4) - uppercase R
+  for i = 1, 4 do
+    vim.keymap.set('n', prefix .. 'R' .. tostring(i), ':ShooterResend' .. i .. '<cr>',
       vim.tbl_extend('force', opts, { desc = 'Resend latest to pane #' .. i }))
   end
 

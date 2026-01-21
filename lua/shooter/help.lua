@@ -48,6 +48,15 @@ QUEUE COMMANDS:
   q1-4  Queue Shot        Add current shot to queue for pane #1-4
   Q     View Queue        Telescope picker to view and manage queued shots
 
+PANE VISIBILITY:
+  r1-4  Toggle Pane       Toggle visibility of tmux pane #1-4
+                          Hides pane to a background window, or shows it again
+                          Useful to temporarily hide Claude to see more code
+
+RESEND:
+  R1-4  Resend Shot       Resend the most recently sent shot to pane #1-4
+                          Useful when Claude needs the same context again
+
 MOVE COMMANDS (prefix: <space>m):
   ma    Archive           Move current file to prompts/archive
   mb    Backlog           Move current file to prompts/backlog

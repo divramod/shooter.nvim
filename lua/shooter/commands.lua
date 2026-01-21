@@ -204,6 +204,13 @@ function M.setup()
     vim.cmd('Oil ' .. history_dir)
   end, { desc = 'Open history directory in Oil' })
 
+  -- Pane toggle commands (1-9)
+  for i = 1, 9 do
+    vim.api.nvim_create_user_command('ShooterPaneToggle' .. i, function()
+      require('shooter.tmux.panes').toggle(i)
+    end, { desc = 'Toggle visibility of tmux pane ' .. i })
+  end
+
   -- Load send/queue commands from submodule
   require('shooter.commands.send').setup()
 end
