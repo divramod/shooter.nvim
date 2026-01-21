@@ -13,7 +13,7 @@ local function check_telescope()
     return false
   end
 
-  vim.health.ok('Telescope is installed')
+  vim.health.ok('Telescope is installed (https://github.com/nvim-telescope/telescope.nvim)')
   return true
 end
 
@@ -28,7 +28,7 @@ local function check_gp_nvim()
     return false
   end
 
-  vim.health.ok('gp.nvim (GpWhisper) is available')
+  vim.health.ok('gp.nvim (GpWhisper) is available (https://github.com/Robitx/gp.nvim)')
   return true
 end
 
@@ -44,7 +44,7 @@ local function check_hal_cli()
     return false
   end
 
-  vim.health.ok('hal CLI is available (image picking)')
+  vim.health.ok('hal CLI is available (https://github.com/divramod/hal)')
   return true
 end
 
@@ -61,7 +61,7 @@ local function check_tmux_installed()
     return false
   end
 
-  vim.health.ok('tmux is installed')
+  vim.health.ok('tmux is installed (https://github.com/tmux/tmux)')
   return true
 end
 
