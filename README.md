@@ -200,6 +200,7 @@ All keybindings use `<space>` prefix (customizable):
 |-----|--------|
 | `<space>]` | Next open shot |
 | `<space>[` | Previous open shot |
+| `<space>.` | Toggle shot done/open |
 
 ### Send to Claude
 

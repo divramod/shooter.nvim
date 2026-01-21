@@ -182,4 +182,65 @@ describe('shot_actions module', function()
       assert.is_true(has_shot1)
     end)
   end)
+
+  describe('toggle_shot_done', function()
+    it('marks open shot as done with timestamp', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## shot 1',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })  -- Position in shot 1
+
+      shot_actions.toggle_shot_done()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot should now be marked as done with x and timestamp
+      assert.is_truthy(result[3]:match('^## x shot 1'))
+      assert.is_truthy(result[3]:match('%(%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d%)'))
+    end)
+
+    it('marks done shot as open (removes x and timestamp)', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00)',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })  -- Position in shot 1
+
+      shot_actions.toggle_shot_done()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot should now be open (no x, no timestamp)
+      assert.are.equal('## shot 1', result[3])
+    end)
+
+    it('works when cursor is in shot content (not header)', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## shot 1',
+        'Shot 1 content',
+        'More content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 5, 0 })  -- Position in content, not header
+
+      shot_actions.toggle_shot_done()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot should still be marked as done
+      assert.is_truthy(result[3]:match('^## x shot 1'))
+    end)
+  end)
 end)

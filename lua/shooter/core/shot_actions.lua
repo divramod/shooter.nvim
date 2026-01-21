@@ -271,4 +271,46 @@ function M.goto_prev_open_shot()
   utils.echo('Shot ' .. shot_num .. ' (wrapped)')
 end
 
+-- Toggle shot done status (mark/unmark with x and timestamp)
+function M.toggle_shot_done()
+  local bufnr = 0
+  local cursor_line = utils.get_cursor()[1]
+
+  -- Find the current shot
+  local shot_start, _, header_line = shots.find_current_shot(bufnr, cursor_line)
+  if not shot_start then
+    utils.echo('Not in a shot')
+    return
+  end
+
+  local line = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
+  local shot_num = shots.parse_shot_header(line)
+
+  -- Check if already marked as done (has x)
+  local config = require('shooter.config')
+  local is_done = line:match(config.get('patterns.executed_shot_header')) ~= nil
+
+  if is_done then
+    -- Remove x and timestamp → make open
+    -- Pattern: ## x shot N (date) → ## shot N
+    line = line:gsub('^(##)%s+x%s+shot', '%1 shot')
+    line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)%s*$', '')
+    utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
+    utils.echo('Shot ' .. shot_num .. ' marked open')
+  else
+    -- Add x and timestamp → make done
+    local timestamp = utils.get_timestamp()
+    line = line:gsub('^(##)%s+shot', '%1 x shot')
+    line = line .. ' (' .. timestamp .. ')'
+    utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
+    utils.echo('Shot ' .. shot_num .. ' marked done')
+  end
+
+  -- Save the file
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  if bufname ~= '' then
+    vim.cmd('write')
+  end
+end
+
 return M

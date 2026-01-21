@@ -82,6 +82,11 @@ function M.setup()
     shot_actions.goto_prev_open_shot()
   end, { desc = 'Go to previous open shot' })
 
+  vim.api.nvim_create_user_command('ShooterToggleDone', function()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.toggle_shot_done()
+  end, { desc = 'Toggle shot done status' })
+
   -- Movement commands
   vim.api.nvim_create_user_command('ShooterArchive', function()
     local files = require('shooter.core.files')
