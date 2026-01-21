@@ -9,6 +9,7 @@ local utils = require('shooter.utils')
 local config = require('shooter.config')
 local files = require('shooter.core.files')
 local shots = require('shooter.core.shots')
+local previewers_mod = require('shooter.telescope.previewers')
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
 local function get_prompt_files()
@@ -59,6 +60,7 @@ function M.list_all_files(opts)
       end,
     }),
     sorter = conf.generic_sorter({}),
+    previewer = previewers_mod.file_previewer(),
   })
 end
 
@@ -176,6 +178,7 @@ function M.list_open_shots(opts)
       entry_maker = function(e) return {value = e, display = e.display, ordinal = e.display} end,
     }),
     sorter = conf.generic_sorter({}),
+    previewer = previewers_mod.shot_previewer(),
   })
 end
 
