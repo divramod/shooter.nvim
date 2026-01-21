@@ -225,13 +225,53 @@ require('shooter').setup({
 
 Shooter.nvim injects context when sending shots to AI:
 
-1. **General Context** (`~/.config/shooter.nvim/shooter-context-global.md`)
+1. **Global Context** (`~/.config/shooter.nvim/shooter-context-global.md`)
    - Shared across all projects
    - Your coding preferences, conventions, etc.
 
 2. **Project Context** (`.shooter.nvim/shooter-context-project.md` at git root)
    - Project-specific instructions
    - Auto-created from template on first use
+
+## Template System
+
+Shooter uses customizable templates for the context instructions sent with each shot.
+
+### Template Locations (Priority Order)
+
+1. **Project-specific**: `./.shooter.nvim/shooter-context-instructions.md`
+2. **Global**: `~/.config/shooter.nvim/shooter-context-instructions.md`
+3. **Plugin fallback**: Built-in templates
+
+For multi-shot sends, use `shooter-context-instructions-multishot.md`.
+
+### Template Variables
+
+Use `{{variable_name}}` syntax in your templates:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{shot_num}}` | Current shot number | `117` |
+| `{{shot_nums}}` | Comma-separated (multishot) | `1, 2, 3` |
+| `{{file_path}}` | File path (with ~ for home) | `~/dev/plans/prompts/file.md` |
+| `{{file_name}}` | Filename with extension | `20260118_0516_feature.md` |
+| `{{file_title}}` | Title from first # heading | `2026-01-18 - feature name` |
+| `{{repo_name}}` | Repository name from git | `divramod/shooter.nvim` |
+| `{{repo_path}}` | Git root path (with ~) | `~/cod/shooter.nvim` |
+
+### Example Custom Template
+
+Create `~/.config/shooter.nvim/shooter-context-instructions.md`:
+
+```markdown
+# context
+1. This is shot {{shot_num}} of "{{file_title}}" in {{repo_name}}.
+2. Please read {{file_path}} for previous context.
+3. You should not implement old shots.
+4. Your current task is shot {{shot_num}}.
+```
+
+See `templates/VARIABLES.md` for full documentation
 
 ## File Structure
 
