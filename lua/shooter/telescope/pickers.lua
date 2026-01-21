@@ -173,6 +173,7 @@ function M.list_open_shots(opts)
     prompt_title = title,
     layout_strategy = 'vertical',
     layout_config = {width = 0.9, height = 0.9, preview_height = 0.5},
+    initial_mode = 'normal',  -- Start in normal mode to quickly send shots with 1-4
     finder = finders.new_table({
       results = shot_entries,
       entry_maker = function(e) return {value = e, display = e.display, ordinal = e.display} end,
