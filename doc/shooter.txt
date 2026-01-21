@@ -1,0 +1,278 @@
+*shooter.txt*  Shot-based iterative development workflow for Neovim
+
+Author:  divramod
+License: MIT
+Repository: https://github.com/divramod/shooter.nvim
+
+==============================================================================
+CONTENTS                                                    *shooter-contents*
+
+    1. Introduction ............................ |shooter-introduction|
+    2. Requirements ............................ |shooter-requirements|
+    3. Installation ............................ |shooter-installation|
+    4. Configuration ........................... |shooter-configuration|
+    5. Commands ................................ |shooter-commands|
+    6. Keymaps ................................. |shooter-keymaps|
+    7. Telescope Pickers ....................... |shooter-telescope|
+    8. Context Files ........................... |shooter-context|
+    9. Queue System ............................ |shooter-queue|
+   10. Health Check ............................ |shooter-health|
+
+==============================================================================
+1. INTRODUCTION                                         *shooter-introduction*
+
+Shooter.nvim is a Neovim plugin for shot-based iterative development with
+tmux integration. It helps you organize development work into "shots" -
+discrete units of work that can be sent to AI assistants (like Claude)
+running in tmux panes.
+
+Features:~
+- Create and manage shot files with timestamped naming
+- Send shots to tmux panes (1-9) running Claude
+- Queue shots for later execution
+- Inject general and project context into messages
+- Move files between folders (archive, backlog, done, etc.)
+- Telescope integration with previews and multi-select
+
+==============================================================================
+2. REQUIREMENTS                                         *shooter-requirements*
+
+- Neovim >= 0.9.0
+- telescope.nvim (https://github.com/nvim-telescope/telescope.nvim)
+- plenary.nvim (https://github.com/nvim-lua/plenary.nvim)
+- tmux (for sending shots to panes)
+
+==============================================================================
+3. INSTALLATION                                         *shooter-installation*
+
+Using lazy.nvim:~
+>lua
+    {
+      'divramod/shooter.nvim',
+      dependencies = {
+        'nvim-telescope/telescope.nvim',
+        'nvim-lua/plenary.nvim',
+      },
+      config = function()
+        require('shooter').setup({
+          -- your configuration here
+        })
+      end,
+    }
+<
+
+Using packer.nvim:~
+>lua
+    use {
+      'divramod/shooter.nvim',
+      requires = {
+        'nvim-telescope/telescope.nvim',
+        'nvim-lua/plenary.nvim',
+      },
+      config = function()
+        require('shooter').setup()
+      end,
+    }
+<
+
+==============================================================================
+4. CONFIGURATION                                       *shooter-configuration*
+
+Call `require('shooter').setup()` with your configuration:~
+>lua
+    require('shooter').setup({
+      paths = {
+        general_context = '~/.config/shooter.nvim/shooter-context-general.md',
+        project_context = '.shooter.nvim/shooter-context-project.md',
+        prompts_root = 'plans/prompts',
+        queue_file = 'plans/prompts/.shot-queue.json',
+      },
+      tmux = {
+        delay = 0.2,          -- delay between send operations
+        max_panes = 9,        -- maximum number of panes (1-9)
+      },
+      telescope = {
+        layout_strategy = 'vertical',
+        layout_config = {
+          width = 0.9,
+          height = 0.9,
+          preview_height = 0.5,
+        },
+      },
+      keymaps = {
+        enabled = true,       -- enable default keymaps
+        prefix = ' ',         -- leader key for keymaps
+      },
+    })
+<
+
+==============================================================================
+5. COMMANDS                                                 *shooter-commands*
+
+File Management:~
+                                                            *:ShooterCreate*
+:ShooterCreate          Create a new shot file with timestamp
+
+                                                            *:ShooterList*
+:ShooterList            List all shot files in Telescope picker
+
+                                                            *:ShooterOpenShots*
+:ShooterOpenShots       Show open (unexecuted) shots in current file
+
+                                                            *:ShooterLast*
+:ShooterLast            Open the most recently modified shot file
+
+                                                            *:ShooterInbox*
+:ShooterInbox           Open shots inbox folder
+
+Movement Commands:~
+                                                            *:ShooterArchive*
+:ShooterArchive         Move current file to archive folder
+
+                                                            *:ShooterBacklog*
+:ShooterBacklog         Move current file to backlog folder
+
+                                                            *:ShooterDone*
+:ShooterDone            Move current file to done folder
+
+                                                            *:ShooterReqs*
+:ShooterReqs            Move current file to requirements folder
+
+                                                            *:ShooterTest*
+:ShooterTest            Move current file to test folder
+
+                                                            *:ShooterWait*
+:ShooterWait            Move current file to wait folder
+
+                                                            *:ShooterPrompts*
+:ShooterPrompts         Move current file to prompts folder
+
+                                                            *:ShooterGitRoot*
+:ShooterGitRoot         Move current file to git root
+
+Send Commands:~
+                                                    *:ShooterSend1* *:ShooterSend9*
+:ShooterSend{1-9}       Send current shot to tmux pane 1-9
+
+                                                *:ShooterSendAll1* *:ShooterSendAll9*
+:ShooterSendAll{1-9}    Send all open shots to tmux pane 1-9
+
+                                            *:ShooterSendVisual1* *:ShooterSendVisual9*
+:ShooterSendVisual{1-9} Send visual selection to tmux pane 1-9
+
+Queue Commands:~
+                                                *:ShooterQueueAdd1* *:ShooterQueueAdd4*
+:ShooterQueueAdd{1-4}   Add current shot to queue for pane 1-4
+
+                                                            *:ShooterQueueView*
+:ShooterQueueView       View queue in Telescope picker
+
+                                                            *:ShooterQueueClear*
+:ShooterQueueClear      Clear all items from queue
+
+Other Commands:~
+                                                            *:ShooterHelp*
+:ShooterHelp            Show help with all keybindings
+
+                                                            *:ShooterImages*
+:ShooterImages          Insert image reference using hal
+
+                                                            *:ShooterPrdList*
+:ShooterPrdList         Show PRD task list in Telescope
+
+                                                            *:ShooterNewShot*
+:ShooterNewShot         Add a new shot to current file
+
+                                                            *:ShooterDeleteLastShot*
+:ShooterDeleteLastShot  Delete the last shot from current file
+
+==============================================================================
+6. KEYMAPS                                                   *shooter-keymaps*
+
+Default keymaps (with prefix <Space>):~
+
+File Operations:~
+  <Space>n              Create new shot file
+  <Space>l              List all shot files
+  <Space>o              Open shots in current file
+  <Space>L              Open last modified shot file
+  <Space>i              Open inbox
+
+Movement:~
+  <Space>ma             Move to archive
+  <Space>mb             Move to backlog
+  <Space>md             Move to done
+  <Space>mr             Move to requirements
+  <Space>mt             Move to test
+  <Space>mw             Move to wait
+  <Space>mp             Move to prompts
+  <Space>mg             Move to git root
+
+Send to Pane:~
+  <Space>1-9            Send current shot to pane 1-9
+  <Space>a1-9           Send all open shots to pane 1-9
+  <Space>v1-9           Send visual selection to pane 1-9
+
+Queue:~
+  <Space>q1-4           Add to queue for pane 1-4
+  <Space>qv             View queue
+  <Space>qc             Clear queue
+
+Other:~
+  <Space>h              Show help
+  <Space>I              Insert image
+  <Space>p              Show PRD tasks
+
+==============================================================================
+7. TELESCOPE PICKERS                                       *shooter-telescope*
+
+Shooter.nvim uses Telescope for file selection with custom previewers.
+
+In Telescope pickers, use these keys:~
+  <CR>                  Open selected file / execute action
+  1-4                   Send selected shot to pane 1-4
+  <C-d>                 Delete selected file
+  <Tab>                 Toggle multi-select
+
+==============================================================================
+8. CONTEXT FILES                                             *shooter-context*
+
+Shooter.nvim injects context into messages sent to Claude:
+
+General Context:~
+  Location: ~/.config/shooter.nvim/shooter-context-general.md
+  Contains global instructions for all projects.
+
+Project Context:~
+  Location: .shooter.nvim/shooter-context-project.md (at git root)
+  Contains project-specific context and instructions.
+
+Create project context from template:~
+  The template is at: templates/shooter-context-project-template.md
+  Copy it to your project's .shooter.nvim/ folder.
+
+==============================================================================
+9. QUEUE SYSTEM                                                *shooter-queue*
+
+The queue system allows you to batch shots for later sending:
+
+1. Add shots to queue with :ShooterQueueAdd{1-4}
+2. View queue with :ShooterQueueView
+3. Send queued shots from the Telescope picker
+4. Clear queue with :ShooterQueueClear
+
+Queue is persisted to: plans/prompts/.shot-queue.json
+
+==============================================================================
+10. HEALTH CHECK                                              *shooter-health*
+
+Run `:checkhealth shooter` to verify your setup:
+
+- Dependencies (Telescope, tmux)
+- Tmux environment (running in tmux, Claude process)
+- Context files (general, project)
+- Directory structure (prompts folder)
+- Queue system (valid JSON)
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
