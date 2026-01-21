@@ -15,6 +15,12 @@ local function trim_trailing(content)
   return content:gsub('%s+$', '')
 end
 
+-- Trim leading and trailing whitespace from message
+local function trim_message(msg)
+  if not msg then return "" end
+  return msg:match("^%s*(.-)%s*$") or msg
+end
+
 -- Format shot content (trim whitespace)
 function M.format_shot_content(content)
   if not content or content == "" then return "" end
@@ -65,7 +71,8 @@ function M.build_shot_message(bufnr, shot_info)
     trim_trailing(ctx.project_content)
   )
 
-  return message
+  -- Remove any leading/trailing whitespace from final message
+  return trim_message(message)
 end
 
 -- Build message for multiple shots
@@ -116,7 +123,8 @@ function M.build_multishot_message(bufnr, shot_list)
     trim_trailing(ctx.project_content)
   )
 
-  return message
+  -- Remove any leading/trailing whitespace from final message
+  return trim_message(message)
 end
 
 -- Get shot message stats (for display purposes)

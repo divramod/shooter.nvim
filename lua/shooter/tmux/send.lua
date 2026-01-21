@@ -81,10 +81,12 @@ function M.build_send_command(pane_id, tmpfile, delay, include_escape_prep)
   end
 
   table.insert(cmd_parts, string.format("tmux load-buffer %s", tmpfile))
-  table.insert(cmd_parts, string.format("tmux paste-buffer -t %s", pane_id))
-  table.insert(cmd_parts, string.format("sleep %.1f", delay))
+  -- Use -p for bracketed paste mode (tells terminal this is one paste unit)
+  table.insert(cmd_parts, string.format("tmux paste-buffer -p -t %s", pane_id))
+  -- Longer delay to ensure paste completes before Enter
+  table.insert(cmd_parts, string.format("sleep %.1f", math.max(delay, 1.0)))
   table.insert(cmd_parts, string.format("tmux send-keys -t %s Enter", pane_id))
-  table.insert(cmd_parts, "sleep 0.1")
+  table.insert(cmd_parts, "sleep 0.2")
   table.insert(cmd_parts, string.format("tmux send-keys -t %s Enter", pane_id))
   table.insert(cmd_parts, string.format("rm %s", tmpfile))
 
@@ -148,9 +150,10 @@ function M.send_multishot_to_pane(pane_id, text)
     return false, err, 0
   end
 
+  local actual_delay = math.max(delay, 1.5)
   local cmd = string.format(
-    "tmux send-keys -t %s C-c && sleep 0.1 && tmux send-keys -t %s C-u && sleep 0.1 && tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
-    pane_id, pane_id, tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
+    "tmux send-keys -t %s C-c && sleep 0.1 && tmux send-keys -t %s C-u && sleep 0.2 && tmux load-buffer %s && tmux paste-buffer -p -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.2 && tmux send-keys -t %s Enter && rm %s",
+    pane_id, pane_id, tmpfile, pane_id, actual_delay, pane_id, pane_id, tmpfile
   )
 
   local success, cmd_err = M.execute_tmux_command(cmd)
