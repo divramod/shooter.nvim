@@ -122,7 +122,7 @@ function M.save_sendable(full_message, shot_num, source_filepath)
   local filename_base = utils.get_basename(source_filename)
 
   local dir_path = string.format('%s/%s/%s/%s', base_dir, user, repo, filename_base)
-  local file_path = string.format('%s/send-%s.md', dir_path, formatted_num)
+  local file_path = string.format('%s/shot-%s.md', dir_path, formatted_num)
 
   -- Ensure directory exists
   utils.ensure_dir(dir_path)
