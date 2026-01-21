@@ -165,4 +165,24 @@ function M.send_multishot_to_pane(pane_id, text)
   return true, nil, text_length
 end
 
+-- Send file reference to Claude using @filepath syntax
+-- This avoids all paste issues by letting Claude read the file directly
+function M.send_file_reference(pane_id, filepath)
+  if not pane_id or pane_id == "" then
+    return false, "No pane ID provided"
+  end
+  if not filepath or filepath == "" then
+    return false, "No filepath provided"
+  end
+
+  -- Build command: C-c, C-u, type @filepath, Enter, Enter
+  local cmd = string.format(
+    "tmux send-keys -t %s C-c && sleep 0.05 && tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '@%s' && sleep 0.1 && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter",
+    pane_id, pane_id, pane_id, filepath, pane_id, pane_id
+  )
+
+  local success, err = M.execute_tmux_command(cmd)
+  return success, err
+end
+
 return M

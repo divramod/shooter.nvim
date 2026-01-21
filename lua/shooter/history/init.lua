@@ -105,6 +105,37 @@ timestamp: %s
   return true, nil
 end
 
+-- Save shot message as a sendable file (just the message, no metadata)
+-- Returns: filepath on success, nil and error on failure
+function M.save_sendable(full_message, shot_num, source_filepath)
+  local user, repo = M.get_git_remote_info()
+
+  if not user or not repo then
+    local cwd = utils.cwd()
+    user = 'local'
+    repo = utils.get_basename(cwd)
+  end
+
+  local source_filename = utils.get_filename(source_filepath)
+  local base_dir = M.get_history_base_dir()
+  local formatted_num = M.format_shot_number(shot_num)
+  local filename_base = utils.get_basename(source_filename)
+
+  local dir_path = string.format('%s/%s/%s/%s', base_dir, user, repo, filename_base)
+  local file_path = string.format('%s/send-%s.md', dir_path, formatted_num)
+
+  -- Ensure directory exists
+  utils.ensure_dir(dir_path)
+
+  -- Write just the message content (what Claude will read)
+  local success, err = utils.write_file(file_path, full_message)
+  if not success then
+    return nil, err
+  end
+
+  return file_path, nil
+end
+
 -- Get history for a specific shot
 function M.get_shot_history(user, repo, filename, shot_num)
   local file_path = M.build_history_path(user, repo, filename, shot_num)
