@@ -44,6 +44,10 @@ M.defaults = {
 
     -- Threshold for long messages (lines)
     long_message_lines = 50,
+
+    -- Send mode: 'paste' (default, fast, shows "[pasted]" in history)
+    --            'keys' (slower, shows full text in shell history)
+    send_mode = 'keys',
   },
 
   -- Telescope configuration
