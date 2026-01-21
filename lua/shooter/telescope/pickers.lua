@@ -74,8 +74,8 @@ function M.list_open_shots(opts)
   end
 
   local filename = vim.fn.fnamemodify(target_file, ':t')
-  local title = is_current and 'Open Shots (Tab/Space=select, c=clear, 1-4=send)'
-    or 'Open Shots from ' .. filename .. ' (Tab/Space=select, c=clear, 1-4=send)'
+  local title = is_current and 'Open Shots (Tab/Space=select, c=clear, 1-4=send, h=hide, q=quit)'
+    or 'Open Shots: ' .. filename .. ' (Tab/Space=select, c=clear, 1-4=send, h=hide, q=quit)'
 
   local picker_instance = pickers.new(opts, {
     prompt_title = title,
@@ -120,9 +120,15 @@ function M.list_open_shots(opts)
       map('n', '<C-n>', actions.move_selection_next)
       map('n', '<C-p>', actions.move_selection_previous)
 
-      -- Close with Ctrl-c or q in normal mode
+      -- Close with Ctrl-c or q in normal mode (clears selection)
       map('n', '<C-c>', actions.close)
       map('n', 'q', actions.close)
+
+      -- Hide with h (saves selection state for next open)
+      map('n', 'h', function()
+        helpers.save_selection_state(prompt_bufnr, target_file)
+        actions.close(prompt_bufnr)
+      end)
 
       -- Space toggles selection AND moves to next line (like Tab)
       map('n', '<space>', function()

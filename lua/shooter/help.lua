@@ -18,7 +18,9 @@ CORE COMMANDS:
   l     Last              Open last edited shooter file
   n     New               Create new shooter file
   o     Open Shots        Telescope picker for open shots (with multi-select)
-                          In telescope: Tab = select, 1-4 = send to claude, Enter = jump
+                          In telescope: Tab/Space = select, c = clear selection
+                            1-4 = send to claude, Enter = jump to shot
+                            h = hide (keeps selection), q = quit (clears selection)
   s     New Shot          Add new shot at top of current file
   t     Telescope         Telescope picker for all shooter files
                           In telescope (normal mode):
