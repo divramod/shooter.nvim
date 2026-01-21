@@ -1,5 +1,5 @@
 -- Shot history module for shooter.nvim
--- Saves every shot to ~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-<number>.md
+-- Saves every shot to ~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-<number>-<timestamp>.md
 
 local utils = require('shooter.utils')
 local config = require('shooter.config')
@@ -51,17 +51,23 @@ function M.format_shot_number(shot_num)
   return string.format('%04d', num)
 end
 
+-- Generate timestamp string for filenames (yyyymmdd_hhmmss)
+function M.get_file_timestamp()
+  return os.date('%Y%m%d_%H%M%S')
+end
+
 -- Build history file path for a shot
--- Returns: ~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-<number>.md
-function M.build_history_path(user, repo, source_filename, shot_num)
+-- Returns: ~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-<number>-<timestamp>.md
+function M.build_history_path(user, repo, source_filename, shot_num, timestamp)
   local base_dir = M.get_history_base_dir()
   local formatted_num = M.format_shot_number(shot_num)
+  timestamp = timestamp or M.get_file_timestamp()
 
   -- Remove extension from source filename
   local filename_base = utils.get_basename(source_filename)
 
   local dir_path = string.format('%s/%s/%s/%s', base_dir, user, repo, filename_base)
-  local file_path = string.format('%s/shot-%s.md', dir_path, formatted_num)
+  local file_path = string.format('%s/shot-%s-%s.md', dir_path, formatted_num, timestamp)
 
   return file_path, dir_path
 end
@@ -127,12 +133,7 @@ function M.save_sendable(full_message, shot_num, source_filepath)
   end
 
   local source_filename = utils.get_filename(source_filepath)
-  local base_dir = M.get_history_base_dir()
-  local formatted_num = M.format_shot_number(shot_num)
-  local filename_base = utils.get_basename(source_filename)
-
-  local dir_path = string.format('%s/%s/%s/%s', base_dir, user, repo, filename_base)
-  local file_path = string.format('%s/shot-%s.md', dir_path, formatted_num)
+  local file_path, dir_path = M.build_history_path(user, repo, source_filename, shot_num)
 
   -- Ensure directory exists
   utils.ensure_dir(dir_path)
@@ -184,6 +185,12 @@ function M.list_history()
   end
 
   return files
+end
+
+-- Re-export migration function from submodule
+function M.migrate_history_files()
+  local migrate = require('shooter.history.migrate')
+  return migrate.migrate_history_files()
 end
 
 return M

@@ -144,6 +144,13 @@ function M.setup()
     require('shooter.analytics').show_project()
   end, { desc = 'Show project shot analytics' })
 
+  -- History migration command
+  vim.api.nvim_create_user_command('ShooterMigrateHistory', function()
+    local history = require('shooter.history')
+    local migrated, skipped = history.migrate_history_files()
+    vim.notify(string.format('History migration: %d migrated, %d skipped', migrated, skipped))
+  end, { desc = 'Migrate history files to new timestamp format' })
+
   -- Load send/queue commands from submodule
   require('shooter.commands.send').setup()
 end
