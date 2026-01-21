@@ -106,11 +106,31 @@ M.defaults = {
 }
 
 -- Current configuration (will be merged with user config)
-M.current = vim.deepcopy(M.defaults)
+-- Initialize with a deep copy of defaults
+M.current = {}
+for k, v in pairs(M.defaults) do
+  if type(v) == 'table' then
+    M.current[k] = vim.deepcopy(v)
+  else
+    M.current[k] = v
+  end
+end
 
 -- Setup function to merge user config
 function M.setup(user_config)
-  M.current = vim.tbl_deep_extend('force', M.defaults, user_config or {})
+  -- Ensure we start with defaults
+  if not M.current or not M.current.paths then
+    M.current = {}
+    for k, v in pairs(M.defaults) do
+      if type(v) == 'table' then
+        M.current[k] = vim.deepcopy(v)
+      else
+        M.current[k] = v
+      end
+    end
+  end
+
+  M.current = vim.tbl_deep_extend('force', M.current, user_config or {})
   return M.current
 end
 

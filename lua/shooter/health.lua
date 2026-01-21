@@ -76,9 +76,18 @@ local function check_general_context()
   local config = require('shooter.config')
   local utils = require('shooter.utils')
 
+  -- Debug: check if M.current exists and has paths
+  local debug_info = string.format(
+    'Debug: M.current exists=%s, M.current.paths exists=%s',
+    tostring(config.current ~= nil),
+    tostring(config.current and config.current.paths ~= nil)
+  )
+  print(debug_info)
+
   local general_context_path = config.get('paths.general_context')
   if not general_context_path then
     vim.health.error('Config error: paths.general_context is nil')
+    vim.health.error(debug_info)
     return false
   end
 
@@ -240,6 +249,21 @@ end
 -- Main health check function
 function M.check()
   vim.health.start('shooter.nvim')
+
+  -- Check if plugin is initialized
+  local shooter = require('shooter')
+  if not shooter.is_initialized() then
+    vim.health.warn('shooter.nvim is not initialized', {
+      'Call require("shooter").setup() in your config',
+      'See :help shooter.nvim for setup instructions',
+    })
+    -- Try to initialize with defaults for health check purposes
+    local config = require('shooter.config')
+    if not config.current or not config.current.paths then
+      vim.health.error('Config module failed to initialize')
+      return
+    end
+  end
 
   -- Check dependencies
   vim.health.start('Dependencies')
