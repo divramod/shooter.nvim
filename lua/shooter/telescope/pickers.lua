@@ -134,7 +134,12 @@ function M.list_open_shots(opts)
       map('n', 'c', function()
         helpers.clear_selection(target_file)
         local picker = action_state.get_current_picker(prompt_bufnr)
-        picker:clear_multi_selection()
+        -- Clear internal multi-selection (drop_all resets the selection set)
+        if picker._multi and picker._multi.drop_all then
+          picker._multi:drop_all()
+        end
+        -- Refresh display to remove selection markers
+        picker:refresh(picker.finder, { reset_prompt = false })
         utils.echo('Selection cleared')
       end)
 
