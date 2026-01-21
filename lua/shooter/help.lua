@@ -49,7 +49,8 @@ QUEUE COMMANDS:
   Q     View Queue        Telescope picker to view and manage queued shots
 
 PANE VISIBILITY:
-  r1-4  Toggle Pane       Toggle visibility of tmux pane #1-4
+  r0-4  Toggle Pane       Toggle visibility of tmux pane #0-4
+                          Uses tmux pane indices (0-based, as shown in pane titles)
                           Hides pane to a background window, or shows it again
                           Useful to temporarily hide Claude to see more code
 

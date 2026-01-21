@@ -204,8 +204,8 @@ function M.setup()
     vim.cmd('Oil ' .. history_dir)
   end, { desc = 'Open history directory in Oil' })
 
-  -- Pane toggle commands (1-9)
-  for i = 1, 9 do
+  -- Pane toggle commands (0-9, using tmux pane indices)
+  for i = 0, 9 do
     vim.api.nvim_create_user_command('ShooterPaneToggle' .. i, function()
       require('shooter.tmux.panes').toggle(i)
     end, { desc = 'Toggle visibility of tmux pane ' .. i })

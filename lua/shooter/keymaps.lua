@@ -148,8 +148,9 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'Q', ':ShooterQueueView<cr>',
     vim.tbl_extend('force', opts, { desc = 'View queue' }))
 
-  -- Pane visibility toggle (1-4) - lowercase r
-  for i = 1, 4 do
+  -- Pane visibility toggle (0-4) - lowercase r
+  -- Uses tmux pane indices (0-based, as shown in pane titles)
+  for i = 0, 4 do
     vim.keymap.set('n', prefix .. 'r' .. tostring(i), ':ShooterPaneToggle' .. i .. '<cr>',
       vim.tbl_extend('force', opts, { desc = 'Toggle pane ' .. i .. ' visibility' }))
   end

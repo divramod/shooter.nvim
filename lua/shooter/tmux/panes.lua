@@ -1,5 +1,5 @@
 -- Tmux pane visibility toggle for shooter.nvim
--- Toggle panes in/out of view with <space>r1-4
+-- Toggle panes in/out of view with <space>r0-4
 
 local M = {}
 
@@ -15,14 +15,17 @@ local function get_current_window()
   return window_id and window_id ~= "" and window_id or nil
 end
 
--- Get pane ID by index (1-based, left-to-right order)
+-- Get pane ID by tmux index (0-based, as shown in pane titles)
 local function get_pane_id_by_index(index)
-  local detect = require('shooter.tmux.detect')
-  local panes = detect.list_all_panes()
-  if not panes or #panes < index then
-    return nil
-  end
-  return panes[index] and panes[index].id or nil
+  -- Use tmux's pane index directly: :.N means current window, pane N
+  local handle = io.popen(string.format(
+    "tmux display -p -t ':.%d' '#{pane_id}' 2>/dev/null",
+    index
+  ))
+  if not handle then return nil end
+  local pane_id = handle:read("*l")
+  handle:close()
+  return pane_id and pane_id ~= "" and pane_id or nil
 end
 
 -- Check if a window exists
