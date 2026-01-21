@@ -203,6 +203,10 @@ function M.list_open_shots(opts)
         end)
       end
 
+      -- Navigation with Ctrl-n/p in normal mode
+      map('n', '<C-n>', actions.move_selection_next)
+      map('n', '<C-p>', actions.move_selection_previous)
+
       return true
     end,
   })
