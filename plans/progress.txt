@@ -1,0 +1,78 @@
+# Implementation Progress Log
+
+This file contains implementation notes for shooter.nvim features.
+Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
+
+---
+
+[2026-01-21 21:45] Shot 227 - 2026-01-18 - nvim next action commands
+- Added tmux pane visibility toggle with <space>r1-4
+- Created lua/shooter/tmux/panes.lua:
+  * toggle(pane_index) - hides/shows pane by index
+  * is_hidden(pane_index) - checks if pane is currently hidden
+  * get_status() - returns all hidden pane states
+  * Uses tmux break-pane to hide (moves to background window)
+  * Uses tmux join-pane to show (brings back to current window)
+- Added ShooterPaneToggle1-9 commands
+- Keymaps: <space>r1-4 = toggle pane visibility
+- Moved resend commands to <space>R1-4 (uppercase R)
+- Added tests in tests/tmux/panes_spec.lua
+- Updated help.lua with new PANE VISIBILITY and RESEND sections
+
+[2026-01-21 21:40] Shot 226 - 2026-01-18 - nvim next action commands
+- Fixed munition import to ensure exactly one empty line after inserted shots
+- Problem: Multiple empty lines could appear after imported content
+- Fixed in lua/shooter/inbox/picker.lua:
+  * Trim trailing whitespace from shot_content with gsub('%s+$', '')
+  * Changed gmatch pattern from '[^\n]*' to '[^\n]+' (skip empty lines)
+  * Guarantees exactly one trailing empty line per shot
+
+[2026-01-21 21:35] Shot 222 - 2026-01-18 - nvim next action commands
+- Fixed munition import to always insert shots at line 3
+- Problem: Too many empty lines between title and first imported shot
+- Fixed in lua/shooter/inbox/picker.lua:
+  * Removed leading empty line from shot_lines array
+  * Added trailing empty line after content instead
+  * Ensure line 2 is empty between title and first shot
+  * Always insert at index 2 (line 3)
+- Format now: Line 1 = # Title, Line 2 = empty, Line 3 = ## shot N
+
+[2026-01-21 21:30] Shot 217 - 2026-01-18 - nvim next action commands
+- Fixed format of imported shots in munition feature
+- Problem: Multi-line content was being passed as single string
+- Fixed in lua/shooter/inbox/picker.lua:
+  * Split content into individual lines using gmatch('[^\n]*')
+  * Each line added separately to shot_lines array
+- Empty line now appears before each shot header as expected
+
+[2026-01-21 21:25] Shot 210 - 2026-01-18 - nvim next action commands
+- Added longest/shortest prompt statistics to analytics
+- Modified lua/shooter/analytics.lua:
+  * Extended calculate_stats() to track extremes for chars, words, sentences
+  * Each extreme tracks value, shot number, and source file
+  * Added "## Prompt Length Extremes" section to report
+- Added 3 tests in tests/core/analytics_spec.lua
+
+[2026-01-21 20:35] Shot 191 - 2026-01-18 - nvim next action commands
+- Added configurable sound notifications when shots are sent
+- Implementation in lua/shooter/sound.lua:
+  * play() - plays configured sound when enabled
+  * play_file(filepath, volume) - plays custom sound one-off
+  * test() - tests sound configuration
+- Added config options: sound.enabled, sound.file, sound.volume
+- Platform support: macOS (afplay), Linux (paplay)
+- Added ShooterSoundTest command
+- Added tests in tests/core/sound_spec.lua
+
+[2026-01-21 20:25] Shot 194 - 2026-01-18 - nvim next action commands
+- Added ShooterUndoLatestSent command and <space>u keybinding
+- Implementation in lua/shooter/core/shot_actions.lua:
+  * undo_latest_sent_shot() finds shot with latest timestamp
+  * Changes "## x shot N (timestamp)" back to "## shot N"
+- Added 3 tests in tests/core/shot_actions_spec.lua
+
+[2026-01-21 20:20] Shot 197 - 2026-01-18 - nvim next action commands
+- Added timestamp to history filenames: shot-<number>-<yyyymmdd>_<hhmmss>.md
+- Created history/migrate.lua for batch migration
+- Added ShooterMigrateHistory command
+- Added 25 tests in tests/core/history_spec.lua
