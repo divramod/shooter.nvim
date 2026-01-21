@@ -110,13 +110,33 @@ function M.save_selection_state(prompt_bufnr, target_file)
   M.persistent_selections[target_file] = selected_shots
 end
 
--- Restore selection from persistent storage
-function M.restore_selection_state(prompt_bufnr, target_file)
+-- Restore selection from persistent storage (with retry for timing issues)
+function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
+  retry_count = retry_count or 0
+  local max_retries = 5
+
   local saved = M.persistent_selections[target_file]
   if not saved or vim.tbl_isempty(saved) then return end
 
   local picker = action_state.get_current_picker(prompt_bufnr)
+  if not picker then
+    if retry_count < max_retries then
+      vim.defer_fn(function()
+        M.restore_selection_state(prompt_bufnr, target_file, retry_count + 1)
+      end, 50)
+    end
+    return
+  end
+
   local manager = picker.manager
+  if not manager or type(manager) ~= 'table' then
+    if retry_count < max_retries then
+      vim.defer_fn(function()
+        M.restore_selection_state(prompt_bufnr, target_file, retry_count + 1)
+      end, 50)
+    end
+    return
+  end
 
   for entry in manager:iter() do
     if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
