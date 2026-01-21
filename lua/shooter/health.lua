@@ -34,34 +34,45 @@ end
 
 -- Check if hal CLI is available (optional - for image picking)
 local function check_hal_cli()
-  local result = vim.fn.executable('hal')
-  if result ~= 1 then
+  if vim.fn.executable('hal') ~= 1 then
     vim.health.info('hal CLI not found', {
       'Optional: Install hal CLI for image picking with <space>g (ShooterImages)',
-      'hal image pick allows selecting images to reference in shots',
       'https://github.com/divramod/hal',
     })
     return false
   end
+  local handle = io.popen('hal --version 2>/dev/null')
+  local version = handle and handle:read('*l') or 'unknown'
+  if handle then handle:close() end
+  vim.health.ok(string.format('hal CLI: %s', version))
+  return true
+end
 
-  vim.health.ok('hal CLI is available (https://github.com/divramod/hal)')
+-- Check if running in iTerm
+local function check_iterm()
+  local term_program = os.getenv('TERM_PROGRAM')
+  if term_program ~= 'iTerm.app' then
+    vim.health.info('Not running in iTerm', { 'Current terminal: ' .. (term_program or 'unknown') })
+    return false
+  end
+  local version = os.getenv('TERM_PROGRAM_VERSION') or 'unknown'
+  vim.health.ok(string.format('iTerm: %s', version))
   return true
 end
 
 -- Check if tmux is installed
 local function check_tmux_installed()
-  local result = vim.fn.executable('tmux')
-  if result ~= 1 then
+  if vim.fn.executable('tmux') ~= 1 then
     vim.health.warn('tmux is not installed or not in PATH', {
       'Install tmux to send shots to Claude panes',
-      'macOS: brew install tmux',
-      'Ubuntu: sudo apt-get install tmux',
-      'https://github.com/tmux/tmux',
+      'macOS: brew install tmux | Ubuntu: sudo apt-get install tmux',
     })
     return false
   end
-
-  vim.health.ok('tmux is installed (https://github.com/tmux/tmux)')
+  local handle = io.popen('tmux -V 2>/dev/null')
+  local version = handle and handle:read('*l') or 'unknown'
+  if handle then handle:close() end
+  vim.health.ok(string.format('tmux: %s', version))
   return true
 end
 
@@ -295,6 +306,7 @@ function M.check()
 
   -- Check system dependencies
   vim.health.start('System Dependencies')
+  check_iterm()
   check_hal_cli()
   local tmux_installed = check_tmux_installed()
 
