@@ -151,20 +151,22 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
     return
   end
 
-  -- Add matching entries to multi-selection
-  local count = 0
+  -- Add matching entries to multi-selection and track their rows
+  local selected_rows = {}
+  local row = 1
   for entry in manager:iter() do
     if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
       picker._multi:add(entry)
-      count = count + 1
+      table.insert(selected_rows, { row = row, entry = entry })
     end
+    row = row + 1
   end
 
-  -- Force visual update by invalidating the results window
-  if count > 0 and picker.results_win and vim.api.nvim_win_is_valid(picker.results_win) then
-    vim.api.nvim_win_call(picker.results_win, function()
-      vim.cmd('redraw!')
-    end)
+  -- Apply multiselect highlighting to each selected row
+  if #selected_rows > 0 and picker.highlighter then
+    for _, sel in ipairs(selected_rows) do
+      picker.highlighter:hi_multiselect(sel.row, true)
+    end
   end
 end
 
