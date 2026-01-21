@@ -77,6 +77,11 @@ local function check_general_context()
   local utils = require('shooter.utils')
 
   local general_context_path = config.get('paths.general_context')
+  if not general_context_path then
+    vim.health.error('Config error: paths.general_context is nil')
+    return false
+  end
+
   local expanded_path = utils.expand_path(general_context_path)
 
   if not utils.file_exists(expanded_path) then
@@ -110,6 +115,11 @@ local function check_project_context()
   end
 
   local project_context_path = config.get('paths.project_context')
+  if not project_context_path then
+    vim.health.error('Config error: paths.project_context is nil')
+    return false
+  end
+
   local full_path = git_root .. '/' .. project_context_path
 
   if not utils.file_exists(full_path) then
@@ -133,6 +143,11 @@ local function check_prompts_directory()
   local utils = require('shooter.utils')
 
   local prompts_root = config.get('paths.prompts_root')
+  if not prompts_root then
+    vim.health.error('Config error: paths.prompts_root is nil')
+    return false
+  end
+
   local cwd = utils.cwd()
   local full_path = cwd .. '/' .. prompts_root
 
@@ -167,6 +182,11 @@ local function check_queue_file()
   local utils = require('shooter.utils')
 
   local queue_file_path = config.get('paths.queue_file')
+  if not queue_file_path then
+    vim.health.error('Config error: paths.queue_file is nil')
+    return false
+  end
+
   local cwd = utils.cwd()
   local full_path = cwd .. '/' .. queue_file_path
 
