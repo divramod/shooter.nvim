@@ -182,26 +182,26 @@ function M.import_actions(actions_to_import, source_filepath)
       end
     end
 
-    -- Insert shot at top (after title line)
+    -- Always insert at line 3 (after title on line 1 and empty line on line 2)
+    -- Format: Line 1 = # Title, Line 2 = empty, Line 3 = ## shot N
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local insert_line = 2 -- Default after first line
 
-    -- Find first shot or end of header section
-    for j, line in ipairs(lines) do
-      if line:match('^##%s+') then
-        insert_line = j
-        break
-      end
+    -- Ensure line 2 is empty (index 1)
+    if #lines < 2 then
+      vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { '' })
+    elseif lines[2] ~= '' then
+      vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { '' })
     end
 
-    -- Build shot lines with proper formatting
-    local shot_lines = { '', '## shot ' .. highest }
-    -- Split content into individual lines
+    -- Build shot lines: header + content + trailing empty line for next shot
+    local shot_lines = { '## shot ' .. highest }
     for line in shot_content:gmatch('[^\n]*') do
       table.insert(shot_lines, line)
     end
+    table.insert(shot_lines, '')  -- Empty line after content
 
-    vim.api.nvim_buf_set_lines(bufnr, insert_line - 1, insert_line - 1, false, shot_lines)
+    -- Insert at line 3 (index 2)
+    vim.api.nvim_buf_set_lines(bufnr, 2, 2, false, shot_lines)
     added = added + 1
   end
 
