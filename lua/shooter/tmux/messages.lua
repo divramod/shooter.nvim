@@ -93,7 +93,8 @@ function M.build_multishot_message(bufnr, shot_list)
   local instructions = templates.load_instructions(true)
   instructions = templates.replace_vars(instructions, vars)
 
-  local message = string.format([[# shots
+  local message = string.format([[# shots %s (%s)
+
 %s
 
 %s
@@ -105,6 +106,8 @@ function M.build_multishot_message(bufnr, shot_list)
 # Shooter project context (%s)
 
 %s]],
+    vars.shot_nums,
+    vars.file_title,
     all_shots_content,
     instructions,
     ctx.global_file,
