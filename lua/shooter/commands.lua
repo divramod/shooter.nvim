@@ -75,6 +75,10 @@ function M.setup()
     require('shooter.core.shot_actions').goto_latest_sent_shot()
   end, { desc = 'Go to latest sent shot' })
 
+  vim.api.nvim_create_user_command('ShooterUndoLatestSent', function()
+    require('shooter.core.shot_actions').undo_latest_sent_shot()
+  end, { desc = 'Undo marking of latest sent shot' })
+
   vim.api.nvim_create_user_command('ShooterHealth', function()
     vim.cmd('checkhealth shooter')
   end, { desc = 'Run shooter health check' })
@@ -144,12 +148,25 @@ function M.setup()
     require('shooter.analytics').show_project()
   end, { desc = 'Show project shot analytics' })
 
-  -- History migration command
+  -- History commands
   vim.api.nvim_create_user_command('ShooterMigrateHistory', function()
     local history = require('shooter.history')
     local migrated, skipped = history.migrate_history_files()
     vim.notify(string.format('History migration: %d migrated, %d skipped', migrated, skipped))
   end, { desc = 'Migrate history files to new timestamp format' })
+
+  vim.api.nvim_create_user_command('ShooterOpenHistory', function()
+    local history = require('shooter.history')
+    local utils = require('shooter.utils')
+    local user, repo = history.get_git_remote_info()
+    if not user or not repo then
+      local cwd = utils.cwd()
+      user, repo = 'local', utils.get_basename(cwd)
+    end
+    local history_dir = string.format('%s/%s/%s', history.get_history_base_dir(), user, repo)
+    vim.fn.mkdir(history_dir, 'p')
+    vim.cmd('Oil ' .. history_dir)
+  end, { desc = 'Open history directory in Oil' })
 
   -- Load send/queue commands from submodule
   require('shooter.commands.send').setup()

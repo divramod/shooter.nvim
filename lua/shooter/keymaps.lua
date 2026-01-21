@@ -35,6 +35,9 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'h', ':ShooterHelp<cr>',
     vim.tbl_extend('force', opts, { desc = 'Help' }))
 
+  vim.keymap.set('n', prefix .. 'i', ':ShooterOpenHistory<cr>',
+    vim.tbl_extend('force', opts, { desc = 'History (Oil)' }))
+
   vim.keymap.set('n', prefix .. 'l', ':ShooterLast<cr>',
     vim.tbl_extend('force', opts, { desc = 'Last file' }))
 
@@ -68,6 +71,9 @@ function M.setup()
 
   vim.keymap.set('n', prefix .. 'L', ':ShooterLatestSent<cr>',
     vim.tbl_extend('force', opts, { desc = 'Latest sent shot' }))
+
+  vim.keymap.set('n', prefix .. 'u', ':ShooterUndoLatestSent<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Undo latest sent marking' }))
 
   vim.keymap.set('n', prefix .. 'H', ':ShooterHealth<cr>',
     vim.tbl_extend('force', opts, { desc = 'Health check' }))

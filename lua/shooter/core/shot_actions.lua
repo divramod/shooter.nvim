@@ -346,4 +346,53 @@ function M.goto_latest_sent_shot()
   utils.echo('Latest sent: Shot ' .. shot_num .. ' (' .. latest_timestamp .. ')')
 end
 
+-- Undo the marking of the latest sent shot (change ## x shot ... back to ## shot ...)
+function M.undo_latest_sent_shot()
+  local bufnr = 0
+  local config = require('shooter.config')
+  local lines = utils.get_buf_lines(bufnr, 0, -1)
+
+  local latest_line = nil
+  local latest_timestamp = nil
+
+  for i, line in ipairs(lines) do
+    -- Match executed shot headers with timestamp
+    if line:match(config.get('patterns.executed_shot_header')) then
+      -- Extract timestamp: (YYYY-MM-DD HH:MM:SS)
+      local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
+      if timestamp then
+        if not latest_timestamp or timestamp > latest_timestamp then
+          latest_timestamp = timestamp
+          latest_line = i
+        end
+      end
+    end
+  end
+
+  if not latest_line then
+    utils.echo('No sent shots found to undo')
+    return
+  end
+
+  local line = lines[latest_line]
+  local shot_num = shots.parse_shot_header(line)
+
+  -- Remove x and timestamp → make open
+  -- Pattern: ## x shot N (date) → ## shot N
+  line = line:gsub('^(##)%s+x%s+shot', '%1 shot')
+  line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)%s*$', '')
+  utils.set_buf_lines(bufnr, latest_line - 1, latest_line, { line })
+
+  -- Move cursor to the undone shot
+  vim.api.nvim_win_set_cursor(0, { latest_line, 0 })
+
+  -- Save the file
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  if bufname ~= '' then
+    vim.cmd('write')
+  end
+
+  utils.echo('Undone marking: Shot ' .. shot_num .. ' is now open')
+end
+
 return M

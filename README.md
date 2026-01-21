@@ -18,6 +18,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 - [Shot Format](#shot-format)
 - [Health Check](#health-check)
 - [Tips](#tips)
+- [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Credits](#credits)
 
@@ -204,6 +205,7 @@ All keybindings use `<space>` prefix (customizable):
 | `<space>[` | Previous open shot |
 | `<space>.` | Toggle shot done/open |
 | `<space>L` | Go to latest sent shot |
+| `<space>u` | Undo latest sent shot marking |
 | `<space>H` | Run health check |
 
 ### Send to Claude
@@ -370,6 +372,20 @@ Validates:
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
 5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability. The shot file is saved to `~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-NNNN.md`. Note: This won't show blue like typed input in Claude Code, but Claude outputs the content at the start of each response for transparency.
+
+## Troubleshooting
+
+### Shot marked as sent but wasn't actually sent
+
+If a shot was marked as sent (header changed from `## shot N` to `## x shot N (timestamp)`) but the send failed due to a problem (e.g., tmux issue, Claude not responding), you have two options to undo the marking:
+
+1. **Native vim undo**: Press `u` in vim immediately after the marking happened. This will undo the header change like any other edit.
+
+2. **Undo latest sent command**: Press `<space>u` (or `:ShooterUndoLatestSent`) to automatically find and undo the marking of the most recently sent shot. This is useful if you've made other edits since the marking and can't use native undo. The command:
+   - Finds the shot with the most recent timestamp
+   - Changes `## x shot N (YYYY-MM-DD HH:MM:SS)` back to `## shot N`
+   - Saves the file
+   - Moves cursor to the undone shot
 
 ## License
 
