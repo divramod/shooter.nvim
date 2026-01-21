@@ -161,6 +161,16 @@ shooter.nvim/
 - `check_tmux_installed()` - Validate tmux exists
 - `check_claude_running()` - Validate Claude process
 
+#### create.lua (< 200 lines)
+**Responsibilities:**
+- Auto-create tmux panes with Claude
+- Wait for Claude to be ready
+
+**Key Functions:**
+- `create_claude_pane()` - Create new pane to the left and start Claude
+- `wait_for_claude(pane_id, timeout)` - Wait for Claude process to start
+- `find_or_create_claude_pane(pane_index)` - Find existing or create new pane
+
 #### send.lua (< 200 lines)
 **Responsibilities:**
 - Send text to tmux panes

@@ -7,6 +7,7 @@ local M = {}
 M.detect = require('shooter.tmux.detect')
 M.send = require('shooter.tmux.send')
 M.messages = require('shooter.tmux.messages')
+M.create = require('shooter.tmux.create')
 
 local operations = require('shooter.tmux.operations')
 

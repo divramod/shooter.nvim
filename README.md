@@ -113,7 +113,8 @@ use {
 3. **Send a shot to Claude** (in tmux):
    - Place cursor in shot 2
    - Press `<space>1` (or `:ShooterSend1`)
-   - Shot content + context is sent to tmux pane running Claude
+   - If no Claude pane exists, one is automatically created to the left
+   - Shot content + context is sent to Claude
 
 4. **View open shots**:
    ```

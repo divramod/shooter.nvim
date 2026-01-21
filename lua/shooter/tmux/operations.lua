@@ -20,14 +20,12 @@ local function mark_and_save(bufnr, shot_info, full_message)
   history.save_shot(shot_content, full_message, shot_num, filepath)
 end
 
--- Helper: Find pane or show error
+-- Helper: Find pane or create one, show error on failure
 local function find_pane_or_error(detect, pane_index)
-  local pane_id = detect.find_claude_pane(pane_index)
+  local create = require('shooter.tmux.create')
+  local pane_id, err = create.find_or_create_claude_pane(pane_index)
   if not pane_id then
-    local msg = pane_index == 1
-      and 'No tmux pane with claude found'
-      or string.format('No claude pane #%d found', pane_index)
-    utils.echo(msg)
+    utils.echo(err or 'Failed to find or create Claude pane')
     return nil
   end
   return pane_id
