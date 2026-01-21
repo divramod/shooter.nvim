@@ -6,7 +6,7 @@ local shots = require('shooter.core.shots')
 
 local M = {}
 
--- Find the insertion point for new shots (after title, before first shot)
+-- Find the insertion point for new shots (after title, before first shot or orphan text)
 -- Returns: insert_line, needs_blank_before (whether to add blank line before header)
 local function find_insertion_line(bufnr)
   local lines = utils.get_buf_lines(bufnr, 0, -1)
@@ -26,16 +26,42 @@ local function find_insertion_line(bufnr)
   end
 
   -- Find the first shot header after title
+  local first_shot_line = nil
   for i = title_line + 1, #lines do
     if lines[i]:match('^##%s+x?%s*shot') then
-      -- Check if there's already a blank line before this shot
-      local prev_line = lines[i - 1] or ''
-      local needs_blank = not prev_line:match('^%s*$')
-      return i, needs_blank
+      first_shot_line = i
+      break
     end
   end
 
-  -- No shots yet, check if there's a blank line after title
+  -- Check for orphan text between title and first shot (or end of file)
+  local search_end = first_shot_line and (first_shot_line - 1) or #lines
+  local orphan_start = nil
+
+  for i = title_line + 1, search_end do
+    local line = lines[i]
+    -- Non-blank text = orphan text (should become part of new shot)
+    if not line:match('^%s*$') then
+      orphan_start = i
+      break
+    end
+  end
+
+  if orphan_start then
+    -- Insert above orphan text so it becomes part of the new shot
+    local prev_line = lines[orphan_start - 1] or ''
+    local needs_blank = not prev_line:match('^%s*$')
+    return orphan_start, needs_blank
+  end
+
+  if first_shot_line then
+    -- Insert before first shot
+    local prev_line = lines[first_shot_line - 1] or ''
+    local needs_blank = not prev_line:match('^%s*$')
+    return first_shot_line, needs_blank
+  end
+
+  -- No shots and no orphan text, insert after title
   local next_line = lines[title_line + 1] or ''
   local needs_blank = not next_line:match('^%s*$')
   return title_line + 1, needs_blank
