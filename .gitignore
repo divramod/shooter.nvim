@@ -1,0 +1,25 @@
+# Vim swap files
+*.swp
+*.swo
+*~
+
+# Neovim data
+.nvim.lua
+
+# Test artifacts
+/tmp/
+*.log
+
+# Queue files (user-specific)
+.shot-queue.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Plugin manager directories
+pack/
+plugin/packer_compiled.lua
+
+# Luacheck cache
+.luacheckcache
