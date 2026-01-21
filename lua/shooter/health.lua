@@ -39,6 +39,7 @@ local function check_hal_cli()
     vim.health.info('hal CLI not found', {
       'Optional: Install hal CLI for image picking with <space>g (ShooterImages)',
       'hal image pick allows selecting images to reference in shots',
+      'https://github.com/divramod/hal',
     })
     return false
   end
@@ -55,6 +56,7 @@ local function check_tmux_installed()
       'Install tmux to send shots to Claude panes',
       'macOS: brew install tmux',
       'Ubuntu: sudo apt-get install tmux',
+      'https://github.com/tmux/tmux',
     })
     return false
   end
