@@ -50,6 +50,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 - tmux (for sending to AI panes)
 - Claude CLI or similar AI tool (optional, for send functionality)
 - [gp.nvim](https://github.com/Robitx/gp.nvim) (optional, for voice dictation with `<space>e`)
+- hal CLI (optional, for image picking with `<space>g`)
 
 ## Installation
 

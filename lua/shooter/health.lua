@@ -32,6 +32,21 @@ local function check_gp_nvim()
   return true
 end
 
+-- Check if hal CLI is available (optional - for image picking)
+local function check_hal_cli()
+  local result = vim.fn.executable('hal')
+  if result ~= 1 then
+    vim.health.info('hal CLI not found', {
+      'Optional: Install hal CLI for image picking with <space>g (ShooterImages)',
+      'hal image pick allows selecting images to reference in shots',
+    })
+    return false
+  end
+
+  vim.health.ok('hal CLI is available (image picking)')
+  return true
+end
+
 -- Check if tmux is installed
 local function check_tmux_installed()
   local result = vim.fn.executable('tmux')
@@ -275,6 +290,7 @@ function M.check()
   vim.health.start('Dependencies')
   check_telescope()
   check_gp_nvim()
+  check_hal_cli()
   local tmux_installed = check_tmux_installed()
 
   -- Check tmux environment (only if tmux is installed)
