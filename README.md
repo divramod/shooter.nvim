@@ -47,7 +47,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
     require('shooter').setup({
       -- Optional: override defaults
       paths = {
-        general_context = '~/.config/shooter.nvim/shooter-context-general.md',
+        global_context = '~/.config/shooter.nvim/shooter-context-global.md',
         prompts_root = 'plans/prompts',
       },
       keymaps = {
@@ -186,8 +186,8 @@ All keybindings use `<space>` prefix (customizable):
 ```lua
 require('shooter').setup({
   paths = {
-    -- General context (shared across projects)
-    general_context = '~/.config/shooter.nvim/shooter-context-general.md',
+    -- Global context (shared across projects)
+    global_context = '~/.config/shooter.nvim/shooter-context-global.md',
 
     -- Project context (at git root)
     project_context = '.shooter.nvim/shooter-context-project.md',
@@ -225,7 +225,7 @@ require('shooter').setup({
 
 Shooter.nvim injects context when sending shots to AI:
 
-1. **General Context** (`~/.config/shooter.nvim/shooter-context-general.md`)
+1. **General Context** (`~/.config/shooter.nvim/shooter-context-global.md`)
    - Shared across all projects
    - Your coding preferences, conventions, etc.
 
@@ -277,7 +277,7 @@ Validates:
 ## Tips
 
 1. **Multi-select shots**: In `:ShooterOpenShots`, press `Tab` to select multiple, then `1-4` to send all
-2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-general.md` to customize AI instructions
+2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-global.md` to customize AI instructions
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
 

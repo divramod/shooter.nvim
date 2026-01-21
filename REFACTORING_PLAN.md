@@ -97,7 +97,7 @@ Refactor the next-action functionality from dotfiles into a standalone, publisha
 ## Context File Migration
 
 ### Old Paths → New Paths
-- General: `~/dev/.ai/na-context-general.md` → `~/.config/shooter.nvim/shooter-context-general.md`
+- General: `~/dev/.ai/na-context-general.md` → `~/.config/shooter.nvim/shooter-context-global.md`
 - Project template: `~/dev/.ai/na-context-project-template.md` → `templates/shooter-context-project-template.md` (in plugin)
 - Project: `.ai/na-context.md` → `.shooter.nvim/shooter-context-project.md` (at git root)
 
@@ -115,7 +115,7 @@ Refactor the next-action functionality from dotfiles into a standalone, publisha
     require('shooter').setup({
       -- Optional: override defaults
       paths = {
-        general_context = '~/.config/shooter.nvim/shooter-context-general.md',
+        global_context = '~/.config/shooter.nvim/shooter-context-global.md',
       },
     })
   end,

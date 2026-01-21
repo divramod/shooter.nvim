@@ -1,5 +1,5 @@
 -- Context file management for shooter.nvim
--- Read and create general/project context files
+-- Read and create global/project context files
 
 local utils = require('shooter.utils')
 local config = require('shooter.config')
@@ -7,9 +7,9 @@ local files = require('shooter.core.files')
 
 local M = {}
 
--- Get general context file path
-function M.get_general_context_path()
-  return utils.expand_path(config.get('paths.general_context'))
+-- Get global context file path
+function M.get_global_context_path()
+  return utils.expand_path(config.get('paths.global_context'))
 end
 
 -- Get project context file path (at git root)
@@ -78,15 +78,15 @@ end
 
 -- Build context section for message
 function M.build_context_section()
-  local general_path = M.get_general_context_path()
+  local global_path = M.get_global_context_path()
   local project_path, err = M.get_or_create_project_context()
 
-  local general_content = M.read_context_file(general_path)
+  local global_content = M.read_context_file(global_path)
   local project_content = project_path and M.read_context_file(project_path) or '(No project context)'
 
   return {
-    general_file = general_path,
-    general_content = general_content,
+    global_file = global_path,
+    global_content = global_content,
     project_file = project_path or '(No project context file)',
     project_content = project_content,
   }
@@ -111,9 +111,9 @@ function M.read_message_template()
 3. you should explicitly not implement the old shots
 4. your current task is the shot {{shot_num}}
 
-# Shooter general context ({{general_context_file}})
+# Shooter global context ({{global_context_file}})
 
-{{general_context_content}}
+{{global_context_content}}
 
 # Shooter project context ({{project_context_file}})
 

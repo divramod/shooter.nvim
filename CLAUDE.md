@@ -107,7 +107,7 @@ shooter.nvim/
 - Build context sections for messages
 
 **Key Functions:**
-- `get_general_context_path()` - Return general context path
+- `get_global_context_path()` - Return global context path
 - `get_project_context_path()` - Return project context path (at git root)
 - `read_context_file(path)` - Safe read with fallback
 - `get_or_create_project_context()` - Create from template if missing
@@ -296,7 +296,7 @@ M.defaults = {
 - Project: `.ai/na-context.md` (at git root)
 
 ### New Paths
-- General: `~/.config/shooter.nvim/shooter-context-general.md`
+- General: `~/.config/shooter.nvim/shooter-context-global.md`
 - Project template: `templates/shooter-context-project-template.md` (in plugin)
 - Project: `.shooter.nvim/shooter-context-project.md` (at git root)
 
@@ -366,7 +366,7 @@ For users migrating from divramod's dotfiles:
 2. **Migrate context files**:
    ```bash
    mkdir -p ~/.config/shooter.nvim
-   cp ~/dev/.ai/na-context-general.md ~/.config/shooter.nvim/shooter-context-general.md
+   cp ~/dev/.ai/na-context-general.md ~/.config/shooter.nvim/shooter-context-global.md
    ```
 3. **Update project contexts**:
    ```bash

@@ -4,9 +4,9 @@
 3. you should explicitly not implement the old shots
 4. your current task is the shot {{shot_num}}
 
-# Shooter general context ({{general_context_file}})
+# Shooter global context ({{global_context_file}})
 
-{{general_context_content}}
+{{global_context_content}}
 
 # Shooter project context ({{project_context_file}})
 

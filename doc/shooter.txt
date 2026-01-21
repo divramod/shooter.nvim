@@ -82,7 +82,7 @@ Call `require('shooter').setup()` with your configuration:~
 >lua
     require('shooter').setup({
       paths = {
-        general_context = '~/.config/shooter.nvim/shooter-context-general.md',
+        global_context = '~/.config/shooter.nvim/shooter-context-global.md',
         project_context = '.shooter.nvim/shooter-context-project.md',
         prompts_root = 'plans/prompts',
         queue_file = 'plans/prompts/.shot-queue.json',
@@ -240,7 +240,7 @@ In Telescope pickers, use these keys:~
 Shooter.nvim injects context into messages sent to Claude:
 
 General Context:~
-  Location: ~/.config/shooter.nvim/shooter-context-general.md
+  Location: ~/.config/shooter.nvim/shooter-context-global.md
   Contains global instructions for all projects.
 
 Project Context:~

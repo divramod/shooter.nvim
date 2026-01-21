@@ -71,22 +71,22 @@ local function check_claude_process()
   return true
 end
 
--- Check general context file
-local function check_general_context()
+-- Check global context file
+local function check_global_context()
   local config = require('shooter.config')
   local utils = require('shooter.utils')
 
-  local general_context_path = config.get('paths.general_context')
-  if not general_context_path then
-    vim.health.error('Config error: paths.general_context is nil')
+  local global_context_path = config.get('paths.global_context')
+  if not global_context_path then
+    vim.health.error('Config error: paths.global_context is nil')
     return false
   end
 
-  local expanded_path = utils.expand_path(general_context_path)
+  local expanded_path = utils.expand_path(global_context_path)
 
   if not utils.file_exists(expanded_path) then
     vim.health.warn(
-      string.format('General context file not found: %s', general_context_path),
+      string.format('Global context file not found: %s', global_context_path),
       {
         'Create the file to provide global context for all projects',
         string.format('mkdir -p %s', vim.fn.fnamemodify(expanded_path, ':h')),
@@ -96,7 +96,7 @@ local function check_general_context()
     return false
   end
 
-  vim.health.ok(string.format('General context file exists: %s', general_context_path))
+  vim.health.ok(string.format('Global context file exists: %s', global_context_path))
   return true
 end
 
@@ -272,7 +272,7 @@ function M.check()
 
   -- Check context files
   vim.health.start('Context Files')
-  check_general_context()
+  check_global_context()
   check_project_context()
 
   -- Check directory structure

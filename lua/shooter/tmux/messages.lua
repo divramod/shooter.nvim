@@ -69,7 +69,7 @@ function M.build_shot_message(bufnr, shot_info)
 3. you should explicitly not implement the old shots.
 4. your current task is the shot %s.
 
-# Shooter general context (%s)
+# Shooter global context (%s)
 
 %s
 
@@ -83,8 +83,8 @@ function M.build_shot_message(bufnr, shot_info)
     title,
     filepath,
     shot_num,
-    ctx.general_file,
-    ctx.general_content,
+    ctx.global_file,
+    ctx.global_content,
     ctx.project_file,
     ctx.project_content
   )
@@ -131,7 +131,7 @@ function M.build_multishot_message(bufnr, shot_list)
 5. please figure out the best order of implementation.
 6. when you have many shots at once, create commits for each of the shots following the repositories git commit conventions.
 
-# Shooter general context (%s)
+# Shooter global context (%s)
 
 %s
 
@@ -142,8 +142,8 @@ function M.build_multishot_message(bufnr, shot_list)
     shots_str,
     title,
     filepath,
-    ctx.general_file,
-    ctx.general_content,
+    ctx.global_file,
+    ctx.global_content,
     ctx.project_file,
     ctx.project_content
   )
