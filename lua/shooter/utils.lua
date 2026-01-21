@@ -67,9 +67,9 @@ function M.escape_pattern(str)
   return vim.pesc(str)
 end
 
--- Get timestamp in YYYYMMDD_HHMM format
+-- Get timestamp in YYYY-MM-DD HH:MM:SS format
 function M.get_timestamp()
-  return os.date('%Y%m%d_%H%M')
+  return os.date('%Y-%m-%d %H:%M:%S')
 end
 
 -- Get date in YYYY-MM-DD format
