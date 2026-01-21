@@ -2,6 +2,7 @@
 -- Send shots, mark executed, save history
 
 local utils = require('shooter.utils')
+local sound = require('shooter.sound')
 
 local M = {}
 
@@ -104,6 +105,7 @@ function M.send_current_shot(pane_index, detect, send, messages)
     local file_title = files.get_file_title(bufnr)
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to claude%s (%s)', shot_num, pane_msg, file_title))
+    sound.play()
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
@@ -162,6 +164,7 @@ function M.send_all_shots(pane_index, detect, send, messages)
     local file_title = files.get_file_title(bufnr)
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to claude%s (%s)', #open_shots, pane_msg, file_title))
+    sound.play()
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
@@ -188,6 +191,7 @@ function M.send_visual_selection(pane_index, start_line, end_line, detect, send)
   if success then
     local pane_msg = pane_index == 1 and '' or string.format(' #%d', pane_index)
     utils.echo(string.format('Sent selection to claude%s (%d chars)', pane_msg, text_length))
+    sound.play()
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
