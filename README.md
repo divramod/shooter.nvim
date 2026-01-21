@@ -267,6 +267,12 @@ require('shooter').setup({
     prefix = ' ',  -- Main prefix
     move_prefix = 'm',  -- Move command prefix
   },
+
+  sound = {
+    enabled = true,  -- Play sound when shot is sent
+    file = '/System/Library/Sounds/Pop.aiff',  -- macOS system sound
+    volume = 0.5,  -- Volume 0.0-1.0
+  },
 })
 ```
 
