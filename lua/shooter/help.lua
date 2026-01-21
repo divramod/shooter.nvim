@@ -29,7 +29,6 @@ CORE COMMANDS:
                             dd = delete, Enter = open
   p     Oil               Open Oil file explorer in plans/prompts folder
   w     Write             Write all modified buffers
-  x     Quit              Write and quit current buffer
 
 SEND TO CLAUDE (single shot):
   1-4                     Send current shot to claude pane #1-4
