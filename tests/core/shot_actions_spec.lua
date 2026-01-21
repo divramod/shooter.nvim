@@ -243,4 +243,69 @@ describe('shot_actions module', function()
       assert.is_truthy(result[3]:match('^## x shot 1'))
     end)
   end)
+
+  describe('undo_latest_sent_shot', function()
+    it('undoes the marking of the latest sent shot', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 2 (2026-01-21 15:00:00)',
+        'Shot 2 content',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00)',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      shot_actions.undo_latest_sent_shot()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot 2 (latest timestamp) should be undone, shot 1 should remain done
+      assert.are.equal('## shot 2', result[3])
+      assert.is_truthy(result[6]:match('^## x shot 1'))
+    end)
+
+    it('does nothing when no sent shots exist', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## shot 1',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      shot_actions.undo_latest_sent_shot()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Nothing should change
+      assert.are.equal('## shot 1', result[3])
+    end)
+
+    it('correctly identifies latest by timestamp not by line order', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      -- Shot 1 has later timestamp but is lower in the file
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 2 (2026-01-21 10:00:00)',
+        'Shot 2 content',
+        '',
+        '## x shot 1 (2026-01-21 15:00:00)',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      shot_actions.undo_latest_sent_shot()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot 1 (latest timestamp) should be undone, shot 2 should remain done
+      assert.is_truthy(result[3]:match('^## x shot 2'))
+      assert.are.equal('## shot 1', result[6])
+    end)
+  end)
 end)

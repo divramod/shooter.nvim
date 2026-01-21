@@ -14,6 +14,7 @@ CORE COMMANDS:
   e     New Shot + Whisper  Create new shot and start voice recording
   g     Get Images        Insert image references (opens hal image pick)
   h     Help              Show this help message
+  i     History           Open shot history for current repo (Oil)
   l     Last              Open last edited shooter file
   n     New               Create new shooter file
   o     Open Shots        Telescope picker for open shots (with multi-select)
@@ -51,6 +52,15 @@ MOVE COMMANDS (prefix: <space>m):
   mt    Test              Move current file to prompts/test
   mw    Wait              Move current file to prompts/wait
 
+NAVIGATION & STATUS:
+  ]     Next Open Shot    Jump to next open (undone) shot
+  [     Prev Open Shot    Jump to previous open shot
+  .     Toggle Done       Toggle shot done/open status (adds/removes x and timestamp)
+  L     Latest Sent       Jump to most recently sent shot (by timestamp)
+  u     Undo Latest Sent  Undo the marking of the latest sent shot
+                          Changes ## x shot N (timestamp) back to ## shot N
+  H     Health Check      Run shooter health check
+
 OTHER COMMANDS:
   P     PRD List          List all tasks from plans/prd.json with preview
 
@@ -66,6 +76,14 @@ FOLDER STRUCTURE:
 CONTEXT FILES:
   ~/.config/shooter.nvim/shooter-context-global.md     <- Global instructions
   <repo>/.shooter.nvim/shooter-context-project.md      <- Project-specific
+
+HISTORY:
+  ~/.config/shooter.nvim/history/<user>/<repo>/        <- Shot history per repo
+
+TROUBLESHOOTING:
+  Shot marked but not sent?
+    - Press 'u' (vim undo) immediately if you haven't made other edits
+    - Or use <space>u to undo the latest sent shot marking any time
 
 Press 'q' to close this help window.
 ]]
