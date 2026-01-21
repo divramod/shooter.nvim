@@ -20,8 +20,14 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'd', ':ShooterDeleteLastShot<cr>',
     vim.tbl_extend('force', opts, { desc = 'Delete last shot' }))
 
-  vim.keymap.set('n', prefix .. 'e', ':ShooterNewShotWhisper<cr>',
+  vim.keymap.set('n', prefix .. 'S', ':ShooterNewShotWhisper<cr>',
     vim.tbl_extend('force', opts, { desc = 'New shot + whisper' }))
+
+  vim.keymap.set('n', prefix .. 'eg', ':ShooterEditGlobalContext<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Edit global context' }))
+
+  vim.keymap.set('n', prefix .. 'ep', ':ShooterEditProjectContext<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Edit project context' }))
 
   vim.keymap.set('n', prefix .. 'g', ':ShooterImages<cr>',
     vim.tbl_extend('force', opts, { desc = 'Get images' }))

@@ -18,22 +18,17 @@ function M.setup()
   vim.api.nvim_create_user_command('ShooterList', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_all_files()
-    if picker then
-      picker:find()
-    end
+    if picker then picker:find() end
   end, { desc = 'List all shooter files with Telescope' })
 
   vim.api.nvim_create_user_command('ShooterOpenShots', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_open_shots()
-    if picker then
-      picker:find()
-    end
+    if picker then picker:find() end
   end, { desc = 'List open shots in current file' })
 
   vim.api.nvim_create_user_command('ShooterHelp', function()
-    local help = require('shooter.help')
-    help.show()
+    require('shooter.help').show()
   end, { desc = 'Show shooter help' })
 
   vim.api.nvim_create_user_command('ShooterInbox', function()
@@ -41,10 +36,7 @@ function M.setup()
     local inbox_path = cwd .. '/INBOX.md'
     if vim.fn.filereadable(inbox_path) ~= 1 then
       local file = io.open(inbox_path, 'w')
-      if file then
-        file:write('# Inbox\n\n')
-        file:close()
-      end
+      if file then file:write('# Inbox\n\n'); file:close() end
     end
     vim.cmd('edit ' .. inbox_path)
   end, { desc = 'Open INBOX.md in repo root' })
@@ -52,44 +44,35 @@ function M.setup()
   vim.api.nvim_create_user_command('ShooterLast', function()
     local files = require('shooter.core.files')
     local last_file = files.get_last_edited_file()
-    if last_file then
-      vim.cmd('edit ' .. vim.fn.fnameescape(last_file))
-    end
+    if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
   end, { desc = 'Open last edited shooter file' })
 
   vim.api.nvim_create_user_command('ShooterNewShot', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.create_new_shot()
+    require('shooter.core.shot_actions').create_new_shot()
   end, { desc = 'Create new shot in current file' })
 
   vim.api.nvim_create_user_command('ShooterNewShotWhisper', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.create_new_shot_with_whisper()
+    require('shooter.core.shot_actions').create_new_shot_with_whisper()
   end, { desc = 'Create new shot and start whisper' })
 
   vim.api.nvim_create_user_command('ShooterDeleteLastShot', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.delete_last_shot()
+    require('shooter.core.shot_actions').delete_last_shot()
   end, { desc = 'Delete the last created shot' })
 
   vim.api.nvim_create_user_command('ShooterNextShot', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.goto_next_open_shot()
+    require('shooter.core.shot_actions').goto_next_open_shot()
   end, { desc = 'Go to next open shot' })
 
   vim.api.nvim_create_user_command('ShooterPrevShot', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.goto_prev_open_shot()
+    require('shooter.core.shot_actions').goto_prev_open_shot()
   end, { desc = 'Go to previous open shot' })
 
   vim.api.nvim_create_user_command('ShooterToggleDone', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.toggle_shot_done()
+    require('shooter.core.shot_actions').toggle_shot_done()
   end, { desc = 'Toggle shot done status' })
 
   vim.api.nvim_create_user_command('ShooterLatestSent', function()
-    local shot_actions = require('shooter.core.shot_actions')
-    shot_actions.goto_latest_sent_shot()
+    require('shooter.core.shot_actions').goto_latest_sent_shot()
   end, { desc = 'Go to latest sent shot' })
 
   vim.api.nvim_create_user_command('ShooterHealth', function()
@@ -97,93 +80,31 @@ function M.setup()
   end, { desc = 'Run shooter health check' })
 
   -- Movement commands
-  vim.api.nvim_create_user_command('ShooterArchive', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('archive')
-  end, { desc = 'Move file to archive folder' })
+  local function move_cmd(folder)
+    return function()
+      require('shooter.core.files').move_file_to_folder(folder)
+    end
+  end
 
-  vim.api.nvim_create_user_command('ShooterBacklog', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('backlog')
-  end, { desc = 'Move file to backlog folder' })
-
-  vim.api.nvim_create_user_command('ShooterDone', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('done')
-  end, { desc = 'Move file to done folder' })
-
-  vim.api.nvim_create_user_command('ShooterReqs', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('reqs')
-  end, { desc = 'Move file to reqs folder' })
-
-  vim.api.nvim_create_user_command('ShooterTest', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('test')
-  end, { desc = 'Move file to test folder' })
-
-  vim.api.nvim_create_user_command('ShooterWait', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('wait')
-  end, { desc = 'Move file to wait folder' })
-
-  vim.api.nvim_create_user_command('ShooterPrompts', function()
-    local files = require('shooter.core.files')
-    files.move_file_to_folder('')
-  end, { desc = 'Move file to prompts (in-progress)' })
+  vim.api.nvim_create_user_command('ShooterArchive', move_cmd('archive'), { desc = '→ archive' })
+  vim.api.nvim_create_user_command('ShooterBacklog', move_cmd('backlog'), { desc = '→ backlog' })
+  vim.api.nvim_create_user_command('ShooterDone', move_cmd('done'), { desc = '→ done' })
+  vim.api.nvim_create_user_command('ShooterReqs', move_cmd('reqs'), { desc = '→ reqs' })
+  vim.api.nvim_create_user_command('ShooterTest', move_cmd('test'), { desc = '→ test' })
+  vim.api.nvim_create_user_command('ShooterWait', move_cmd('wait'), { desc = '→ wait' })
+  vim.api.nvim_create_user_command('ShooterPrompts', move_cmd(''), { desc = '→ prompts' })
 
   vim.api.nvim_create_user_command('ShooterGitRoot', function()
-    local files = require('shooter.core.files')
-    files.move_to_git_root()
+    require('shooter.core.files').move_to_git_root()
   end, { desc = 'Move file to git root' })
-
-  -- Send commands (1-9)
-  for i = 1, 9 do
-    vim.api.nvim_create_user_command('ShooterSend' .. i, function()
-      local tmux = require('shooter.tmux')
-      tmux.send_current_shot(i)
-    end, { desc = 'Send current shot to pane ' .. i })
-
-    vim.api.nvim_create_user_command('ShooterSendAll' .. i, function()
-      local tmux = require('shooter.tmux')
-      tmux.send_all_shots(i)
-    end, { desc = 'Send all open shots to pane ' .. i })
-
-    vim.api.nvim_create_user_command('ShooterSendVisual' .. i, function(opts)
-      local tmux = require('shooter.tmux')
-      local start_line = opts.line1
-      local end_line = opts.line2
-      tmux.send_visual_selection(i, start_line, end_line)
-    end, { range = true, desc = 'Send visual selection to pane ' .. i })
-  end
-
-  -- Queue commands (1-4)
-  for i = 1, 4 do
-    vim.api.nvim_create_user_command('ShooterQueueAdd' .. i, function()
-      local queue = require('shooter.queue')
-      queue.add_to_queue(nil, i)
-    end, { desc = 'Add current shot to queue for pane ' .. i })
-  end
-
-  vim.api.nvim_create_user_command('ShooterQueueView', function()
-    local queue_picker = require('shooter.queue.picker')
-    queue_picker.show_queue()
-  end, { desc = 'View shot queue' })
-
-  vim.api.nvim_create_user_command('ShooterQueueClear', function()
-    local queue = require('shooter.queue')
-    queue.clear_queue()
-  end, { desc = 'Clear shot queue' })
 
   -- Other commands
   vim.api.nvim_create_user_command('ShooterImages', function()
-    local images = require('shooter.images')
-    images.insert_images()
+    require('shooter.images').insert_images()
   end, { desc = 'Insert image references' })
 
   vim.api.nvim_create_user_command('ShooterPrdList', function()
-    local prd = require('shooter.prd')
-    prd.list()
+    require('shooter.prd').list()
   end, { desc = 'List PRD tasks with preview' })
 
   vim.api.nvim_create_user_command('ShooterOpenPrompts', function()
@@ -192,6 +113,30 @@ function M.setup()
     vim.fn.mkdir(prompts_dir, 'p')
     vim.cmd('Oil ' .. prompts_dir)
   end, { desc = 'Open Oil in prompts folder' })
+
+  vim.api.nvim_create_user_command('ShooterEditGlobalContext', function()
+    local config = require('shooter.config')
+    local utils = require('shooter.utils')
+    local global_path = utils.expand_path(config.get('paths.global_context'))
+    vim.fn.mkdir(vim.fn.fnamemodify(global_path, ':h'), 'p')
+    vim.cmd('edit ' .. vim.fn.fnameescape(global_path))
+  end, { desc = 'Edit global shooter context file' })
+
+  vim.api.nvim_create_user_command('ShooterEditProjectContext', function()
+    local config = require('shooter.config')
+    local files = require('shooter.core.files')
+    local git_root = files.get_git_root()
+    if not git_root then
+      vim.notify('Not in a git repository', vim.log.levels.WARN)
+      return
+    end
+    local project_path = git_root .. '/' .. config.get('paths.project_context')
+    vim.fn.mkdir(vim.fn.fnamemodify(project_path, ':h'), 'p')
+    vim.cmd('edit ' .. vim.fn.fnameescape(project_path))
+  end, { desc = 'Edit project shooter context file' })
+
+  -- Load send/queue commands from submodule
+  require('shooter.commands.send').setup()
 end
 
 return M
