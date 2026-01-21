@@ -7,11 +7,12 @@ local keys = require('shooter.tmux.keys')
 local M = {}
 
 -- Prepare escape sequences for tmux send-keys
--- For Claude Code: C-c to cancel, C-u to clear line
+-- For Claude Code prompt (not vim editing)
 function M.prepare_escape_sequences(pane_id)
   local cmd_parts = {
+    -- Cancel any operation and clear line
     string.format("tmux send-keys -t %s C-c", pane_id),
-    "sleep 0.1",
+    "sleep 0.05",
     string.format("tmux send-keys -t %s C-u", pane_id),
     "sleep 0.1",
   }
