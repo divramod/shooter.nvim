@@ -113,13 +113,13 @@ end
 -- Restore selection from persistent storage (with retry for timing issues)
 function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
   retry_count = retry_count or 0
-  local max_retries = 5
+  local max_retries = 10
 
   local saved = M.persistent_selections[target_file]
   if not saved or vim.tbl_isempty(saved) then return end
 
   local picker = action_state.get_current_picker(prompt_bufnr)
-  if not picker then
+  if not picker or not picker._multi then
     if retry_count < max_retries then
       vim.defer_fn(function()
         M.restore_selection_state(prompt_bufnr, target_file, retry_count + 1)
@@ -138,9 +138,20 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
     return
   end
 
-  -- Add matching entries to multi-selection
-  if not picker._multi then return end
+  -- Check if entries are ready (manager has entries)
+  local has_entries = false
+  for _ in manager:iter() do
+    has_entries = true
+    break
+  end
+  if not has_entries and retry_count < max_retries then
+    vim.defer_fn(function()
+      M.restore_selection_state(prompt_bufnr, target_file, retry_count + 1)
+    end, 50)
+    return
+  end
 
+  -- Add matching entries to multi-selection
   local count = 0
   for entry in manager:iter() do
     if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
@@ -149,12 +160,11 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
     end
   end
 
-  -- Force full repaint of results to show selection markers
-  if count > 0 and picker.results_bufnr and vim.api.nvim_buf_is_valid(picker.results_bufnr) then
-    -- Trigger movement to force highlighter refresh on all visible entries
-    local actions = require('telescope.actions')
-    actions.move_selection_next(prompt_bufnr)
-    actions.move_selection_previous(prompt_bufnr)
+  -- Force visual update by invalidating the results window
+  if count > 0 and picker.results_win and vim.api.nvim_win_is_valid(picker.results_win) then
+    vim.api.nvim_win_call(picker.results_win, function()
+      vim.cmd('redraw!')
+    end)
   end
 end
 
