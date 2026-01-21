@@ -5,18 +5,11 @@ local M = {}
 
 -- Define highlight groups
 local function define_highlights()
-  -- Open shot: yellow-ish background
+  -- Open shot: yellow-ish background (done shots not highlighted)
   vim.api.nvim_set_hl(0, 'ShooterOpenShot', {
     bg = '#3d3d00',
     fg = '#ffff00',
     bold = true,
-  })
-
-  -- Done shot: green-ish/muted background
-  vim.api.nvim_set_hl(0, 'ShooterDoneShot', {
-    bg = '#1a3d1a',
-    fg = '#88aa88',
-    italic = true,
   })
 end
 
@@ -27,11 +20,8 @@ local function apply_syntax(bufnr)
   -- Clear existing matches for this buffer
   pcall(vim.fn.clearmatches)
 
-  -- Add match for open shots: ## shot N
+  -- Add match for open shots only: ## shot N (done shots not highlighted)
   vim.fn.matchadd('ShooterOpenShot', '^##\\s\\+shot\\s\\+\\d\\+.*$')
-
-  -- Add match for done shots: ## x shot N (date)
-  vim.fn.matchadd('ShooterDoneShot', '^##\\s\\+x\\s\\+shot\\s\\+\\d\\+.*$')
 end
 
 -- Check if file is a prompts file
