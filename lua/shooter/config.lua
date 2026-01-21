@@ -139,7 +139,8 @@ function M.get(path)
   -- Debug logging
   print(string.format('[config.get] path=%s, M.current exists=%s', path, tostring(M.current ~= nil)))
 
-  local keys = vim.split(path, '%.', { plain = true })
+  -- FIX: Use '.' not '%.' when plain = true
+  local keys = vim.split(path, '.', { plain = true })
   print(string.format('[config.get] split keys: %s', vim.inspect(keys)))
 
   local value = M.current
@@ -166,7 +167,8 @@ end
 
 -- Set config value by path
 function M.set(path, new_value)
-  local keys = vim.split(path, '%.', { plain = true })
+  -- FIX: Use '.' not '%.' when plain = true
+  local keys = vim.split(path, '.', { plain = true })
   local value = M.current
 
   for i = 1, #keys - 1 do
