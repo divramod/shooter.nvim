@@ -299,6 +299,16 @@ function M.check()
     end
   end
 
+  -- Check config file
+  vim.health.start('Configuration')
+  local utils = require('shooter.utils')
+  local config_path = utils.find_config_file()
+  if config_path then
+    vim.health.ok('Config file: ' .. config_path)
+  else
+    vim.health.info('Config file not found (searched ~/.config/nvim/lua/plugins/)')
+  end
+
   -- Check Neovim plugin dependencies
   vim.health.start('Neovim Plugins')
   check_telescope()

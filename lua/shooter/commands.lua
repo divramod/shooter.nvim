@@ -147,6 +147,16 @@ function M.setup()
     vim.cmd('edit ' .. vim.fn.fnameescape(project_path))
   end, { desc = 'Edit project shooter context file' })
 
+  vim.api.nvim_create_user_command('ShooterEditConfig', function()
+    local utils = require('shooter.utils')
+    local config_path = utils.find_config_file()
+    if not config_path then
+      vim.notify('Shooter config file not found. Check ~/.config/nvim/lua/plugins/', vim.log.levels.WARN)
+      return
+    end
+    vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
+  end, { desc = 'Edit shooter.nvim config file' })
+
   -- Analytics commands
   vim.api.nvim_create_user_command('ShooterAnalyticsGlobal', function()
     require('shooter.analytics').show_global()

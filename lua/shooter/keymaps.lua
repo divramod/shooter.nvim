@@ -29,6 +29,9 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'ep', ':ShooterEditProjectContext<cr>',
     vim.tbl_extend('force', opts, { desc = 'Edit project context' }))
 
+  vim.keymap.set('n', prefix .. 'ec', ':ShooterEditConfig<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Edit shooter config' }))
+
   vim.keymap.set('n', prefix .. 'g', ':ShooterImages<cr>',
     vim.tbl_extend('force', opts, { desc = 'Get images' }))
 

@@ -190,4 +190,30 @@ function M.fnameescape(path)
   return vim.fn.fnameescape(path)
 end
 
+-- Find shooter.nvim config file (searches common locations for lazy.nvim and packer)
+function M.find_config_file()
+  local nvim_config = vim.fn.stdpath('config')
+  local candidates = {
+    nvim_config .. '/lua/plugins/shooter.lua',  -- lazy.nvim
+    nvim_config .. '/lua/plugins/shooter/init.lua',
+    nvim_config .. '/lua/user/plugins/shooter.lua',
+    nvim_config .. '/after/plugin/shooter.lua',  -- packer after
+    nvim_config .. '/plugin/shooter.lua',
+  }
+  for _, path in ipairs(candidates) do
+    if M.file_exists(path) then return path end
+  end
+  -- Fallback: grep for shooter in plugins dir
+  local plugins_dir = nvim_config .. '/lua/plugins'
+  if M.dir_exists(plugins_dir) then
+    local handle = io.popen('grep -l "shooter" "' .. plugins_dir .. '"/*.lua 2>/dev/null | head -1')
+    if handle then
+      local result = handle:read('*l')
+      handle:close()
+      if result and result ~= '' then return result end
+    end
+  end
+  return nil
+end
+
 return M

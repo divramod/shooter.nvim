@@ -75,9 +75,14 @@ FOLDER STRUCTURE:
   plans/prompts/test/      <- testing
   plans/prompts/wait/      <- waiting/blocked
 
-CONTEXT FILES:
-  ~/.config/shooter.nvim/shooter-context-global.md     <- Global instructions
-  <repo>/.shooter.nvim/shooter-context-project.md      <- Project-specific
+CONTEXT & CONFIG:
+  ec    Edit Config       Edit shooter.nvim config file (auto-detected)
+  eg    Edit Global       Edit global context file
+  ep    Edit Project      Edit project context file
+
+  Config file:           ~/.config/nvim/lua/plugins/shooter.lua (lazy.nvim)
+  Global context:        ~/.config/shooter.nvim/shooter-context-global.md
+  Project context:       <repo>/.shooter.nvim/shooter-context-project.md
 
 HISTORY:
   ~/.config/shooter.nvim/history/<user>/<repo>/        <- Shot history per repo
