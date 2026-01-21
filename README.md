@@ -17,6 +17,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 - [File Structure](#file-structure)
 - [Shot Format](#shot-format)
 - [Health Check](#health-check)
+- [Sound Notifications](#sound-notifications)
 - [Tips](#tips)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
@@ -371,6 +372,39 @@ Validates:
 - Directory structure
 - Queue file integrity
 
+## Sound Notifications
+
+Shooter can play a sound when a shot is successfully sent. This is useful for audible feedback when you're not looking at the screen.
+
+**Configuration:**
+```lua
+sound = {
+  enabled = true,  -- Enable/disable sound
+  file = '/System/Library/Sounds/Pop.aiff',  -- Sound file path
+  volume = 0.5,  -- Volume (0.0-1.0)
+}
+```
+
+**Available macOS system sounds** (in `/System/Library/Sounds/`):
+- `Pop.aiff` (default) - short pop
+- `Glass.aiff` - glass clink
+- `Ping.aiff` - ping
+- `Tink.aiff` - light tap
+- `Blow.aiff`, `Bottle.aiff`, `Frog.aiff`, `Funk.aiff`, `Morse.aiff`, `Purr.aiff`, `Sosumi.aiff`, `Submarine.aiff`
+
+**Custom sound:** Use any `.aiff`, `.mp3`, or `.wav` file:
+```lua
+sound = {
+  enabled = true,
+  file = '~/.config/shooter.nvim/shot.mp3',
+  volume = 0.7,
+}
+```
+
+**Test sound:** Run `:ShooterSoundTest` to test your configuration.
+
+**Linux:** Uses `paplay` (PulseAudio) instead of `afplay`.
+
 ## Tips
 
 1. **Multi-select shots**: In `:ShooterOpenShots`, press `Tab` to select multiple, then `1-4` to send all
@@ -378,6 +412,7 @@ Validates:
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
 5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability. The shot file is saved to `~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-NNNN.md`. Note: This won't show blue like typed input in Claude Code, but Claude outputs the content at the start of each response for transparency.
+6. **Sound notifications**: Enable `sound.enabled = true` to hear a sound when shots are sent
 
 ## Troubleshooting
 
