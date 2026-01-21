@@ -177,10 +177,10 @@ function M.send_file_reference(pane_id, filepath)
     return false, "No filepath provided"
   end
 
-  -- Build command: C-c, C-u, type @filepath, Enter, Enter
+  -- Build command: C-u to clear line (NOT C-c which would exit Claude!), then @filepath
   local cmd = string.format(
-    "tmux send-keys -t %s C-c && sleep 0.05 && tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '@%s' && sleep 0.1 && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter",
-    pane_id, pane_id, pane_id, filepath, pane_id, pane_id
+    "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '@%s' && sleep 0.1 && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter",
+    pane_id, pane_id, filepath, pane_id, pane_id
   )
 
   local success, err = M.execute_tmux_command(cmd)

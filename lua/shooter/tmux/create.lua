@@ -99,8 +99,9 @@ function M.start_and_wait_for_claude(pane_id, message)
 
   if M.wait_for_claude(pane_id, 15000) then
     -- Give Claude time to fully initialize and show prompt
+    -- Claude takes ~5 seconds to load and display its greeting
     -- Use vim.wait with always-false condition for non-blocking delay
-    vim.wait(3000, function() return false end, 100)
+    vim.wait(5000, function() return false end, 100)
     utils.echo("Claude is ready")
     return pane_id, nil
   else
