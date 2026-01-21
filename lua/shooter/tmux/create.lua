@@ -53,8 +53,10 @@ function M.wait_for_claude(pane_id, timeout_ms)
         local tty_num = tty:match("ttys(%d+)")
         if tty_num then
           -- Check if Claude is running on this TTY
+          -- macOS ps shows "s009" format, tmux shows "/dev/ttys009"
+          -- So grep for anything ending in "s" + tty_num (matches s009, ttys009)
           local ps_handle = io.popen(string.format(
-            "ps aux | grep '[c]laude' | awk '{print $7}' | grep -q 'ttys%s' && echo 'yes'",
+            "ps aux | grep '[c]laude' | awk '{print $7}' | grep -q 's%s$' && echo 'yes'",
             tty_num
           ))
           if ps_handle then

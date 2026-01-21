@@ -74,8 +74,10 @@ function M.get_claude_ttys()
 
   local ttys = {}
   for tty in output:gmatch("[^\n]+") do
-    -- Extract tty number (e.g., ttys004 -> 004)
-    local tty_num = tty:match("ttys(%d+)")
+    -- Extract tty number - handle both formats:
+    -- macOS ps shows "s009" but tmux shows "/dev/ttys009"
+    -- So we need to match both "ttys009" -> "009" and "s009" -> "009"
+    local tty_num = tty:match("ttys(%d+)") or tty:match("^s(%d+)$")
     if tty_num then
       ttys[tty_num] = true
     end
