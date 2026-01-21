@@ -48,6 +48,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 - [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 - tmux (for sending to AI panes)
 - Claude CLI or similar AI tool (optional, for send functionality)
+- [gp.nvim](https://github.com/Robitx/gp.nvim) (optional, for voice dictation with `<space>e`)
 
 ## Installation
 
@@ -189,6 +190,7 @@ All keybindings use `<space>` prefix (customizable):
 | `<space>t` | Telescope file list |
 | `<space>l` | Open last file |
 | `<space>s` | New shot |
+| `<space>e` | New shot + whisper (requires gp.nvim) |
 | `<space>d` | Delete last shot |
 | `<space>h` | Help |
 

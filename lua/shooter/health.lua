@@ -17,6 +17,21 @@ local function check_telescope()
   return true
 end
 
+-- Check if gp.nvim is available (optional - for whisper dictation)
+local function check_gp_nvim()
+  local has_gp = vim.fn.exists(':GpWhisper') == 2
+  if not has_gp then
+    vim.health.info('gp.nvim (GpWhisper) not found', {
+      'Optional: Install gp.nvim for voice dictation with <space>e',
+      'https://github.com/Robitx/gp.nvim',
+    })
+    return false
+  end
+
+  vim.health.ok('gp.nvim (GpWhisper) is available')
+  return true
+end
+
 -- Check if tmux is installed
 local function check_tmux_installed()
   local result = vim.fn.executable('tmux')
@@ -259,6 +274,7 @@ function M.check()
   -- Check dependencies
   vim.health.start('Dependencies')
   check_telescope()
+  check_gp_nvim()
   local tmux_installed = check_tmux_installed()
 
   -- Check tmux environment (only if tmux is installed)
