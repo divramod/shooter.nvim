@@ -51,19 +51,19 @@ function M.create_new_shot()
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  -- Only add blank line before if there isn't one already
+  -- Structure: [blank before], header, blank, blank (cursor here)
   local lines_to_add
   local cursor_offset
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '' }
-    cursor_offset = 2
+    lines_to_add = { '', shot_header, '', '' }
+    cursor_offset = 3
   else
-    lines_to_add = { shot_header, '' }
-    cursor_offset = 1
+    lines_to_add = { shot_header, '', '' }
+    cursor_offset = 2
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  -- Position cursor on the blank line after header (ready to type)
+  -- Position cursor on the second blank line after header (with spacing above)
   vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
@@ -80,19 +80,19 @@ function M.create_new_shot_with_whisper()
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  -- Only add blank line before if there isn't one already
+  -- Structure: [blank before], header, blank, blank (cursor here)
   local lines_to_add
   local cursor_offset
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '' }
-    cursor_offset = 2
+    lines_to_add = { '', shot_header, '', '' }
+    cursor_offset = 3
   else
-    lines_to_add = { shot_header, '' }
-    cursor_offset = 1
+    lines_to_add = { shot_header, '', '' }
+    cursor_offset = 2
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  -- Position cursor on the blank line after header
+  -- Position cursor on the second blank line after header (with spacing above)
   vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
