@@ -10,6 +10,12 @@ function M.echo(msg)
   end)
 end
 
+-- Show notification using vim.notify
+function M.notify(msg, level)
+  level = level or vim.log.levels.INFO
+  vim.notify(msg, level)
+end
+
 -- Show regular echo message (may require Enter)
 function M.echo_regular(msg)
   vim.cmd('echo "' .. msg:gsub('"', '\\"') .. '"')
