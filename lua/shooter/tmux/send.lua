@@ -81,6 +81,8 @@ function M.build_send_command(pane_id, tmpfile, delay, include_escape_prep)
 
   if include_escape_prep then
     table.insert(cmd_parts, M.prepare_escape_sequences(pane_id))
+    -- Extra delay after escape sequences to ensure mode switch completes
+    table.insert(cmd_parts, "sleep 0.2")
   end
 
   table.insert(cmd_parts, string.format("tmux load-buffer %s", tmpfile))
@@ -152,7 +154,7 @@ function M.send_multishot_to_pane(pane_id, text)
   end
 
   local cmd = string.format(
-    "tmux send-keys -t %s Escape Escape i && sleep 0.1 && tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
+    "tmux send-keys -t %s Escape Escape i && sleep 0.2 && tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
     pane_id, tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
   )
 
