@@ -140,7 +140,10 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
 
   for entry in manager:iter() do
     if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
-      picker:add_selection(entry)
+      -- Use internal _multi:add instead of add_selection (which expects row number)
+      if picker._multi and picker._multi.add then
+        picker._multi:add(entry)
+      end
     end
   end
 end
