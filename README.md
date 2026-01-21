@@ -2,6 +2,24 @@
 
 A Neovim plugin for managing iterative development workflows with shots (numbered work items), tmux integration, and context-aware AI collaboration.
 
+## Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+- [Default Keybindings](#default-keybindings)
+- [Configuration](#configuration)
+- [Context Files](#context-files)
+- [Template System](#template-system)
+- [File Structure](#file-structure)
+- [Shot Format](#shot-format)
+- [Health Check](#health-check)
+- [Tips](#tips)
+- [License](#license)
+- [Credits](#credits)
+
 ## Features
 
 - 📝 **Shot-based workflow**: Break down features into numbered, executable shots
@@ -81,19 +99,19 @@ use {
    ```
    Enter a feature name when prompted. This creates a timestamped markdown file in `plans/prompts/`.
 
-2. **Add shots to your file**:
+2. **Add shots to your file** (latest shot at top):
    ```markdown
    # 2026-01-21 - Add user authentication
 
-   ## shot 1
-   Set up database schema for users table
-
    ## shot 2
    Create registration endpoint
+
+   ## shot 1
+   Set up database schema for users table
    ```
 
 3. **Send a shot to Claude** (in tmux):
-   - Place cursor in shot 1
+   - Place cursor in shot 2
    - Press `<space>1` (or `:ShooterSend1`)
    - Shot content + context is sent to tmux pane running Claude
 
@@ -289,17 +307,19 @@ plans/prompts/
 
 ## Shot Format
 
+Shots are ordered with the **latest at the top**:
+
 ```markdown
 # 2026-01-21 - Feature Title
 
-## shot 1
-Description of first task
-
-## x shot 2 (20260121_1430)
-Completed shot (marked with 'x' and timestamp)
-
 ## shot 3
 Next task to work on
+
+## x shot 2 (2026-01-21 14:30:00)
+Completed shot (marked with 'x' and timestamp)
+
+## x shot 1 (2026-01-21 10:00:00)
+First task (already done)
 ```
 
 ## Health Check
