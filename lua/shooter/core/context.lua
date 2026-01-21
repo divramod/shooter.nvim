@@ -7,6 +7,16 @@ local files = require('shooter.core.files')
 
 local M = {}
 
+-- Replace home directory with ~ for better readability
+local function shorten_home(path)
+  if not path then return "" end
+  local home = os.getenv('HOME')
+  if home and path:sub(1, #home) == home then
+    return '~' .. path:sub(#home + 1)
+  end
+  return path
+end
+
 -- Get global context file path
 function M.get_global_context_path()
   return utils.expand_path(config.get('paths.global_context'))
@@ -85,9 +95,9 @@ function M.build_context_section()
   local project_content = project_path and M.read_context_file(project_path) or '(No project context)'
 
   return {
-    global_file = global_path,
+    global_file = shorten_home(global_path),
     global_content = global_content,
-    project_file = project_path or '(No project context file)',
+    project_file = project_path and shorten_home(project_path) or '(No project context file)',
     project_content = project_content,
   }
 end

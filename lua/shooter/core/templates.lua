@@ -13,6 +13,16 @@ local function trim_trailing(content)
   return content:gsub('%s+$', '')
 end
 
+-- Replace home directory with ~ for better readability
+local function shorten_home(path)
+  if not path then return "" end
+  local home = os.getenv('HOME')
+  if home and path:sub(1, #home) == home then
+    return '~' .. path:sub(#home + 1)
+  end
+  return path
+end
+
 -- Get repository name from git remote or folder name
 function M.get_repo_name()
   local git_root = files.get_git_root()
@@ -93,13 +103,13 @@ function M.build_vars(bufnr, shot_num)
     shot_num = shot_num or "",
 
     -- File variables (prefix: file_)
-    file_path = filepath,
+    file_path = shorten_home(filepath),
     file_name = utils.get_filename(filepath),
     file_title = files.get_file_title(bufnr),
 
     -- Repository variables (prefix: repo_)
     repo_name = M.get_repo_name(),
-    repo_path = git_root or utils.cwd(),
+    repo_path = shorten_home(git_root or utils.cwd()),
   }
 end
 
@@ -127,18 +137,18 @@ function M.load_instructions(is_multishot)
   if not content then
     if is_multishot then
       content = [[# context
-1. these are shots {{shot_nums}} of the feature "{{file_title}}" in repo {{repo_name}}.
-2. please read the file {{file_path}} to get more context on what was prompted before.
-3. you should explicitly not implement the old shots.
-4. your current task is to implement all the shots above.
-5. please figure out the best order of implementation.
-6. when you have many shots at once, create commits for each of the shots following the repositories git commit conventions.]]
+1. These are shots {{shot_nums}} of the feature "{{file_title}}" in repo {{repo_name}}.
+2. Please read the file {{file_path}} to get more context on what was prompted before.
+3. You should explicitly not implement the old shots.
+4. Your current task is to implement all the shots above.
+5. Please figure out the best order of implementation.
+6. When you have many shots at once, create commits for each of the shots following the repositories git commit conventions.]]
     else
       content = [[# context
-1. this is shot {{shot_num}} of the feature "{{file_title}}" in repo {{repo_name}}.
-2. please read the file {{file_path}} to get more context on what was prompted before.
-3. you should explicitly not implement the old shots.
-4. your current task is the shot {{shot_num}}.]]
+1. This is shot {{shot_num}} of the feature "{{file_title}}" in repo {{repo_name}}.
+2. Please read the file {{file_path}} to get more context on what was prompted before.
+3. You should explicitly not implement the old shots.
+4. Your current task is the shot {{shot_num}}.]]
     end
   end
 
