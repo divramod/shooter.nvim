@@ -135,6 +135,15 @@ function M.setup()
     vim.cmd('edit ' .. vim.fn.fnameescape(project_path))
   end, { desc = 'Edit project shooter context file' })
 
+  -- Analytics commands
+  vim.api.nvim_create_user_command('ShooterAnalyticsGlobal', function()
+    require('shooter.analytics').show_global()
+  end, { desc = 'Show global shot analytics' })
+
+  vim.api.nvim_create_user_command('ShooterAnalyticsProject', function()
+    require('shooter.analytics').show_project()
+  end, { desc = 'Show project shot analytics' })
+
   -- Load send/queue commands from submodule
   require('shooter.commands.send').setup()
 end

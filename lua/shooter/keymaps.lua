@@ -72,6 +72,12 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'H', ':ShooterHealth<cr>',
     vim.tbl_extend('force', opts, { desc = 'Health check' }))
 
+  vim.keymap.set('n', prefix .. 'A', ':ShooterAnalyticsGlobal<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Global analytics' }))
+
+  vim.keymap.set('n', prefix .. 'a', ':ShooterAnalyticsProject<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Project analytics' }))
+
   -- Move commands (with move_prefix, e.g., <space>m)
   vim.keymap.set('n', prefix .. move_prefix .. 'a', ':ShooterArchive<cr>',
     vim.tbl_extend('force', opts, { desc = '→ archive' }))
