@@ -7,6 +7,7 @@ local shots = require('shooter.core.shots')
 local M = {}
 
 -- Find the insertion point for new shots (after title, before first shot)
+-- Returns: insert_line, needs_blank_before (whether to add blank line before header)
 local function find_insertion_line(bufnr)
   local lines = utils.get_buf_lines(bufnr, 0, -1)
 
@@ -21,36 +22,49 @@ local function find_insertion_line(bufnr)
 
   -- If no title, insert at line 1
   if not title_line then
-    return 1
+    return 1, true
   end
 
   -- Find the first shot header after title
   for i = title_line + 1, #lines do
     if lines[i]:match('^##%s+x?%s*shot') then
-      -- Insert before this shot (with blank line)
-      return i
+      -- Check if there's already a blank line before this shot
+      local prev_line = lines[i - 1] or ''
+      local needs_blank = not prev_line:match('^%s*$')
+      return i, needs_blank
     end
   end
 
-  -- No shots yet, insert after title with blank line
-  return title_line + 1
+  -- No shots yet, check if there's a blank line after title
+  local next_line = lines[title_line + 1] or ''
+  local needs_blank = not next_line:match('^%s*$')
+  return title_line + 1, needs_blank
 end
 
 -- Create a new shot at the top (below title, above other shots)
 function M.create_new_shot()
   local bufnr = 0
   local next_num = shots.get_next_shot_number(bufnr)
-  local insert_line = find_insertion_line(bufnr)
+  local insert_line, needs_blank_before = find_insertion_line(bufnr)
 
   -- Build the new shot header
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  local lines_to_add = { '', shot_header, '' }
+  -- Only add blank line before if there isn't one already
+  local lines_to_add
+  local cursor_offset
+  if needs_blank_before then
+    lines_to_add = { '', shot_header, '' }
+    cursor_offset = 2
+  else
+    lines_to_add = { shot_header, '' }
+    cursor_offset = 1
+  end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
   -- Position cursor on the blank line after header (ready to type)
-  vim.api.nvim_win_set_cursor(0, { insert_line + 2, 0 })
+  vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
   utils.echo('Created shot ' .. next_num)
@@ -60,17 +74,26 @@ end
 function M.create_new_shot_with_whisper()
   local bufnr = 0
   local next_num = shots.get_next_shot_number(bufnr)
-  local insert_line = find_insertion_line(bufnr)
+  local insert_line, needs_blank_before = find_insertion_line(bufnr)
 
   -- Build the new shot header
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  local lines_to_add = { '', shot_header, '' }
+  -- Only add blank line before if there isn't one already
+  local lines_to_add
+  local cursor_offset
+  if needs_blank_before then
+    lines_to_add = { '', shot_header, '' }
+    cursor_offset = 2
+  else
+    lines_to_add = { shot_header, '' }
+    cursor_offset = 1
+  end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
   -- Position cursor on the blank line after header
-  vim.api.nvim_win_set_cursor(0, { insert_line + 2, 0 })
+  vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
   -- Start whisper after a short delay to ensure insert mode is active
