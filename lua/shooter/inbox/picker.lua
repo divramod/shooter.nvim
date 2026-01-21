@@ -193,12 +193,16 @@ function M.import_actions(actions_to_import, source_filepath)
       vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { '' })
     end
 
-    -- Build shot lines: header + content + trailing empty line for next shot
+    -- Build shot lines: header + content + exactly one trailing empty line
     local shot_lines = { '## shot ' .. highest }
-    for line in shot_content:gmatch('[^\n]*') do
-      table.insert(shot_lines, line)
+    -- Trim content and split into lines, removing trailing empty lines
+    local trimmed_content = shot_content:gsub('%s+$', '')
+    if trimmed_content ~= '' then
+      for line in trimmed_content:gmatch('[^\n]+') do
+        table.insert(shot_lines, line)
+      end
     end
-    table.insert(shot_lines, '')  -- Empty line after content
+    shot_lines[#shot_lines + 1] = ''  -- Exactly one empty line after content
 
     -- Insert at line 3 (index 2)
     vim.api.nvim_buf_set_lines(bufnr, 2, 2, false, shot_lines)
