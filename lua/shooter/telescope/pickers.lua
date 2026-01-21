@@ -210,6 +210,9 @@ function M.list_open_shots(opts)
       -- Close with Ctrl-c in normal mode
       map('n', '<C-c>', actions.close)
 
+      -- Space toggles selection (prevents shooter keymaps from triggering)
+      map('n', '<space>', actions.toggle_selection)
+
       return true
     end,
   })
