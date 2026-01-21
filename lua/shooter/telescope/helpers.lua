@@ -151,23 +151,31 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
     return
   end
 
-  -- Add matching entries to multi-selection and track their rows
-  local selected_rows = {}
-  local row = 1
+  -- Find which rows need to be selected
+  local rows_to_select = {}
+  local row = 0
   for entry in manager:iter() do
     if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
-      picker._multi:add(entry)
-      table.insert(selected_rows, { row = row, entry = entry })
+      table.insert(rows_to_select, row)
     end
     row = row + 1
   end
 
-  -- Apply multiselect highlighting to each selected row
-  if #selected_rows > 0 and picker.highlighter then
-    for _, sel in ipairs(selected_rows) do
-      picker.highlighter:hi_multiselect(sel.row, true)
-    end
+  if #rows_to_select == 0 then return end
+
+  -- Use telescope actions to programmatically select each row
+  local actions = require('telescope.actions')
+  local current_row = picker:get_selection_row()
+
+  for _, target_row in ipairs(rows_to_select) do
+    -- Move to the target row
+    picker:set_selection(target_row)
+    -- Toggle selection (this properly updates both _multi and display)
+    actions.toggle_selection(prompt_bufnr)
   end
+
+  -- Return to original position (or first row if original is now selected)
+  picker:set_selection(current_row)
 end
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
