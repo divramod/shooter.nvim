@@ -31,6 +31,13 @@ local function find_pane_or_error(detect, pane_index)
   return pane_id
 end
 
+-- Check if shot is already executed (has x in header)
+local function is_shot_executed(bufnr, header_line)
+  local config = require('shooter.config')
+  local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
+  return header_text:match(config.get('patterns.executed_shot_header')) ~= nil
+end
+
 -- Send current shot to Claude pane using file reference (@filepath)
 function M.send_current_shot(pane_index, detect, send, messages)
   pane_index = pane_index or 1
@@ -54,6 +61,21 @@ function M.send_current_shot(pane_index, detect, send, messages)
   if not shot_start then
     utils.echo('No shot found at cursor position')
     return
+  end
+
+  -- Check if shot is already executed and ask for confirmation
+  if is_shot_executed(bufnr, header_line) then
+    local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
+    local shot_num = shots.parse_shot_header(header_text)
+    local choice = vim.fn.confirm(
+      string.format('Shot %s was already sent. Resend?', shot_num),
+      '&Yes\n&No',
+      2
+    )
+    if choice ~= 1 then
+      utils.echo('Resend cancelled')
+      return
+    end
   end
 
   local shot_info = { start_line = shot_start, end_line = shot_end, header_line = header_line }
