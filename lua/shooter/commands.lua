@@ -79,6 +79,14 @@ function M.setup()
     require('shooter.core.shot_actions').undo_latest_sent_shot()
   end, { desc = 'Undo marking of latest sent shot' })
 
+  vim.api.nvim_create_user_command('ShooterPrevSent', function()
+    require('shooter.core.shot_actions').goto_prev_sent_shot()
+  end, { desc = 'Go to previous (older) sent shot' })
+
+  vim.api.nvim_create_user_command('ShooterNextSent', function()
+    require('shooter.core.shot_actions').goto_next_sent_shot()
+  end, { desc = 'Go to next (newer) sent shot' })
+
   vim.api.nvim_create_user_command('ShooterHealth', function()
     vim.cmd('checkhealth shooter')
   end, { desc = 'Run shooter health check' })

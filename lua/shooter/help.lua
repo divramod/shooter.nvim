@@ -57,10 +57,11 @@ MOVE COMMANDS (prefix: <space>m):
 NAVIGATION & STATUS:
   ]     Next Open Shot    Jump to next open (undone) shot
   [     Prev Open Shot    Jump to previous open shot
+  }     Next Sent Shot    Jump to next (newer) sent shot by timestamp
+  {     Prev Sent Shot    Jump to previous (older) sent shot by timestamp
   .     Toggle Done       Toggle shot done/open status (adds/removes x and timestamp)
   L     Latest Sent       Jump to most recently sent shot (by timestamp)
   u     Undo Latest Sent  Undo the marking of the latest sent shot
-                          Changes ## x shot N (timestamp) back to ## shot N
   H     Health Check      Run shooter health check
 
 OTHER COMMANDS:

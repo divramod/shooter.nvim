@@ -75,6 +75,12 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'u', ':ShooterUndoLatestSent<cr>',
     vim.tbl_extend('force', opts, { desc = 'Undo latest sent marking' }))
 
+  vim.keymap.set('n', prefix .. '{', ':ShooterPrevSent<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Previous sent shot' }))
+
+  vim.keymap.set('n', prefix .. '}', ':ShooterNextSent<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Next sent shot' }))
+
   vim.keymap.set('n', prefix .. 'H', ':ShooterHealth<cr>',
     vim.tbl_extend('force', opts, { desc = 'Health check' }))
 
