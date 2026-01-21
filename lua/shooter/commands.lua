@@ -72,6 +72,16 @@ function M.setup()
     shot_actions.delete_last_shot()
   end, { desc = 'Delete the last created shot' })
 
+  vim.api.nvim_create_user_command('ShooterNextShot', function()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.goto_next_open_shot()
+  end, { desc = 'Go to next open shot' })
+
+  vim.api.nvim_create_user_command('ShooterPrevShot', function()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.goto_prev_open_shot()
+  end, { desc = 'Go to previous open shot' })
+
   -- Movement commands
   vim.api.nvim_create_user_command('ShooterArchive', function()
     local files = require('shooter.core.files')

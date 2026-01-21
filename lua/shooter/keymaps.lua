@@ -50,6 +50,13 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'P', ':ShooterPrdList<cr>',
     vim.tbl_extend('force', opts, { desc = 'PRD list tasks' }))
 
+  -- Shot navigation
+  vim.keymap.set('n', prefix .. ']', ':ShooterNextShot<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Next open shot' }))
+
+  vim.keymap.set('n', prefix .. '[', ':ShooterPrevShot<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Previous open shot' }))
+
   -- Move commands (with move_prefix, e.g., <space>m)
   vim.keymap.set('n', prefix .. move_prefix .. 'a', ':ShooterArchive<cr>',
     vim.tbl_extend('force', opts, { desc = '→ archive' }))
