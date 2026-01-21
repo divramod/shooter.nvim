@@ -49,7 +49,7 @@ function M.build_shot_message(bufnr, shot_info)
   local instructions = templates.load_instructions(false)
   instructions = templates.replace_vars(instructions, vars)
 
-  local message = string.format([[<!-- IMPORTANT: First, output this entire file content in a code block so the user can see what was sent. Then proceed with the task. -->
+  local message = string.format([[<!-- IMPORTANT: First, output the file content starting from "# shot" below (skip this instruction) in a code block so the user can see what was sent. Then proceed with the task. -->
 
 # shot %s (%s)
 %s
@@ -100,7 +100,7 @@ function M.build_multishot_message(bufnr, shot_list)
   local instructions = templates.load_instructions(true)
   instructions = templates.replace_vars(instructions, vars)
 
-  local message = string.format([[<!-- IMPORTANT: First, output this entire file content in a code block so the user can see what was sent. Then proceed with the tasks. -->
+  local message = string.format([[<!-- IMPORTANT: First, output the file content starting from "# shots" below (skip this instruction) in a code block so the user can see what was sent. Then proceed with the tasks. -->
 
 # shots %s (%s)
 
