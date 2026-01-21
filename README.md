@@ -203,6 +203,8 @@ All keybindings use `<space>` prefix (customizable):
 | `<space>]` | Next open shot |
 | `<space>[` | Previous open shot |
 | `<space>.` | Toggle shot done/open |
+| `<space>L` | Go to latest sent shot |
+| `<space>H` | Run health check |
 
 ### Send to Claude
 
