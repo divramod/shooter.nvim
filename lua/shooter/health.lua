@@ -286,10 +286,13 @@ function M.check()
     end
   end
 
-  -- Check dependencies
-  vim.health.start('Dependencies')
+  -- Check Neovim plugin dependencies
+  vim.health.start('Neovim Plugins')
   check_telescope()
   check_gp_nvim()
+
+  -- Check system dependencies
+  vim.health.start('System Dependencies')
   check_hal_cli()
   local tmux_installed = check_tmux_installed()
 
