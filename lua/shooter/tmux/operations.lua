@@ -243,6 +243,7 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
     local file_title = files.get_file_title(bufnr)
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to claude%s (%s)', #shot_infos, pane_msg, file_title))
+    sound.play()
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end

@@ -148,6 +148,10 @@ function M.setup()
     require('shooter.analytics').show_project()
   end, { desc = 'Show project shot analytics' })
 
+  vim.api.nvim_create_user_command('ShooterSoundTest', function()
+    require('shooter.sound').test()
+  end, { desc = 'Test shot sound' })
+
   -- History commands
   vim.api.nvim_create_user_command('ShooterMigrateHistory', function()
     local history = require('shooter.history')
