@@ -35,9 +35,19 @@ function M.get_history_base_dir()
   return utils.expand_path('~/.config/shooter.nvim/history')
 end
 
--- Format shot number with leading zeros (e.g., 7 -> "0007")
+-- Format shot number with leading zeros (e.g., 7 -> "0007", "170-169" -> "0170-0169")
 function M.format_shot_number(shot_num)
-  local num = tonumber(shot_num) or 0
+  local str = tostring(shot_num)
+  -- Handle multi-shot format (e.g., "170-169")
+  if str:match('%-') then
+    local parts = {}
+    for num in str:gmatch('([^-]+)') do
+      local n = tonumber(num) or 0
+      table.insert(parts, string.format('%04d', n))
+    end
+    return table.concat(parts, '-')
+  end
+  local num = tonumber(str) or 0
   return string.format('%04d', num)
 end
 
