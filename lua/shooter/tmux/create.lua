@@ -11,11 +11,16 @@ local M = {}
 local CLAUDE_CMD = 'claude -c --dangerously-skip-permissions'
 
 -- Start Claude in an existing shell pane
+-- Sends Ctrl-C first to handle vi mode and clear any pending input
 -- Returns true on success, false on failure
 function M.start_claude_in_pane(pane_id)
   if not pane_id then
     return false, "No pane ID provided"
   end
+  -- Send Ctrl-C to cancel any pending input (handles vi normal mode too)
+  -- Then Ctrl-U to clear the line, then the command
+  os.execute(string.format("tmux send-keys -t %s C-c C-u 2>/dev/null", pane_id))
+  vim.loop.sleep(100)  -- Brief pause for shell to process
   os.execute(string.format("tmux send-keys -t %s '%s' Enter 2>/dev/null", pane_id, CLAUDE_CMD))
   return true, nil
 end
