@@ -55,11 +55,9 @@ function M.build_shot_message(bufnr, shot_info)
 %s
 
 # Shooter global context (%s)
-
 %s
 
 # Shooter project context (%s)
-
 %s]],
     shot_num,
     vars.file_title,
