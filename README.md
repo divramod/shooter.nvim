@@ -4,6 +4,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 
 ## Table of Contents
 
+- [Terminology](#terminology)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -19,6 +20,15 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 - [Tips](#tips)
 - [License](#license)
 - [Credits](#credits)
+
+## Terminology
+
+| Term | Description |
+|------|-------------|
+| **Prompts File** | The markdown file you edit in Neovim containing multiple shots (e.g., `20260118_0516_feature.md`) |
+| **Shot** | A numbered work item within a prompts file (e.g., `## shot 5`) |
+| **Shot File** | The file sent to Claude via `@filepath` syntax, saved to `~/.config/shooter.nvim/history/` |
+| **Context File** | Global or project-specific instructions injected with each shot |
 
 ## Features
 
@@ -136,6 +146,9 @@ use {
 | `:ShooterHelp` | Show help |
 | `:ShooterLast` | Open last edited file |
 | `:ShooterNewShot` | Add new shot to current file |
+| `:ShooterDeleteLastShot` | Delete the last unexecuted shot |
+| `:ShooterNextShot` | Go to next open shot |
+| `:ShooterPrevShot` | Go to previous open shot |
 
 ### Send Commands
 
@@ -176,7 +189,15 @@ All keybindings use `<space>` prefix (customizable):
 | `<space>t` | Telescope file list |
 | `<space>l` | Open last file |
 | `<space>s` | New shot |
+| `<space>d` | Delete last shot |
 | `<space>h` | Help |
+
+### Navigation
+
+| Key | Action |
+|-----|--------|
+| `<space>]` | Next open shot |
+| `<space>[` | Previous open shot |
 
 ### Send to Claude
 
@@ -341,6 +362,7 @@ Validates:
 2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-global.md` to customize AI instructions
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
+5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability. The shot file is saved to `~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-NNNN.md`. Note: This won't show blue like typed input in Claude Code, but Claude outputs the content at the start of each response for transparency.
 
 ## License
 
