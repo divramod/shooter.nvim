@@ -4,15 +4,15 @@ local M = {}
 local action_state = require('telescope.actions.state')
 local utils = require('shooter.utils')
 
--- Persistent selection storage (file -> set of shot numbers)
-M.persistent_selections = {}
+-- Persistent state storage (file -> { selections = set of shot numbers, cursor_row = number })
+M.persistent_state = {}
 
--- Clear persistent selection for a file
+-- Clear persistent state for a file
 function M.clear_selection(filepath)
   if filepath then
-    M.persistent_selections[filepath] = nil
+    M.persistent_state[filepath] = nil
   else
-    M.persistent_selections = {}
+    M.persistent_state = {}
   end
 end
 
@@ -97,7 +97,7 @@ function M.make_shot_entry(shot, lines, target_file, is_current)
   }
 end
 
--- Save current multi-selection to persistent storage
+-- Save current multi-selection and cursor position to persistent storage
 function M.save_selection_state(prompt_bufnr, target_file)
   local picker = action_state.get_current_picker(prompt_bufnr)
   local multi = picker:get_multi_selection()
@@ -107,16 +107,22 @@ function M.save_selection_state(prompt_bufnr, target_file)
       selected_shots[entry.value.shot_num] = true
     end
   end
-  M.persistent_selections[target_file] = selected_shots
+  M.persistent_state[target_file] = {
+    selections = selected_shots,
+    cursor_row = picker:get_selection_row(),
+  }
 end
 
--- Restore selection from persistent storage (with retry for timing issues)
+-- Restore selection and cursor position from persistent storage (with retry)
 function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
   retry_count = retry_count or 0
   local max_retries = 10
 
-  local saved = M.persistent_selections[target_file]
-  if not saved or vim.tbl_isempty(saved) then return end
+  local state = M.persistent_state[target_file]
+  if not state then return end
+
+  local saved = state.selections
+  local saved_cursor = state.cursor_row
 
   local picker = action_state.get_current_picker(prompt_bufnr)
   if not picker or not picker._multi then
@@ -153,29 +159,29 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
 
   -- Find which rows need to be selected
   local rows_to_select = {}
-  local row = 0
-  for entry in manager:iter() do
-    if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
-      table.insert(rows_to_select, row)
+  if saved and not vim.tbl_isempty(saved) then
+    local row = 0
+    for entry in manager:iter() do
+      if entry.value and entry.value.shot_num and saved[entry.value.shot_num] then
+        table.insert(rows_to_select, row)
+      end
+      row = row + 1
     end
-    row = row + 1
   end
-
-  if #rows_to_select == 0 then return end
 
   -- Use telescope actions to programmatically select each row
-  local actions = require('telescope.actions')
-  local current_row = picker:get_selection_row()
-
-  for _, target_row in ipairs(rows_to_select) do
-    -- Move to the target row
-    picker:set_selection(target_row)
-    -- Toggle selection (this properly updates both _multi and display)
-    actions.toggle_selection(prompt_bufnr)
+  if #rows_to_select > 0 then
+    local actions = require('telescope.actions')
+    for _, target_row in ipairs(rows_to_select) do
+      picker:set_selection(target_row)
+      actions.toggle_selection(prompt_bufnr)
+    end
   end
 
-  -- Return to original position (or first row if original is now selected)
-  picker:set_selection(current_row)
+  -- Restore cursor to saved position
+  if saved_cursor then
+    picker:set_selection(saved_cursor)
+  end
 end
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
