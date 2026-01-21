@@ -193,10 +193,14 @@ function M.send_visual_selection(pane_index, start_line, end_line, detect, send)
   end
 end
 
--- Send specific shots to Claude pane (used by telescope multi-select)
+-- Send specific shots to Claude pane using file reference (used by telescope multi-select)
 function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, messages)
   pane_index = pane_index or 1
   bufnr = bufnr or utils.current_buf()
+
+  local files = require('shooter.core.files')
+  local shots = require('shooter.core.shots')
+  local history = require('shooter.history')
 
   if #shot_infos == 0 then
     utils.echo('No shots to send')
@@ -204,18 +208,37 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
   end
 
   local full_message = messages.build_multishot_message(bufnr, shot_infos)
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+
+  -- Build shot numbers string for filename
+  local shot_nums = {}
+  for _, shot_info in ipairs(shot_infos) do
+    local header_text = utils.get_buf_lines(bufnr, shot_info.header_line - 1, shot_info.header_line)[1]
+    local shot_num = shots.parse_shot_header(header_text)
+    table.insert(shot_nums, shot_num)
+  end
+  local shots_str = table.concat(shot_nums, '-')
+
+  -- Save message to sendable file
+  local sendable_path, save_err = history.save_sendable(full_message, shots_str, filepath)
+  if not sendable_path then
+    utils.echo('Failed to save sendable file: ' .. (save_err or 'unknown error'))
+    return
+  end
 
   local pane_id = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
 
-  local success, err, text_length = send.send_multishot_to_pane(pane_id, full_message)
+  -- Send file reference instead of pasting content
+  local success, err = send.send_file_reference(pane_id, sendable_path)
 
   if success then
     for _, shot_info in ipairs(shot_infos) do
       mark_and_save(bufnr, shot_info, full_message)
     end
-    local pane_msg = pane_index == 1 and '' or string.format(' #%d', pane_index)
-    utils.echo(string.format('Sent %d shots to claude%s (%d chars)', #shot_infos, pane_msg, text_length))
+    local file_title = files.get_file_title(bufnr)
+    local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
+    utils.echo(string.format('Sent %d shots to claude%s (%s)', #shot_infos, pane_msg, file_title))
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
