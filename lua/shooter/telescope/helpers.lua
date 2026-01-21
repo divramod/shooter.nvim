@@ -149,11 +149,12 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
     end
   end
 
-  -- Refresh the picker display to show selection markers
-  if count > 0 then
-    local row = picker:get_selection_row()
-    picker:get_status_updater(picker.prompt_bufnr, picker.results_bufnr)()
-    picker.highlighter:hi_multiselect(row, picker._multi:is_selected(picker:get_selection()))
+  -- Force full repaint of results to show selection markers
+  if count > 0 and picker.results_bufnr and vim.api.nvim_buf_is_valid(picker.results_bufnr) then
+    -- Trigger movement to force highlighter refresh on all visible entries
+    local actions = require('telescope.actions')
+    actions.move_selection_next(prompt_bufnr)
+    actions.move_selection_previous(prompt_bufnr)
   end
 end
 
