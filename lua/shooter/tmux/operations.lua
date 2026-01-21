@@ -80,7 +80,7 @@ function M.send_current_shot(pane_index, detect, send, messages)
   if success then
     mark_and_save(bufnr, shot_info, full_message)
     local pane_msg = pane_index == 1 and '' or string.format(' #%d', pane_index)
-    utils.echo(string.format('Sent shot %s to claude%s (@%s)', shot_num, pane_msg, sendable_path))
+    utils.echo(string.format('Sent shot %s%s', shot_num, pane_msg))
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
@@ -137,7 +137,7 @@ function M.send_all_shots(pane_index, detect, send, messages)
       mark_and_save(bufnr, shot_info, full_message)
     end
     local pane_msg = pane_index == 1 and '' or string.format(' #%d', pane_index)
-    utils.echo(string.format('Sent %d shots to claude%s (@file)', #open_shots, pane_msg))
+    utils.echo(string.format('Sent %d shots%s', #open_shots, pane_msg))
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
