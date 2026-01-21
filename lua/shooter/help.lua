@@ -82,6 +82,11 @@ CONTEXT FILES:
 HISTORY:
   ~/.config/shooter.nvim/history/<user>/<repo>/        <- Shot history per repo
 
+SOUND NOTIFICATIONS:
+  Enable sound when shots are sent (disabled by default):
+    sound = { enabled = true, file = '/System/Library/Sounds/Pop.aiff', volume = 0.5 }
+  Test with :ShooterSoundTest
+
 TROUBLESHOOTING:
   Shot marked but not sent?
     - Press 'u' (vim undo) immediately if you haven't made other edits
