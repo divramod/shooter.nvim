@@ -124,6 +124,12 @@ function M.setup()
   vim.keymap.set('n', prefix .. 'Q', ':ShooterQueueView<cr>',
     vim.tbl_extend('force', opts, { desc = 'View queue' }))
 
+  -- Resend latest shot commands (1-4)
+  for i = 1, 4 do
+    vim.keymap.set('n', prefix .. 'r' .. tostring(i), ':ShooterResend' .. i .. '<cr>',
+      vim.tbl_extend('force', opts, { desc = 'Resend latest to pane #' .. i }))
+  end
+
   -- Visual mode send commands (1-4)
   for i = 1, 4 do
     vim.keymap.set('v', prefix .. tostring(i), ':ShooterSendVisual' .. i .. '<cr>',

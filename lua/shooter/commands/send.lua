@@ -21,6 +21,11 @@ function M.setup()
       local end_line = opts.line2
       tmux.send_visual_selection(i, start_line, end_line)
     end, { range = true, desc = 'Send visual selection to pane ' .. i })
+
+    vim.api.nvim_create_user_command('ShooterResend' .. i, function()
+      local tmux = require('shooter.tmux')
+      tmux.resend_latest_shot(i)
+    end, { desc = 'Resend latest shot to pane ' .. i })
   end
 
   -- Queue commands (1-4)
