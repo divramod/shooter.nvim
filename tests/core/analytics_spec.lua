@@ -50,6 +50,33 @@ describe('analytics module', function()
       assert.is_true(found)
     end)
 
+    it('includes prompt length extremes section', function()
+      local lines = analytics.generate_report(nil)
+      local found = false
+      for _, line in ipairs(lines) do
+        if line:match('## Prompt Length Extremes') then found = true; break end
+      end
+      assert.is_true(found)
+    end)
+
+    it('includes longest prompts subsection', function()
+      local lines = analytics.generate_report(nil)
+      local found = false
+      for _, line in ipairs(lines) do
+        if line:match('### Longest Prompts') then found = true; break end
+      end
+      assert.is_true(found)
+    end)
+
+    it('includes shortest prompts subsection', function()
+      local lines = analytics.generate_report(nil)
+      local found = false
+      for _, line in ipairs(lines) do
+        if line:match('### Shortest Prompts') then found = true; break end
+      end
+      assert.is_true(found)
+    end)
+
     it('includes timestamp', function()
       local lines = analytics.generate_report(nil)
       local found = false
