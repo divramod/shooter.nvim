@@ -207,6 +207,9 @@ function M.list_open_shots(opts)
       map('n', '<C-n>', actions.move_selection_next)
       map('n', '<C-p>', actions.move_selection_previous)
 
+      -- Close with Ctrl-c in normal mode
+      map('n', '<C-c>', actions.close)
+
       return true
     end,
   })
