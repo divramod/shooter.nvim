@@ -86,7 +86,8 @@ function M.build_send_command(pane_id, tmpfile, delay, include_escape_prep)
   end
 
   table.insert(cmd_parts, string.format("tmux load-buffer %s", tmpfile))
-  table.insert(cmd_parts, string.format("tmux paste-buffer -t %s", pane_id))
+  -- Use -p for bracketed paste mode to prevent line-by-line interpretation
+  table.insert(cmd_parts, string.format("tmux paste-buffer -p -t %s", pane_id))
   table.insert(cmd_parts, string.format("sleep %.1f", delay))
   table.insert(cmd_parts, string.format("tmux send-keys -t %s Enter", pane_id))
   table.insert(cmd_parts, "sleep 0.1")
@@ -153,8 +154,9 @@ function M.send_multishot_to_pane(pane_id, text)
     return false, err, 0
   end
 
+  -- Use -p for bracketed paste mode to prevent line-by-line interpretation
   local cmd = string.format(
-    "tmux send-keys -t %s Escape Escape i && sleep 0.2 && tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
+    "tmux send-keys -t %s Escape Escape i && sleep 0.2 && tmux load-buffer %s && tmux paste-buffer -p -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
     pane_id, tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
   )
 
