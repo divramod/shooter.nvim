@@ -7,15 +7,12 @@ local keys = require('shooter.tmux.keys')
 local M = {}
 
 -- Prepare escape sequences for tmux send-keys
+-- For Claude Code: C-c to cancel, C-u to clear line
 function M.prepare_escape_sequences(pane_id)
   local cmd_parts = {
-    string.format("tmux send-keys -t %s Escape Escape Escape", pane_id),
-    "sleep 0.1",
     string.format("tmux send-keys -t %s C-c", pane_id),
     "sleep 0.1",
     string.format("tmux send-keys -t %s C-u", pane_id),
-    "sleep 0.1",
-    string.format("tmux send-keys -t %s Escape Escape i", pane_id),
     "sleep 0.1",
   }
   return table.concat(cmd_parts, " && ")
@@ -152,8 +149,8 @@ function M.send_multishot_to_pane(pane_id, text)
   end
 
   local cmd = string.format(
-    "tmux send-keys -t %s Escape Escape i && sleep 0.1 && tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
-    pane_id, tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
+    "tmux send-keys -t %s C-c && sleep 0.1 && tmux send-keys -t %s C-u && sleep 0.1 && tmux load-buffer %s && tmux paste-buffer -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter && rm %s",
+    pane_id, pane_id, tmpfile, pane_id, delay, pane_id, pane_id, tmpfile
   )
 
   local success, cmd_err = M.execute_tmux_command(cmd)

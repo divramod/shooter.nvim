@@ -22,8 +22,10 @@ function M.send(pane_id, text)
   local lines = vim.split(text, '\n', { plain = true })
   local script_parts = {}
 
-  -- Initial escape sequence to ensure clean state
-  table.insert(script_parts, string.format("tmux send-keys -t %s Escape Escape i", pane_id))
+  -- Initial escape sequence to ensure clean state (C-c cancels, C-u clears line)
+  table.insert(script_parts, string.format("tmux send-keys -t %s C-c", pane_id))
+  table.insert(script_parts, "sleep 0.05")
+  table.insert(script_parts, string.format("tmux send-keys -t %s C-u", pane_id))
   table.insert(script_parts, "sleep 0.05")
 
   for i, line in ipairs(lines) do
