@@ -56,7 +56,11 @@ local function calculate_stats(shots)
   local bounds = get_time_boundaries()
   local stats = { total = #shots, today = 0, this_week = 0, this_month = 0, this_year = 0,
     by_project = {}, total_chars = 0, total_words = 0, total_sentences = 0, time_diffs = {},
-    by_file = { today = {}, week = {}, month = {}, year = {}, alltime = {} } }
+    by_file = { today = {}, week = {}, month = {}, year = {}, alltime = {} },
+    -- Track extremes for prompt length
+    longest_chars = nil, shortest_chars = nil,
+    longest_words = nil, shortest_words = nil,
+    longest_sentences = nil, shortest_sentences = nil }
   local prev_time = nil
   for _, shot in ipairs(shots) do
     local t = shot.time or 0
@@ -69,6 +73,37 @@ local function calculate_stats(shots)
     stats.total_chars = stats.total_chars + (shot.chars or 0)
     stats.total_words = stats.total_words + (shot.words or 0)
     stats.total_sentences = stats.total_sentences + (shot.sentences or 0)
+
+    -- Track longest/shortest prompts
+    local chars, words, sents = shot.chars or 0, shot.words or 0, shot.sentences or 0
+    local shot_id = string.format('shot %s', shot.shot or '?')
+    local short_src = shot.source and shot.source:match('[^/]+$') or 'unknown'
+
+    if chars > 0 then
+      if not stats.longest_chars or chars > stats.longest_chars.value then
+        stats.longest_chars = { value = chars, shot = shot_id, source = short_src }
+      end
+      if not stats.shortest_chars or chars < stats.shortest_chars.value then
+        stats.shortest_chars = { value = chars, shot = shot_id, source = short_src }
+      end
+    end
+    if words > 0 then
+      if not stats.longest_words or words > stats.longest_words.value then
+        stats.longest_words = { value = words, shot = shot_id, source = short_src }
+      end
+      if not stats.shortest_words or words < stats.shortest_words.value then
+        stats.shortest_words = { value = words, shot = shot_id, source = short_src }
+      end
+    end
+    if sents > 0 then
+      if not stats.longest_sentences or sents > stats.longest_sentences.value then
+        stats.longest_sentences = { value = sents, shot = shot_id, source = short_src }
+      end
+      if not stats.shortest_sentences or sents < stats.shortest_sentences.value then
+        stats.shortest_sentences = { value = sents, shot = shot_id, source = short_src }
+      end
+    end
+
     -- Track shots per source file by time period
     local src = shot.source
     if src then
@@ -137,6 +172,37 @@ function M.generate_report(project_filter)
   if #stats.time_diffs > 0 then
     local sum = 0; for _, d in ipairs(stats.time_diffs) do sum = sum + d end
     add(string.format('- **Avg time between shots**: %s', format_duration(sum / #stats.time_diffs)))
+  end
+  add('')
+
+  -- Prompt length extremes section
+  add('## Prompt Length Extremes'); add('')
+  add('### Longest Prompts')
+  if stats.longest_chars then
+    add(string.format('- **By Characters**: %d chars (%s in %s)',
+      stats.longest_chars.value, stats.longest_chars.shot, stats.longest_chars.source))
+  end
+  if stats.longest_words then
+    add(string.format('- **By Words**: %d words (%s in %s)',
+      stats.longest_words.value, stats.longest_words.shot, stats.longest_words.source))
+  end
+  if stats.longest_sentences then
+    add(string.format('- **By Sentences**: %d sentences (%s in %s)',
+      stats.longest_sentences.value, stats.longest_sentences.shot, stats.longest_sentences.source))
+  end
+  add('')
+  add('### Shortest Prompts')
+  if stats.shortest_chars then
+    add(string.format('- **By Characters**: %d chars (%s in %s)',
+      stats.shortest_chars.value, stats.shortest_chars.shot, stats.shortest_chars.source))
+  end
+  if stats.shortest_words then
+    add(string.format('- **By Words**: %d words (%s in %s)',
+      stats.shortest_words.value, stats.shortest_words.shot, stats.shortest_words.source))
+  end
+  if stats.shortest_sentences then
+    add(string.format('- **By Sentences**: %d sentences (%s in %s)',
+      stats.shortest_sentences.value, stats.shortest_sentences.shot, stats.shortest_sentences.source))
   end
   add('')
 

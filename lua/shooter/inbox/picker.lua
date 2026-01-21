@@ -74,10 +74,8 @@ function M.show_action_picker(filepath)
   local action_state = require('telescope.actions.state')
   local previewers = require('telescope.previewers')
 
-  local selected = {}
-
   pickers.new({}, {
-    prompt_title = 'Select Next Actions (Tab/Space=select, Enter=import)',
+    prompt_title = 'Select Actions (Tab/Space=select, Enter=import)',
     finder = finders.new_table({
       results = next_actions,
       entry_maker = function(entry)
@@ -101,37 +99,31 @@ function M.show_action_picker(filepath)
     }),
     layout_strategy = 'vertical',
     layout_config = { width = 0.9, height = 0.9, preview_height = 0.5 },
+    initial_mode = 'normal',
     attach_mappings = function(prompt_bufnr, map)
-      -- Toggle selection with Tab or Space
-      local function toggle_selection()
-        local entry = action_state.get_selected_entry()
-        if entry then
-          local key = entry.value.start_line
-          if selected[key] then
-            selected[key] = nil
-          else
-            selected[key] = entry.value
-          end
-        end
+      -- Toggle selection with Tab (use telescope's built-in)
+      map('n', '<Tab>', function()
+        actions.toggle_selection(prompt_bufnr)
         actions.move_selection_next(prompt_bufnr)
-      end
-
-      map('i', '<Tab>', toggle_selection)
-      map('n', '<Tab>', toggle_selection)
-      map('i', '<Space>', toggle_selection)
-      map('n', '<Space>', toggle_selection)
+      end)
+      -- Space also toggles selection and moves down
+      map('n', '<space>', function()
+        actions.toggle_selection(prompt_bufnr)
+        actions.move_selection_next(prompt_bufnr)
+      end)
 
       -- Import selected actions on Enter
       actions.select_default:replace(function()
         local picker = action_state.get_current_picker(prompt_bufnr)
+        local multi = picker:get_multi_selection()
 
-        -- If nothing selected, use current entry
         local to_import = {}
-        for _, action in pairs(selected) do
-          table.insert(to_import, action)
-        end
-
-        if #to_import == 0 then
+        if #multi > 0 then
+          for _, entry in ipairs(multi) do
+            table.insert(to_import, entry.value)
+          end
+        else
+          -- No multi-selection, use current entry
           local entry = action_state.get_selected_entry()
           if entry then
             table.insert(to_import, entry.value)
@@ -152,7 +144,6 @@ end
 
 -- Import selected actions as new shots and remove from source
 function M.import_actions(actions_to_import, source_filepath)
-  local shot_actions = require('shooter.core.shot_actions')
   local shots = require('shooter.core.shots')
 
   -- Sort by start_line descending (so we remove from bottom first)
@@ -168,8 +159,8 @@ function M.import_actions(actions_to_import, source_filepath)
     return
   end
 
-  -- Find highest shot number
-  local highest = shots.find_highest_shot_number(bufnr) or 0
+  -- Find highest shot number (get_next_shot_number returns max + 1, so subtract 1)
+  local highest = shots.get_next_shot_number(bufnr) - 1
 
   -- Add shots in reverse order (so first selected becomes highest number)
   local added = 0
