@@ -32,8 +32,8 @@ function M.setup()
   end, { desc = 'List open shots in current file' })
 
   vim.api.nvim_create_user_command('ShooterHelp', function()
-    -- TODO: Implement help display
-    vim.notify('ShooterHelp not yet implemented', vim.log.levels.INFO)
+    local help = require('shooter.help')
+    help.show()
   end, { desc = 'Show shooter help' })
 
   vim.api.nvim_create_user_command('ShooterInbox', function()
@@ -153,13 +153,13 @@ function M.setup()
 
   -- Other commands
   vim.api.nvim_create_user_command('ShooterImages', function()
-    -- TODO: Implement image insertion
-    vim.notify('ShooterImages not yet implemented', vim.log.levels.INFO)
+    local images = require('shooter.images')
+    images.insert_images()
   end, { desc = 'Insert image references' })
 
   vim.api.nvim_create_user_command('ShooterPrdList', function()
-    -- TODO: Implement PRD list picker
-    vim.notify('ShooterPrdList not yet implemented', vim.log.levels.INFO)
+    local prd = require('shooter.prd')
+    prd.list()
   end, { desc = 'List PRD tasks with preview' })
 
   vim.api.nvim_create_user_command('ShooterOpenPrompts', function()
