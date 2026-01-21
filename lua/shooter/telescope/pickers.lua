@@ -4,12 +4,14 @@ local M = {}
 local pickers = require('telescope.pickers')
 local finders = require('telescope.finders')
 local conf = require('telescope.config').values
+local actions = require('telescope.actions')
 
 local utils = require('shooter.utils')
 local config = require('shooter.config')
 local files = require('shooter.core.files')
 local shots = require('shooter.core.shots')
 local previewers_mod = require('shooter.telescope.previewers')
+local telescope_actions = require('shooter.telescope.actions')
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
 local function get_prompt_files()
@@ -180,6 +182,29 @@ function M.list_open_shots(opts)
     }),
     sorter = conf.generic_sorter({}),
     previewer = previewers_mod.shot_previewer(),
+    attach_mappings = function(prompt_bufnr, map)
+      -- Enter opens the file at shot position
+      actions.select_default:replace(function()
+        local entry = require('telescope.actions.state').get_selected_entry()
+        actions.close(prompt_bufnr)
+        if entry and entry.value then
+          local shot_data = entry.value
+          if not shot_data.is_current_file then
+            vim.cmd('edit ' .. vim.fn.fnameescape(shot_data.target_file))
+          end
+          vim.api.nvim_win_set_cursor(0, {shot_data.header_line, 0})
+        end
+      end)
+
+      -- Send shot to pane 1-4
+      for i = 1, 4 do
+        map('n', tostring(i), function()
+          telescope_actions.send_multiple_shots(prompt_bufnr, i)
+        end)
+      end
+
+      return true
+    end,
   })
 end
 
