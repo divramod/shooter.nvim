@@ -66,8 +66,11 @@ function M.is_pane_running_claude(pane_id)
   if not cmd then
     return false
   end
-  -- Match "claude" or "node" (Claude CLI runs as node process)
-  return cmd:match('^claude') or cmd:match('^node')
+  -- Match "claude", "node", or version pattern like "2.1.14"
+  -- Claude sets its process title to its version number
+  return cmd:match('^claude')
+    or cmd:match('^node')
+    or cmd:match('^%d+%.%d+')  -- Version pattern: 2.1.14, 3.0.0, etc.
 end
 
 -- Wait for Claude to be ready in a pane (check foreground process)
