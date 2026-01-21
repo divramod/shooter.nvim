@@ -15,42 +15,72 @@ local helpers = require('shooter.telescope.helpers')
 -- Re-export clear_selection from helpers for external access
 M.clear_selection = helpers.clear_selection
 
--- List all next-action files
-function M.list_all_files(opts)
-  opts = opts or {}
-  local cwd = vim.fn.getcwd()
-  local prompts_dir = cwd .. '/plans/prompts'
+-- Folder filter mappings for file pickers
+local folder_filters = {
+  a = 'archive', b = 'backlog', d = 'done', r = 'reqs', w = 'wait', p = '',
+}
 
-  vim.fn.mkdir(prompts_dir, 'p')
+-- Create file picker with folder filter support
+local function create_file_picker(opts, get_files_fn, title_prefix, current_filter)
+  current_filter = current_filter or nil
 
-  local file_list = helpers.get_prompt_files()
-
+  local file_list = get_files_fn(current_filter)
   if #file_list == 0 then
-    utils.echo('No prompt files found')
+    local msg = current_filter and ('No files in ' .. current_filter) or 'No prompt files found'
+    utils.echo(msg)
     return
   end
 
-  return pickers.new(opts, {
-    prompt_title = 'Next Actions (a/b/d/p/r/t/w=move, dd=delete)',
+  local title = title_prefix
+  if current_filter and current_filter ~= '' then
+    title = title .. ' [' .. current_filter .. ']'
+  end
+  title = title .. ' (a/b/d/r/w/p=filter, c=clear)'
+
+  local picker_instance = pickers.new(opts, {
+    prompt_title = title,
     layout_strategy = 'horizontal',
-    layout_config = {
-      width = 0.95,
-      preview_width = 0.5,
-    },
+    layout_config = { width = 0.95, preview_width = 0.5 },
     finder = finders.new_table({
       results = file_list,
       entry_maker = function(entry)
-        return {
-          value = entry,
-          display = entry.display,
-          ordinal = entry.display,
-          path = entry.path,
-        }
+        return { value = entry, display = entry.display, ordinal = entry.display, path = entry.path }
       end,
     }),
     sorter = conf.generic_sorter({}),
     previewer = previewers_mod.file_previewer(),
+    attach_mappings = function(prompt_bufnr, map)
+      -- Folder filter keys
+      for key, folder in pairs(folder_filters) do
+        map('n', key, function()
+          actions.close(prompt_bufnr)
+          local new_picker = create_file_picker(opts, get_files_fn, title_prefix, folder)
+          if new_picker then new_picker:find() end
+        end)
+      end
+      -- Clear filter
+      map('n', 'c', function()
+        actions.close(prompt_bufnr)
+        local new_picker = create_file_picker(opts, get_files_fn, title_prefix, nil)
+        if new_picker then new_picker:find() end
+      end)
+      return true
+    end,
   })
+  return picker_instance
+end
+
+-- List all next-action files (current repo)
+function M.list_all_files(opts)
+  opts = opts or {}
+  vim.fn.mkdir(vim.fn.getcwd() .. '/plans/prompts', 'p')
+  return create_file_picker(opts, helpers.get_prompt_files, 'Next Actions')
+end
+
+-- List all next-action files from ALL configured repos
+function M.list_all_repos_files(opts)
+  opts = opts or {}
+  return create_file_picker(opts, helpers.get_all_repos_prompt_files, 'All Repos')
 end
 
 -- List open shots in current or last edited file

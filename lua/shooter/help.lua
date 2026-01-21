@@ -26,11 +26,12 @@ CORE COMMANDS:
                             1-4 = send to claude, Enter = jump to shot
                             h = hide (keeps selection), q = quit (clears selection)
   s     New Shot          Add new shot at top of current file
-  t     Telescope         Telescope picker for all shooter files
+  t     Telescope         Telescope picker for shot files (current repo)
                           In telescope (normal mode):
-                            a = archive, b = backlog, d = done
-                            p = prompts, r = reqs, t = test, w = wait
+                            a/b/d/r/w/p = filter by folder, c = clear filter
                             dd = delete, Enter = open
+  T     Telescope All     Telescope picker for shot files (ALL configured repos)
+                          Same filter keys as <space>t
   p     Oil               Open Oil file explorer in plans/prompts folder
   w     Write             Write all modified buffers
 

@@ -185,15 +185,72 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
 end
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
-function M.get_prompt_files()
+function M.get_prompt_files(folder_filter)
   local cwd = vim.fn.getcwd()
   local prompts_dir = cwd .. '/plans/prompts'
+  if folder_filter and folder_filter ~= '' then
+    prompts_dir = prompts_dir .. '/' .. folder_filter
+  end
   local file_list = vim.fn.globpath(prompts_dir, '**/*.md', false, true)
   local results = {}
+  local base = cwd .. '/plans/prompts/'
   for _, file in ipairs(file_list) do
-    local display = file:gsub('^' .. vim.pesc(prompts_dir) .. '/', '')
+    local display = file:gsub('^' .. vim.pesc(base), '')
     table.insert(results, { display = display, path = file })
   end
+  return results
+end
+
+-- Get prompt files from all configured repos
+function M.get_all_repos_prompt_files(folder_filter)
+  local config = require('shooter.config')
+  local results = {}
+  local seen = {}
+
+  -- Helper to add files from a repo
+  local function add_repo_files(repo_path, repo_name)
+    local prompts_dir = repo_path .. '/plans/prompts'
+    if folder_filter and folder_filter ~= '' then
+      prompts_dir = prompts_dir .. '/' .. folder_filter
+    end
+    if utils.dir_exists(prompts_dir) then
+      local files = vim.fn.globpath(prompts_dir, '**/*.md', false, true)
+      local base = repo_path .. '/plans/prompts/'
+      for _, file in ipairs(files) do
+        if not seen[file] then
+          seen[file] = true
+          local rel = file:gsub('^' .. vim.pesc(base), '')
+          table.insert(results, { display = repo_name .. '/' .. rel, path = file, repo = repo_name })
+        end
+      end
+    end
+  end
+
+  -- Add direct repo paths
+  for _, path in ipairs(config.get('repos.direct_paths') or {}) do
+    local expanded = utils.expand_path(path)
+    if utils.dir_exists(expanded .. '/.git') then
+      add_repo_files(expanded, vim.fn.fnamemodify(expanded, ':t'))
+    end
+  end
+
+  -- Search directories for repos
+  for _, dir in ipairs(config.get('repos.search_dirs') or {}) do
+    local expanded = utils.expand_path(dir)
+    if utils.dir_exists(expanded) then
+      local handle = io.popen('ls -d "' .. expanded .. '"/*/ 2>/dev/null')
+      if handle then
+        for subdir in handle:lines() do
+          subdir = subdir:gsub('/$', '')
+          if utils.dir_exists(subdir .. '/.git') then
+            add_repo_files(subdir, vim.fn.fnamemodify(subdir, ':t'))
+          end
+        end
+        handle:close()
+      end
+    end
+  end
+
   return results
 end
 

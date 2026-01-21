@@ -62,6 +62,9 @@ function M.setup()
   vim.keymap.set('n', prefix .. 't', ':ShooterList<cr>',
     vim.tbl_extend('force', opts, { desc = 'Telescope list' }))
 
+  vim.keymap.set('n', prefix .. 'T', ':ShooterListAll<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Telescope list (all repos)' }))
+
   vim.keymap.set('n', prefix .. 'p', ':ShooterOpenPrompts<cr>',
     vim.tbl_extend('force', opts, { desc = 'Oil prompts folder' }))
 

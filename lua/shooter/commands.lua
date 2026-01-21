@@ -21,6 +21,12 @@ function M.setup()
     if picker then picker:find() end
   end, { desc = 'List all shooter files with Telescope' })
 
+  vim.api.nvim_create_user_command('ShooterListAll', function()
+    local pickers = require('shooter.telescope.pickers')
+    local picker = pickers.list_all_repos_files()
+    if picker then picker:find() end
+  end, { desc = 'List shot files from all configured repos' })
+
   vim.api.nvim_create_user_command('ShooterOpenShots', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_open_shots()
