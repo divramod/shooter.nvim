@@ -58,18 +58,18 @@ function M.setup()
   end, { desc = 'Open last edited shooter file' })
 
   vim.api.nvim_create_user_command('ShooterNewShot', function()
-    local shots = require('shooter.core.shots')
-    shots.create_new_shot()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.create_new_shot()
   end, { desc = 'Create new shot in current file' })
 
   vim.api.nvim_create_user_command('ShooterNewShotWhisper', function()
-    local shots = require('shooter.core.shots')
-    shots.create_new_shot_with_whisper()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.create_new_shot_with_whisper()
   end, { desc = 'Create new shot and start whisper' })
 
   vim.api.nvim_create_user_command('ShooterDeleteLastShot', function()
-    local shots = require('shooter.core.shots')
-    shots.delete_last_shot()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.delete_last_shot()
   end, { desc = 'Delete the last created shot' })
 
   -- Movement commands
