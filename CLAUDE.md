@@ -405,9 +405,21 @@ Potential additions (not in scope for v1.0):
 When adding features:
 1. Keep modules under 200 lines
 2. Add corresponding tests
-3. Update documentation
-4. Follow existing patterns
-5. Don't break backward compatibility
+3. **Update README.md** when adding or changing features
+4. Update this CLAUDE.md if architecture changes
+5. Follow existing patterns
+6. Don't break backward compatibility
+
+### Documentation Requirements
+
+**Always update README.md when:**
+- Adding new commands or keybindings
+- Adding new configuration options
+- Changing template variables
+- Adding new features or workflows
+- Fixing behavior that affects user expectations
+
+The README is the primary user-facing documentation. Keep it in sync with code changes.
 
 ## Version History
 
