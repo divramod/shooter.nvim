@@ -76,18 +76,9 @@ local function check_general_context()
   local config = require('shooter.config')
   local utils = require('shooter.utils')
 
-  -- Debug: check if M.current exists and has paths
-  local debug_info = string.format(
-    'Debug: M.current exists=%s, M.current.paths exists=%s',
-    tostring(config.current ~= nil),
-    tostring(config.current and config.current.paths ~= nil)
-  )
-  print(debug_info)
-
   local general_context_path = config.get('paths.general_context')
   if not general_context_path then
     vim.health.error('Config error: paths.general_context is nil')
-    vim.health.error(debug_info)
     return false
   end
 

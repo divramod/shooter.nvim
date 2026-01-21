@@ -136,32 +136,16 @@ end
 
 -- Get config value by path (e.g., 'tmux.delay')
 function M.get(path)
-  -- Debug logging
-  print(string.format('[config.get] path=%s, M.current exists=%s', path, tostring(M.current ~= nil)))
-
-  -- FIX: Use '.' not '%.' when plain = true
   local keys = vim.split(path, '.', { plain = true })
-  print(string.format('[config.get] split keys: %s', vim.inspect(keys)))
-
   local value = M.current
 
-  for i, key in ipairs(keys) do
-    print(string.format('[config.get] step %d: key=%s, value type=%s, value[key] exists=%s',
-      i, key, type(value), tostring(value and value[key] ~= nil)))
-
+  for _, key in ipairs(keys) do
     if type(value) ~= 'table' then
-      print('[config.get] ERROR: value is not a table, returning nil')
       return nil
     end
     value = value[key]
-
-    if value == nil then
-      print(string.format('[config.get] ERROR: value[%s] is nil', key))
-      return nil
-    end
   end
 
-  print(string.format('[config.get] SUCCESS: returning %s', vim.inspect(value)))
   return value
 end
 
