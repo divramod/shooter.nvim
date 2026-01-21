@@ -40,6 +40,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 - 📋 **Queue system**: Queue shots for later execution across multiple panes
 - ✅ **Shot tracking**: Mark shots as executed with timestamps
 - 🖼️ **Image insertion**: Reference images in your shots
+- 🎨 **Syntax highlighting**: Visual distinction between open and done shots
 
 ## Requirements
 

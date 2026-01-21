@@ -28,6 +28,10 @@ function M.setup(user_config)
     keymaps.setup()
   end
 
+  -- Setup syntax highlighting for prompt files
+  local syntax = require('shooter.syntax')
+  syntax.setup()
+
   M._initialized = true
   return M._config
 end
