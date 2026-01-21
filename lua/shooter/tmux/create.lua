@@ -20,7 +20,7 @@ function M.start_claude_in_pane(pane_id)
   -- Send Ctrl-C to cancel any pending input (handles vi normal mode too)
   -- Then Ctrl-U to clear the line, then the command
   os.execute(string.format("tmux send-keys -t %s C-c C-u 2>/dev/null", pane_id))
-  vim.loop.sleep(100)  -- Brief pause for shell to process
+  vim.wait(100, function() return false end, 20)  -- Brief pause for shell to process
   os.execute(string.format("tmux send-keys -t %s '%s' Enter 2>/dev/null", pane_id, CLAUDE_CMD))
   return true, nil
 end
@@ -71,20 +71,17 @@ function M.is_pane_running_claude(pane_id)
 end
 
 -- Wait for Claude to be ready in a pane (check foreground process)
+-- Uses vim.wait() which keeps nvim responsive during the wait
 -- Returns true when ready, false on timeout
 function M.wait_for_claude(pane_id, timeout_ms)
   timeout_ms = timeout_ms or 10000  -- Default 10 seconds
-  local start = vim.loop.now()
 
-  while (vim.loop.now() - start) < timeout_ms do
-    if M.is_pane_running_claude(pane_id) then
-      return true
-    end
-    -- Wait a bit before checking again
-    vim.loop.sleep(500)
-  end
+  -- vim.wait() keeps nvim responsive while polling
+  local ok = vim.wait(timeout_ms, function()
+    return M.is_pane_running_claude(pane_id)
+  end, 500)  -- Check every 500ms
 
-  return false
+  return ok
 end
 
 -- Start Claude in a pane and wait for it to be ready
@@ -96,7 +93,8 @@ function M.start_and_wait_for_claude(pane_id, message)
 
   if M.wait_for_claude(pane_id, 15000) then
     -- Give Claude time to fully initialize and show prompt
-    vim.loop.sleep(2000)
+    -- Use vim.wait with always-false condition for non-blocking delay
+    vim.wait(3000, function() return false end, 100)
     utils.echo("Claude is ready")
     return pane_id, nil
   else
@@ -132,8 +130,8 @@ function M.find_or_create_claude_pane(pane_index)
       if not new_pane_id then
         return nil, create_err
       end
-      -- Wait for shell to initialize in new pane
-      vim.loop.sleep(500)
+      -- Wait for shell to initialize in new pane (non-blocking)
+      vim.wait(500, function() return false end, 50)
       return M.start_and_wait_for_claude(new_pane_id, "Starting Claude in new pane...")
     end
   end
