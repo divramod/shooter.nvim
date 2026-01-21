@@ -313,4 +313,37 @@ function M.toggle_shot_done()
   end
 end
 
+-- Navigate to the most recently sent/executed shot (by timestamp)
+function M.goto_latest_sent_shot()
+  local bufnr = 0
+  local config = require('shooter.config')
+  local lines = utils.get_buf_lines(bufnr, 0, -1)
+
+  local latest_line = nil
+  local latest_timestamp = nil
+
+  for i, line in ipairs(lines) do
+    -- Match executed shot headers with timestamp
+    if line:match(config.get('patterns.executed_shot_header')) then
+      -- Extract timestamp: (YYYY-MM-DD HH:MM:SS)
+      local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
+      if timestamp then
+        if not latest_timestamp or timestamp > latest_timestamp then
+          latest_timestamp = timestamp
+          latest_line = i
+        end
+      end
+    end
+  end
+
+  if not latest_line then
+    utils.echo('No sent shots found')
+    return
+  end
+
+  vim.api.nvim_win_set_cursor(0, { latest_line, 0 })
+  local shot_num = shots.parse_shot_header(lines[latest_line])
+  utils.echo('Latest sent: Shot ' .. shot_num .. ' (' .. latest_timestamp .. ')')
+end
+
 return M

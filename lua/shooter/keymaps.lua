@@ -60,6 +60,12 @@ function M.setup()
   vim.keymap.set('n', prefix .. '.', ':ShooterToggleDone<cr>',
     vim.tbl_extend('force', opts, { desc = 'Toggle shot done' }))
 
+  vim.keymap.set('n', prefix .. 'L', ':ShooterLatestSent<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Latest sent shot' }))
+
+  vim.keymap.set('n', prefix .. 'H', ':ShooterHealth<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Health check' }))
+
   -- Move commands (with move_prefix, e.g., <space>m)
   vim.keymap.set('n', prefix .. move_prefix .. 'a', ':ShooterArchive<cr>',
     vim.tbl_extend('force', opts, { desc = '→ archive' }))

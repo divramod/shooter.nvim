@@ -87,6 +87,15 @@ function M.setup()
     shot_actions.toggle_shot_done()
   end, { desc = 'Toggle shot done status' })
 
+  vim.api.nvim_create_user_command('ShooterLatestSent', function()
+    local shot_actions = require('shooter.core.shot_actions')
+    shot_actions.goto_latest_sent_shot()
+  end, { desc = 'Go to latest sent shot' })
+
+  vim.api.nvim_create_user_command('ShooterHealth', function()
+    vim.cmd('checkhealth shooter')
+  end, { desc = 'Run shooter health check' })
+
   -- Movement commands
   vim.api.nvim_create_user_command('ShooterArchive', function()
     local files = require('shooter.core.files')
