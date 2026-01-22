@@ -1,4 +1,37 @@
-# 2026-01-18 - nvim next action commands
+# 2026-01-18 - shooter.nvim
+
+## x shot 239 (2026-01-22 01:03:59)
+i shoot also from shooter.nvim, from the current directory.
+why is it not in the history as a own folder?
+~/cod/shooter.nvim (main) ❯ git remote -v                                                         1:03:29
+origin  git@github.com:divramod/shooter.nvim.git (fetch)
+origin  git@github.com:divramod/shooter.nvim.git (push)
+
+## shot 238
+integrate the tmux pane navigation plugin into shooter.nvim
+
+## x shot 237 (2026-01-22 00:17:13)
+move to archive folder is broken, when in oil
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260122_001652.png
+
+## x shot 236 (2026-01-22 00:13:44)
+< >o i want to also be able to press d on a shot in the telescope and telescope then deletes it.
+
+## x shot 235 (2026-01-21 23:55:25)
+i want to add a tmux command wrapper to shooter.
+analyze my tmux configuration and tell me, which commands i have available.
+after that give me a select list, where i can choose the command i want to wrap.
+the tmux wrapper commands should start with < >U
+
+## x shot 234 (2026-01-21 23:41:29)
+the shotfiles created by shooter should look like this: 
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260121_234112.png
+
+## x shot 233 (2026-01-21 22:59:41)
+< >n is not working as expected.
+it did not asked for a feature name and just created a shot file with wrong naming.
+
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260121_225938.png
 
 ## x shot 232 (2026-01-21 22:25:42)
 i want to disable the automatic renaming of my tmux windows.
