@@ -5,6 +5,68 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 
 ---
 
+[2026-01-22 01:05] Shot 239 - 2026-01-18 - nvim next action commands
+- Fixed git remote parsing truncating repo names with dots
+- Bug: Pattern `[^/%.]+` stopped at `.` so `shooter.nvim` became `shooter`
+- Fixed in lua/shooter/history/init.lua:
+  * Changed patterns to `(.+)%.git$` to capture full repo name
+  * Added fallback patterns for remotes without .git suffix
+- Now correctly parses: git@github.com:divramod/shooter.nvim.git → divramod/shooter.nvim
+
+[2026-01-22 00:25] Shot 237 - 2026-01-18 - nvim next action commands
+- Fixed move commands (archive, backlog, etc.) broken when in Oil
+- Bug: commands/move.lua was calling non-existent function
+  * Wrong: require('shooter.core.files').move_file_to_folder(folder)
+  * Right: require('shooter.core.movement').move_to_archive() etc.
+- Fixed in lua/shooter/commands/move.lua:
+  * Now uses shooter.core.movement module directly
+  * Calls existing wrapper functions (move_to_archive, move_to_backlog, etc.)
+
+[2026-01-22 00:20] Shot 236 - 2026-01-18 - nvim next action commands
+- Added 'd' key to delete shot in open shots picker (<space>o)
+- Implementation in lua/shooter/telescope/actions.lua:
+  * delete_shot(pb, target_file, refresh_fn) - delete selected shot with confirm
+  * Handles loading buffer if file not already open
+  * Refreshes picker after deletion
+- Wired up in lua/shooter/telescope/pickers.lua with refresh callback
+- Updated help.lua with 'd = delete shot' in picker keys
+- Note: telescope/pickers.lua and actions.lua now slightly over 200 lines (tech debt)
+
+[2026-01-22 00:10] Shot 235 - 2026-01-18 - nvim next action commands
+- Added tmux command wrappers with <space>U prefix
+- Created lua/shooter/tmux/wrapper.lua module:
+  * zoom_toggle() - Toggle pane zoom (like M-z)
+  * edit_in_vim() - Edit pane content in vim
+  * git_status_toggle() - Toggle git status display
+  * lightswitch() - Toggle light/dark theme
+  * kill_other_panes() - Kill all except current
+  * reload_session() - Reload tmuxp session
+  * delete_session() - Session delete picker
+  * smug_load() - Load smug session
+  * yank_to_vim() - Yank pane to vim buffer
+  * choose_session() - Tmux session chooser
+  * switch_last() - Switch to last client
+- Added 11 ShooterTmux* commands in commands.lua
+- Added keymaps: <space>U{z,e,g,i,o,r,d,s,y,c,p}
+- Updated help.lua with TMUX WRAPPER section
+
+[2026-01-21 23:45] Shot 234 - 2026-01-18 - nvim next action commands
+- Fixed filename format to use date only, not datetime with time
+- Problem: Files created as "2026-01-21 22:57:49_slug.md" (with time/spaces)
+- Expected: "2026-01-21_slug.md" (date only, underscore separator)
+- Fixed in lua/shooter/core/files.lua:
+  * generate_filename() now uses utils.get_date() instead of get_timestamp()
+  * Format: YYYY-MM-DD_slug.md
+
+[2026-01-21 23:05] Shot 233 - 2026-01-18 - nvim next action commands
+- Fixed ShooterCreate (<space>n) not prompting for feature name
+- Problem: When called without args, defaulted to "New Shot File"
+- Fixed in lua/shooter/commands.lua:
+  * Now uses vim.ui.input({ prompt = 'Feature title: ' }) when no args
+  * Only creates file after user enters a title
+  * If user cancels or enters empty string, no file is created
+- Pattern follows existing implementation in core/repos.lua:96
+
 [2026-01-21 21:45] Shot 227 - 2026-01-18 - nvim next action commands
 - Added tmux pane visibility toggle with <space>r1-4
 - Created lua/shooter/tmux/panes.lua:
