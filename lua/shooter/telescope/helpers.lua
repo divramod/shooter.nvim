@@ -185,13 +185,23 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
 end
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
+-- When no folder_filter: only files directly in plans/prompts/ (not subfolders)
+-- With folder_filter: all files recursively in that subfolder
 function M.get_prompt_files(folder_filter)
   local cwd = vim.fn.getcwd()
   local prompts_dir = cwd .. '/plans/prompts'
+  local glob_pattern
+
   if folder_filter and folder_filter ~= '' then
+    -- Filter specified: search recursively in that subfolder
     prompts_dir = prompts_dir .. '/' .. folder_filter
+    glob_pattern = '**/*.md'
+  else
+    -- No filter: only files directly in plans/prompts (not subfolders)
+    glob_pattern = '*.md'
   end
-  local file_list = vim.fn.globpath(prompts_dir, '**/*.md', false, true)
+
+  local file_list = vim.fn.globpath(prompts_dir, glob_pattern, false, true)
   local results = {}
   local base = cwd .. '/plans/prompts/'
   for _, file in ipairs(file_list) do
@@ -202,6 +212,7 @@ function M.get_prompt_files(folder_filter)
 end
 
 -- Get prompt files from all configured repos
+-- Same filtering logic as get_prompt_files: root only when no filter, recursive with filter
 function M.get_all_repos_prompt_files(folder_filter)
   local config = require('shooter.config')
   local results = {}
@@ -210,11 +221,17 @@ function M.get_all_repos_prompt_files(folder_filter)
   -- Helper to add files from a repo
   local function add_repo_files(repo_path, repo_name)
     local prompts_dir = repo_path .. '/plans/prompts'
+    local glob_pattern
+
     if folder_filter and folder_filter ~= '' then
       prompts_dir = prompts_dir .. '/' .. folder_filter
+      glob_pattern = '**/*.md'
+    else
+      glob_pattern = '*.md'
     end
+
     if utils.dir_exists(prompts_dir) then
-      local files = vim.fn.globpath(prompts_dir, '**/*.md', false, true)
+      local files = vim.fn.globpath(prompts_dir, glob_pattern, false, true)
       local base = repo_path .. '/plans/prompts/'
       for _, file in ipairs(files) do
         if not seen[file] then
