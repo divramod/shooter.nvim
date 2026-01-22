@@ -24,7 +24,8 @@ CORE COMMANDS:
   o     Open Shots        Telescope picker for open shots (with multi-select)
                           In telescope: Tab/Space = select, n = new shots file
                             c = clear selection, 1-4 = send to claude
-                            Enter = jump to shot, h = hide, q = quit
+                            d = delete shot, Enter = jump to shot
+                            h = hide, q = quit
   s     New Shot          Add new shot at top of current file
   t     Telescope         Telescope picker for shot files (current repo)
                           In telescope (normal mode):
@@ -57,6 +58,19 @@ PANE VISIBILITY:
 RESEND:
   R1-4  Resend Shot       Resend the most recently sent shot to pane #1-4
                           Useful when Claude needs the same context again
+
+TMUX WRAPPER (prefix: <space>U):
+  Uz    Zoom Toggle       Toggle current pane zoom (like tmux M-z)
+  Ue    Edit in Vim       Edit pane content in vim (d-tmux-edit-vim)
+  Ug    Git Status        Toggle git status display
+  Ui    Light Switch      Toggle light/dark theme
+  Uo    Kill Others       Kill all panes except current
+  Ur    Reload            Reload tmuxp session
+  Ud    Delete Session    Open session delete picker
+  Us    Smug Load         Load smug session picker
+  Uy    Yank to Vim       Yank pane content to new vim buffer
+  Uc    Choose Session    Open tmux session chooser tree
+  Up    Switch Last       Switch to last tmux client
 
 MOVE COMMANDS (prefix: <space>m):
   ma    Archive           Move current file to prompts/archive
