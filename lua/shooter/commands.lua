@@ -8,10 +8,19 @@ function M.setup()
   -- Core shot management commands
   vim.api.nvim_create_user_command('ShooterCreate', function(opts)
     local files = require('shooter.core.files')
-    local title = opts.args ~= '' and opts.args or 'New Shot File'
-    local path, filename = files.create_file(title)
-    if path then
-      vim.cmd('edit ' .. vim.fn.fnameescape(path))
+
+    local function create_with_title(title)
+      if not title or title == '' then return end
+      local path, _ = files.create_file(title)
+      if path then
+        vim.cmd('edit ' .. vim.fn.fnameescape(path))
+      end
+    end
+
+    if opts.args ~= '' then
+      create_with_title(opts.args)
+    else
+      vim.ui.input({ prompt = 'Feature title: ' }, create_with_title)
     end
   end, { nargs = '?', desc = 'Create new shooter file' })
 
@@ -97,25 +106,6 @@ function M.setup()
     vim.cmd('checkhealth shooter')
   end, { desc = 'Run shooter health check' })
 
-  -- Movement commands
-  local function move_cmd(folder)
-    return function()
-      require('shooter.core.files').move_file_to_folder(folder)
-    end
-  end
-
-  vim.api.nvim_create_user_command('ShooterArchive', move_cmd('archive'), { desc = '→ archive' })
-  vim.api.nvim_create_user_command('ShooterBacklog', move_cmd('backlog'), { desc = '→ backlog' })
-  vim.api.nvim_create_user_command('ShooterDone', move_cmd('done'), { desc = '→ done' })
-  vim.api.nvim_create_user_command('ShooterReqs', move_cmd('reqs'), { desc = '→ reqs' })
-  vim.api.nvim_create_user_command('ShooterTest', move_cmd('test'), { desc = '→ test' })
-  vim.api.nvim_create_user_command('ShooterWait', move_cmd('wait'), { desc = '→ wait' })
-  vim.api.nvim_create_user_command('ShooterPrompts', move_cmd(''), { desc = '→ prompts' })
-
-  vim.api.nvim_create_user_command('ShooterGitRoot', function()
-    require('shooter.core.files').move_to_git_root()
-  end, { desc = 'Move file to git root' })
-
   -- Other commands
   vim.api.nvim_create_user_command('ShooterImages', function()
     require('shooter.images').insert_images()
@@ -131,37 +121,6 @@ function M.setup()
     vim.fn.mkdir(prompts_dir, 'p')
     vim.cmd('Oil ' .. prompts_dir)
   end, { desc = 'Open Oil in prompts folder' })
-
-  vim.api.nvim_create_user_command('ShooterEditGlobalContext', function()
-    local config = require('shooter.config')
-    local utils = require('shooter.utils')
-    local global_path = utils.expand_path(config.get('paths.global_context'))
-    vim.fn.mkdir(vim.fn.fnamemodify(global_path, ':h'), 'p')
-    vim.cmd('edit ' .. vim.fn.fnameescape(global_path))
-  end, { desc = 'Edit global shooter context file' })
-
-  vim.api.nvim_create_user_command('ShooterEditProjectContext', function()
-    local config = require('shooter.config')
-    local files = require('shooter.core.files')
-    local git_root = files.get_git_root()
-    if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
-      return
-    end
-    local project_path = git_root .. '/' .. config.get('paths.project_context')
-    vim.fn.mkdir(vim.fn.fnamemodify(project_path, ':h'), 'p')
-    vim.cmd('edit ' .. vim.fn.fnameescape(project_path))
-  end, { desc = 'Edit project shooter context file' })
-
-  vim.api.nvim_create_user_command('ShooterEditConfig', function()
-    local utils = require('shooter.utils')
-    local config_path = utils.find_config_file()
-    if not config_path then
-      vim.notify('Shooter config file not found. Check ~/.config/nvim/lua/plugins/', vim.log.levels.WARN)
-      return
-    end
-    vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
-  end, { desc = 'Edit shooter.nvim config file' })
 
   vim.api.nvim_create_user_command('ShooterCreateInRepo', function()
     require('shooter.core.repos').create_in_repo_picker()
@@ -211,8 +170,11 @@ function M.setup()
     end, { desc = 'Toggle visibility of tmux pane ' .. i })
   end
 
-  -- Load send/queue commands from submodule
+  -- Load submodule commands
   require('shooter.commands.send').setup()
+  require('shooter.commands.move').setup()
+  require('shooter.commands.edit').setup()
+  require('shooter.commands.tmux').setup()
 end
 
 return M

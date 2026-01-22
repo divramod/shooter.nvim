@@ -107,7 +107,7 @@ function M.get_file_title(bufnr)
   return utils.get_basename(vim.fn.expand('%:p'))
 end
 
--- Generate timestamped filename
+-- Generate dated filename (YYYY-MM-DD_slug.md)
 function M.generate_filename(title)
   -- Slugify title
   local slug = title:lower()
@@ -116,8 +116,8 @@ function M.generate_filename(title)
   slug = slug:gsub('%-+', '-')
   slug = slug:gsub('^%-', ''):gsub('%-$', '')
 
-  local datetime = utils.get_timestamp()
-  return string.format('%s_%s.md', datetime, slug)
+  local date = utils.get_date()
+  return string.format('%s_%s.md', date, slug)
 end
 
 -- Create new shooter file
