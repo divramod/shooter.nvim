@@ -166,6 +166,31 @@ function M.setup()
     vim.keymap.set('v', prefix .. tostring(i), ':ShooterSendVisual' .. i .. '<cr>',
       vim.tbl_extend('force', opts, { desc = 'Send selection to pane ' .. i }))
   end
+
+  -- Tmux wrapper commands (U prefix)
+  local tmux_prefix = config.get('keymaps.tmux_prefix') or 'U'
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'z', ':ShooterTmuxZoom<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: zoom toggle' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'e', ':ShooterTmuxEdit<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: edit pane in vim' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'g', ':ShooterTmuxGit<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: git status toggle' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'i', ':ShooterTmuxLight<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: light/dark toggle' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'o', ':ShooterTmuxKillOthers<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: kill other panes' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'r', ':ShooterTmuxReload<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: reload session' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'd', ':ShooterTmuxDelete<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: delete session' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 's', ':ShooterTmuxSmug<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: smug load' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'y', ':ShooterTmuxYank<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: yank pane to vim' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'c', ':ShooterTmuxChoose<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: choose session' }))
+  vim.keymap.set('n', prefix .. tmux_prefix .. 'p', ':ShooterTmuxSwitch<cr>',
+    vim.tbl_extend('force', opts, { desc = 'Tmux: switch to last' }))
 end
 
 return M
