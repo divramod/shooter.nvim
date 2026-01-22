@@ -114,6 +114,67 @@ function M.delete_file(pb)
   vim.cmd('redraw')
 end
 
+-- Delete shot action (for open shots picker)
+function M.delete_shot(pb, target_file, refresh_fn)
+  local entry = action_state.get_selected_entry()
+  if not entry or not entry.value then
+    utils.echo('No shot selected')
+    return
+  end
+
+  local shot_data = entry.value
+  local shot_num = shot_data.shot_num or '?'
+
+  -- Confirm deletion
+  if vim.fn.input('Delete shot ' .. shot_num .. '? (y/n): '):lower() ~= 'y' then
+    vim.cmd('redraw')
+    return
+  end
+
+  -- Get buffer for the file (load if necessary)
+  local bufnr = vim.fn.bufnr(shot_data.target_file)
+  local was_loaded = bufnr ~= -1
+
+  if not was_loaded then
+    bufnr = vim.fn.bufadd(shot_data.target_file)
+    vim.fn.bufload(bufnr)
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local header_line = shot_data.header_line
+
+  -- Find shot end (next shot header or end of file)
+  local shot_end = #lines
+  for i = header_line + 1, #lines do
+    if lines[i]:match('^##%s+x?%s*shot') then
+      shot_end = i - 1
+      break
+    end
+  end
+
+  -- Find shot start (include preceding blank line if exists)
+  local shot_start = header_line
+  if header_line > 1 and lines[header_line - 1]:match('^%s*$') then
+    shot_start = header_line - 1
+  end
+
+  -- Delete the range
+  vim.api.nvim_buf_set_lines(bufnr, shot_start - 1, shot_end, false, {})
+
+  -- Save the file
+  vim.api.nvim_buf_call(bufnr, function()
+    vim.cmd('silent write')
+  end)
+
+  utils.echo('Deleted shot ' .. shot_num)
+  vim.cmd('redraw')
+
+  -- Refresh the picker
+  if refresh_fn then
+    refresh_fn(pb)
+  end
+end
+
 -- Move file action
 function M.move_file(pb, tfolder)
   local s = action_state.get_selected_entry()

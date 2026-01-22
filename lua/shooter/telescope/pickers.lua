@@ -186,6 +186,26 @@ function M.list_open_shots(opts)
         vim.cmd('ShooterCreate')
       end)
 
+      -- 'd' deletes the selected shot
+      map('n', 'd', function()
+        local refresh_fn = function(pb)
+          -- Re-read the file and rebuild entries
+          local new_lines = helpers.read_lines(target_file, is_current)
+          if not new_lines then return end
+          local new_shots = helpers.find_open_shots(new_lines)
+          local new_entries = {}
+          for _, shot in ipairs(new_shots) do
+            table.insert(new_entries, helpers.make_shot_entry(shot, new_lines, target_file, is_current))
+          end
+          local picker = action_state.get_current_picker(pb)
+          picker:refresh(finders.new_table({
+            results = new_entries,
+            entry_maker = function(e) return {value = e, display = e.display, ordinal = e.display} end,
+          }), { reset_prompt = false })
+        end
+        telescope_actions.delete_shot(prompt_bufnr, target_file, refresh_fn)
+      end)
+
       return true
     end,
   })
