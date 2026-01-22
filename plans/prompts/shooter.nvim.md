@@ -1,5 +1,8 @@
 # 2026-01-18 - shooter.nvim
 
+## x shot 240 (2026-01-22 08:06:49)
+in the < >t command, there should only be the files from the ~/plans/prompts folder in the beginning. getting the others, will happen with the filters.
+
 ## x shot 239 (2026-01-22 01:03:59)
 i shoot also from shooter.nvim, from the current directory.
 why is it not in the history as a own folder?
@@ -9,6 +12,7 @@ origin  git@github.com:divramod/shooter.nvim.git (push)
 
 ## shot 238
 integrate the tmux pane navigation plugin into shooter.nvim
+i am using the plugin  
 
 ## x shot 237 (2026-01-22 00:17:13)
 move to archive folder is broken, when in oil

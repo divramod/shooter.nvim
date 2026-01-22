@@ -5,6 +5,13 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 
 ---
 
+[2026-01-22 08:10] Shot 240 - 2026-01-18 - shooter.nvim
+- Changed <space>t to only show files directly in plans/prompts/ by default
+- Subfolders (archive, backlog, done, etc.) only shown when filter is applied
+- Fixed in lua/shooter/telescope/helpers.lua:
+  * get_prompt_files(): uses *.md (root only) when no filter, **/*.md with filter
+  * get_all_repos_prompt_files(): same pattern for multi-repo picker
+
 [2026-01-22 01:05] Shot 239 - 2026-01-18 - nvim next action commands
 - Fixed git remote parsing truncating repo names with dots
 - Bug: Pattern `[^/%.]+` stopped at `.` so `shooter.nvim` became `shooter`
