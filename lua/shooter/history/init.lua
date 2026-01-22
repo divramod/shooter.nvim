@@ -15,14 +15,25 @@ function M.get_git_remote_info()
 
   result = utils.trim(result)
 
-  -- Parse git@github.com:user/repo.git
-  local user, repo = result:match('git@[^:]+:([^/]+)/([^/%.]+)')
+  -- Parse git@github.com:user/repo.git (handles repo names with dots like shooter.nvim)
+  local user, repo = result:match('git@[^:]+:([^/]+)/(.+)%.git$')
   if user and repo then
     return user, repo
   end
 
   -- Parse https://github.com/user/repo.git
-  user, repo = result:match('https?://[^/]+/([^/]+)/([^/%.]+)')
+  user, repo = result:match('https?://[^/]+/([^/]+)/(.+)%.git$')
+  if user and repo then
+    return user, repo
+  end
+
+  -- Fallback: no .git suffix (some remotes don't have it)
+  user, repo = result:match('git@[^:]+:([^/]+)/(.+)$')
+  if user and repo then
+    return user, repo
+  end
+
+  user, repo = result:match('https?://[^/]+/([^/]+)/(.+)$')
   if user and repo then
     return user, repo
   end
