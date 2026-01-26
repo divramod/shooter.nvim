@@ -1,4 +1,775 @@
-# 2026-01-18 - shooter.nvim
+# shooter.nvim
+
+## shot 350
+add move to project command and move to repo command
+
+## x shot 349 (2026-01-26 08:53:23)
+introduce a navigation namespace. i have a lot of navigation commands, which does not specifically belong to a certain area.
+create cmd ShooterNavOpenLastEditedFiles <number>, which should be a telescope picker, which shows the last <number> edited files in the current repo.
+the last edited file should be on top.
+map < >z to ShooterNavOpenLastEditedFiles 10
+
+## x shot 348 (2026-01-26 08:48:40)
+add the shortcut < >L to ShooterRepoOpenLasteEditedFile
+
+## x shot 347 (2026-01-26 08:30:59)
+creae command ShooterRepoOpenLastEditedFile
+this should open the last file i edited for the whole repo
+create a repo namespace
+
+## x shot 346 (2026-01-26 08:20:47)
+the problem seems to be when leaving a shotfile.
+then the oil is colored.
+when i open a non shotfile and the open oil, its not colored.
+when i open a shotfile and then open oil, its colored.
+
+## x shot 345 (2026-01-26 08:18:09)
+the coloring takes over files, which are in non plans/prompts folders and in oil in nvim.
+please disable that. the coloring should only be active in files in plans/prompts folders.
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260126_081751.png
+
+## x shot 344 (2026-01-26 07:00:58)
+add < >i to open root INBOX.md file in the current repo
+
+## shot 343
+introduce namespaces in Shooter commands
+
+## x shot 342 (2026-01-24 12:15:33)
+the shot picker < >o help is to distracting.
+remove the standard telescope help and just show the shooter.nvim specific help commands.
+
+## shot 341
+in the shotfile picker, i want to be able to move a shot to a new shotfile, because its a whole feature for example.
+
+## x shot 340 (2026-01-24 11:44:42)
+the list should be
+- ma: move archive
+- mb: move backlog
+- md: move done
+- mr: move reqs
+- mw: move wait
+- mp: move plans/prompts
+rename mf to mp
+
+## x shot 339 (2026-01-24 11:41:10)
+pressing q in normal mode in the sort picker should go back to the shotfile picker in normal mode.
+pressing q in normal mode in the project picker should go back to the shotfile picker in normal mode.
+both close also the shotfile picker right now.
+
+## x shot 338 (2026-01-24 11:39:48)
+pressing c-c in normal mode works in all three pickers.
+pressing c-c in insert mode in project picker and sort picker closes also the sort picker.
+it should go back to the shotfile picker in normal mode instead.
+
+## x shot 337 (2026-01-24 11:59:54)
+c-n and c-p does not work in the shotfile picker
+
+## x shot 336 (2026-01-24 11:36:57)
+pressing c-c in the shotfile picker should close the picker in normal mode.
+in insert mode, it should go to normal mode.
+
+pressing c-c in the sort picker shoould go back to the shotfile picker in normal mode.
+pressing c-c in insert mode should go to normal mode.
+
+pressing c-c in the project picker should go back to the shotfile picker in normal mode.
+pressing c-c in insert mode should go to normal mode.
+
+## x shot 335 (2026-01-24 11:42:04)
+i want the move commands also to work in the shotfile picker.
+so pressing ma, should move the file under the cursor to the archive folder
+when the archive folder is not selected in the the folder filter, it should disappear from the result list
+
+## x shot 334 (2026-01-24 11:37:44)
+c-n and c-p should work in all three pickers
+
+## x shot 333 (2026-01-24 11:57:08)
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_115636.png
+fix help, its to distrating.
+remove all standard telescope mappings.
+describe all commands, which have anonymous description there.
+
+## x shot 332 (2026-01-24 11:26:24)
+L is nice.
+standard should be top and it should be persisted in the session settings.
+
+## x shot 331 (2026-01-24 11:27:08)
+disabling and enabling in the sort picker should be done with space and tab instead of t.
+
+## x shot 330 (2026-01-24 11:22:04)
+the preview of the shotfiles is to the right in the shotfilepicker.
+i want to be able to have it at the top, because my windows are not wide enough
+
+## x shot 329 (2026-01-24 11:20:16)
+sort picker: when i untoggle (disable) on sorter, the priorities of the others should be updated.
+if i have three with priorieties 1, 2, 4 and i disable 1. 2 and 4 should become 1 and 2
+
+## x shot 328 (2026-01-24 11:18:20)
+instead of using A and C
+i want to just use A, to toggle between all and only plans/prompts
+
+## x shot 327 (2026-01-24 11:17:15)
+changing priority of in the sort picker, jumps always back to the first entry in the telescope list. it should stay on the current entry.
+
+## x shot 326 (2026-01-24 11:15:24)
+pressing A and C in the shotfile picker has no effect on the result list, even though it should have.
+
+## x shot 325 (2026-01-24 11:13:37)
+the priority change for one item in the sort picker should be updating the other items.
+no two items should have the same priority number.
+
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_111332.png
+
+## x shot 324 (2026-01-24 11:47:45)
+pressing < >l like i can do outside of the picker, should always work.
+now it shows me an error.
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_110950.png
+< >l should always lead me to the last edited shot file in the current repo.
+< >L should lead me to the last opened shot file in the current repo.
+
+## x shot 323 (2026-01-24 11:46:25)
+pressing n in any of the pickers should create a new shotfile.
+i want to be asked first for the name and, if there are subprojects in the repo, for the project, where to create the shotfile in.
+
+## x shot 322 (2026-01-24 11:05:43)
+i want to be able to press S in normal mode in all 3 pickers and then the session config yaml file should be opened in a new tab for editing.
+here i then can do changes to the session config.
+so if the picker is then reinvoked with < >v, the session manager should check, if the session config file was changed and reload it accordingly.
+
+## x shot 321 (2026-01-24 11:03:44)
+i also want to add the sortPicker to default start in normal mode and add it to the session settings under vimMode: sortPicker: normal | insert
+
+## x shot 320 (2026-01-24 11:02:18)
+the sort function can be changed from S to s mapping.
+also it is empty.
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_110214.png
+
+## x shot 319 (2026-01-24 11:53:09)
+the folders _archive and _template should always be excluded from the project picker telescope list. this should also be configurable in the shooter lua config as excludeFolderNames: [_archive, _template] at the right place.
+
+## x shot 318 (2026-01-24 10:53:33)
+the projects picker shows no projects even though i have some
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_105309.png
+
+## x shot 317 (2026-01-24 10:58:47)
+when i select a project, it selects it and jumps up to the first.
+instead, i want it to stay at the current position, so that i can select multiple projects faster.
+
+## x shot 316 (2026-01-24 10:49:12)
+pressing A in the root of the telescope shotfile picker should switch on all folders (archived, backlog, done, reqs, wait, plans/prompts)
+pressing C should clear all folder filters (archived, backlog, done, reqs, wait, plans/prompts) and enable only plans/prompts
+
+## x shot 315 (2026-01-24 10:46:22)
+here, i want to be able to:
+- select with tab or space
+when i press enter, the new filter state should be applied/saved
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_104614.png
+
+## shot 314
+the next step would be, to be able to also configure the folders for the sub projects seperately in the session settings. so the projects filter should look like this:
+```yaml
+```
+
+## x shot 313 (2026-01-24 10:51:07)
+the user should also be able to decide, if he wants to start the shotfile picker in insert mode or normal mode, that should go to the session settings also to vimMode: insert | normal
+also in the projects selection telescope, the user should be able to decide, if he wants to start in insert mode or normal mode, that should also go to the session settings as vimMode: insert | normal
+to combine both the session settings should look like this:
+```yaml
+vimMode:
+    shotfilePicker: insert | normal
+    projectPicker: insert | normal
+```
+the default is normal mode for both
+
+## x shot 312 (2026-01-24 10:20:55)
+ok, i thought about it. and have the following things:
+1. when i run < >v, it should open the last session i had, when i ran that command for the current repository.
+2. when there is no last session, it should create a session automatically, named <repo-name-slug>
+3. the filtering in general should work as whitelist
+4. so when the session is created, only the shotfiles of the plans/prompts folder of the root project and all subprojects should be shown. this is the DEFAULT filter settings. which would end up in a filter state like this:
+```yaml
+name: init
+filters:
+  projects: all
+  folders:
+    archived: false
+    backlog: false
+    done: false
+    reqs: false
+    wait: false
+    prompts: true
+  sortBy: ...
+```
+5. if i then press a, it should change the state to:
+```yaml
+name: init
+filters:
+  projects: all
+  folders:
+    archived: true
+    backlog: false
+    done: false
+    reqs: false
+    wait: false
+    prompts: true
+  sortBy: ...
+```
+6. if i press p then, it should change the state to:
+```yaml
+name: init
+filters:
+  projects: all
+  folders:
+    archived: true
+    backlog: false
+    done: false
+    reqs: false
+    wait: false
+    prompts: false
+  sortBy:
+    - modified
+```
+7. if i press P then and select 3 projects, it should change the state to:
+```yaml
+name: init
+filters:
+  projects: 
+    rootProject: true
+    subProjects:
+        - <path-to-subproject-1>
+        - <path-to-subproject-2>
+        - <path-to-subproject-3>
+  folders:
+    archived: true
+    backlog: false
+    done: false
+    reqs: false
+    wait: false
+    prompts: false
+  sortBy: ...
+```
+8. the root project is a special project, which needs to be handled sperately. in the project selection telescope, it should possible to toggle the root project with r in normal mode.
+
+this is how i want the session configuration on a per project basis to work
+the session files should be saved in the ~/.config/shooter.nvim/sessions/<repo-name>/ folder.
+each session gets a yaml file with the session name slugged as filename.
+so there will always be a session created automatically, when there is none existing, when i run < >v in a repo.
+this will be named init.yaml
+
+a session should be able to be renamed
+the session commands in normal mode should be:
+- ss: save session (this is a backup command, if the user wants to save the current session configuration manually, usually the session is saved automatically, every time the user changes the filter settings)
+- sl: load session (opens a telescope list of sessions and loads the session which was selected by the user from the sessions folder, shows a telescope list of existing sessions in the current repo)
+- sn: new session (creates a new session with DEFAULT filter settings, asks for a name)
+- sd: delete the current session (asks for confirmation, then deletes it, then loads the init.yaml session or creates it, when not existing)
+- sr: rename the current session (asks for a new name (shows the old one, which can be changed), renames the session file accordingly)
+
+the init.yaml session should never be edited or deleted, once created.
+when a user tries to delete it, it should just copy the DEFAULT filter settings into a the new session to be created.
+
+every time a user changes the session settings, the current session should be saved automatically.
+
+the sortBy should have the following options:
+the user presses S in normal mode to choose the sortBy option between:
+- created
+- modified
+- filename
+- shot count
+- projectname
+- path
+- none (telescope default)
+
+the sort settings should be stackable, so the user could say, sort by filename and then by modified date
+all sorting options need to be able to be switched by ascending and descending order
+
+when in the sorting modifier view of the session, the current applied sort order should be shown somewhere.
+there needs to be a way, to move a sort type up or down in the sort priority order
+
+to get this running, the sort settings could look like this in the sessions yaml file:
+```yaml
+  sortBy:
+    created:
+      enabled: false
+    filename:
+      enabled: true
+      priority: 1
+    modified:
+      enabled: false
+    path:
+      enabled: false
+    projectname:
+      enabled: false
+    shotcount:
+      enabled: true
+      priority: 2
+```
+
+## x shot 311 (2026-01-24 09:41:50)
+looks good, can you put something in the description texts where we have anonymous stated there now?
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_094136.png
+
+## x shot 310 (2026-01-24 09:37:09)
+the notification, which shows the help, should stay open, until i close it.
+and i do not like the notifcation solution.
+isnt there a better way to show help commands in telescope pickers?
+if so, i want to use them
+
+## x shot 309 (2026-01-24 09:35:29)
+instead of showing me, please show the whole path to the root project.
+also replace the home directory with ~
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_093459.png
+
+## x shot 308 (2026-01-24 09:31:46)
+also, i usually go into normal mode to open help, or apply a filter.
+then the picker seems to reload and is in insert mode again.
+i want to persist the mode, when applying filters or opening help.
+
+## x shot 307 (2026-01-24 09:30:14)
+help closes the picker window. i dont want that
+
+## x shot 306 (2026-01-24 09:27:21)
+when in the < >v picker, i want to be able to pres ? in normal mode to see all available mappings for that picker
+
+## shot 305
+i want to introduce sub projects in shooter.nvim
+so we have my me repo:
+ me/
+   projects/
+     mobilehome-t3/
+       projects/
+         connect-powerstation/
+
+## x shot 304 (2026-01-24 09:23:43)
+when i press a to filter, the picker closes automatically whith the message no files in archive.
+if i press < >v again to reopen it, it does not open with the same message.
+the picker also needs to show, when the result list is empty.
+
+## x shot 303 (2026-01-24 12:12:24)
+in analytics < >a, all files mentioned somewhere in the report, should be openable when i press enter in a line with a file path.
+
+## x shot 302 (2026-01-24 09:00:26)
+< >v should open recent shot files from the whole repo, sorted by most recently edited
+< >V should open recent global shot files, sorted by most recently edited
+as there are filters already for the folders like archive, backlog, done, reqs, wait, plans/promptswhich can be triggered with  a, b, d, r, w, p
+i want also a filter for recently edited files triggered by l
+i want to get rid of the second step, which asks me to choose a project, when in a repo with a projects folder and instead show all recents, all archived and so on.
+addionally in that view, i want to be able to add a projects filter with P.
+when there are multiple projects existant, i want to be ablte to press P, which opens a telescope list of projects in the current repo, where i can choose one or more projects to filter the shot files for, this filter then should be persistant until i remove it with pressing C (ShooterClearFilter).
+
+## shot 301
+workflow analysis: what costs me the most time?
+
+## shot 300
+i need a good workflow also to get pics form pc to figma
+
+## shot 299
+in these sections in the analytics pane, i also always want to know the repo and where the shot file is located.
+
+for the global command ~/... i want to see the repo and the shot file path for occurence of a file path.
+for local ./plans/... is enough
+
+```txt
+### Longest Prompts
+- **By Characters**: 18388 chars (shot 13 in 20260116_1000_restructure.md)
+- **By Words**: 3320 words (shot 7 in 20260116_1000_restructure.md)
+- **By Sentences**: 145 sentences (shot 6 in 20260116_1000_restructure.md)
+
+### Shortest Prompts
+- **By Characters**: 193 chars (shot 52 in shooter.nvim.md)
+- **By Words**: 18 words (shot 52 in 20260118_0516_nvim-next-action-commands.md)
+- **By Sentences**: 3 sentences (shot 1 in fix-dark-mode-problems-in-courses.md)
+
+## File Rankings (Top 5)
+
+### Today
+1. nvim.md (49)
+2. shooter.nvim.md (40)
+3. beads.md (9)
+4. quality-standards.md (6)
+5. listening-exercise-feat.md (4)
+
+### This Week
+1. 20260118_0516_nvim-next-action-commands.md (293)
+2. shooter.nvim.md (289)
+3. nvim.md (82)
+4. cleanup.md (39)
+5. zsh.md (28)
+
+### This Month
+1. 20260118_0516_nvim-next-action-commands.md (293)
+2. shooter.nvim.md (289)
+3. nvim.md (82)
+4. cleanup.md (39)
+5. zsh.md (28)
+
+### This Year
+1. 20260118_0516_nvim-next-action-commands.md (293)
+2. shooter.nvim.md (289)
+3. nvim.md (82)
+4. cleanup.md (39)
+5. zsh.md (28)
+
+### All Time
+1. 20260118_0516_nvim-next-action-commands.md (293)
+2. shooter.nvim.md (289)
+3. nvim.md (82)
+4. cleanup.md (39)
+5. tmux.md (28)
+```
+
+## x shot 298 (2026-01-23 12:18:32)
+i renamed them. but there are still files in the analytis, which have the old pattern.
+please search through all files in all repos configured in the shooter config and rename all files, which have the old pattern to the new pattern and fix the history accordingly.
+do all, that the analytics command shows everything correctly now and nothing is missing.
+
+## x shot 297 (2026-01-23 12:04:52)
+after the cleanup, why is a file with a date in the begining still at the first place?
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_120451.png
+
+## x shot 296 (2026-01-23 11:40:03)
+ok, now we need to clean all the history folders from the double created files.
+
+## x shot 295 (2026-01-23 11:36:01)
+i found a problem in the creation of the history files.
+it actually creates two files, with one second difference in the timestamp, when i create a new shot file with < >n
+please fix that
+
+## x shot 294 (2026-01-23 11:18:22)
+nice, now its not blocking anymore.
+only thing is, that only one file was checked.
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_111820.png
+
+## shot 293
+when i press yes to open the audit report, it throws an error
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_110923.png
+
+## x shot 292 (2026-01-23 11:06:35)
+now i have a error again:
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_110633.png
+
+## x shot 291 (2026-01-23 11:03:56)
+ShooterHistoryAudit is still blocking the gui in nvim.
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_110303.png
+i press something and then some seconds later, the gui is responsive again.
+if you want, you can remove the progress bar. i suspect, that this could be the problem.
+
+## shot 290
+please add pleanary also to the checkhealth cmd of shooter.nvim
+also add the versions, which are installed for all deps in the checkhealth cmd
+please add the versions to all plugins and also ttok 
+please add also a area for the the ai cli tools in the checkhealth, which checks if claude, codex, gemini, copilot cli, qwen cli are installed and if so, which version is installed
+
+## x shot 289 (2026-01-23 10:56:17)
+this is still blocking.
+cant you run it completely in the background?
+please research the web, on how its done correctly with lua and then come up with a plan.
+also there was a error message as i pressed 1 yes to open the report.
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_105552.png
+it also asked me to press enter there. 
+
+## x shot 288 (2026-01-23 10:52:26)
+this is still blocking.
+i think because of the progressbar in the commandline.
+can you put the progessbar into the notification area of nvim instead of the commandline?
+i need to be able to work, while the audit is running.
+when the audit is done, i want to be asked, if i want to open the audit report.
+
+## x shot 287 (2026-01-23 10:43:39)
+ShooterHistoryAudit is blocking the gui in nvim.
+can you send a message to the user, that it is running and run it in the background?
+also add a progress bar or something like this, so that the user sees, that something is happening.
+when the audit is done, send a message to the user, that its done and open the audit report.
+the audit reports should be saved to files in the ~/.config/shooter.nvim/audit-reports/ folder with the date and time as filename.
+
+## shot 286
+the shooter.nvim plugin has the following goals: 
+1. beeing faster in shooting to ai cli agents (claude, gemini, codex, copilot, qwen)
+2. analyzing the habits of the shooter, so that he can see, what he does and has good data to optimize his workflow. the plugin should give the user hints, how to improve his shooting workflow based on the data it collects.
+
+## shot 285
+please in all shot history files add the shotfile title from the shotfile to the metadata, if its not already there.
+
+## shot 284
+i have some copied files, which trick the history function.
+i need a ShooterShotfileDelete command, which deletes a shot file and its history folder accordingly.
+i know that cant be undone, so please add a prompt, where the user has to type "DELETE" to confirm the deletion.
+
+## x shot 283 (2026-01-23 10:28:24)
+fix all shotfiles in all repos configured in the shooter config
+there are some shots, which are already marked as done like this
+```## x shot 1```
+but they are missing the date format
+```## x shot 1 (2026-01-19 07:41:00)```
+
+for these shots, please add a sensible date, when the shot was marked as done.
+this sensible date you can derive from the next shot, which is marked as done and has a date.
+just do it one minute before the next shot was marked as done.
+
+after you did that, i want you to go through all shot files in all repos configured in the shooter config and ensure, that all done shots also have a corresponding history file. if a shot is marked as done and does not have a history file, create one with the content of the shot and the date, when it was marked as done.
+
+that way, we get the history functionality back to 100%
+
+## x shot 282 (2026-01-23 10:21:48)
+i need a ShooterShotfileRename command.
+manually renaming will destroy the history functionality.
+so the beware user should use this command to rename a shot file, which automatically renames the history folder for the shot file accordingly.
+the function should open a prompt, where the current name of the file can be edited.
+it should be possible to go into normal mode and insert mode in that prompt to be able to navigate and edit the name faster.
+the shotfiles in the history folder should also be looped through and the metadata source should be updated accordingly with the new shot file name.
+also add that functionality to the greenkeep command, so that when the shot file is renamed there, the history folder and the shot files in the history folder are also updated accordingly.
+also update the move commands
+the < >m commands should also update the path in the shot files history files
+go here into plan mode again, look at the whole codebase and see if it would have sideeffects, for example to the analytics command.
+
+i also want you to go through every shotfile in all folders in the history folder and check, if they have the right format.
+some older ones are not named correctly  and dont have the metadata inside.
+
+## x shot 281 (2026-01-23 10:03:55)
+ok, i have a second and third job for you for the greenkeeping command.
+
+earlier, the shot file header looked like this:
+```# 2026-01-18 - Layout```
+
+and the shot file was named like this:
+```20260118_2338_layout.md```
+
+i want you to add to the greenkeep command, that it also changes the shot file header to the new format:
+```# layout``` and the file name should match the slugged shot file header title
+```layout.md```
+
+so you also need to update the titles of all files and the file names accordingly with that command
+
+this is especially important here, that you also adapt this in the history folder.
+i want you to rename there all the folders, which have been created by the shots with < >1 and so on.
+
+because then the analytics command will also be up to date
+
+## x shot 280 (2026-01-23 09:56:51)
+nice, that worked.
+the only thing is, that in the current file, i could not see the changed date format, because it did not reload/redrawed the file after the changes.
+could you do that also?
+
+## x shot 279 (2026-01-23 09:52:34)
+i need a ShooterGreenkeep command.
+as you now, earlier you used to write the shot done header like this
+
+```## x shot 1 (20260119_0741)```
+now we changed the dateformat to
+```## x shot 276 (2026-01-23 09:25:41)```
+
+the greenkeep command should go through all shot files in the current repo and change the dateformat of all done shots in all shotfile to the new format.
+
+it should be triggered with < >G
+
+## shot 278
+introduce a project migration, where i can move the shot files from a projects repo into a programming repo with no projects folder structure.
+
+## shot 277
+make it possible to configure a me / gtd repo with a project folder structure
+then everything should be setup automatically
+research files always should belong to a project
+
+## x shot 276 (2026-01-23 09:25:41)
+one more thing, i do not want you to add the date to the file header when creating a new shot file with < >n
+
+## x shot 275 (2026-01-23 09:21:56)
+it kind of worked, it is down now, but not in insert mode, when i create a new shot file with < >n
+
+## x shot 274 (2026-01-23 09:20:13)
+one adaption to the < >n command, after the file is created, i want to go directly into insert mode unter the shot 1 header, so that i can start writing the shot directly
+
+## shot 273
+have a look at the ci, if still everything is passing
+
+## x shot 272 (2026-01-23 08:54:18)
+i want you to adapt the < >n in a that, if there is a projects folder in the root of the repository, it first asks for the project name, where to create the shot file in.
+instead of the root, it should create the shot file in the projects/<project name>/plans/prompts folder.
+
+also the sending shots functionality from a file or from the telescope opened by < >o should be aware of that and change the pathes for the history files accordingly with adding subpathes.
+
+please also look through the whole codebase for all Shooter commands, if that change affects the functionality of the commands. 
+
+go into planmode and create a plan for that change, to ensure, that all the functionality is still working.
+
+for example < >v should also ask for the project, before opening the telesope with the file list.
+
+there could be more affected commands.
+
+please go thouroughly through the plan phase here, because its a big change.
+
+## x shot 271 (2026-01-23 09:15:22)
+"i want a command < >Oo which opens the current file in obsidian, when its in my obsidian vault."
+
+## x shot 270 (2026-01-23 08:08:55)
+it seems that the coloring of shooter has a higher priority than the search highlight color.
+i want that the other way round.
+is that possible?
+
+## x shot 269 (2026-01-23 08:03:20)
+instead of yellow as background can you define a little lighter orange as default background color for shots for the shooter.nvim plugin? yellow is often the highlight of the seearch results and i dont want to get confused there.
+
+## x shot 30 (2026-01-23 07:58:36)
+i want a command < >Oo which opens the current file in obsidian, when its in my obsidian vault.
+
+## x shot 268 (2026-01-23 07:33:44)
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_073213.png
+instead of having yellow on black i want to have black as foreground and yellow as backgound color, so that i can see the cursor position better.
+please also make this the default but changeable in the shooter config.
+please also make a paragraph in the readme about the configuration overall with all possible configuration entries.
+
+## x shot 267 (2026-01-23 07:28:31)
+inserting a new shot, when oil is open should in general be forbidden.
+
+## shot 266
+create claude.md instructions for shots, maybe a shooter agent, which gots the task and creates a bead?
+
+## x shot 265 (2026-01-23 00:24:08)
+< >ttc write a command ShooterToolTokenCounter, which counts the tokens of the current file.
+you can use ttok < plans/prompts/agents.md
+please add to the healthcheck, that ttok is installed and working
+and that python is installed and working
+
+## shot 264
+restructure folders shooter creates:
+
+<repo>/
+  .logs/
+    unit-test/
+    unit-test-coverage/
+    e2e-test/
+    e2e-test-coverage/
+    format/
+    build/
+    prettify/
+    docker/
+    nextjs/
+  .shooter/
+    log/
+    cfg/
+      config.yaml
+      prompts/
+    research/
+    shoot/
+
+agents i often use:
+- /git-add
+- /git-commit
+- /git-push
+- /progress-update
+- /changelog-update
+- /prd-update
+- /readme-update
+
+## x shot 263 (2026-01-22 20:44:11)
+remap < >t to < >v
+
+## shot 262
+have a prioritization command, which loops through the shotfiles and prioritizes the shots files.
+on a second level, it prioritizes the shots in the shot files.
+
+## shot 261
+create different shot variants.
+seperate between a normal answer and a real new shot.
+normal answer would be a threat for a already existing shot.
+
+## x shot 260 (2026-01-22 18:09:07)
+< >mm new shortcut to move file in oil and editor. fuzzy search the target folder like in obsidian
+when i press < >mm, it should open a telescope list of folders in the project (going down until the git root). c-c should close the telescope window in insert and normal mode.
+respect the .gitignore list.
+
+## x shot 259 (2026-01-22 12:34:08)
+nope, the size of the original vim pane still fucks up.
+maybe you split the window for the pane vertically instead of horizontally?
+
+## x shot 258 (2026-01-22 12:19:43)
+nope, the vim window from where i start it, is smaller afterwards.
+
+## x shot 257 (2026-01-22 12:16:43)
+it kind of worked.
+the tui started.
+but the original size of the panes has not been restored.
+i think you first need to maximize the pane and then start the tui.
+
+## x shot 256 (2026-01-22 12:11:53)
+create a command < >b, which spawns a new tmux pane in the current window and runs shooter watch in it and then maximizes it.
+when the shooter watch command exits, the pane should be closed again and the previous pane layout should be restored.
+
+## shot 255
+if i accidentially run the send all shots command in a file, it should ask me, if i really want to run all
+
+## x shot 254 (2026-01-22 12:35:29)
+when there is a new shot file created with < >n, i do not want to have the date anymore in the name.
+i just want to have the <feat name slug>.md
+please adapt that
+
+## x shot 253 (2026-01-22 10:03:05)
+in the file preview, i only want to see the shots, which are not done
+
+## x shot 252 (2026-01-22 10:02:03)
+c-n and c-p are not working in the repo view
+
+## x shot 251 (2026-01-22 09:58:22)
+this is not, what i really want.
+i want a two step solution.
+first, you show me all repos in a telescope list, where i can choose one.
+the repos should have the amount of shot in progress shot files (5/22 and the amount of open shots in these in parentheses
+then i choose one of the repos.
+then you show me the list of in progress shot files in parentheses i see (5/220) 5 of 220 shots are open
+then i choose one of the shot files
+then you show me the open shots of the file
+so basically three different telescopes
+in each one: 
+1 <c-n> and <c-p> should work do navigate
+2 q should quit
+3 H should go back to the previous telescope
+
+## x shot 250 (2026-01-22 09:35:41)
+dashboard improvements: it looks already nice, please improve it:
+1. i want to make the state of the dashboard persistant. when i enter on a file or a shot, it closes the dashboard and goes to the shot/file. when i then reopen the dashboard, i want to be at the same postion in the tree.
+2. when i expand with L, it does not have the position of the project i expanded, instead, it expands and goes to the top, the first project
+3. i want to have a search as you type functionality at the top, with a input like with telescope, where i can go into insert mode and normal mode. when i search, as i type, the tree should update
+
+## shot 249
+i need commands to open all the inbox files i have.
+so that i can write new items directly there.
+
+## shot 248
+move screenshot images folder
+
+## x shot 247 (2026-01-22 09:27:49)
+some things about the dashboard
+first, there is an error
+/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260122_092610.png
+
+next, i want you to search for shot files in all git repos defined in the shooter config under repos
+
+## x shot 246 (2026-01-22 09:12:39)
+remap < >g to < >I to get images in ~/cod/shooter.nvim
+
+## x shot 245 (2026-01-22 09:16:54)
+i need a project dashboard, which shows me per project:
+- the in progress shot files, with their list of open shots
+- when i press enter on one of the files, it opens the file 
+- when i press enter on one of the shots of the file, it opens the the file, where the shot is located
+- this needs to be interactive
+- please research, how something like this can be done in nvim, does have lua special libs to do that?
+- basically a tui inside nvim
+
+## shot 244
+mappings for gsd folders/files 
+i want to use get shit done (a agent framework) in many of my projects.
+so i need some shortcuts to work with it:
+1. < >
+
+## x shot 243 (2026-01-22 09:08:07)
+fogine/vim-i3wm-tmux-navigator should be a direct dependency of shooter.nvim
+it should be documented in the readme and healthcheck
+
+## x shot 242 (2026-01-22 09:08:07)
+oil should be a direct dependency of shooter.nvim
+need it often. put it to the readme and healthcheck
+
+## shot 241
+tmux: have an indicator, that a shot was send
 
 ## x shot 240 (2026-01-22 08:06:49)
 in the < >t command, there should only be the files from the ~/plans/prompts folder in the beginning. getting the others, will happen with the filters.
@@ -10,9 +781,10 @@ why is it not in the history as a own folder?
 origin  git@github.com:divramod/shooter.nvim.git (fetch)
 origin  git@github.com:divramod/shooter.nvim.git (push)
 
-## shot 238
+## x shot 238 (2026-01-22 08:34:07)
 integrate the tmux pane navigation plugin into shooter.nvim
-i am using the plugin  
+i am using the plugin 'alexghergh/nvim-tmux-navigation'
+can you add that to the health check and the readme of shooter.nvim?
 
 ## x shot 237 (2026-01-22 00:17:13)
 move to archive folder is broken, when in oil
@@ -566,6 +1338,7 @@ the latest shot is always at the top
 
 ## x shot 120 (2026-01-21 12:22:00)
 can you document all the last shots in the shooters readme.md. the pathes of the template files, etc 
+
 ## x shot 119 (2026-01-21 12:22:00)
 can you please start the sentences with big letters in the ```# context``` 1. 2. 3. 4.
 
@@ -799,7 +1572,7 @@ now please:
 ## x shot 84 (2026-01-21 08:41:00)
 ctrl+c in command mode should not close vim completely, but just exit the current mode and go back to normal mode.
 
-## x shot 83
+## x shot 83 (2026-01-21 08:08:00)
 the <space><space> commands are my nvim next actions commands, with which i help myself working with ai in tmux and nvim.
 please go through them and also look at the code and document the architecture and the patterns of these in .ai/context/next-actions.md and mention this in the CLAUDE.md and AGENTS.md.
 
@@ -831,6 +1604,7 @@ Can you adapt that command so that it only deletes the last shot when it is not 
 
 ## x shot 80 (2026-01-20 11:54:00)
 Now create a new command, space, space, d, which deletes the last shot I created.
+
 ## x shot 79 (2026-01-20 11:51:00)Can you write a command which is activated with space space e, which creates a new shot like space space s, but additionally starts gp whisper so that I can instantly start to speak.
 
 ## x shot 78 (2026-01-20 11:50:00)
@@ -1029,7 +1803,7 @@ the @ file at the bottom of the message is a problem, when you paste the prompt 
 ## x shot 38 (2026-01-20 09:35:00)
 can you remap <space><space>N1 ... to <space><space><space>1 ...
 
-## x shot 37
+## x shot 37 (2026-01-20 09:21:00)
 /Users/mod/dev/plans/prompts/images/clipboard_20260120_091619.png
 the \e[200 and 201 look ugly in the code i sent you.
 can you remove that from the lua code?
@@ -1135,7 +1909,7 @@ can you change ,,ns to ,,n1 to send to the first claude pane in tmux
 for the command ,,n2
 i still have the problem, that when claude pasted the text like in the screenshot (not the real text visible, only [Pasted text #3 ...] then it will not start automatically.
 
-## x shot 19
+## x shot 19 (2026-01-18 08:53:00)
 the image picker is working, but when i call the nvim command i get an error
 
 ## x shot 18 (2026-01-18 08:54:00)
@@ -1228,7 +2002,7 @@ add a new command ,,np which moves a file to the prompts folder of the current p
 this is my in progress folder
 add also add ,,p which opens the oil file explorer in the prompts folder of the current project.
 
-## x shot 4
+## x shot 4 (2026-01-18 06:18:00)
 i want you to crate a lua snippet ns, which adds a new shot into my next actions file.
 state of the next action file before snippet
 
@@ -1237,7 +2011,7 @@ state of the next action file before snippet
 
 ns<cursor_waiting_to_press_tab>
 
-## x shot 1
+## x shot 1 (2026-01-18 06:18:00)
 ```
 
 after executing the snippet and pressing tab, the file should look like this:
@@ -1245,10 +2019,10 @@ after executing the snippet and pressing tab, the file should look like this:
 ```markdown
 # <YYYY-MM-DD> - <description>
 
-## x shot 2
+## x shot 2 (2026-01-18 06:18:00)
 <cursor>
 
-## x shot 1
+## x shot 1 (2026-01-18 06:18:00)
 ```
 
 ## x shot 3 (2026-01-18 06:19:00)
@@ -1256,20 +2030,20 @@ this is just
 a 
 test shot
 
-## x shot 2
+## x shot 2 (2026-01-23 11:40:03)
 ,,ns i want you to add a new command to my next action commands list.
 my next action files currently look like this:
 
 ```markdown
 # <YYYY-MM-DD> - <description>
 
-## x shot 3
+## x shot 3 (2026-01-23 11:40:03)
 a prompt i plan to send to claude
 
 ## x shot 2 some title
 some prompt i sent to claude
 
-## x shot 1
+## x shot 1 (2026-01-23 11:40:03)
 some prompt i sent to claude
 ```
 
@@ -1278,6 +2052,7 @@ in visual mode, it sends the selected text to claude and enters.
 what i want you to do is to rename ,,sc to ,,ns (next action send to claude).
 also, i want you to adapt ,,sc (now ,,ns) so that when it send the content to claude, it also adapts the header of the shot to that the time the shot happened (when the command was executed).
 ```markdown
+
 ## x shot 3 some title (<YYYYMMDD>_<HHMM>)
 ```
 
@@ -1290,7 +2065,7 @@ when the text is longer than a certain amount, claude justs shows a message like
 in that case, the enter command does not work and i have to manually press enter again to send the prompt.
 please fix that problem too.
 
-## x shot 1
+## x shot 1 (2026-01-23 11:40:03)
 i want you to write some new nvim commands.
 1. first, i want you to rename ,,pe to ,,nc (next action create).
 2. create a new command ,,ne (next action edit) that opens telescope, which lists all files in the projects prompts folder and its subfolders and when i press enter on a selected file, it opens that file for editing.

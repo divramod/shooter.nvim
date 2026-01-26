@@ -5,6 +5,858 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 
 ---
 
+[2026-01-26 06:26] Shot 9 (shot) - Ignore shot headers inside code blocks when shooting
+- Bug: When cursor was inside a code block containing example `## shot N`, it found that example
+- Fix: Added `is_in_code_block()` helper to shots.lua
+- Updated `find_current_shot()` to skip headers inside code blocks
+- Updated `find_all_shots()` to skip headers inside code blocks
+- Now shooting from inside a code block correctly finds the enclosing real shot
+
+[2026-01-26 06:22] Shot 8 (shot) - Exclude shot headers inside code blocks from highlighting
+- Modified syntax.lua to check if line is inside a code block before highlighting
+- Added `is_in_code_block()` function that counts ``` markers above the line
+- Changed from `matchadd()` (pattern-based) to `matchaddpos()` (line-based)
+- Added TextChanged/TextChangedI autocommands to update highlighting when buffer changes
+- Now `## shot N` inside ``` blocks won't be highlighted
+
+[2026-01-26 06:20] Shot 2 (shot) - Add ShooterShotExtract command
+- Added `extract_subtask()` function to shot_actions.lua
+- Finds ### heading at or above cursor, extracts content until next ### or end of shot
+- Creates new shot with subtask title in parentheses (e.g., `## shot 5 (subtask name)`)
+- Removes extracted content from original shot
+- Added `ShooterShotExtract` command
+- Added `se` keymap in shot namespace, `e` as core shortcut
+- Updated help.lua
+
+[2026-01-26 05:50] Shot 4 (shot) - Add ShooterShotYank command
+- Added `yank_shot()` function to shot_actions.lua - yanks current shot to + and " registers
+- Added `ShooterShotYank` command in commands.lua
+- Added `sy` keymap in shot namespace
+- Added `ys` keymap as core shortcut
+- Updated help.lua with new keymaps
+
+[2026-01-24 22:40] Shot 4 (shotfile) - Add <space>l core shortcut for last shotfile
+- Added `l` to core shortcuts (root level) for quick access to last edited shotfile
+- Maps to existing `ShooterShotfileLast` command
+- Core shortcuts now: n (new), s (shot), o (open shots), v (picker), l (last), 1-4 (send)
+- Updated help.lua to reflect new core shortcut
+
+[2026-01-24 22:30] Shot 7 (opencode) - Provider selection prompt when no AI session running
+- When no Claude or opencode pane exists, user is now prompted to choose which AI to start
+- Added `M.prompt_provider_selection()` - uses vim.fn.confirm with Claude/OpenCode/Cancel options
+- Added `M.start_ai_with_prompt()` - handles pane creation/reuse after user selects provider
+- Generalized AI functions: `start_ai_in_pane()`, `is_pane_running_ai()`, `wait_for_ai()`, `start_and_wait_for_ai()`
+- Kept backward compatibility aliases for Claude-specific functions
+- `PROVIDER_CMDS` table maps provider names to commands (claude uses -c --dangerously-skip-permissions, opencode uses -c)
+- All changes in `tmux/create.lua` (196 lines, under limit)
+
+[2026-01-24 22:27] Shot 6 (opencode) - Document opencode session continuation
+- OpenCode uses `-c` or `--continue` flag to continue last session
+- Use `-s <session-id>` for specific session
+- Use `opencode session list` to see available sessions
+- Updated opencode provider's `get_create_command()` to use `opencode -c`
+
+[2026-01-24 22:35] Shot 3 (opencode) - Custom send for opencode (escape autocomplete)
+- Bug: OpenCode's `@` triggers autocomplete dropdown, Enter selects from it instead of submitting
+- Fix: Added custom `send_file_reference` in opencode.lua that presses Escape to dismiss autocomplete before Enter
+- Updated `operations.lua` to use provider-specific send method via `send_file_ref()` helper
+- `find_pane_or_error` now returns provider object in addition to name
+- Claude provider continues using default send (no autocomplete issue)
+
+[2026-01-24 22:25] Shot 2 (opencode) - Fix grep pattern for provider detection
+- Bug: grep -E with escaped pipe `\\|` matches literal pipe character, not alternation
+- Fix: Changed `table.concat(patterns, '\\|')` to `table.concat(patterns, '|')` in providers/init.lua
+- With grep -E (extended regex), `|` is alternation, `\|` is literal pipe
+- Detection now correctly finds both claude and opencode processes
+
+[2026-01-24 22:15] Shot 1 (opencode) - Provider abstraction for multiple AI backends
+- Created provider system to abstract AI backend detection and communication
+- New files:
+  - `lua/shooter/providers/init.lua` (125 lines) - Provider registry and detection
+  - `lua/shooter/providers/claude.lua` (45 lines) - Claude Code provider
+  - `lua/shooter/providers/opencode.lua` (46 lines) - OpenCode provider
+- Updated `tmux/detect.lua` to use providers for AI detection (supports claude and opencode)
+- Updated `tmux/operations.lua` to show which provider received the shot (e.g., "Sent shot 1 to claude" or "Sent shot 1 to opencode")
+- Updated `tmux/create.lua` with `find_or_create_ai_pane()` that finds any AI pane
+- Both providers use same `@filepath` syntax for sending file references
+- Default auto-creation falls back to Claude when no AI pane exists
+- Added tests in `tests/providers/init_spec.lua`
+- All files under 200 line limit after refactoring operations.lua
+
+[2026-01-24 12:45] Shot 2 (shot) - Normalize blank lines after move
+- Added `normalize_blank_lines()` function to enforce exactly one blank line before each shot header
+- Applied normalization to target file after inserting shot
+- Applied normalization to source buffer after deleting shot
+- Cursor position is preserved in source file after move
+- Rule: exactly one empty line above each `## shot` or `## x shot` header
+
+[2026-01-24 12:40] Shot 1 (shot) - Move shot to another shotfile
+- Created `lua/shooter/core/shot_move.lua` (143 lines) for moving shots between files
+- Added `ShooterMoveShot` command
+- Added `<space>ms` keymap (move shot)
+- Flow: find shot under cursor → pick target file → renumber shot → insert into target → delete from source
+- Shot is inserted after the title heading in the target file
+- Shot number is updated to be next available in target file
+- Updated help.lua with new command documentation
+
+[2026-01-24 12:35] Shot 1 (shotfile) - E37 error when creating new shotfile from picker
+- Bug: pressing `n` in shotfile picker to create new file caused E37 error
+- Cause: `vim.cmd('edit')` fails when previous buffer has unsaved changes
+- Fix: Changed to `vim.cmd('edit!')` in `create_with_title_and_project()` (commands.lua:17)
+- The old buffer isn't destroyed, just hidden - user can still access it via `:ls` and `:b #`
+
+[2026-01-24 12:30] Shot 2 (shotfile-picker) - Title-based rename flow
+- Changed rename to prompt for title instead of filename
+- Flow: extract current title → prompt for new title → generate slug → update heading → rename file
+- Added `extract_title()` to read first `# heading` from file
+- Added `update_title_in_file()` to update the title heading after rename
+- Filename is now derived from title using `files.generate_filename()` (slug)
+- Reports what changed: title updated, history synced
+
+[2026-01-24 12:25] Shot 3 (shotfile-picker) - Consolidate rename mappings
+- Added `<space>R` global keymap to rename shotfile (same as existing `<space>F`)
+- Now consistent: `<space>R` in shotfile = rename, `R` in picker = rename selected
+- `<space>R` doesn't conflict with `<space>R1-4` (resend) - Vim waits for number
+- Updated help.lua to document `<space>R` and `R` in picker
+- Kept `<space>F` for backward compatibility
+
+[2026-01-24 12:22] Shot 1 (shotfile-picker) - Rename mapping R in shotfile picker
+- Added `R` mapping to shotfile picker for renaming the selected file
+- Opens the file, then triggers the interactive rename prompt
+- R is not conflicting with any other mapping (checked: no existing R mapping)
+- Updated picker_help.lua to include R in ACTIONS section
+- Note: global `<space>F` still works but `R` in picker is more convenient
+
+[2026-01-24 12:18] Shot 342 - Shot picker help too distracting
+- Added `?` mapping to open shots picker (`<space>o`) showing custom help
+- Uses `picker_help.show_shots_help` instead of Telescope's which_key
+- Added descriptions to navigation mappings (C-n, C-p, C-c, q)
+- Now consistent with shotfile picker help (shooter-only keymaps)
+
+[2026-01-24 12:15] Shot 303 - Open files from analytics report
+- Added Enter keymap in analytics report to open files mentioned on the current line
+- Builds path map from shots (source paths and history file paths)
+- Matches `.md` filenames in various formats (in parentheses, numbered lists, etc.)
+- Added `q` keymap to close the analytics buffer
+- Note: analytics.lua is 286 lines (over 200 limit) - needs future refactoring
+
+[2026-01-24 12:10] Shot 337 - C-n and C-p not working in shotfile picker
+- Bug: C-n and C-p navigation didn't work in the shotfile picker (only in open shots picker)
+- Fix: Added C-n and C-p mappings to shotfile picker's attach_mappings
+- Works in both normal and insert mode
+- Added descriptions for consistency with other pickers
+
+[2026-01-24 12:05] Shot 333 - Fix picker help display
+- Created `lua/shooter/telescope/picker_help.lua` with custom help popups
+- Replaced `actions.which_key` with custom help that only shows shooter-specific keymaps
+- Removed all standard telescope mappings from help (no more anonymous descriptions)
+- Added descriptions to all mappings that were missing them (n, l, ma-mp, etc.)
+- Fixed `L` keymap conflict: removed duplicate that was overwriting layout toggle
+- Help popup shows organized sections: FOLDERS, SESSION, FILTER & SORT, ACTIONS, MOVE, NAVIGATION
+- Press `?` in any picker to show clean, shooter-only help
+
+[2026-01-24 11:54] Shot 319 - Exclude folders from project picker
+- Added `projects.exclude_folders` config option (default: `['_archive', '_template']`)
+- Updated `list_projects()` to filter out excluded folder names
+- Config is in shooter.config under `projects.exclude_folders`
+
+[2026-01-24 11:48] Shot 324 - l and L mappings in pickers
+- Bug: pressing `<space>l` in picker caused E37 error (buffer switch with unsaved changes)
+- Fix: Added `l` and `L` mappings to all pickers that close picker first, then run command
+- `l` → ShooterLast (last edited shot file)
+- `L` → ShooterLatestSent (latest sent shot file)
+- Condensed session/picker.lua to 195 lines
+
+[2026-01-24 11:47] Shot 323 - Create new shotfile from pickers
+- Added `n` mapping to all three pickers (shotfile, project, sort) to create new shotfile
+- Calls ShooterCreate which: prompts for title, shows project picker if subprojects exist
+- Closes picker before creating to avoid conflicts
+
+[2026-01-24 11:45] Shot 340 - Rename move mappings
+- Changed `me` to `mr` for reqs (more intuitive)
+- Changed `mf` to `mp` for prompts (p=prompts)
+- Final mappings: ma=archive, mb=backlog, md=done, mr=reqs, mw=wait, mp=prompts
+
+[2026-01-24 11:43] Shot 335 - Move commands in shotfile picker
+- Added move mappings to shotfile picker (ma=archive, mb=backlog, md=done, me=reqs, mw=wait, mf=prompts)
+- Created `move_file_path(file_path, target_folder)` in movement.lua for picker use
+- After move, picker refreshes automatically; files in non-selected folders disappear from results
+- History sync updates source paths automatically
+
+[2026-01-24 11:42] Shot 339 - Q mapping for project/sort pickers
+- Bug: pressing `q` in project/sort picker was closing all pickers (including shotfile picker)
+- Fix: Added `q` normal mode mapping that goes back to shotfile picker (same as <C-c>)
+- Created go_back() helper function for reuse by both `q` and `<C-c>`
+
+[2026-01-24 11:40] Shot 338 - C-c insert mode fix for project/sort pickers
+- Bug: <C-c> in insert mode was closing project/sort pickers entirely
+- Fix: Added <C-c> insert mode mapping that goes to normal mode (vim.cmd('stopinsert'))
+- Now <C-c> in insert mode → normal mode, <C-c> in normal mode → back to shotfile picker
+
+[2026-01-24 11:34] Shot 336 - C-c behavior in all pickers
+- Shotfile picker: <C-c> in normal mode closes picker (insert mode goes to normal by default)
+- Project picker: <C-c> in normal mode closes and returns to shotfile picker (no changes saved)
+- Sort picker: <C-c> in normal mode closes, reloads from disk (discards changes), returns to shotfile
+- Insert mode <C-c> behavior unchanged (goes to normal mode - default vim behavior)
+
+[2026-01-24 11:30] Shot 334 - C-n and C-p navigation in all pickers
+- Added <C-n> and <C-p> mappings for navigation in all three session pickers
+- Session picker, project picker, and sort picker now have consistent navigation
+- Works in both normal and insert mode
+- Condensed code to keep picker.lua at 198 lines
+
+[2026-01-24 11:28] Shot 331 - Sort picker toggle with Tab/Space
+- Changed sort picker toggle from `t` to `<Tab>` and `<Space>`
+- Matches project picker behavior (both use Tab/Space for toggling)
+- Works in both normal and insert mode
+- Updated title to reflect new keybindings
+- Condensed mappings to keep picker.lua at exactly 200 lines
+
+[2026-01-24 11:27] Shot 332 - Default layout to vertical
+- Changed default layout from 'horizontal' to 'vertical' (preview on top)
+- Updated defaults.lua, storage.lua, and telescope/pickers.lua fallbacks
+- Layout is already persisted in session settings (from shot 330)
+
+[2026-01-24 11:30] Shot 330 - Layout toggle for preview position
+- Added `layout` setting to session (values: 'horizontal' or 'vertical')
+- Horizontal: preview on right (default)
+- Vertical: preview on top (for narrow windows)
+- Press `L` in shotfile picker to toggle layout
+- Layout saved to session YAML and persists across Neovim restarts
+- Updated:
+  * defaults.lua: Added layout field with default 'horizontal'
+  * storage.lua: Serialize/parse layout setting in YAML
+  * session/init.lua: Added toggle_layout() function
+  * telescope/pickers.lua: Apply layout_strategy and layout_config from session
+- Layout config:
+  * Horizontal: width=0.95, preview_width=0.5
+  * Vertical: width=0.95, height=0.9, preview_height=0.5
+
+[2026-01-24 11:24] Shot 329 - Sort picker renumber priorities on disable
+- When disabling a sort criterion, priorities of remaining enabled items are renumbered
+- Example: disabling priority 1 when you have [1, 2, 4] results in [1, 3] (2→1, 4→3)
+- Shifts down all priorities that were higher than the disabled one's priority
+- Ensures no gaps in priority sequence for enabled criteria
+
+[2026-01-24 11:22] Shot 328 - Toggle all folders with A key
+- Changed `A` from "enable all" to toggle between all folders and prompts-only
+- Removed `C` mapping (no longer needed, `A` handles both states)
+- Added `toggle_all_folders()` and `all_folders_enabled()` to session module
+- Pressing `A` when all folders enabled → resets to prompts only
+- Pressing `A` when not all enabled → enables all folders
+
+[2026-01-24 11:20] Shot 327 - Sort picker cursor position after priority change
+- Bug: Cursor jumped to first entry after changing priority with +/-
+- Fix: Updated refresh() function to preserve selection row
+- Uses get_selection_row() before refresh, set_selection(row) after with vim.defer_fn
+- Cursor now stays on current entry when changing priority or toggling sort criteria
+
+[2026-01-24 11:18] Shot 326 - A and C folder toggles not working
+- Bug: Files from subdirectories (archive, backlog, etc.) were not being gathered
+- Root cause: get_prompt_files used `*.md` glob which only finds root-level files
+- Fix: Changed to `**/*.md` to gather ALL files including subdirectories
+- Session filtering now properly filters by enabled folders
+- `A` (enable all folders) and `C` (reset to prompts only) now work correctly
+
+[2026-01-24 11:15] Shot 325 - Sort picker priority swap
+- Fixed priority changes to swap with other items instead of creating duplicates
+- When pressing `+` (increase priority): swaps with item that has priority-1
+- When pressing `-` (decrease priority): swaps with item that has priority+1
+- No two enabled items can have the same priority number
+- Refactored to use shared `swap_priority(delta)` function
+- picker.lua at 197 lines (under 200 limit)
+
+[2026-01-24 11:10] Shot 322 - Open session config with S mapping
+- Added `S` mapping to all pickers (shotfile, session, project, sort) to open session YAML in new tab
+- Session config YAML opens with `:tabedit` for editing
+- Added `session.get_session_file_path()` to get current session file path
+- Added `session.reload_from_disk()` to reload session after external edits
+- File picker now calls `reload_from_disk()` on invocation to pick up YAML changes
+
+[2026-01-24 11:08] Shot 321 - Add sortPicker to vimMode settings
+- Added `sortPicker: normal | insert` to vimMode session settings (default: normal)
+- Updated defaults.lua with sortPicker in DEFAULT and validate_session
+- Updated storage.lua to serialize/parse sortPicker setting
+- Sort picker now uses vimMode.sortPicker for initial_mode
+
+[2026-01-24 11:05] Shot 320 - Sort picker empty and mapping change
+- Changed sort picker mapping from `S` (uppercase) to `s` (lowercase)
+- Fixed empty sort picker by adding entry_maker to finder
+- Sort picker now shows all 6 criteria: created, filename, modified, path, projectname, shotcount
+- picker.lua still at 194 lines (under 200 limit)
+
+[2026-01-24 11:00] Shot 318 - Project picker shows no projects fix
+- Problem: Project picker showed empty Results when no projects/ folder exists
+- Root cause: list_projects() only finds subdirectories in git_root/projects/
+- Solution: Always show root project as first entry in project picker
+- Root project now displayed as "[x] reponame (root)" or "[ ] reponame (root)"
+- Toggle with Tab/Space like subprojects
+- Removed separate 'r' key mapping (now unified with Tab/Space)
+- Picker always has at least one entry (root) even with no subprojects
+- Refactored picker.lua to 185 lines (was 265, under 200-line limit)
+
+[2026-01-24 11:00] Shot 317 - Cursor position after project selection
+- Already addressed by shot 315 fix (cursor preserved after toggle)
+- Implementation: get_selection_row() before refresh, set_selection(row) after
+- vim.schedule() ensures cursor restore happens after Telescope finishes refresh
+
+[2026-01-24 10:55] Shot 313 - VimMode session setting for pickers
+- Added vimMode to session settings with shotfilePicker and projectPicker
+- Both default to 'normal' mode
+- Session YAML now includes:
+  vimMode:
+    shotfilePicker: normal | insert
+    projectPicker: normal | insert
+- Updated defaults.lua with vimMode in DEFAULT and validate_session
+- Updated storage.lua to serialize/parse vimMode settings
+- File picker uses session vimMode.shotfilePicker
+- Project picker uses session vimMode.projectPicker
+
+[2026-01-24 10:52] Shot 316 - Enable all folders with A, clear with C
+- Added `A` key to enable ALL folders (archive, backlog, done, reqs, wait, prompts)
+- Added `C` key (uppercase) as alias for `c` to reset folders to default
+- Added `enable_all_folders()` function to session module
+- Updated README with new keymaps
+
+[2026-01-24 10:50] Shot 315 - Project picker Tab/Space selection
+- Fixed project picker to properly refresh display after toggling selection
+- Added Tab and Space keymaps for toggling project selection
+- Tab works in both normal and insert mode
+- Space works in normal mode
+- Cursor position is preserved after refresh
+- Updated title to show "Tab/Space=select"
+
+[2026-01-24 10:30] Shot 312 - Per-Repo Session System with Whitelist Filtering
+- Complete redesign of filter/session system
+- Created new lua/shooter/session/ module with 6 files:
+  - defaults.lua: DEFAULT session template, create_session, validate_session
+  - storage.lua: YAML I/O, session CRUD operations
+  - init.lua: Session lifecycle, toggle_folder, set_projects
+  - filter.lua: Whitelist folder/project filtering
+  - sort.lua: Multi-criteria sorting with priorities
+  - picker.lua: Telescope pickers for session/project/sort management
+- Per-repo YAML sessions in ~/.config/shooter.nvim/sessions/<repo-slug>/
+- Whitelist folder filtering (toggle ON/OFF) instead of exclusive filtering
+- Dual keymaps for folder toggles: 1-6 (numbers) and a/b/t/e/w/f (letters)
+- Session commands: ss (save), sl (load), sn (new), sd (delete), sr (rename)
+- P opens project picker (r=root toggle, Tab=multi-select)
+- S opens sort picker (t=toggle, +/-=priority, d=direction)
+- Root project separate from subprojects (empty subProjects = NONE)
+- Auto-create init.yaml session on first <space>v
+- Auto-save session on every filter change
+- Title shows: [session-name | active-filters | sort-status]
+- Refactored telescope/pickers.lua to use new session module
+- Created tests/session/ with 4 test files (54 tests total)
+- All tests passing
+
+[2026-01-24 09:42] Shot 311 - Add descriptions to which-key mappings
+- Added { desc = '...' } to all custom mappings
+- Folder filters: "filter: archive", "filter: backlog", etc.
+- Other mappings: "toggle: sort by recent", "filter: by project", etc.
+- No more "anonymous" in which-key popup
+
+[2026-01-24 09:38] Shot 310 - Use telescope's built-in which-key for help
+- Replaced custom notification with telescope's actions.which_key
+- Press '?' in normal mode or Ctrl-/ in insert mode
+- Shows proper popup with all mappings, stays open until dismissed
+
+[2026-01-24 09:36] Shot 309 - Show full repo path in picker title
+- Changed from showing just repo name to full path
+- Home directory replaced with ~ (e.g., ~/cod/shooter.nvim)
+
+[2026-01-24 09:33] Shot 308 - Persist mode when applying filters
+- Added initial_mode option to picker creation
+- All filter actions now pass initial_mode = 'normal'
+- Picker stays in normal mode after applying folder/mtime/project filters
+
+[2026-01-24 09:31] Shot 307 - Fix help closing picker
+- Changed from floating window to vim.notify (non-blocking)
+- Help now shows as notification, picker stays open
+- Condensed help text to fit in notification
+
+[2026-01-24 09:28] Shot 306 - Add help mapping to file picker
+- Press '?' in normal mode to show all available mappings
+- Title now shows "(?=help)" hint instead of listing all keys
+
+[2026-01-24 09:25] Shot 304 - Fix empty filter closing picker
+- Bug: Pressing 'a' to filter by archive closed picker if no files matched
+- Pressing <space>v again wouldn't open because filter was saved
+- Fix: Removed early return, picker now shows even when empty
+- Title shows "(empty: archive)" when no files match filter
+- User can still change filters using keyboard shortcuts
+
+[2026-01-24 09:00] Shot 302 - Improved File Picker with Recent Files and Project Filters
+- Created lua/shooter/filter_state.lua - persists filters to JSON
+- Added 'l' key to toggle sort by recently edited (mtime)
+- Added 'P' key to filter by project(s) (multi-select picker)
+- Added 'C' key to clear all filters
+- Added 'S' key to save current filter as named session
+- Added 'L' key to load saved filter session
+- ShooterList now shows all files (root + projects) by default
+- Added ShooterClearFilter command and <space>V keymap
+
+[2026-01-23 13:45] Shot 296 - Clean up duplicate history files
+- Created lua/shooter/history/cleanup.lua (76 lines)
+- cleanup_duplicates(do_fix) finds files with same shot number, 1 second apart
+- Keeps file with YAML frontmatter (history file), deletes sendable file
+- New command: :ShooterHistoryCleanup (dry-run) and :ShooterHistoryCleanup! (delete)
+- Cleaned 88 duplicate files from all history folders
+
+[2026-01-23 13:30] Shot 295 - Fix duplicate history files on send
+- Bug: save_sendable() and save_shot() each generated their own timestamp
+- If second boundary crossed between calls, two different files were created
+- Fix: save_sendable() now returns timestamp along with filepath
+- save_shot() accepts optional timestamp parameter
+- operations.lua passes timestamp from save_sendable to mark_and_save
+- Now both functions use the same timestamp, creating single file
+
+[2026-01-23 13:00] Shot 294 - Fix subprocess not seeing all files
+- Subprocess ran with --clean flag, so config (repos) was not available
+- get_all_repos_prompt_files() only found current git root (1 file)
+- Fix: Get file list in parent process (where config is loaded), pass to subprocess
+- Files list serialized as JSON and passed in the script
+- Now correctly processes all files from all configured repos
+
+[2026-01-23 12:45] Subprocess-based audit for true non-blocking
+- Spawns `nvim --headless --clean -l /dev/stdin` subprocess via vim.fn.jobstart()
+- Sends audit Lua script via stdin to the subprocess
+- Subprocess runs audit, writes JSON results to temp file
+- Main nvim reads results when job exits, generates report
+- Uses get_plugin_root() to dynamically find shooter.nvim path
+- Truly non-blocking: UI remains responsive during audit
+- Scales to any number of files
+
+[2026-01-23 12:30] Simplified audit to synchronous execution
+- All async approaches had issues (fast event context, blocking during I/O)
+- Fundamental problem: Neovim Lua runs single-threaded, file I/O always blocks
+- Solution: Run synchronously with clear "Working..." message and forced redraw
+- Shows message before work starts so user knows something is happening
+- Audit completes in 2-3 seconds for ~120 files - acceptable
+
+[2026-01-23 12:20] Shot 292 - Fix vim API error in idle callback
+- vim.loop.new_idle() callbacks run in "fast event" context where vim APIs not allowed
+- Switched to vim.loop.new_timer() with vim.schedule_wrap() for safe API access
+- Timer fires every 1ms, callback runs on main thread via schedule_wrap
+- This allows vim.fn.*, vim.split, etc. to work properly
+
+[2026-01-23 12:15] Shot 291 - Non-blocking Audit via vim.loop.new_idle()
+- Switched from plenary.async to vim.loop.new_idle() for lowest priority processing
+- Idle callbacks only run when event loop has nothing else to do
+- Removed progress notifications (they caused redraws that felt blocking)
+- Only shows start message and completion prompt
+- Processes one file per idle tick for maximum UI responsiveness
+
+[2026-01-23 12:00] Shot 289 - Non-blocking Audit via plenary.async
+- Rewrote audit_runner.lua to use plenary.async.void() coroutines
+- async.util.scheduler() yields to event loop after each file for UI responsiveness
+- Changed vim.ui.select to vim.fn.confirm (cleaner dialog, no command-line conflict)
+- Progress notifications at 25/50/75/100%
+- Research: vim.loop timers still run synchronously on main thread
+- Solution: plenary.async uses coroutines that properly yield control
+- Sources: https://dzx.fr/blog/async-lua-in-neovim/, https://github.com/nvim-lua/plenary.nvim
+
+[2026-01-23 11:45] Shot 288 - Truly Non-blocking Audit with Notifications
+- Rewrote audit_runner.lua to use vim.loop timer instead of vim.defer_fn
+- Progress now shown via vim.notify (notification area) instead of command line
+- Notifications appear at 25%, 50%, 75%, 100%
+- Added vim.ui.select prompt asking "Open audit report?" when done
+- Added M._running flag to prevent concurrent audits
+- Added open_last_report() to open most recent report
+
+[2026-01-23 11:30] Shot 287 - Non-blocking History Audit with Progress
+- Created lua/shooter/history/audit_runner.lua (~160 lines):
+  * get_reports_dir() - returns ~/.config/shooter.nvim/audit-reports/
+  * generate_report_path() - generates timestamped report filename
+  * generate_report() - creates markdown report from audit results
+  * run_async() - runs audit in background with progress bar
+  * finish_audit() - saves report and opens it
+- Progress bar shows: [████████░░░░░░░░░░░░] 40% filename.md
+- Reports saved to ~/.config/shooter.nvim/audit-reports/audit-YYYYMMDD_HHMMSS.md
+- Report includes summary table and per-file details
+- Opens report automatically when audit completes
+- Added tests: audit_runner_spec.lua (6 tests)
+
+[2026-01-23 11:00] Shot 282 - History Sync, File Rename, and History Recovery
+- Created lua/shooter/history/sync.lua (~150 lines):
+  * find_history_folder() - find history folder for source file
+  * build_history_folder_path() - construct history folder path
+  * parse_frontmatter() - parse YAML frontmatter from history file
+  * update_frontmatter_field() - update single field in frontmatter
+  * update_source_paths() - update source in all history files in folder
+  * rename_history_folder() - rename folder + update all metadata
+  * history_exists_for_shot() - check if history exists for shot number
+  * get_history_info() - get info about existing history
+
+- Created lua/shooter/core/rename.lua (~100 lines):
+  * perform_rename() - rename file with history sync
+  * rename_current_file() - interactive rename with vim.ui.input
+
+- Created lua/shooter/history/audit.lua (~200 lines):
+  * parse_done_shot() - parse done shot header (with/without date)
+  * subtract_minute() - derive date by subtracting 1 minute
+  * get_shot_content() - extract shot content between headers
+  * fix_shots_missing_dates() - add dates to `## x shot N` missing dates
+  * find_missing_history() - find done shots without history files
+  * create_history_file() - create reconstructed history file
+  * run() - main audit function across all configured repos
+
+- Updated greenkeep.lua: Now syncs history when renaming files
+- Updated movement.lua: Now updates history source paths when moving files
+- Added commands: ShooterShotfileRename, ShooterHistoryAudit, ShooterHistoryAudit!
+- Added keymap: `<space>F` for ShooterShotfileRename
+- Added tests: sync_spec.lua (8), rename_spec.lua (4), audit_spec.lua (11)
+- Updated README.md with new commands and keymaps
+
+[2026-01-23 10:10] Shot 279-281 - ShooterGreenkeep command (full migration)
+- Added ShooterGreenkeep command to migrate all old formats:
+  * Shot dates: `(20260119_0741)` → `(2026-01-19 07:41:00)`
+  * File headers: `# 2026-01-18 - Layout` → `# layout`
+  * Filenames: `20260118_2338_layout.md` → `layout.md`
+  * History folders: `20260118_0516_nvim-commands` → `nvim-commands`
+- Created lua/shooter/core/greenkeep.lua (~180 lines):
+  * convert_date() - convert old date parts to new format
+  * slugify() - convert title to slug (lowercase, dashes)
+  * extract_slug_from_filename() - extract slug from old filename patterns
+  * process_header() - convert old header format
+  * process_shot_date() - convert old shot date format
+  * process_file_content() - process both headers and shot dates
+  * rename_file_if_needed() - rename old format files
+  * rename_folder_if_needed() - rename old format history folders
+  * get_old_history_folders() - find folders needing renaming
+  * run() - main entry point with stats reporting
+- Added keymap: `<space>G` for ShooterGreenkeep
+- Added tests in tests/core/greenkeep_spec.lua (22 tests)
+- Auto-reload buffer after changes, handles file rename gracefully
+
+[2026-01-23 09:30] Shot 276 - 2026-01-18 - shooter.nvim
+- Removed date from file header when creating new shot files
+- Header now just "# <title>" instead of "# <date> - <title>"
+- Updated lua/shooter/core/files.lua
+
+[2026-01-23 09:25] Shot 274/275 - 2026-01-18 - shooter.nvim
+- ShooterCreate now enters insert mode after file creation
+- Cursor positioned on line 4 (after "## shot 1" header)
+- User can immediately start typing shot content
+- Fix: wrapped in vim.schedule() to work with async vim.ui.input callback
+- Updated lua/shooter/commands.lua
+
+[2026-01-23 09:30] Shot 272 - 2026-01-18 - shooter.nvim
+- Added project support for mono-repos with projects/ folder structure
+- Created lua/shooter/core/project.lua (~160 lines):
+  * has_projects() - check if projects/ folder exists at git root
+  * list_projects() - list all project directories
+  * detect_from_path(filepath) - extract project name from file path
+  * detect_from_cwd() - detect project from current working directory
+  * get_prompts_dir(project) - get absolute prompts path for project
+  * get_prompts_root(project) - get relative prompts path
+  * pick_project(callback, opts) - telescope picker for project selection
+- Updated lua/shooter/core/files.lua:
+  * get_prompts_dir(project) - delegates to project module
+  * is_in_prompts_folder(path) - checks both root and project paths
+  * create_file() accepts project parameter
+  * get_prompt_files() accepts project parameter
+- Updated lua/shooter/commands.lua:
+  * ShooterCreate - auto-detects project or shows picker
+  * ShooterList - auto-detects project or shows picker
+- Updated lua/shooter/telescope/pickers.lua:
+  * list_all_files() accepts project parameter, passes to helpers
+- Updated lua/shooter/telescope/helpers.lua:
+  * get_target_file() - checks both root and project prompts paths
+  * get_prompt_files(filter, project) - accepts project parameter
+  * get_all_repos_prompt_files() - includes files from all projects
+- Updated lua/shooter/history/init.lua:
+  * detect_project_from_path() - detect project from source file path
+  * build_history_path() - includes project in path (uses _root for non-project)
+  * save_shot() and save_sendable() - auto-detect project
+  * New path format: ~/.config/.../history/user/repo/project/filename/
+- Updated lua/shooter/dashboard/data.lua:
+  * process_prompts_dir() - helper for processing prompts directory
+  * get_repo_files() - includes files from all projects
+  * Files include project field and display with project prefix
+- Created tests/core/project_spec.lua - 11 tests for project module
+- Updated tests/core/history_spec.lua - added project path tests
+- Updated lua/shooter/help.lua - added PROJECT SUPPORT section
+- Updated README.md - added Project Support section with examples
+- Backward compatible: repos without projects/ folder work exactly as before
+
+[2026-01-23 08:10] Shot 270 - 2026-01-18 - shooter.nvim
+- Fixed search highlight being overridden by shot highlight
+- Changed matchadd() priority from default (10) to -1
+- Search highlights (priority 10) now take precedence over shot highlights
+- Updated lua/shooter/syntax.lua
+
+[2026-01-23 08:05] Shot 269 - 2026-01-18 - shooter.nvim
+- Changed default shot highlight from yellow to light orange
+- Old: bg=#ffff00 (yellow) - conflicts with search highlights
+- New: bg=#ffb347 (light orange) - distinct from search results
+- Updated config.lua, syntax.lua, after/syntax/markdown.vim
+- Updated README.md highlight documentation
+
+[2026-01-23 08:00] Shot 30 - 2026-01-18 - shooter.nvim
+- Added ShooterOpenObsidian command (<space>Oo keymap)
+- Opens current file in Obsidian app using obsidian:// URL scheme
+- Only works if file is inside an Obsidian vault
+- Created lua/shooter/tools/obsidian.lua (90 lines):
+  * find_vault(filepath) - walks up directory tree looking for .obsidian
+  * get_relative_path(filepath, vault_root) - strips vault root from path
+  * url_encode(str) - encodes path for obsidian:// URL
+  * open_in_obsidian() - main function, builds URL and opens
+- Cross-platform: uses `open` on macOS, `xdg-open` on Linux
+- Updated commands.lua, keymaps.lua, help.lua, README.md
+
+[2026-01-23 07:40] Shot 268 - 2026-01-18 - shooter.nvim
+- Changed open shot highlighting from yellow-on-black to black-on-yellow
+- New default: fg=#000000 (black), bg=#ffff00 (yellow), bold=true
+- Better cursor visibility with inverted colors
+- Made highlighting configurable via config.highlight.open_shot:
+  * fg: foreground color
+  * bg: background color
+  * bold: bold text (default true)
+- Updated lua/shooter/syntax.lua to read colors from config
+- Updated after/syntax/markdown.vim with new default colors
+- Added comprehensive Configuration section to README.md:
+  * All config options with defaults
+  * Section headers for organization
+  * Highlight customization examples
+
+[2026-01-23 00:30] Shot 265 - 2026-01-18 - shooter.nvim
+- Added ShooterToolTokenCounter command (<space>ttc keymap)
+- Counts tokens in current file using ttok CLI (pip install ttok)
+- Created lua/shooter/tools/token_counter.lua (65 lines):
+  * count_tokens(filepath) - runs ttok < file, returns count
+  * show_token_count() - displays formatted count with thousands separator
+- Added health checks in lua/shooter/health.lua:
+  * check_python() - verifies python3 or python is installed
+  * check_ttok() - verifies ttok is installed and working
+- Updated help.lua with TOOLS section
+- Updated README.md: requirements, commands table, keybindings, health check
+
+[2026-01-22 20:45] Shot 263 - 2026-01-18 - shooter.nvim
+- Remapped <space>t to <space>v for ShooterList (Telescope file picker)
+- Updated keymaps.lua, help.lua, README.md
+
+[2026-01-22 18:10] Shot 260 - 2026-01-18 - shooter.nvim
+- Added <space>mm fuzzy folder picker for moving files (like Obsidian)
+- New module: lua/shooter/core/move_picker.lua (155 lines)
+  * get_project_folders() - lists all folders from git root
+  * Respects .gitignore using `git check-ignore`
+  * Uses `git ls-files` and `find` to get comprehensive folder list
+  * move_file_to_folder() - handles the actual file move
+  * open_picker() - Telescope picker with folder list
+- Works in both Oil and regular editor buffers
+- <C-c> closes picker in both insert and normal mode
+- Added ShooterMovePicker command and <space>mm keymap
+- Updated help.lua, README.md
+
+[2026-01-22 12:36] Shot 254 - 2026-01-18 - shooter.nvim
+- Changed filename format for new shot files
+- Old: `YYYY-MM-DD_slug.md` (e.g., `2026-01-22_my-feature.md`)
+- New: `slug.md` (e.g., `my-feature.md`)
+- Modified generate_filename() in lua/shooter/core/files.lua
+- Note: file content still has date in the # heading (unchanged)
+
+[2026-01-22 12:35] Shot 259 - 2026-01-18 - shooter.nvim
+- Fixed vim pane width still getting messed up after ShooterWatch
+- Bug: horizontal split (-h) was dividing the width of existing panes
+- Fix: use vertical split (-v) instead - creates top/bottom split
+- Changed: `split-window -hb` → `split-window -vb`
+- Vertical split doesn't affect horizontal pane widths at all
+- When zoomed and closed, horizontal layout is preserved
+
+[2026-01-22 12:25] Shot 258 - 2026-01-18 - shooter.nvim
+- Fixed vim window being smaller after ShooterWatch exits
+- Bug: select-layout ran while watch pane still existed (before shell exited)
+- Applied 2-pane layout to 3-pane window, causing size issues
+- Fix: spawn background process with `nohup` that survives pane close
+- New sequence: unzoom, then `nohup sh -c 'sleep 0.3; tmux select-layout' &`
+- Background job waits 0.3s for pane to fully close, then restores layout
+
+[2026-01-22 12:20] Shot 257 - 2026-01-18 - shooter.nvim
+- Fixed ShooterWatch not restoring original pane layout
+- Bug: zoom only captures post-split state, not original layout
+- Fix: save layout BEFORE split with `display-message -p "#{window_layout}"`
+- Run wrapper: `shooter watch; tmux select-layout '<saved_layout>'`
+- When watch exits, select-layout runs to restore original sizes
+
+[2026-01-22 12:15] Shot 256 - 2026-01-18 - shooter.nvim
+- Added ShooterWatch command (<space>b keymap)
+- Opens maximized tmux pane running "shooter watch"
+- When shooter watch exits, pane auto-closes and layout restores
+- Implementation in lua/shooter/tmux/watch.lua (75 lines):
+  * check_tmux() - validates tmux is installed
+  * in_tmux() - validates running inside tmux
+  * tmux_cmd() - helper to run tmux commands
+  * open_watch_pane() - saves layout, splits, runs shooter watch, zooms
+- Updated commands.lua, keymaps.lua, help.lua, README.md
+
+[2026-01-22 10:40] Shot 253 - 2026-01-18 - shooter.nvim
+- Changed file preview in Files picker to only show open shots
+- Previously showed entire file content including done shots
+- Now shows: file title + list of open shots with previews
+- Preview title changed from "File Preview" to "Open Shots"
+
+[2026-01-22 10:35] Shot 252 - 2026-01-18 - shooter.nvim
+- Fixed <C-n>/<C-p> not working in dashboard repo view
+- Bug: mappings were only set for insert mode ('i'), but initial_mode = 'normal'
+- Fix: added normal mode mappings for <C-n> and <C-p> in common_mappings()
+- Now both modes have navigation keybindings
+
+[2026-01-22 10:30] Shot 251 - 2026-01-18 - shooter.nvim
+- Implemented three-step drill-down dashboard (user requested)
+- Flow: Repos picker -> Files picker -> Shots picker
+- Each picker shows:
+  * Repos: name (X/Y files) [X/Y shots] - files with shots / total, open / total
+  * Files: title (X/Y) - open / total shots
+  * Shots: shot N: preview text
+- Navigation in all pickers:
+  * Enter = select/drill down (on shot: opens file at line)
+  * H = go back to previous picker
+  * q = quit
+  * <C-n>/<C-p> = navigate in insert mode
+  * 1-4 = send shot to pane (on shots picker)
+- Modified data.lua:
+  * get_shots() returns { open = [...], total = N }
+  * get_repo_files() returns { files, total_files, open_shots, total_shots }
+  * get_all_repos() includes files_with_shots, total_files, open_shots, total_shots
+- dashboard/init.lua (164 lines):
+  * show_repos() - step 1
+  * show_files(repo, back_fn) - step 2
+  * show_shots(file_entry, back_fn) - step 3
+  * common_mappings() - shared keybindings with back support
+- Updated help.lua with three-step flow description
+
+[2026-01-22 10:15] Shot 251 (initial) - 2026-01-18 - shooter.nvim
+- Replaced nui.nvim dashboard with Telescope-based picker
+- User feedback: "honestly i dont like it" on nui.nvim tree approach
+- New approach: flat searchable list with visual hierarchy
+  * Format: repo > file | shot N: preview text
+  * Telescope handles fuzzy search, cursor, selection state
+- Deleted 3 nui.nvim modules:
+  * dashboard/state.lua (was 95 lines)
+  * dashboard/search.lua (was 130 lines)
+  * dashboard/tree.lua (was 130 lines)
+- Rewrote dashboard/init.lua (159 lines) using Telescope:
+  * flatten_repos() - converts hierarchical data to flat list
+  * shot_previewer() - shows full shot content in preview
+  * open_shot() - opens file at shot line
+  * send_to_pane() - sends shot and closes picker
+- Removed nui.nvim dependency:
+  * Removed from README.md requirements and dependencies
+  * Removed check_nui_nvim() from health.lua
+  * Removed from CLAUDE.md health checks list
+- Updated help.lua with simpler dashboard description
+- Benefits: no new deps, familiar UX, less code, built-in search
+
+[2026-01-22 09:50] Shot 250 - 2026-01-18 - shooter.nvim
+- Major dashboard improvements:
+  1. Persistent state - cursor position, expanded nodes, and search filter
+     saved across dashboard close/reopen cycles
+  2. Fixed expand/collapse all (L/H) to preserve cursor position
+  3. Added search-as-you-type with '/' to enter search mode
+- Created 2 new modules to keep init.lua under 200 lines:
+  * state.lua (95 lines) - handles persistent state management
+  * search.lua (130 lines) - handles search input and tree filtering
+- Search features:
+  * '/' enters search mode (insert mode on search line)
+  * Filters repos/files/shots in real-time as you type
+  * Escape exits search mode, Enter submits and moves to results
+  * Filter persists when reopening dashboard
+- Updated help.lua with new search keybinding
+
+[2026-01-22 09:35] Shot 247 - 2026-01-18 - shooter.nvim
+- Fixed dashboard error: `attempt to call method 'iter_nodes' (a nil value)`
+- Bug: NuiTree doesn't have `iter_nodes()` method
+- Fix: Created `iter_all_nodes(tree, parent_id)` helper function that recursively
+  iterates using `tree:get_nodes()` and `node:get_id()` for children
+- Updated 4 locations in lua/shooter/dashboard/init.lua
+- Multi-repo support already implemented in data.lua:
+  * Reads from config.repos.direct_paths (explicit repo paths)
+  * Reads from config.repos.search_dirs (directories to search for git repos)
+  * User needs to configure these in their shooter.nvim setup()
+
+[2026-01-22 09:45] Shot 245 - 2026-01-18 - shooter.nvim (IMPLEMENTATION)
+- Implemented interactive project dashboard using nui.nvim
+- New dependency: nui.nvim (added to README, healthcheck)
+- Created 3 new modules in lua/shooter/dashboard/:
+  * data.lua - gathers files and open shots from repos (160 lines)
+  * tree.lua - NuiTree node building and rendering (130 lines)
+  * init.lua - main dashboard with popup, keymaps, actions (175 lines)
+- Features:
+  * Shows all repos with in-progress files containing open shots
+  * Expandable tree: repo -> file -> shots
+  * Enter on file: opens file
+  * Enter on shot: opens file at shot line
+  * Tab/h/l: toggle expand/collapse
+  * L/H: expand/collapse all
+  * r: refresh, q/Esc: close
+- Added ShooterDashboard command + <space>D keymap
+- Updated help.lua with dashboard documentation
+- Created tests/dashboard/data_spec.lua with 7 tests
+
+[2026-01-22 09:25] Shot 245 - 2026-01-18 - shooter.nvim (RESEARCH)
+- Researched TUI options for building interactive project dashboard in Neovim
+- Goal: Show files per project with expandable open shots, interactive navigation
+
+RECOMMENDED APPROACH: nui.nvim (https://github.com/MunifTanjim/nui.nvim)
+  - Full UI component library for Neovim, Lua-based, requires Neovim 0.5+
+  - Main components:
+    * NuiTree - hierarchical tree view with expand/collapse (PERFECT for files→shots)
+    * NuiPopup - floating windows for modal UI
+    * NuiLayout - compose multiple components (rows/columns)
+    * NuiMenu - selectable list items
+    * NuiLine/NuiText - styled text rendering
+  - Used by neo-tree.nvim for its tree UI
+  - Example usage:
+    ```lua
+    local tree = NuiTree({
+      winid = popup.winid,
+      nodes = {
+        NuiTree.Node({ text = "file.md" }, {
+          NuiTree.Node({ text = "shot 1" }),
+          NuiTree.Node({ text = "shot 2" }),
+        }),
+      },
+      prepare_node = function(node)
+        local line = NuiLine()
+        line:append(node:is_expanded() and " " or " ")
+        line:append(node.text)
+        return line
+      end,
+    })
+    ```
+  - Keybindings via tree:map() for expand/collapse/select
+
+ALTERNATIVE APPROACHES:
+  1. Native vim.api - nvim_create_buf + nvim_open_win (more work, no dependencies)
+  2. Telescope custom layout - extend existing picker (limited tree support)
+  3. Oil-style buffer - scratch buffer with custom syntax (simpler but less interactive)
+
+IMPLEMENTATION PLAN (if pursuing):
+  1. Add nui.nvim as dependency
+  2. Create lua/shooter/dashboard/init.lua (main entry)
+  3. Create lua/shooter/dashboard/tree.lua (NuiTree logic)
+  4. Create lua/shooter/dashboard/data.lua (gather files+shots per project)
+  5. Keymaps: Enter=open, Tab=expand/collapse, q=quit
+  6. Add ShooterDashboard command + keymap
+
+[2026-01-22 09:20] Shot 246 - 2026-01-18 - shooter.nvim
+- Remapped <space>g to <space>I for ShooterImages (get images)
+- Updated lua/shooter/keymaps.lua: changed prefix .. 'g' to prefix .. 'I'
+- Updated lua/shooter/help.lua: changed 'g' to 'I' in CORE COMMANDS section
+- Updated lua/shooter/health.lua: changed <space>g to <space>I in hal CLI hint
+- Updated README.md: changed <space>g to <space>I in requirements
+
+[2026-01-22 09:15] Shots 242, 243 - 2026-01-18 - shooter.nvim
+- Added oil.nvim and vim-i3wm-tmux-navigator as direct dependencies
+- Added healthcheck functions in lua/shooter/health.lua:
+  * check_oil_nvim() - verifies oil.nvim is installed (required)
+  * check_vim_tmux_navigator() - verifies fogine/vim-i3wm-tmux-navigator is installed (required)
+- Updated README.md:
+  * Added both plugins to Requirements section
+  * Added to lazy.nvim dependencies list
+  * Added to packer.nvim requires list
+  * Updated Health Check section to mention new dependencies
+
 [2026-01-22 08:10] Shot 240 - 2026-01-18 - shooter.nvim
 - Changed <space>t to only show files directly in plans/prompts/ by default
 - Subfolders (archive, backlog, done, etc.) only shown when filter is applied
