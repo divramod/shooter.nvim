@@ -38,7 +38,7 @@ describe('shooter.history.audit_runner', function()
 
       local report = audit_runner.generate_report(results, false)
       assert.truthy(report:match('# Shooter History Audit Report'))
-      assert.truthy(report:match('Files checked | 10'))
+      assert.truthy(report:match('Prompt files checked | 10'))
       assert.truthy(report:match('Shots missing dates | 2'))
       assert.truthy(report:match('Missing history entries | 3'))
     end)

@@ -123,11 +123,11 @@ Content here
 ]])
       f:close()
 
-      local files = data.get_repo_files(test_dir)
+      local result = data.get_repo_files(test_dir)
 
-      assert.are.equal(1, #files)
-      assert.are.equal('test.md', files[1].name)
-      assert.are.equal(1, #files[1].shots)
+      assert.are.equal(1, #result.files)
+      assert.are.equal('test.md', result.files[1].name)
+      assert.are.equal(1, #result.files[1].shots)
     end)
 
     it('excludes files with no open shots', function()
@@ -141,9 +141,9 @@ Completed
 ]])
       f:close()
 
-      local files = data.get_repo_files(test_dir)
+      local result = data.get_repo_files(test_dir)
 
-      assert.are.equal(0, #files)
+      assert.are.equal(0, #result.files)
     end)
   end)
 end)
