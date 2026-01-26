@@ -1,0 +1,73 @@
+-- Tests for obsidian integration
+local obsidian = require('shooter.tools.obsidian')
+
+describe('obsidian', function()
+  describe('find_vault', function()
+    it('returns error for empty filepath', function()
+      local vault_root, err = obsidian.find_vault('')
+      assert.is_nil(vault_root)
+      assert.matches('No file path', err)
+    end)
+
+    it('returns error for nil filepath', function()
+      local vault_root, err = obsidian.find_vault(nil)
+      assert.is_nil(vault_root)
+      assert.matches('No file path', err)
+    end)
+
+    it('returns error when not in vault', function()
+      local vault_root, err = obsidian.find_vault('/tmp/not-a-vault/file.md')
+      assert.is_nil(vault_root)
+      assert.matches('Not in an Obsidian vault', err)
+    end)
+  end)
+
+  describe('url_encode', function()
+    it('encodes spaces', function()
+      local result = obsidian.url_encode('hello world')
+      assert.equals('hello%20world', result)
+    end)
+
+    it('preserves alphanumeric characters', function()
+      local result = obsidian.url_encode('abc123')
+      assert.equals('abc123', result)
+    end)
+
+    it('preserves slashes for paths', function()
+      local result = obsidian.url_encode('folder/subfolder/file.md')
+      assert.equals('folder/subfolder/file.md', result)
+    end)
+
+    it('encodes special characters', function()
+      local result = obsidian.url_encode('file (1).md')
+      assert.equals('file%20%281%29.md', result)
+    end)
+
+    it('handles empty string', function()
+      local result = obsidian.url_encode('')
+      assert.equals('', result)
+    end)
+
+    it('handles nil', function()
+      local result = obsidian.url_encode(nil)
+      assert.equals('', result)
+    end)
+  end)
+
+  describe('get_relative_path', function()
+    it('strips vault root from path', function()
+      local result = obsidian.get_relative_path('/home/user/vault/notes/file.md', '/home/user/vault')
+      assert.equals('notes/file.md', result)
+    end)
+
+    it('handles trailing slash in vault root', function()
+      local result = obsidian.get_relative_path('/home/user/vault/notes/file.md', '/home/user/vault/')
+      assert.equals('notes/file.md', result)
+    end)
+
+    it('handles file at vault root', function()
+      local result = obsidian.get_relative_path('/home/user/vault/file.md', '/home/user/vault')
+      assert.equals('file.md', result)
+    end)
+  end)
+end)
