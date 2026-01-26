@@ -21,26 +21,49 @@ shooter.nvim/
 │   ├── init.lua              # Main entry point, setup()
 │   ├── config.lua            # Configuration defaults
 │   ├── utils.lua             # Shared utilities
-│   ├── commands.lua          # Vim command registration
-│   ├── keymaps.lua           # Default keybindings
+│   ├── commands.lua          # Vim command registration (8 namespaces)
+│   ├── keymaps.lua           # Default keybindings (8 namespaces)
 │   ├── health.lua            # :checkhealth integration
+│   ├── context/              # Context detection for commands
+│   │   ├── init.lua          # is_telescope_picker(), is_oil_buffer(), etc.
+│   │   └── resolvers.lua     # resolve_shot_target(), resolve_shotfile_target()
+│   ├── keymaps/              # Context-specific keymaps
+│   │   ├── picker.lua        # Shared telescope picker keymaps
+│   │   └── oil.lua           # Oil buffer keymaps (autocmd-based)
 │   ├── core/
 │   │   ├── files.lua         # File operations
 │   │   ├── shots.lua         # Shot detection/marking
 │   │   ├── movement.lua      # File movement
-│   │   └── context.lua       # Context management
+│   │   ├── project.lua       # Project detection and paths
+│   │   └── context.lua       # Context file management
 │   ├── telescope/
 │   │   ├── pickers.lua       # Picker constructors
 │   │   ├── actions.lua       # Action handlers
-│   │   └── previewers.lua    # Custom previewers
+│   │   ├── previewers.lua    # Custom previewers
+│   │   ├── helpers.lua       # Picker utilities
+│   │   └── picker_help.lua   # Picker help popups
 │   ├── tmux/
 │   │   ├── send.lua          # Send to panes
 │   │   ├── detect.lua        # Find Claude panes
+│   │   ├── wrapper.lua       # Tmux wrapper commands
+│   │   ├── panes.lua         # Pane toggle functionality
+│   │   ├── watch.lua         # Watch pane management
 │   │   └── messages.lua      # Build messages
-│   └── queue/
-│       ├── init.lua          # Queue management
-│       ├── storage.lua       # JSON persistence
-│       └── picker.lua        # Queue picker
+│   ├── queue/
+│   │   ├── init.lua          # Queue management
+│   │   ├── storage.lua       # JSON persistence
+│   │   └── picker.lua        # Queue picker
+│   ├── dashboard/
+│   │   ├── init.lua          # Dashboard main entry
+│   │   ├── data.lua          # Gather files and shots
+│   │   └── tree.lua          # NuiTree rendering
+│   └── session/
+│       ├── init.lua          # Session lifecycle management
+│       ├── defaults.lua      # DEFAULT template, validation
+│       ├── storage.lua       # YAML I/O, session CRUD
+│       ├── filter.lua        # Whitelist folder/project filtering
+│       ├── sort.lua          # Multi-criteria sorting
+│       └── picker.lua        # Telescope pickers for sessions
 ├── templates/
 │   ├── shooter-context-project-template.md
 │   └── shooter-context-message.md
@@ -226,6 +249,126 @@ shooter.nvim/
 - `show_queue_picker()` - Display queue in telescope
 - `setup_queue_actions()` - Configure send/remove keybindings
 
+### Dashboard Module (`lua/shooter/dashboard/`)
+
+#### data.lua (< 200 lines)
+**Responsibilities:**
+- Gather files and their open shots from repos
+- Parse shot content and previews
+- Support multiple repos from config
+
+**Key Functions:**
+- `get_open_shots(filepath)` - Parse file for open shots
+- `get_file_title(filepath)` - Extract title from first # heading
+- `get_repo_files(repo_path)` - Get all files with open shots
+- `get_all_repos()` - Get all configured repos with files
+- `get_current_repo()` - Get current repo only
+
+#### tree.lua (< 200 lines)
+**Responsibilities:**
+- Build NuiTree nodes from repo data
+- Render nodes with icons and styling
+- Handle node actions (open file/shot)
+
+**Key Functions:**
+- `build_nodes(repos)` - Create tree structure from data
+- `prepare_node(node)` - Render single node with icons
+- `create_tree(winid, nodes)` - Initialize NuiTree
+- `get_node_action(node)` - Determine action for Enter key
+
+#### init.lua (< 200 lines)
+**Responsibilities:**
+- Main dashboard UI with NuiPopup
+- Keyboard navigation and actions
+- Expand/collapse functionality
+
+**Key Functions:**
+- `open()` - Open dashboard popup
+- `close()` - Close dashboard
+- `refresh()` - Reload dashboard data
+- `toggle()` - Toggle dashboard visibility
+
+### Session Module (`lua/shooter/session/`)
+
+Per-repo YAML session management with whitelist-based filtering.
+
+#### defaults.lua (< 100 lines)
+**Responsibilities:**
+- Define DEFAULT session structure
+- Session creation and validation
+
+**Key Functions:**
+- `M.DEFAULT` - Default session template
+- `create_session(name)` - Create session with name
+- `validate_session(session)` - Fill missing keys
+- `reset_folders()` - Return default folder config
+
+#### storage.lua (< 200 lines)
+**Responsibilities:**
+- YAML serialization/deserialization
+- Session file I/O operations
+- Path resolution for session directories
+
+**Key Functions:**
+- `get_repo_slug(git_root)` - Sanitized repo identifier
+- `get_sessions_dir(repo_slug)` - Path to sessions folder
+- `read_session(repo_slug, name)` - Parse YAML
+- `write_session(repo_slug, session)` - Serialize YAML
+- `list_sessions(repo_slug)` - Array of session names
+- `delete_session(repo_slug, name)` - Remove file
+- `rename_session(repo_slug, old, new)` - Rename file
+
+#### init.lua (< 200 lines)
+**Responsibilities:**
+- Session lifecycle management
+- Current session state tracking
+- Auto-save on changes
+
+**Key Functions:**
+- `get_current_session()` - Load or create init session
+- `load_session(name)` - Load specific session
+- `save_current()` - Write current to storage
+- `toggle_folder(folder)` - Toggle + auto-save
+- `set_projects(root, subs)` - Set project filter
+- `create_new_session(name)` - New with DEFAULT
+- `delete_current_session()` - Delete + load init
+- `rename_current_session(new_name)` - Rename file
+
+#### filter.lua (< 150 lines)
+**Responsibilities:**
+- Apply whitelist folder filtering
+- Apply project filtering (root + subprojects)
+- Detect file folder/project from path
+
+**Key Functions:**
+- `apply_filters(files, session, git_root)` - Main entry
+- `detect_file_folder(filepath)` - Extract folder name
+- `detect_file_project(filepath, git_root)` - Extract project name
+- `get_filter_status(session)` - Status string for title
+
+#### sort.lua (< 150 lines)
+**Responsibilities:**
+- Multi-criteria sorting with priorities
+- File metadata extraction
+- Comparator building
+
+**Key Functions:**
+- `sort_files(files, session)` - Sort by session config
+- `get_enabled_criteria(sort_config)` - Sorted by priority
+- `build_comparator(criteria)` - Multi-criteria comparator
+- `get_file_metadata(filepath)` - mtime, ctime, shotcount
+
+#### picker.lua (< 200 lines)
+**Responsibilities:**
+- Telescope pickers for session/project/sort
+- Session management UI
+
+**Key Functions:**
+- `show_session_picker(callback)` - Load sessions
+- `show_new_session_prompt(callback)` - Name input
+- `show_project_picker(callback)` - Multi-select with r=root
+- `show_sort_picker(callback)` - Configure sort criteria
+
 ### Top-Level Modules
 
 #### init.lua (< 200 lines)
@@ -293,6 +436,8 @@ M.defaults = {
 
 **Checks:**
 - Telescope installed
+- oil.nvim installed
+- vim-i3wm-tmux-navigator installed
 - Tmux installed
 - Claude process running
 - Context files exist
@@ -341,6 +486,130 @@ M.defaults = {
 - Built-in dependency validation
 - Clear error messages with remediation
 - Follows vim.health API
+
+## Context-Aware Command Architecture
+
+**CRITICAL PRINCIPLE:** All commands within a namespace must work identically
+across all contexts where that namespace applies.
+
+### Command Namespaces (8 total)
+
+| # | Namespace | Prefix | Description |
+|---|-----------|--------|-------------|
+| 1 | **Shotfile** | `f` | File-level: create, list, rename, delete, move, history |
+| 2 | **Shot** | `s` | Shot-level: new, delete, toggle, move, nav, send, queue |
+| 3 | **Tmux** | `t` | All tmux: wrapper commands + pane toggle |
+| 4 | **Subproject** | `p` | Subproject management: create, list, ensure-folders |
+| 5 | **Tools** | `l` | Utilities: token-counter, obsidian, images, PRD |
+| 6 | **Cfg** | `c` | Configuration: shotfile picker, shot picker, plugin |
+| 7 | **Analytics** | `a` | Stats: project, global |
+| 8 | **Help** | `h` | Info: help, health, dashboard |
+
+### Context Types
+
+Commands detect their current context and resolve targets accordingly:
+
+| Context | Detection | Example |
+|---------|-----------|---------|
+| `telescope` | `is_telescope_picker()` | Shot picker, shotfile picker |
+| `oil` | `is_oil_buffer()` | Oil file browser |
+| `shotfile` | `is_in_shotfile()` | Editing a shotfile buffer |
+| `buffer` | Default | Any other buffer |
+
+### Namespace Context Mapping
+
+| Namespace | Applicable Contexts |
+|-----------|---------------------|
+| Shot | shotfile buffer, shot picker |
+| Shotfile | shotfile buffer, shotfile picker, Oil |
+| Subproject | project file, project picker, Oil (projects/) |
+
+### Key Modules
+
+```
+lua/shooter/context/
+├── init.lua         # Context detection: is_telescope_picker(), is_oil_buffer(), etc.
+└── resolvers.lua    # Target resolution: resolve_shot_target(), resolve_shotfile_target()
+
+lua/shooter/keymaps/
+├── picker.lua       # Shared keymap definitions for telescope pickers
+└── oil.lua          # Oil buffer keymap bindings (autocmd-based)
+```
+
+### Target Resolution Pattern
+
+Every context-aware command should use a resolver:
+
+```lua
+-- Example: resolve shotfile target across all contexts
+function resolve_shotfile_target()
+  local ctx = context.detect_context()
+
+  -- Context 1: In telescope picker
+  if ctx == 'telescope' then
+    local sel = context.get_telescope_selection()
+    if sel and sel.path then return { path = sel.path } end
+  end
+
+  -- Context 2: In Oil buffer
+  if ctx == 'oil' then
+    local entry = context.get_oil_cursor_entry()
+    if entry then return { path = entry.path } end
+  end
+
+  -- Context 3: In shotfile buffer itself
+  if ctx == 'shotfile' then
+    return { path = vim.api.nvim_buf_get_name(0) }
+  end
+
+  return nil
+end
+```
+
+### Same Keymap, Same Behavior
+
+The same keymap works identically in all applicable contexts:
+
+```
+<space>fr (rename)
+- In shotfile buffer → renames current file
+- In shotfile picker → renames selected file
+- In Oil buffer → renames file under cursor
+
+<space>s. (toggle done)
+- In shotfile buffer → toggles shot under cursor
+- In shot picker → toggles selected shot
+```
+
+### Adding New Commands
+
+When adding a new command:
+
+1. **Identify namespace**: Which namespace does this command belong to?
+2. **List contexts**: In which contexts should this command work?
+3. **Implement resolver**: Use `resolve_<namespace>_target()` pattern
+4. **Bind keymaps**: Add keymap in ALL applicable contexts:
+   - Normal mode (`keymaps.lua`)
+   - Telescope pickers (`attach_mappings` in pickers.lua)
+   - Oil buffers (`keymaps/oil.lua`)
+5. **Test**: Verify command works identically in each context
+
+### Bidirectional Aliases
+
+Some commands have bidirectional aliases for discoverability:
+
+```lua
+ShooterCfgShot = ShooterShotCfg        -- Both work
+ShooterCfgShotfile = ShooterShotfileCfg
+```
+
+### Backward Compatibility
+
+All old command names work as aliases:
+- `ShooterCreate` → `ShooterShotfileNew`
+- `ShooterSend1` → `ShooterShotSend1`
+- `ShooterArchive` → `ShooterShotfileMoveArchive`
+- etc.
 
 ## Testing Strategy
 
