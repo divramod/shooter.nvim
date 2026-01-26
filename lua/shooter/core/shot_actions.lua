@@ -458,4 +458,169 @@ function M.undo_latest_sent_shot()
   utils.echo('Undone marking: Shot ' .. shot_num .. ' is now open')
 end
 
+-- Yank current shot content to clipboard, mark as done, and save to history
+function M.yank_shot()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cursor_line = utils.get_cursor()[1]
+  local start_line, end_line, header_line = shots.find_current_shot(bufnr, cursor_line)
+  if not start_line then
+    utils.echo('No shot found under cursor')
+    return
+  end
+
+  -- Get shot info
+  local content = shots.get_shot_content(bufnr, start_line, end_line)
+  local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
+  local shot_num = shots.parse_shot_header(header_text) or '?'
+  local source_filepath = vim.api.nvim_buf_get_name(bufnr)
+
+  -- Build full message for history (same as when shooting)
+  local messages = require('shooter.tmux.messages')
+  local shot_info = { start_line = start_line, end_line = end_line, header_line = header_line }
+  local full_message = messages.build_shot_message(bufnr, shot_info)
+
+  -- Save to history
+  local history = require('shooter.history')
+  history.save_shot(content, full_message, shot_num, source_filepath)
+
+  -- Mark shot as done
+  shots.mark_shot_executed(bufnr, header_line)
+
+  -- Yank to clipboard
+  vim.fn.setreg('+', content)
+  vim.fn.setreg('"', content)
+  utils.echo('Yanked shot ' .. shot_num .. ', marked done, saved to history')
+end
+
+-- Extract subtask under cursor into a new shot
+-- Finds ### heading at or above cursor, extracts until next ### or end of shot
+function M.extract_subtask()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cursor_line = utils.get_cursor()[1]
+  local shot_start, shot_end = shots.find_current_shot(bufnr, cursor_line)
+  if not shot_start then
+    utils.echo('No shot found under cursor')
+    return
+  end
+
+  local lines = utils.get_buf_lines(bufnr, shot_start - 1, shot_end)
+  local subtask_start, subtask_end = nil, nil
+
+  -- Find ### heading at or before cursor (relative to shot)
+  local rel_cursor = cursor_line - shot_start + 1
+  for i = rel_cursor, 1, -1 do
+    if lines[i] and lines[i]:match('^###%s+') then
+      subtask_start = i
+      break
+    end
+  end
+
+  if not subtask_start then
+    utils.echo('No subtask (### heading) found at or above cursor')
+    return
+  end
+
+  -- Find end of subtask (next ### or end of shot)
+  for i = subtask_start + 1, #lines do
+    if lines[i]:match('^###%s+') then
+      subtask_end = i - 1
+      break
+    end
+  end
+  subtask_end = subtask_end or #lines
+
+  -- Trim trailing blank lines from subtask
+  while subtask_end > subtask_start and lines[subtask_end]:match('^%s*$') do
+    subtask_end = subtask_end - 1
+  end
+
+  -- Extract subtask content (skip the ### header itself for the new shot body)
+  local subtask_lines = {}
+  for i = subtask_start + 1, subtask_end do
+    table.insert(subtask_lines, lines[i])
+  end
+  local subtask_title = lines[subtask_start]:match('^###%s+(.+)$') or 'extracted'
+
+  -- Create new shot with subtask content
+  -- Format: ## shot N, then UPPERCASED TITLE on next line, then content
+  local next_num = shots.get_next_shot_number(bufnr)
+  local insert_line, needs_blank = find_insertion_line(bufnr)
+  local new_lines = {}
+  if needs_blank then table.insert(new_lines, '') end
+  table.insert(new_lines, '## shot ' .. next_num)
+  table.insert(new_lines, subtask_title:upper())
+  for _, line in ipairs(subtask_lines) do
+    table.insert(new_lines, line)
+  end
+  table.insert(new_lines, '')
+  utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, new_lines)
+
+  -- Remove subtask from original shot (adjust for inserted lines)
+  local offset = #new_lines
+  local del_start = shot_start + subtask_start - 1 + offset
+  local del_end = shot_start + subtask_end - 1 + offset
+  -- Include leading blank line if exists
+  if subtask_start > 1 and lines[subtask_start - 1]:match('^%s*$') then
+    del_start = del_start - 1
+  end
+  utils.set_buf_lines(bufnr, del_start - 1, del_end, {})
+
+  vim.cmd('write')
+
+  -- Jump to end of extracted shot (line before trailing blank) and enter insert mode
+  local shot_end_line = insert_line + #new_lines - 2  -- -1 for trailing blank, -1 for 0-index adjustment
+  if needs_blank then shot_end_line = shot_end_line end  -- blank at start already counted
+  vim.api.nvim_win_set_cursor(0, { shot_end_line, 0 })
+  vim.cmd('normal! $')
+  vim.cmd('startinsert!')
+  utils.echo('Extracted subtask to shot ' .. next_num)
+end
+
+-- Extract current line into a new shot
+function M.extract_line()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cursor_line = utils.get_cursor()[1]
+  local shot_start, shot_end = shots.find_current_shot(bufnr, cursor_line)
+  if not shot_start then
+    utils.echo('No shot found under cursor')
+    return
+  end
+
+  -- Get the current line content
+  local lines = utils.get_buf_lines(bufnr, cursor_line - 1, cursor_line)
+  local line_content = lines[1]
+  if not line_content or line_content:match('^%s*$') then
+    utils.echo('Current line is empty')
+    return
+  end
+  -- Don't extract the shot header itself
+  if line_content:match('^##%s+x?%s*shot') then
+    utils.echo('Cannot extract shot header')
+    return
+  end
+
+  -- Create new shot with line content (uppercased as title)
+  local next_num = shots.get_next_shot_number(bufnr)
+  local insert_line, needs_blank = find_insertion_line(bufnr)
+  local new_lines = {}
+  if needs_blank then table.insert(new_lines, '') end
+  table.insert(new_lines, '## shot ' .. next_num)
+  table.insert(new_lines, line_content:upper())
+  table.insert(new_lines, '')
+  utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, new_lines)
+
+  -- Remove line from original shot (adjust for inserted lines)
+  local del_line = cursor_line + #new_lines
+  utils.set_buf_lines(bufnr, del_line - 1, del_line, {})
+
+  vim.cmd('write')
+
+  -- Jump to end of extracted shot (the TITLE line) and enter insert mode
+  local shot_end_line = insert_line + #new_lines - 2  -- -1 for trailing blank, -1 for 0-index
+  vim.api.nvim_win_set_cursor(0, { shot_end_line, 0 })
+  vim.cmd('normal! $')
+  vim.cmd('startinsert!')
+  utils.echo('Extracted line to shot ' .. next_num)
+end
+
 return M

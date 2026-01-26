@@ -6,7 +6,19 @@ local config = require('shooter.config')
 
 local M = {}
 
+-- Check if a line is inside a code block (count ``` markers above)
+local function is_in_code_block(lines, line_num)
+  local in_block = false
+  for i = 1, line_num - 1 do
+    if lines[i]:match('^```') then
+      in_block = not in_block
+    end
+  end
+  return in_block
+end
+
 -- Find shot boundaries (returns start_line, end_line, header_line for the current shot)
+-- Ignores shot headers inside code blocks
 function M.find_current_shot(bufnr, cursor_line)
   bufnr = bufnr or 0
   cursor_line = cursor_line or utils.get_cursor()[1]
@@ -18,9 +30,9 @@ function M.find_current_shot(bufnr, cursor_line)
   local shot_header_line = nil
   local shot_end = total_lines
 
-  -- Find the shot header at or above cursor
+  -- Find the shot header at or above cursor (skip headers inside code blocks)
   for i = cursor_line, 1, -1 do
-    if lines[i]:match(config.get('patterns.shot_header')) then
+    if lines[i]:match(config.get('patterns.shot_header')) and not is_in_code_block(lines, i) then
       shot_start = i
       shot_header_line = i
       break
@@ -31,9 +43,9 @@ function M.find_current_shot(bufnr, cursor_line)
     return nil, nil, nil
   end
 
-  -- Find the next shot header (or end of file)
+  -- Find the next shot header (or end of file), skip headers inside code blocks
   for i = shot_start + 1, total_lines do
-    if lines[i]:match(config.get('patterns.shot_header')) then
+    if lines[i]:match(config.get('patterns.shot_header')) and not is_in_code_block(lines, i) then
       shot_end = i - 1
       break
     end
@@ -48,6 +60,7 @@ function M.find_current_shot(bufnr, cursor_line)
 end
 
 -- Find all shots in file (both open and executed)
+-- Ignores shot headers inside code blocks
 function M.find_all_shots(bufnr)
   bufnr = bufnr or 0
   local total_lines = utils.buf_line_count(bufnr)
@@ -56,13 +69,14 @@ function M.find_all_shots(bufnr)
 
   local i = 1
   while i <= total_lines do
-    if lines[i]:match(config.get('patterns.shot_header')) then
+    -- Skip headers inside code blocks
+    if lines[i]:match(config.get('patterns.shot_header')) and not is_in_code_block(lines, i) then
       local shot_start = i
       local shot_end = total_lines
 
-      -- Find the next shot header (or end of file)
+      -- Find the next shot header (or end of file), skip headers in code blocks
       for j = shot_start + 1, total_lines do
-        if lines[j]:match(config.get('patterns.shot_header')) then
+        if lines[j]:match(config.get('patterns.shot_header')) and not is_in_code_block(lines, j) then
           shot_end = j - 1
           break
         end
