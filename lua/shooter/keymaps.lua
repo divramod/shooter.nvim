@@ -1,5 +1,5 @@
 -- Default keybindings for shooter.nvim
--- Extracted from n-special.lua
+-- Organized by namespace with subprefixes
 
 local M = {}
 
@@ -7,190 +7,174 @@ local M = {}
 function M.setup()
   local config = require('shooter.config')
 
-  -- Check if keymaps are enabled
   if not config.get('keymaps.enabled') then
     return
   end
 
   local prefix = config.get('keymaps.prefix')
-  local move_prefix = config.get('keymaps.move_prefix')
   local opts = { noremap = true, silent = true }
 
-  -- Core commands
-  vim.keymap.set('n', prefix .. 'd', ':ShooterDeleteLastShot<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Delete last shot' }))
+  local function map(mode, lhs, rhs, desc)
+    vim.keymap.set(mode, prefix .. lhs, rhs, vim.tbl_extend('force', opts, { desc = desc }))
+  end
 
-  vim.keymap.set('n', prefix .. 'S', ':ShooterNewShotWhisper<cr>',
-    vim.tbl_extend('force', opts, { desc = 'New shot + whisper' }))
+  -- ============================================================
+  -- CORE SHORTCUTS (root level for quick access)
+  -- ============================================================
+  map('n', 'n', ':ShooterShotfileNew<cr>', 'New shotfile')
+  map('n', 's', ':ShooterShotNew<cr>', 'New shot')
+  map('n', 'o', ':ShooterShotPicker<cr>', 'Open shots picker')
+  map('n', 'v', ':ShooterShotfilePicker<cr>', 'Shotfile picker')
+  map('n', 'l', ':ShooterShotfileLast<cr>', 'Last shotfile')
+  map('n', 'L', ':ShooterRepoOpenLastEditedFile<cr>', 'Last edited file in repo')
+  map('n', 'i', ':ShooterInbox<cr>', 'Open INBOX.md')
+  map('n', '.', ':ShooterShotToggle<cr>', 'Toggle shot done')
+  map('n', 'y', ':ShooterShotYank<cr>', 'Yank shot')
+  map('n', 'z', ':ShooterNavLastEditedFiles 10<cr>', 'Last 10 edited files')
+  map('n', 'e', ':ShooterShotExtractBlock<cr>', 'Extract block')
+  map('n', 'E', ':ShooterShotExtractLine<cr>', 'Extract line')
 
-  vim.keymap.set('n', prefix .. 'eg', ':ShooterEditGlobalContext<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Edit global context' }))
+  -- Send to pane (1-4) - root level for speed
+  for i = 1, 4 do
+    map('n', tostring(i), ':ShooterShotSend' .. i .. '<cr>', 'Send to pane ' .. i)
+    map('v', tostring(i), ':ShooterShotSendVisual' .. i .. '<cr>', 'Send selection to pane ' .. i)
+  end
 
-  vim.keymap.set('n', prefix .. 'ep', ':ShooterEditProjectContext<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Edit project context' }))
+  -- ============================================================
+  -- SHOTFILE NAMESPACE (f prefix)
+  -- ============================================================
+  map('n', 'fn', ':ShooterShotfileNew<cr>', 'New shotfile')
+  map('n', 'fN', ':ShooterShotfileNewInRepo<cr>', 'New in other repo')
+  map('n', 'fp', ':ShooterShotfilePicker<cr>', 'Shotfile picker')
+  map('n', 'fP', ':ShooterShotfilePickerAll<cr>', 'All repos picker')
+  map('n', 'fl', ':ShooterShotfileLast<cr>', 'Last edited file')
+  map('n', 'fr', ':ShooterShotfileRename<cr>', 'Rename current')
+  map('n', 'fd', ':ShooterShotfileDelete<cr>', 'Delete current')
+  map('n', 'fo', ':ShooterShotfileOpenPrompts<cr>', 'Oil prompts folder')
+  map('n', 'fi', ':ShooterShotfileHistory<cr>', 'History (Oil)')
 
-  vim.keymap.set('n', prefix .. 'ec', ':ShooterEditConfig<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Edit shooter config' }))
+  -- Shotfile move commands (fm prefix)
+  map('n', 'fma', ':ShooterShotfileMoveArchive<cr>', 'Move to archive')
+  map('n', 'fmb', ':ShooterShotfileMoveBacklog<cr>', 'Move to backlog')
+  map('n', 'fmd', ':ShooterShotfileMoveDone<cr>', 'Move to done')
+  map('n', 'fmp', ':ShooterShotfileMovePrompts<cr>', 'Move to prompts')
+  map('n', 'fmr', ':ShooterShotfileMoveReqs<cr>', 'Move to reqs')
+  map('n', 'fmt', ':ShooterShotfileMoveTest<cr>', 'Move to test')
+  map('n', 'fmw', ':ShooterShotfileMoveWait<cr>', 'Move to wait')
+  map('n', 'fmg', ':ShooterShotfileMoveGitRoot<cr>', 'Move to git root')
+  map('n', 'fmm', ':ShooterShotfileMovePicker<cr>', 'Fuzzy folder picker')
 
-  vim.keymap.set('n', prefix .. 'g', ':ShooterImages<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Get images' }))
-
-  vim.keymap.set('n', prefix .. 'h', ':ShooterHelp<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Help' }))
-
-  vim.keymap.set('n', prefix .. 'i', ':ShooterOpenHistory<cr>',
-    vim.tbl_extend('force', opts, { desc = 'History (Oil)' }))
-
-  vim.keymap.set('n', prefix .. 'l', ':ShooterLast<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Last file' }))
-
-  vim.keymap.set('n', prefix .. 'n', ':ShooterCreate<cr>',
-    vim.tbl_extend('force', opts, { desc = 'New' }))
-
-  vim.keymap.set('n', prefix .. 'N', ':ShooterCreateInRepo<cr>',
-    vim.tbl_extend('force', opts, { desc = 'New in other repo' }))
-
-  vim.keymap.set('n', prefix .. 'M', ':ShooterMunition<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Get munition (import inbox tasks)' }))
-
-  vim.keymap.set('n', prefix .. 'o', ':ShooterOpenShots<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Open shots picker' }))
-
-  vim.keymap.set('n', prefix .. 's', ':ShooterNewShot<cr>',
-    vim.tbl_extend('force', opts, { desc = 'New shot' }))
-
-  vim.keymap.set('n', prefix .. 't', ':ShooterList<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Telescope list' }))
-
-  vim.keymap.set('n', prefix .. 'T', ':ShooterListAll<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Telescope list (all repos)' }))
-
-  vim.keymap.set('n', prefix .. 'p', ':ShooterOpenPrompts<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Oil prompts folder' }))
-
-  vim.keymap.set('n', prefix .. 'P', ':ShooterPrdList<cr>',
-    vim.tbl_extend('force', opts, { desc = 'PRD list tasks' }))
+  -- ============================================================
+  -- SHOT NAMESPACE (s prefix)
+  -- ============================================================
+  map('n', 'ss', ':ShooterShotNew<cr>', 'New shot')
+  map('n', 'sS', ':ShooterShotNewWhisper<cr>', 'New shot + whisper')
+  map('n', 'sd', ':ShooterShotDelete<cr>', 'Delete last shot')
+  map('n', 's.', ':ShooterShotToggle<cr>', 'Toggle done')
+  map('n', 'sm', ':ShooterShotMove<cr>', 'Move to another file')
+  map('n', 'sM', ':ShooterShotMunition<cr>', 'Import from inbox')
+  map('n', 'sy', ':ShooterShotYank<cr>', 'Yank shot to clipboard')
+  map('n', 'se', ':ShooterShotExtractBlock<cr>', 'Extract block to new shot')
+  map('n', 'sE', ':ShooterShotExtractLine<cr>', 'Extract line to new shot')
+  map('n', 'sp', ':ShooterShotPicker<cr>', 'Open shots picker')
 
   -- Shot navigation
-  vim.keymap.set('n', prefix .. ']', ':ShooterNextShot<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Next open shot' }))
+  map('n', 's]', ':ShooterShotNavNext<cr>', 'Next open shot')
+  map('n', 's[', ':ShooterShotNavPrev<cr>', 'Prev open shot')
+  map('n', 's}', ':ShooterShotNavNextSent<cr>', 'Next sent shot')
+  map('n', 's{', ':ShooterShotNavPrevSent<cr>', 'Prev sent shot')
+  map('n', 'sL', ':ShooterShotNavLatest<cr>', 'Latest sent')
+  map('n', 'su', ':ShooterShotNavUndo<cr>', 'Undo sent marking')
 
-  vim.keymap.set('n', prefix .. '[', ':ShooterPrevShot<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Previous open shot' }))
-
-  vim.keymap.set('n', prefix .. '.', ':ShooterToggleDone<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Toggle shot done' }))
-
-  vim.keymap.set('n', prefix .. 'L', ':ShooterLatestSent<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Latest sent shot' }))
-
-  vim.keymap.set('n', prefix .. 'u', ':ShooterUndoLatestSent<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Undo latest sent marking' }))
-
-  vim.keymap.set('n', prefix .. '{', ':ShooterPrevSent<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Previous sent shot' }))
-
-  vim.keymap.set('n', prefix .. '}', ':ShooterNextSent<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Next sent shot' }))
-
-  vim.keymap.set('n', prefix .. 'H', ':ShooterHealth<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Health check' }))
-
-  vim.keymap.set('n', prefix .. 'A', ':ShooterAnalyticsGlobal<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Global analytics' }))
-
-  vim.keymap.set('n', prefix .. 'a', ':ShooterAnalyticsProject<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Project analytics' }))
-
-  -- Move commands (with move_prefix, e.g., <space>m)
-  vim.keymap.set('n', prefix .. move_prefix .. 'a', ':ShooterArchive<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ archive' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 'b', ':ShooterBacklog<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ backlog' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 'd', ':ShooterDone<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ done' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 'g', ':ShooterGitRoot<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ git root' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 'p', ':ShooterPrompts<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ prompts' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 'r', ':ShooterReqs<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ reqs' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 't', ':ShooterTest<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ test' }))
-
-  vim.keymap.set('n', prefix .. move_prefix .. 'w', ':ShooterWait<cr>',
-    vim.tbl_extend('force', opts, { desc = '→ wait' }))
-
-  -- Send to claude (single shot) - panes 1-4
+  -- Shot send (also at root, but available with s prefix too)
   for i = 1, 4 do
-    vim.keymap.set('n', prefix .. tostring(i), ':ShooterSend' .. i .. '<cr>',
-      vim.tbl_extend('force', opts, { desc = 'Send to claude #' .. i }))
+    map('n', 's' .. i, ':ShooterShotSend' .. i .. '<cr>', 'Send to pane ' .. i)
+    map('n', 'sR' .. i, ':ShooterShotResend' .. i .. '<cr>', 'Resend to pane ' .. i)
   end
 
-  -- Send ALL open shots - double space prefix
+  -- Shot queue
   for i = 1, 4 do
-    vim.keymap.set('n', prefix .. prefix .. tostring(i), ':ShooterSendAll' .. i .. '<cr>',
-      vim.tbl_extend('force', opts, { desc = 'Send ALL to claude #' .. i }))
+    map('n', 'sq' .. i, ':ShooterShotQueue' .. i .. '<cr>', 'Queue for pane ' .. i)
   end
+  map('n', 'sqQ', ':ShooterShotQueueView<cr>', 'View queue')
 
-  -- Queue commands
-  for i = 1, 4 do
-    vim.keymap.set('n', prefix .. 'q' .. tostring(i), ':ShooterQueueAdd' .. i .. '<cr>',
-      vim.tbl_extend('force', opts, { desc = 'Queue for pane #' .. i }))
-  end
+  -- ============================================================
+  -- TMUX NAMESPACE (t prefix)
+  -- ============================================================
+  map('n', 'tz', ':ShooterTmuxZoom<cr>', 'Zoom toggle')
+  map('n', 'te', ':ShooterTmuxEdit<cr>', 'Edit pane in vim')
+  map('n', 'tg', ':ShooterTmuxGit<cr>', 'Git status toggle')
+  map('n', 'ti', ':ShooterTmuxLight<cr>', 'Light/dark toggle')
+  map('n', 'to', ':ShooterTmuxKillOthers<cr>', 'Kill other panes')
+  map('n', 'tr', ':ShooterTmuxReload<cr>', 'Reload session')
+  map('n', 'td', ':ShooterTmuxDelete<cr>', 'Delete session')
+  map('n', 'ts', ':ShooterTmuxSmug<cr>', 'Smug load')
+  map('n', 'ty', ':ShooterTmuxYank<cr>', 'Yank pane to vim')
+  map('n', 'tc', ':ShooterTmuxChoose<cr>', 'Choose session')
+  map('n', 'tp', ':ShooterTmuxSwitch<cr>', 'Switch to last')
+  map('n', 'tw', ':ShooterTmuxWatch<cr>', 'Watch pane')
 
-  vim.keymap.set('n', prefix .. 'Q', ':ShooterQueueView<cr>',
-    vim.tbl_extend('force', opts, { desc = 'View queue' }))
-
-  -- Pane visibility toggle (0-9) - lowercase r
-  -- Uses tmux pane indices (0-based, as shown in pane titles)
+  -- Pane toggle (t0-t9)
   for i = 0, 9 do
-    vim.keymap.set('n', prefix .. 'r' .. tostring(i), ':ShooterPaneToggle' .. i .. '<cr>',
-      vim.tbl_extend('force', opts, { desc = 'Toggle pane ' .. i .. ' visibility' }))
+    map('n', 't' .. i, ':ShooterTmuxPaneToggle' .. i .. '<cr>', 'Toggle pane ' .. i)
   end
 
-  -- Resend latest shot commands (1-4) - uppercase R
+  -- ============================================================
+  -- SUBPROJECT NAMESPACE (p prefix)
+  -- ============================================================
+  map('n', 'pn', ':ShooterSubprojectNew<cr>', 'New subproject')
+  map('n', 'pl', ':ShooterSubprojectList<cr>', 'List subprojects')
+  map('n', 'pe', ':ShooterSubprojectEnsure<cr>', 'Ensure standard folders')
+
+  -- ============================================================
+  -- TOOLS NAMESPACE (l prefix)
+  -- ============================================================
+  map('n', 'lt', ':ShooterToolToken<cr>', 'Token counter')
+  map('n', 'lo', ':ShooterToolObsidian<cr>', 'Open in Obsidian')
+  map('n', 'li', ':ShooterToolImages<cr>', 'Insert images')
+  map('n', 'lw', ':ShooterTmuxWatch<cr>', 'Watch pane')
+  map('n', 'lp', ':ShooterToolPrd<cr>', 'PRD list')
+
+  -- ============================================================
+  -- CFG NAMESPACE (c prefix)
+  -- ============================================================
+  map('n', 'cg', ':ShooterCfgGlobal<cr>', 'Edit global context')
+  map('n', 'cp', ':ShooterCfgProject<cr>', 'Edit project context')
+  map('n', 'ce', ':ShooterCfgPlugin<cr>', 'Edit shooter.lua plugin')
+  map('n', 'cs', ':ShooterCfgShot<cr>', 'Shot picker config')
+  map('n', 'cf', ':ShooterCfgShotfile<cr>', 'Shotfile picker config')
+
+  -- ============================================================
+  -- ANALYTICS NAMESPACE (a prefix)
+  -- ============================================================
+  map('n', 'aa', ':ShooterAnalyticsProject<cr>', 'Project analytics')
+  map('n', 'aA', ':ShooterAnalyticsGlobal<cr>', 'Global analytics')
+
+  -- ============================================================
+  -- HELP NAMESPACE (h prefix)
+  -- ============================================================
+  map('n', 'hh', ':ShooterHelp<cr>', 'Show help')
+  map('n', 'hH', ':ShooterHealth<cr>', 'Health check')
+  map('n', 'hd', ':ShooterHelpDashboard<cr>', 'Dashboard')
+
+  -- ============================================================
+  -- NAV NAMESPACE (z prefix) - Navigation commands
+  -- ============================================================
+  map('n', 'zz', ':ShooterNavLastEditedFiles 10<cr>', 'Last 10 edited files')
+  map('n', 'zl', ':ShooterNavLastEditedFile<cr>', 'Last edited file')
+
+  -- ============================================================
+  -- REPO NAMESPACE (r prefix)
+  -- ============================================================
+  map('n', 'rl', ':ShooterRepoOpenLastEditedFile<cr>', 'Last edited file in repo')
+
+  -- ============================================================
+  -- SEND ALL (double prefix)
+  -- ============================================================
   for i = 1, 4 do
-    vim.keymap.set('n', prefix .. 'R' .. tostring(i), ':ShooterResend' .. i .. '<cr>',
-      vim.tbl_extend('force', opts, { desc = 'Resend latest to pane #' .. i }))
+    vim.keymap.set('n', prefix .. prefix .. tostring(i), ':ShooterShotSendAll' .. i .. '<cr>',
+      vim.tbl_extend('force', opts, { desc = 'Send ALL to pane ' .. i }))
   end
-
-  -- Visual mode send commands (1-4)
-  for i = 1, 4 do
-    vim.keymap.set('v', prefix .. tostring(i), ':ShooterSendVisual' .. i .. '<cr>',
-      vim.tbl_extend('force', opts, { desc = 'Send selection to pane ' .. i }))
-  end
-
-  -- Tmux wrapper commands (U prefix)
-  local tmux_prefix = config.get('keymaps.tmux_prefix') or 'U'
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'z', ':ShooterTmuxZoom<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: zoom toggle' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'e', ':ShooterTmuxEdit<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: edit pane in vim' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'g', ':ShooterTmuxGit<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: git status toggle' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'i', ':ShooterTmuxLight<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: light/dark toggle' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'o', ':ShooterTmuxKillOthers<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: kill other panes' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'r', ':ShooterTmuxReload<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: reload session' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'd', ':ShooterTmuxDelete<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: delete session' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 's', ':ShooterTmuxSmug<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: smug load' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'y', ':ShooterTmuxYank<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: yank pane to vim' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'c', ':ShooterTmuxChoose<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: choose session' }))
-  vim.keymap.set('n', prefix .. tmux_prefix .. 'p', ':ShooterTmuxSwitch<cr>',
-    vim.tbl_extend('force', opts, { desc = 'Tmux: switch to last' }))
 end
 
 return M
