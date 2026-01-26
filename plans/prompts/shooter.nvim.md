@@ -1,10 +1,12 @@
 # shooter.nvim
 
+## x shot 354 (2026-01-26 18:17:50)
+maybe < >, should become the file opening and oil opening mapping namespace
+
 ## x shot 353 (2026-01-26 17:48:09)
 the paste from clipboard command should still work with p in normal mode and c-v in insert mode and normal mode.
-/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260126_180738.png
 
-## shot 352
+## x shot 352 (2026-01-26 18:17:19)
 i need the shortcut for opening the prompts folder with oil back.
 put it to < >,p
 also put opening the plans folder to < >,l
