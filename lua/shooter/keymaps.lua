@@ -200,11 +200,9 @@ function M.setup()
 
     vim.keymap.set('i', '<C-v>', function()
       if not clipboard.smart_paste_insert() then
-        -- Insert clipboard content at cursor
-        local reg = vim.fn.getreg('+')
-        if reg and reg ~= '' then
-          vim.api.nvim_put({ reg }, 'c', false, true)
-        end
+        -- Use Ctrl-R + to paste from clipboard register (native vim way)
+        local keys = vim.api.nvim_replace_termcodes('<C-r>+', true, false, true)
+        vim.api.nvim_feedkeys(keys, 'n', false)
       end
     end, vim.tbl_extend('force', opts, { desc = 'Smart paste from clipboard' }))
   end
