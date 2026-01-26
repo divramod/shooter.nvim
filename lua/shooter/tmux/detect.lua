@@ -1,5 +1,5 @@
 -- Tmux pane detection for shooter.nvim
--- Find and validate tmux panes running Claude
+-- Find and validate tmux panes running AI (Claude, opencode, etc.)
 
 local utils = require('shooter.utils')
 local config = require('shooter.config')
@@ -17,21 +17,18 @@ function M.in_tmux()
   return utils.in_tmux()
 end
 
--- Check if Claude is running (basic check via ps)
-function M.check_claude_running()
+-- Check if any AI is running (basic check via ps)
+function M.check_ai_running()
   if not M.check_tmux_installed() then
     return false
   end
+  local providers = require('shooter.providers')
+  return providers.check_any_ai_running()
+end
 
-  local handle = io.popen("ps aux | grep '[c]laude' 2>/dev/null")
-  if not handle then
-    return false
-  end
-
-  local result = handle:read("*a")
-  handle:close()
-
-  return result and result ~= ""
+-- Alias for backward compatibility
+function M.check_claude_running()
+  return M.check_ai_running()
 end
 
 -- List all tmux panes with their IDs and TTYs
@@ -62,53 +59,43 @@ function M.list_all_panes()
   return panes
 end
 
--- Get list of TTYs running Claude
-function M.get_claude_ttys()
-  local handle = io.popen("ps aux | grep '[c]laude' | awk '{print $7}' 2>/dev/null")
-  if not handle then
-    return {}
-  end
-
-  local output = handle:read("*a")
-  handle:close()
-
-  local ttys = {}
-  for tty in output:gmatch("[^\n]+") do
-    -- Extract tty number - handle both formats:
-    -- macOS ps shows "s009" but tmux shows "/dev/ttys009"
-    -- So we need to match both "ttys009" -> "009" and "s009" -> "009"
-    local tty_num = tty:match("ttys(%d+)") or tty:match("^s(%d+)$")
-    if tty_num then
-      ttys[tty_num] = true
-    end
-  end
-
-  return ttys
+-- Get list of TTYs running any AI
+function M.get_ai_ttys()
+  local providers = require('shooter.providers')
+  return providers.get_ai_ttys()
 end
 
--- Find all panes running Claude
-function M.find_all_claude_panes()
+-- Alias for backward compatibility
+function M.get_claude_ttys()
+  return M.get_ai_ttys()
+end
+
+-- Find all panes running any AI
+function M.find_all_ai_panes()
   local all_panes = M.list_all_panes()
-  local claude_ttys = M.get_claude_ttys()
-  local claude_panes = {}
+  local ai_ttys = M.get_ai_ttys()
+  local ai_panes = {}
 
   for _, pane in ipairs(all_panes) do
-    -- Extract tty number from pane tty
     local tty_num = pane.tty:match("ttys(%d+)")
-    if tty_num and claude_ttys[tty_num] then
-      table.insert(claude_panes, pane.id)
+    if tty_num and ai_ttys[tty_num] then
+      table.insert(ai_panes, pane.id)
     end
   end
 
-  return claude_panes
+  return ai_panes
 end
 
--- Find the Nth Claude pane (1-indexed, defaults to 1)
+-- Alias for backward compatibility
+function M.find_all_claude_panes()
+  return M.find_all_ai_panes()
+end
+
+-- Find the Nth AI pane (1-indexed, defaults to 1)
 -- Returns pane_id or nil if not found
-function M.find_claude_pane(pane_index)
+function M.find_ai_pane(pane_index)
   pane_index = pane_index or 1
 
-  -- Validate pane index
   local max_panes = config.get('tmux.max_panes')
   if pane_index < 1 or pane_index > max_panes then
     return nil, string.format("Pane index must be between 1 and %d", max_panes)
@@ -122,18 +109,22 @@ function M.find_claude_pane(pane_index)
     return nil, "Not running in tmux"
   end
 
-  local claude_panes = M.find_all_claude_panes()
+  local ai_panes = M.find_all_ai_panes()
 
-  -- Return the Nth pane if it exists
-  if pane_index <= #claude_panes then
-    return claude_panes[pane_index], nil
+  if pane_index <= #ai_panes then
+    return ai_panes[pane_index], nil
   end
 
-  if #claude_panes == 0 then
-    return nil, "No tmux pane with Claude found in current window"
+  if #ai_panes == 0 then
+    return nil, "No tmux pane with AI (Claude/opencode) found in current window"
   else
-    return nil, string.format("No Claude pane #%d found (only %d pane(s) available)", pane_index, #claude_panes)
+    return nil, string.format("No AI pane #%d found (only %d pane(s) available)", pane_index, #ai_panes)
   end
+end
+
+-- Alias for backward compatibility
+function M.find_claude_pane(pane_index)
+  return M.find_ai_pane(pane_index)
 end
 
 -- Validate pane exists and is accessible
