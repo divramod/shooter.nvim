@@ -1,0 +1,112 @@
+#!/bin/bash
+# shooter-clipboard-image - Check and save clipboard image
+#
+# Usage:
+#   shooter-clipboard-image check    # Returns 0 if image in clipboard, 1 otherwise
+#   shooter-clipboard-image save     # Saves image and outputs path
+#   shooter-clipboard-image save DIR # Saves image to DIR and outputs path
+#
+# Exit codes:
+#   0 - Success (image found/saved)
+#   1 - No image in clipboard
+#   2 - Failed to save image
+#   3 - Invalid arguments
+
+set -e
+
+CLIPBOARD_IMAGES_DIR="${HOME}/.clipboard-images"
+
+# Check if clipboard contains an image
+check_clipboard_has_image() {
+    local info
+    info=$(osascript -e 'clipboard info' 2>/dev/null || echo "")
+
+    # Check for common image types
+    if echo "$info" | grep -qE '«class PNGf»|«class TIFF»|«class JPEG»|«class GIFf»|public.png|public.tiff|public.jpeg'; then
+        return 0
+    fi
+    return 1
+}
+
+# Save clipboard image to file
+save_clipboard_image() {
+    local output_dir="${1:-$CLIPBOARD_IMAGES_DIR}"
+    local timestamp
+    local output_file
+
+    # Create output directory if it doesn't exist
+    mkdir -p "$output_dir"
+
+    # Generate timestamped filename
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    output_file="${output_dir}/clipboard_${timestamp}.png"
+
+    # Save clipboard image using osascript
+    osascript -e "
+        set theFile to POSIX file \"${output_file}\"
+        try
+            set imageData to the clipboard as «class PNGf»
+            set fileRef to open for access theFile with write permission
+            write imageData to fileRef
+            close access fileRef
+            return \"success\"
+        on error errMsg
+            try
+                close access theFile
+            end try
+            return \"error: \" & errMsg
+        end try
+    " 2>/dev/null | grep -q "success"
+
+    if [ $? -eq 0 ] && [ -f "$output_file" ]; then
+        echo "$output_file"
+        return 0
+    fi
+
+    # Try TIFF format if PNG failed
+    output_file="${output_dir}/clipboard_${timestamp}.tiff"
+    osascript -e "
+        set theFile to POSIX file \"${output_file}\"
+        try
+            set imageData to the clipboard as «class TIFF»
+            set fileRef to open for access theFile with write permission
+            write imageData to fileRef
+            close access fileRef
+            return \"success\"
+        on error errMsg
+            try
+                close access theFile
+            end try
+            return \"error: \" & errMsg
+        end try
+    " 2>/dev/null | grep -q "success"
+
+    if [ $? -eq 0 ] && [ -f "$output_file" ]; then
+        echo "$output_file"
+        return 0
+    fi
+
+    return 2
+}
+
+# Main
+case "${1:-check}" in
+    check)
+        if check_clipboard_has_image; then
+            exit 0
+        else
+            exit 1
+        fi
+        ;;
+    save)
+        if ! check_clipboard_has_image; then
+            exit 1
+        fi
+        save_clipboard_image "${2:-}"
+        exit $?
+        ;;
+    *)
+        echo "Usage: shooter-clipboard-image [check|save [DIR]]" >&2
+        exit 3
+        ;;
+esac

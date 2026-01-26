@@ -369,6 +369,21 @@ local function setup_tool_commands()
   create_cmd('ShooterToolSoundTest', function()
     require('shooter.sound').test()
   end, { desc = 'Test sound' }, 'ShooterSoundTest')
+
+  -- ShooterToolClipboardPaste - Paste clipboard image
+  create_cmd('ShooterToolClipboardPaste', function()
+    require('shooter.tools.clipboard_image').paste_image_normal()
+  end, { desc = 'Paste clipboard image' })
+
+  -- ShooterToolClipboardCheck - Check if clipboard has image
+  create_cmd('ShooterToolClipboardCheck', function()
+    require('shooter.tools.clipboard_image').check()
+  end, { desc = 'Check clipboard for image' })
+
+  -- ShooterToolClipboardImages - Open images directory
+  create_cmd('ShooterToolClipboardImages', function()
+    require('shooter.tools.clipboard_image').open_images_dir()
+  end, { desc = 'Open clipboard images folder' })
 end
 
 -- Setup Cfg namespace commands (c prefix in keymaps)

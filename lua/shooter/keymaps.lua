@@ -134,6 +134,8 @@ function M.setup()
   map('n', 'li', ':ShooterToolImages<cr>', 'Insert images')
   map('n', 'lw', ':ShooterTmuxWatch<cr>', 'Watch pane')
   map('n', 'lp', ':ShooterToolPrd<cr>', 'PRD list')
+  map('n', 'lc', ':ShooterToolClipboardPaste<cr>', 'Paste clipboard image')
+  map('n', 'lI', ':ShooterToolClipboardImages<cr>', 'Open images folder')
 
   -- ============================================================
   -- CFG NAMESPACE (c prefix)

@@ -101,6 +101,8 @@ TOOLS NAMESPACE (l prefix)
   li        Insert images         Insert image references
   lw        Watch pane            Open watch pane (= tw)
   lp        PRD list              List tasks from plans/prd.json
+  lc        Clipboard paste       Paste clipboard image to .shooter.nvim/images/
+  lI        Images folder         Open clipboard images folder in Oil
 
 CFG NAMESPACE (c prefix)
   cg        Global context        Edit global context file
