@@ -4,6 +4,15 @@ local M = {}
 local action_state = require('telescope.actions.state')
 local utils = require('shooter.utils')
 
+-- Get file modification time (returns seconds since epoch, or 0 on error)
+function M.get_file_mtime(filepath)
+  local stat = vim.loop.fs_stat(filepath)
+  if stat then
+    return stat.mtime.sec
+  end
+  return 0
+end
+
 -- Persistent state storage (file -> { selections = set of shot numbers, cursor_row = number })
 M.persistent_state = {}
 
@@ -17,21 +26,19 @@ function M.clear_selection(filepath)
 end
 
 -- Get target file (current file if in prompts, or last edited)
+-- Checks both root and project prompts paths
 function M.get_target_file()
-  local cwd = vim.fn.getcwd()
-  local prompts_path = cwd .. '/plans/prompts'
+  local files_mod = require('shooter.core.files')
   local filepath = vim.fn.expand('%:p')
 
-  if filepath:find(prompts_path, 1, true) then
+  -- Check if current file is in any prompts folder (root or project)
+  if files_mod.is_in_prompts_folder(filepath) then
     return filepath, true
   end
 
-  if vim.fn.isdirectory(prompts_path) ~= 1 then return nil, false end
-  local handle = io.popen('find "' .. prompts_path .. '" -name "*.md" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1')
-  if not handle then return nil, false end
-  local last_file = handle:read('*l')
-  handle:close()
-  return last_file and last_file ~= '' and last_file or nil, false
+  -- Try to find last edited file
+  local last_file = files_mod.find_last_file()
+  return last_file, false
 end
 
 -- Read file lines (from buffer if current, from disk otherwise)
@@ -185,60 +192,141 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
 end
 
 -- Get files for telescope picker (returns display paths without plans/prompts prefix)
--- When no folder_filter: only files directly in plans/prompts/ (not subfolders)
--- With folder_filter: all files recursively in that subfolder
-function M.get_prompt_files(folder_filter)
-  local cwd = vim.fn.getcwd()
-  local prompts_dir = cwd .. '/plans/prompts'
-  local glob_pattern
+-- opts table supports:
+--   folder_filter: 'a', 'b', 'd', 'r', 'w', 'p' or full folder name
+--   project: single project name (legacy support)
+--   projects: array of project names to include (new)
+--   sort_by_mtime: boolean to sort by modification time (new)
+--   include_all_projects: boolean to include all projects (new)
+function M.get_prompt_files(folder_filter_or_opts, project)
+  local files_mod = require('shooter.core.files')
+  local project_mod = require('shooter.core.project')
 
-  if folder_filter and folder_filter ~= '' then
-    -- Filter specified: search recursively in that subfolder
-    prompts_dir = prompts_dir .. '/' .. folder_filter
-    glob_pattern = '**/*.md'
+  -- Handle both legacy (folder_filter, project) and new (opts) calling conventions
+  local opts = {}
+  if type(folder_filter_or_opts) == 'table' then
+    opts = folder_filter_or_opts
   else
-    -- No filter: only files directly in plans/prompts (not subfolders)
-    glob_pattern = '*.md'
+    opts.folder_filter = folder_filter_or_opts
+    opts.project = project
   end
 
-  local file_list = vim.fn.globpath(prompts_dir, glob_pattern, false, true)
   local results = {}
-  local base = cwd .. '/plans/prompts/'
-  for _, file in ipairs(file_list) do
-    local display = file:gsub('^' .. vim.pesc(base), '')
-    table.insert(results, { display = display, path = file })
+  local seen = {}
+
+  -- Helper to add files from a single prompts directory
+  local function add_from_prompts_dir(prompts_dir, display_prefix, proj_name)
+    local search_dir = prompts_dir
+    local glob_pattern
+    if opts.folder_filter and opts.folder_filter ~= '' then
+      search_dir = search_dir .. '/' .. opts.folder_filter
+      glob_pattern = '**/*.md'
+    else
+      -- Get ALL files including subdirectories - session filtering handles folder selection
+      glob_pattern = '**/*.md'
+    end
+    if not utils.dir_exists(search_dir) then return end
+    local file_list = vim.fn.globpath(search_dir, glob_pattern, false, true)
+    local base = prompts_dir .. '/'
+    for _, file in ipairs(file_list) do
+      if not seen[file] then
+        seen[file] = true
+        local display = display_prefix .. file:gsub('^' .. vim.pesc(base), '')
+        table.insert(results, { display = display, path = file, project = proj_name })
+      end
+    end
   end
+
+  -- Determine which projects to include
+  if opts.include_all_projects then
+    -- Include root + all projects
+    local git_root = files_mod.get_git_root() or utils.cwd()
+    -- Add root prompts
+    add_from_prompts_dir(git_root .. '/plans/prompts', '', nil)
+    -- Add all project prompts
+    local projects = project_mod.list_projects()
+    for _, p in ipairs(projects) do
+      add_from_prompts_dir(p.path .. '/plans/prompts', p.name .. '/', p.name)
+    end
+  elseif opts.projects and #opts.projects > 0 then
+    -- Include only specified projects
+    for _, proj_name in ipairs(opts.projects) do
+      local prompts_dir = files_mod.get_prompts_dir(proj_name)
+      local prefix = proj_name and proj_name ~= '' and (proj_name .. '/') or ''
+      add_from_prompts_dir(prompts_dir, prefix, proj_name)
+    end
+  else
+    -- Single project (or root if nil)
+    local prompts_dir = files_mod.get_prompts_dir(opts.project)
+    add_from_prompts_dir(prompts_dir, '', opts.project)
+  end
+
+  -- Sort by mtime if requested
+  if opts.sort_by_mtime then
+    table.sort(results, function(a, b)
+      return M.get_file_mtime(a.path) > M.get_file_mtime(b.path)
+    end)
+  end
+
   return results
 end
 
 -- Get prompt files from all configured repos
--- Same filtering logic as get_prompt_files: root only when no filter, recursive with filter
-function M.get_all_repos_prompt_files(folder_filter)
+-- opts table supports:
+--   folder_filter: folder to filter by
+--   sort_by_mtime: boolean to sort by modification time
+function M.get_all_repos_prompt_files(folder_filter_or_opts)
   local config = require('shooter.config')
   local results = {}
   local seen = {}
 
-  -- Helper to add files from a repo
-  local function add_repo_files(repo_path, repo_name)
-    local prompts_dir = repo_path .. '/plans/prompts'
+  -- Handle both legacy (folder_filter) and new (opts) calling conventions
+  local opts = {}
+  if type(folder_filter_or_opts) == 'table' then
+    opts = folder_filter_or_opts
+  else
+    opts.folder_filter = folder_filter_or_opts
+  end
+
+  -- Helper to add files from a prompts directory
+  local function add_prompts_dir(prompts_dir, display_prefix, repo_name)
+    local search_dir = prompts_dir
     local glob_pattern
 
-    if folder_filter and folder_filter ~= '' then
-      prompts_dir = prompts_dir .. '/' .. folder_filter
+    if opts.folder_filter and opts.folder_filter ~= '' then
+      search_dir = search_dir .. '/' .. opts.folder_filter
       glob_pattern = '**/*.md'
     else
       glob_pattern = '*.md'
     end
 
-    if utils.dir_exists(prompts_dir) then
-      local files = vim.fn.globpath(prompts_dir, glob_pattern, false, true)
-      local base = repo_path .. '/plans/prompts/'
+    if utils.dir_exists(search_dir) then
+      local files = vim.fn.globpath(search_dir, glob_pattern, false, true)
       for _, file in ipairs(files) do
         if not seen[file] then
           seen[file] = true
-          local rel = file:gsub('^' .. vim.pesc(base), '')
-          table.insert(results, { display = repo_name .. '/' .. rel, path = file, repo = repo_name })
+          local rel = file:gsub('^' .. vim.pesc(prompts_dir) .. '/', '')
+          table.insert(results, { display = display_prefix .. rel, path = file, repo = repo_name })
         end
+      end
+    end
+  end
+
+  -- Helper to add files from a repo (root + all projects)
+  local function add_repo_files(repo_path, repo_name)
+    -- Add root prompts
+    add_prompts_dir(repo_path .. '/plans/prompts', repo_name .. '/', repo_name)
+
+    -- Add project prompts if projects/ folder exists
+    local projects_dir = repo_path .. '/projects'
+    if utils.dir_exists(projects_dir) then
+      local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')
+      if handle then
+        for project in handle:lines() do
+          local project_prompts = projects_dir .. '/' .. project .. '/plans/prompts'
+          add_prompts_dir(project_prompts, repo_name .. '/' .. project .. '/', repo_name)
+        end
+        handle:close()
       end
     end
   end
@@ -266,6 +354,13 @@ function M.get_all_repos_prompt_files(folder_filter)
         handle:close()
       end
     end
+  end
+
+  -- Sort by mtime if requested
+  if opts.sort_by_mtime then
+    table.sort(results, function(a, b)
+      return M.get_file_mtime(a.path) > M.get_file_mtime(b.path)
+    end)
   end
 
   return results
