@@ -160,6 +160,13 @@ function M.setup()
   map('n', 'hd', ':ShooterHelpDashboard<cr>', 'Dashboard')
 
   -- ============================================================
+  -- QUICK FOLDER ACCESS (, prefix)
+  -- ============================================================
+  map('n', ',p', ':ShooterShotfileOpenPrompts<cr>', 'Open prompts folder')
+  map('n', ',l', ':ShooterOpenPlans<cr>', 'Open plans folder')
+  map('n', ',s', ':ShooterOpenShooterConfig<cr>', 'Open .shooter.nvim folder')
+
+  -- ============================================================
   -- NAV NAMESPACE (z prefix) - Navigation commands
   -- ============================================================
   map('n', 'zz', ':ShooterNavLastEditedFiles 10<cr>', 'Last 10 edited files')

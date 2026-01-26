@@ -120,6 +120,11 @@ HELP NAMESPACE (h prefix)
   hH        Health                Run shooter health check
   hd        Dashboard             Open project dashboard
 
+QUICK FOLDER ACCESS (, prefix)
+  ,p        Prompts folder        Open plans/prompts in Oil
+  ,l        Plans folder          Open plans in Oil
+  ,s        Shooter config        Open .shooter.nvim in Oil
+
 SEND ALL (double prefix)
   <space><space>1-4               Send ALL open shots to pane #1-4
 

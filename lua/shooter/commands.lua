@@ -121,6 +121,32 @@ local function setup_shotfile_commands()
     vim.cmd('Oil ' .. history_dir)
   end, { desc = 'Open history directory in Oil' }, 'ShooterOpenHistory')
 
+  -- ShooterOpenPlans - Open plans folder in Oil
+  create_cmd('ShooterOpenPlans', function()
+    local files = require('shooter.core.files')
+    local git_root = files.get_git_root()
+    if git_root then
+      local plans_dir = git_root .. '/plans'
+      vim.fn.mkdir(plans_dir, 'p')
+      vim.cmd('Oil ' .. plans_dir)
+    else
+      vim.notify('Not in a git repository', vim.log.levels.WARN)
+    end
+  end, { desc = 'Open plans folder in Oil' })
+
+  -- ShooterOpenShooterConfig - Open .shooter.nvim folder in Oil
+  create_cmd('ShooterOpenShooterConfig', function()
+    local files = require('shooter.core.files')
+    local git_root = files.get_git_root()
+    if git_root then
+      local shooter_dir = git_root .. '/.shooter.nvim'
+      vim.fn.mkdir(shooter_dir, 'p')
+      vim.cmd('Oil ' .. shooter_dir)
+    else
+      vim.notify('Not in a git repository', vim.log.levels.WARN)
+    end
+  end, { desc = 'Open .shooter.nvim folder in Oil' })
+
   -- Move commands
   create_cmd('ShooterShotfileMoveArchive', movement.move_to_archive, { desc = 'Move to archive' }, 'ShooterArchive')
   create_cmd('ShooterShotfileMoveBacklog', movement.move_to_backlog, { desc = 'Move to backlog' }, 'ShooterBacklog')
