@@ -116,6 +116,13 @@ function M.move_to_folder(target_folder, open_in_oil)
   -- Move the file
   local success = os.rename(file_path, target_path)
   if success then
+    -- Update history source paths
+    local sync = require('shooter.history.sync')
+    local history_folder = sync.find_history_folder(file_path)
+    if history_folder then
+      sync.update_source_paths(history_folder, target_path)
+    end
+
     local display_folder = target_folder == '' and 'prompts' or target_folder
     utils.echo('Moved to ' .. display_folder .. '/' .. filename)
 
@@ -168,6 +175,25 @@ end
 
 function M.move_to_prompts()
   M.move_to_folder('', false)
+end
+
+-- Move file by path (for use from pickers) - returns true on success
+function M.move_file_path(file_path, target_folder)
+  if not file_path or not files.is_in_prompts_folder(file_path) then return false end
+  local filename = utils.get_filename(file_path)
+  local cwd = utils.cwd()
+  local target_dir = target_folder == '' and cwd .. '/' .. config.get('paths.prompts_root')
+    or cwd .. '/' .. config.get('paths.prompts_root') .. '/' .. target_folder
+  local target_path = target_dir .. '/' .. filename
+  if not utils.file_exists(file_path) or utils.file_exists(target_path) then return false end
+  utils.ensure_dir(target_dir)
+  local success = os.rename(file_path, target_path)
+  if success then
+    local sync = require('shooter.history.sync'); local hf = sync.find_history_folder(file_path)
+    if hf then sync.update_source_paths(hf, target_path) end
+    utils.echo('Moved to ' .. (target_folder == '' and 'prompts' or target_folder) .. '/' .. filename)
+  end
+  return success
 end
 
 -- Move file or folder to git root

@@ -57,35 +57,46 @@ function M.get_current_file_or_folder_path()
   end
 end
 
--- Helper: Get prompts directory path
-function M.get_prompts_dir()
-  return utils.cwd() .. '/' .. config.get('paths.prompts_root')
+-- Helper: Get prompts directory path (project-aware)
+-- project = nil means root level, string means specific project
+function M.get_prompts_dir(project)
+  local project_mod = require('shooter.core.project')
+  return project_mod.get_prompts_dir(project)
 end
 
--- Helper: Check if path is in prompts folder
+-- Helper: Check if path is in prompts folder (checks both root and project paths)
 function M.is_in_prompts_folder(path)
-  local prompts_path = M.get_prompts_dir()
-  return path:find(prompts_path, 1, true) ~= nil
+  if not path then return false end
+  -- Check root prompts path
+  local root_prompts = utils.cwd() .. '/' .. config.get('paths.prompts_root')
+  if path:find(root_prompts, 1, true) then
+    return true
+  end
+  -- Check project prompts paths
+  local git_root = M.get_git_root()
+  if git_root and path:find(git_root .. '/projects/.+/plans/prompts') then
+    return true
+  end
+  return false
 end
 
 -- Helper: Check if current file is a next-action/shooter file
 function M.is_shooter_file(filepath)
   filepath = filepath or vim.fn.expand('%:p')
-  local prompts_path = utils.cwd() .. '/' .. config.get('paths.prompts_root')
-  return filepath:find(prompts_path, 1, true) ~= nil
+  return M.is_in_prompts_folder(filepath)
 end
 
 -- Get shooter files from directory (returns display paths without plans/prompts prefix)
-function M.get_prompt_files()
-  local cwd = utils.cwd()
-  local prompts_dir = cwd .. '/' .. config.get('paths.prompts_root')
+-- project = nil means root level, string means specific project
+function M.get_prompt_files(project)
+  local prompts_dir = M.get_prompts_dir(project)
   local files = vim.fn.globpath(prompts_dir, '**/*.md', false, true)
   local results = {}
 
   for _, file in ipairs(files) do
     -- Store both display path (without plans/prompts/) and full path
     local display = file:gsub('^' .. utils.escape_pattern(prompts_dir) .. '/', '')
-    table.insert(results, { display = display, path = file })
+    table.insert(results, { display = display, path = file, project = project })
   end
 
   return results
@@ -107,7 +118,7 @@ function M.get_file_title(bufnr)
   return utils.get_basename(vim.fn.expand('%:p'))
 end
 
--- Generate dated filename (YYYY-MM-DD_slug.md)
+-- Generate filename from title (slug.md)
 function M.generate_filename(title)
   -- Slugify title
   local slug = title:lower()
@@ -116,28 +127,29 @@ function M.generate_filename(title)
   slug = slug:gsub('%-+', '-')
   slug = slug:gsub('^%-', ''):gsub('%-$', '')
 
-  local date = utils.get_date()
-  return string.format('%s_%s.md', date, slug)
+  return string.format('%s.md', slug)
 end
 
--- Create new shooter file
-function M.create_file(title, folder, initial_content)
+-- Create new shooter file (project-aware)
+-- project = nil means root level, string means specific project
+function M.create_file(title, folder, initial_content, project)
   folder = folder or ''
-  local base_path = config.get('paths.prompts_root')
+  local project_mod = require('shooter.core.project')
+  local base_path = project_mod.get_prompts_root(project)
 
   if folder ~= '' then
     base_path = base_path .. '/' .. folder
   end
 
   local filename = M.generate_filename(title)
-  local full_path = utils.cwd() .. '/' .. base_path .. '/' .. filename
+  local git_root = M.get_git_root() or utils.cwd()
+  local full_path = git_root .. '/' .. base_path .. '/' .. filename
 
   -- Ensure directory exists
   local dir = utils.get_dirname(full_path)
   utils.ensure_dir(dir)
 
   -- Build file content
-  local date = utils.get_date()
   local file_content
 
   if initial_content and initial_content ~= '' then
@@ -145,12 +157,12 @@ function M.create_file(title, folder, initial_content)
     local has_shot_pattern = initial_content:match(config.get('patterns.shot_header'))
 
     if has_shot_pattern then
-      file_content = string.format('# %s - %s\n\n\n%s\n', date, title, initial_content)
+      file_content = string.format('# %s\n\n\n%s\n', title, initial_content)
     else
-      file_content = string.format('# %s - %s\n\n## shot 1\n%s\n', date, title, initial_content)
+      file_content = string.format('# %s\n\n## shot 1\n%s\n', title, initial_content)
     end
   else
-    file_content = string.format('# %s - %s\n\n## shot 1\n\n', date, title)
+    file_content = string.format('# %s\n\n## shot 1\n\n', title)
   end
 
   -- Write the file
@@ -163,10 +175,10 @@ function M.create_file(title, folder, initial_content)
   return full_path, filename
 end
 
--- Find last edited shooter file
-function M.find_last_file()
-  local cwd = utils.cwd()
-  local prompts_dir = cwd .. '/' .. config.get('paths.prompts_root')
+-- Find last edited shooter file (project-aware)
+-- project = nil means root level, string means specific project
+function M.find_last_file(project)
+  local prompts_dir = M.get_prompts_dir(project)
 
   if not utils.dir_exists(prompts_dir) then
     return nil
@@ -183,8 +195,8 @@ function M.find_last_file()
 end
 
 -- Alias for find_last_file (used by commands.lua)
-function M.get_last_edited_file()
-  return M.find_last_file()
+function M.get_last_edited_file(project)
+  return M.find_last_file(project)
 end
 
 return M
