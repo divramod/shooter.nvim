@@ -177,6 +177,37 @@ function M.setup()
     vim.keymap.set('n', prefix .. prefix .. tostring(i), ':ShooterShotSendAll' .. i .. '<cr>',
       vim.tbl_extend('force', opts, { desc = 'Send ALL to pane ' .. i }))
   end
+
+  -- ============================================================
+  -- SMART PASTE KEYMAPS (global, not under prefix)
+  -- These override default paste to support clipboard images
+  -- ============================================================
+  if config.get('keymaps.smart_paste') ~= false then
+    local clipboard = require('shooter.tools.clipboard_image')
+
+    -- Normal mode: p and P for smart paste
+    vim.keymap.set('n', 'p', clipboard.smart_paste_after,
+      vim.tbl_extend('force', opts, { desc = 'Smart paste (image or text)' }))
+    vim.keymap.set('n', 'P', clipboard.smart_paste_before,
+      vim.tbl_extend('force', opts, { desc = 'Smart paste before (image or text)' }))
+
+    -- Ctrl-V in normal and insert mode
+    vim.keymap.set('n', '<C-v>', function()
+      if not clipboard.smart_paste_insert() then
+        vim.cmd('normal! "+p')
+      end
+    end, vim.tbl_extend('force', opts, { desc = 'Smart paste from clipboard' }))
+
+    vim.keymap.set('i', '<C-v>', function()
+      if not clipboard.smart_paste_insert() then
+        -- Insert clipboard content at cursor
+        local reg = vim.fn.getreg('+')
+        if reg and reg ~= '' then
+          vim.api.nvim_put({ reg }, 'c', false, true)
+        end
+      end
+    end, vim.tbl_extend('force', opts, { desc = 'Smart paste from clipboard' }))
+  end
 end
 
 return M

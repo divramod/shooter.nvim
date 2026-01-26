@@ -76,6 +76,9 @@ M.defaults = {
 
     -- Copy command prefix (c)
     copy_prefix = 'c',
+
+    -- Enable smart paste (p, P, Ctrl-V check for clipboard images)
+    smart_paste = true,
   },
 
   -- File patterns

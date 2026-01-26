@@ -151,6 +151,16 @@ function M.smart_paste_before()
   end
 end
 
+-- Smart paste for insert mode (Ctrl+V)
+-- Returns nil to allow fallback to default behavior when no image
+function M.smart_paste_insert()
+  if M.has_image() then
+    M.paste_image_insert()
+    return true
+  end
+  return false
+end
+
 -- Check command - notify if clipboard has image
 function M.check()
   if M.has_image() then

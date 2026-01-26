@@ -362,6 +362,21 @@ All keybindings use `<space>` prefix (customizable). Commands are organized into
 | `<space>li` | Insert images |
 | `<space>lw` | Watch pane |
 | `<space>lp` | PRD list |
+| `<space>lc` | Paste clipboard image |
+| `<space>lI` | Open clipboard images folder |
+
+### Smart Paste (Global Keymaps)
+
+Automatically paste clipboard images instead of text when an image is in the clipboard.
+Images are saved to `<repo>/.shooter.nvim/images/clipboard_YYYYMMDD_HHMMSS.png`.
+
+| Key | Action |
+|-----|--------|
+| `p` | Smart paste after (image or text) |
+| `P` | Smart paste before (image or text) |
+| `<C-v>` | Smart paste from clipboard (normal & insert mode) |
+
+Disable with `keymaps.smart_paste = false` in config.
 
 ### Cfg Namespace (`<space>c`)
 
@@ -502,6 +517,9 @@ require('shooter').setup({
 
     -- Copy command prefix
     copy_prefix = 'c',
+
+    -- Enable smart paste (p, P, Ctrl-V check for clipboard images)
+    smart_paste = true,
   },
 
   -- ═══════════════════════════════════════════════════════════════════════════
