@@ -1,5 +1,22 @@
 # shooter.nvim
 
+## x shot 353 (2026-01-26 17:48:09)
+the paste from clipboard command should still work with p in normal mode and c-v in insert mode and normal mode.
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260126_180738.png
+
+## shot 352
+i need the shortcut for opening the prompts folder with oil back.
+put it to < >,p
+also put opening the plans folder to < >,l
+also put opening the the <repo>/.shooter.nvim folder to < >,s
+
+## x shot 351 (2026-01-26 17:31:46)
+mv paste picture from clipboard command to repo utils/tools
+i have a feature in ~/a/dev/dotfiles/nvim, which pastes pictures from the clipboard, into a file to <repo>/.shooter.nvim/imgaes
+this functionality belongs to to this repo here.
+can you move it here please?
+i think it could be part of the tools namespace, right?
+
 ## shot 350
 add move to project command and move to repo command
 
