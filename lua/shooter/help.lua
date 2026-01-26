@@ -1,101 +1,127 @@
 -- Help display for shooter.nvim
--- Shows available commands and keybindings
+-- Shows available commands and keybindings organized by namespace
 
 local M = {}
 
--- Help text content
+-- Help text content organized by namespace
 local help_text = [[
 Shooter.nvim Commands (prefix: <space>)
 ========================================
 
-CORE COMMANDS:
-  d     Delete Last Shot  Delete the most recently created shot (highest number)
-                          Only deletes if not already being worked on (no x marker)
-  e     New Shot + Whisper  Create new shot and start voice recording
-  g     Get Images        Insert image references (opens hal image pick)
-  h     Help              Show this help message
-  i     History           Open shot history for current repo (Oil)
-  l     Last              Open last edited shooter file
-  M     Munition          Import tasks from inbox files as new shots
-                          First pick inbox file, then select tasks (- [ ] or # headers)
-                          Multi-select with Tab/Space, Enter imports and deletes from source
-  n     New               Create new shooter file
-  N     New in Repo       Create new file in another repo (picker)
-  o     Open Shots        Telescope picker for open shots (with multi-select)
-                          In telescope: Tab/Space = select, n = new shots file
-                            c = clear selection, 1-4 = send to claude
-                            d = delete shot, Enter = jump to shot
-                            h = hide, q = quit
-  s     New Shot          Add new shot at top of current file
-  t     Telescope         Telescope picker for shot files (current repo)
-                          In telescope (normal mode):
-                            a/b/d/r/w/p = filter by folder, c = clear filter
-                            dd = delete, Enter = open
-  T     Telescope All     Telescope picker for shot files (ALL configured repos)
-                          Same filter keys as <space>t
-  p     Oil               Open Oil file explorer in plans/prompts folder
-  w     Write             Write all modified buffers
+CORE SHORTCUTS (root level for quick access)
+  n         New shotfile          Create new shooter file
+  s         New shot              Add new shot to current file
+  o         Open shots picker     Telescope picker for open shots
+  v         Shotfile picker       Telescope picker for shot files
+  l         Last shotfile         Open last edited shotfile in repo
+  .         Toggle done           Toggle shot done/open status
+  z         Yank shot             Yank current shot to clipboard
+  e         Extract block         Extract ### subtask block to new shot
+  E         Extract line          Extract current line to new shot
+  1-4       Send to pane          Send current shot to Claude pane #1-4
 
-SEND TO CLAUDE (single shot):
-  1-4                     Send current shot to claude pane #1-4
-                          In shooter file: sends entire shot, marks with x and timestamp
-                          Outside: sends current line (normal) or selection (visual)
+SHOTFILE NAMESPACE (f prefix)
+  fn        New shotfile          Create new shooter file (= n)
+  fN        New in repo           Create in another repo
+  fp        Shotfile picker       Telescope picker (current repo) (= v)
+  fP        All repos picker      Telescope picker (all repos)
+  fl        Last file             Open last edited shotfile
+  fr        Rename                Rename current shotfile
+  fd        Delete                Delete current shotfile
+  fo        Open prompts          Oil prompts folder
+  fi        History               Open history directory in Oil
 
-SEND TO CLAUDE (multi-shot):
-  <space>1-4              Send ALL open shots to claude pane #1-4
-                          (double space = <space><space>1)
+  MOVE COMMANDS (fm prefix)
+  fma       Move to archive       Move file to prompts/archive
+  fmb       Move to backlog       Move file to prompts/backlog
+  fmd       Move to done          Move file to prompts/done
+  fmp       Move to prompts       Move file to prompts root
+  fmr       Move to reqs          Move file to prompts/reqs
+  fmt       Move to test          Move file to prompts/test
+  fmw       Move to wait          Move file to prompts/wait
+  fmg       Move to git root      Move file/folder to git root
+  fmm       Fuzzy picker          Move to any folder (fuzzy search)
 
-QUEUE COMMANDS:
-  q1-4  Queue Shot        Add current shot to queue for pane #1-4
-  Q     View Queue        Telescope picker to view and manage queued shots
+SHOT NAMESPACE (s prefix)
+  ss        New shot              Create new shot (= s)
+  sS        New + whisper         Create shot and start voice recording
+  sd        Delete                Delete last created shot
+  s.        Toggle done           Toggle shot done/open status
+  sm        Move shot             Move shot to another shotfile
+  sM        Munition              Import tasks from inbox files
+  sy        Yank shot             Yank current shot to clipboard (= z)
+  se        Extract block         Extract ### subtask block (= e)
+  sE        Extract line          Extract current line (= E)
+  sp        Open shots picker     Telescope picker for open shots (= o)
 
-PANE VISIBILITY:
-  r0-9  Toggle Pane       Toggle visibility of tmux pane #0-9
-                          Uses tmux pane indices (0-based, as shown in pane titles)
-                          Hides pane to a background window, or shows it again
-                          Useful to temporarily hide Claude to see more code
+  NAVIGATION
+  s]        Next open shot        Jump to next open (undone) shot
+  s[        Prev open shot        Jump to previous open shot
+  s}        Next sent shot        Jump to next (newer) sent shot
+  s{        Prev sent shot        Jump to previous (older) sent shot
+  sL        Latest sent           Jump to most recently sent shot
+  su        Undo sent             Undo the marking of latest sent shot
 
-RESEND:
-  R1-4  Resend Shot       Resend the most recently sent shot to pane #1-4
-                          Useful when Claude needs the same context again
+  SEND (s1-4 or just 1-4)
+  s1-4      Send to pane          Send current shot to Claude pane #1-4
 
-TMUX WRAPPER (prefix: <space>U):
-  Uz    Zoom Toggle       Toggle current pane zoom (like tmux M-z)
-  Ue    Edit in Vim       Edit pane content in vim (d-tmux-edit-vim)
-  Ug    Git Status        Toggle git status display
-  Ui    Light Switch      Toggle light/dark theme
-  Uo    Kill Others       Kill all panes except current
-  Ur    Reload            Reload tmuxp session
-  Ud    Delete Session    Open session delete picker
-  Us    Smug Load         Load smug session picker
-  Uy    Yank to Vim       Yank pane content to new vim buffer
-  Uc    Choose Session    Open tmux session chooser tree
-  Up    Switch Last       Switch to last tmux client
+  RESEND
+  sR1-4     Resend to pane        Resend latest shot to pane #1-4
 
-MOVE COMMANDS (prefix: <space>m):
-  ma    Archive           Move current file to prompts/archive
-  mb    Backlog           Move current file to prompts/backlog
-  md    Done              Move current file to prompts/done
-  mg    Git Root          Move current file/folder to git root
-  mp    Prompts           Move current file to prompts (in-progress)
-  mr    Reqs              Move current file to prompts/reqs
-  mt    Test              Move current file to prompts/test
-  mw    Wait              Move current file to prompts/wait
+  QUEUE
+  sq1-4     Queue for pane        Add shot to queue for pane #1-4
+  sqQ       View queue            Telescope picker for queued shots
 
-NAVIGATION & STATUS:
-  ]     Next Open Shot    Jump to next open (undone) shot
-  [     Prev Open Shot    Jump to previous open shot
-  }     Next Sent Shot    Jump to next (newer) sent shot by timestamp
-  {     Prev Sent Shot    Jump to previous (older) sent shot by timestamp
-  .     Toggle Done       Toggle shot done/open status (adds/removes x and timestamp)
-  L     Latest Sent       Jump to most recently sent shot (by timestamp)
-  u     Undo Latest Sent  Undo the marking of the latest sent shot
-  H     Health Check      Run shooter health check
+TMUX NAMESPACE (t prefix)
+  tz        Zoom toggle           Toggle current pane zoom
+  te        Edit in vim           Edit pane content in vim
+  tg        Git status            Toggle git status display
+  ti        Light switch          Toggle light/dark theme
+  to        Kill others           Kill all panes except current
+  tr        Reload                Reload tmuxp session
+  td        Delete session        Open session delete picker
+  ts        Smug load             Load smug session
+  ty        Yank to vim           Yank pane content to new vim buffer
+  tc        Choose session        Open tmux session chooser tree
+  tp        Switch last           Switch to last tmux client
+  tw        Watch pane            Open maximized pane with shooter watch
 
-OTHER COMMANDS:
-  P     PRD List          List all tasks from plans/prd.json with preview
+  PANE TOGGLE (t0-9)
+  t0-9      Toggle pane           Toggle visibility of tmux pane #0-9
+                                  Hides pane to background, or shows again
 
-FOLDER STRUCTURE:
+SUBPROJECT NAMESPACE (p prefix)
+  pn        New subproject        Create new subproject
+  pl        List subprojects      List and select subproject
+  pe        Ensure folders        Ensure standard folder structure exists
+
+TOOLS NAMESPACE (l prefix)
+  lt        Token counter         Count tokens in file using ttok
+  lo        Open in Obsidian      Open current file in Obsidian app
+  li        Insert images         Insert image references
+  lw        Watch pane            Open watch pane (= tw)
+  lp        PRD list              List tasks from plans/prd.json
+
+CFG NAMESPACE (c prefix)
+  cg        Global context        Edit global context file
+  cp        Project context       Edit project context file
+  ce        Plugin config         Edit shooter.lua plugin config
+  cs        Shot picker config    Toggle shot picker vim mode
+  cf        Shotfile config       Edit shotfile picker session config
+
+ANALYTICS NAMESPACE (a prefix)
+  aa        Project analytics     Show project shot analytics
+  aA        Global analytics      Show global shot analytics
+
+HELP NAMESPACE (h prefix)
+  hh        Help                  Show this help message
+  hH        Health                Run shooter health check
+  hd        Dashboard             Open project dashboard
+
+SEND ALL (double prefix)
+  <space><space>1-4               Send ALL open shots to pane #1-4
+
+FOLDER STRUCTURE
   plans/prompts/           <- new files created here (in-progress)
   plans/prompts/archive/   <- completed/archived
   plans/prompts/backlog/   <- future tasks
@@ -104,27 +130,20 @@ FOLDER STRUCTURE:
   plans/prompts/test/      <- testing
   plans/prompts/wait/      <- waiting/blocked
 
-CONTEXT & CONFIG:
-  ec    Edit Config       Edit shooter.nvim config file (auto-detected)
-  eg    Edit Global       Edit global context file
-  ep    Edit Project      Edit project context file
+PROJECT SUPPORT
+  If a 'projects/' folder exists at git root, shooter becomes project-aware:
+  - <space>n shows project picker when at repo root
+  - If cwd is inside projects/<name>/, that project is auto-detected
+  - Files are created at projects/<name>/plans/prompts/
+  - History paths include project: ~/.config/.../history/user/repo/project/...
 
-  Config file:           ~/.config/nvim/lua/plugins/shooter.lua (lazy.nvim)
-  Global context:        ~/.config/shooter.nvim/shooter-context-global.md
-  Project context:       <repo>/.shooter.nvim/shooter-context-project.md
+CONTEXT FILES
+  Global context:   ~/.config/shooter.nvim/shooter-context-global.md
+  Project context:  <repo>/.shooter.nvim/shooter-context-project.md
+  Plugin config:    ~/.config/nvim/lua/plugins/shooter.lua (lazy.nvim)
 
-HISTORY:
-  ~/.config/shooter.nvim/history/<user>/<repo>/        <- Shot history per repo
-
-SOUND NOTIFICATIONS:
-  Enable sound when shots are sent (disabled by default):
-    sound = { enabled = true, file = '/System/Library/Sounds/Pop.aiff', volume = 0.5 }
-  Test with :ShooterSoundTest
-
-TROUBLESHOOTING:
-  Shot marked but not sent?
-    - Press 'u' (vim undo) immediately if you haven't made other edits
-    - Or use <space>u to undo the latest sent shot marking any time
+HISTORY
+  ~/.config/shooter.nvim/history/<user>/<repo>/   <- Shot history per repo
 
 Press 'q' to close this help window.
 ]]

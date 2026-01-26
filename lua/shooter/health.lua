@@ -17,6 +17,37 @@ local function check_telescope()
   return true
 end
 
+-- Check if oil.nvim is available (required - for file management)
+local function check_oil_nvim()
+  local ok = pcall(require, 'oil')
+  if not ok then
+    vim.health.error('oil.nvim not found', {
+      'Install oil.nvim: https://github.com/stevearc/oil.nvim',
+      'Required for file management and movement commands',
+    })
+    return false
+  end
+
+  vim.health.ok('oil.nvim is installed (https://github.com/stevearc/oil.nvim)')
+  return true
+end
+
+-- Check if vim-i3wm-tmux-navigator is available (required - for pane navigation)
+local function check_vim_tmux_navigator()
+  -- Check if the plugin is loaded by looking for its commands or functions
+  local has_plugin = vim.fn.exists(':TmuxNavigateLeft') == 2
+  if not has_plugin then
+    vim.health.error('vim-i3wm-tmux-navigator not found', {
+      'Install vim-i3wm-tmux-navigator: https://github.com/fogine/vim-i3wm-tmux-navigator',
+      'Required for seamless navigation between vim splits and tmux panes',
+    })
+    return false
+  end
+
+  vim.health.ok('vim-i3wm-tmux-navigator is installed (https://github.com/fogine/vim-i3wm-tmux-navigator)')
+  return true
+end
+
 -- Check if gp.nvim is available (optional - for whisper dictation)
 local function check_gp_nvim()
   local has_gp = vim.fn.exists(':GpWhisper') == 2
@@ -29,22 +60,6 @@ local function check_gp_nvim()
   end
 
   vim.health.ok('gp.nvim (GpWhisper) is available (https://github.com/Robitx/gp.nvim)')
-  return true
-end
-
--- Check if hal CLI is available (optional - for image picking)
-local function check_hal_cli()
-  if vim.fn.executable('hal') ~= 1 then
-    vim.health.info('hal CLI not found', {
-      'Optional: Install hal CLI for image picking with <space>g (ShooterImages)',
-      'https://github.com/divramod/hal',
-    })
-    return false
-  end
-  local handle = io.popen('hal --version 2>/dev/null')
-  local version = handle and handle:read('*l') or 'unknown'
-  if handle then handle:close() end
-  vim.health.ok(string.format('hal CLI: %s', version))
   return true
 end
 
@@ -312,12 +327,17 @@ function M.check()
   -- Check Neovim plugin dependencies
   vim.health.start('Neovim Plugins')
   check_telescope()
+  check_oil_nvim()
+  check_vim_tmux_navigator()
   check_gp_nvim()
 
   -- Check system dependencies
   vim.health.start('System Dependencies')
   check_iterm()
-  check_hal_cli()
+  local tools = require('shooter.health.tools')
+  tools.check_hal_cli()
+  tools.check_python()
+  tools.check_ttok()
   local tmux_installed = check_tmux_installed()
 
   -- Check tmux environment (only if tmux is installed)

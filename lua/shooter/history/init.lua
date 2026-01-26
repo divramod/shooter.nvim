@@ -67,17 +67,33 @@ function M.get_file_timestamp()
   return os.date('%Y%m%d_%H%M%S')
 end
 
+-- Detect project from a source file path
+-- Returns project name or '_root' if not in a project
+function M.detect_project_from_path(filepath)
+  if not filepath then return '_root' end
+
+  local files_mod = require('shooter.core.files')
+  local git_root = files_mod.get_git_root()
+  if not git_root then return '_root' end
+
+  -- Check if path contains /projects/<name>/
+  local pattern = vim.pesc(git_root) .. '/projects/([^/]+)/'
+  local project = filepath:match(pattern)
+  return project or '_root'
+end
+
 -- Build history file path for a shot
--- Returns: ~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-<number>-<timestamp>.md
-function M.build_history_path(user, repo, source_filename, shot_num, timestamp)
+-- Returns: ~/.config/shooter.nvim/history/<user>/<repo>/<project>/<filename>/shot-<number>-<timestamp>.md
+function M.build_history_path(user, repo, source_filename, shot_num, timestamp, project)
   local base_dir = M.get_history_base_dir()
   local formatted_num = M.format_shot_number(shot_num)
   timestamp = timestamp or M.get_file_timestamp()
+  project = project or '_root'
 
   -- Remove extension from source filename
   local filename_base = utils.get_basename(source_filename)
 
-  local dir_path = string.format('%s/%s/%s/%s', base_dir, user, repo, filename_base)
+  local dir_path = string.format('%s/%s/%s/%s/%s', base_dir, user, repo, project, filename_base)
   local file_path = string.format('%s/shot-%s-%s.md', dir_path, formatted_num, timestamp)
 
   return file_path, dir_path
@@ -88,8 +104,9 @@ end
 -- @param full_message: The full message sent to Claude (with context)
 -- @param shot_num: The shot number
 -- @param source_filepath: The file the shot came from
+-- @param timestamp: Optional timestamp to use (for consistency with save_sendable)
 -- @return success, error_message
-function M.save_shot(shot_content, full_message, shot_num, source_filepath)
+function M.save_shot(shot_content, full_message, shot_num, source_filepath, timestamp)
   local user, repo = M.get_git_remote_info()
 
   if not user or not repo then
@@ -99,14 +116,16 @@ function M.save_shot(shot_content, full_message, shot_num, source_filepath)
     repo = utils.get_basename(cwd)
   end
 
+  local project = M.detect_project_from_path(source_filepath)
   local source_filename = utils.get_filename(source_filepath)
-  local file_path, dir_path = M.build_history_path(user, repo, source_filename, shot_num)
+  timestamp = timestamp or M.get_file_timestamp()
+  local file_path, dir_path = M.build_history_path(user, repo, source_filename, shot_num, timestamp, project)
 
   -- Ensure directory exists
   utils.ensure_dir(dir_path)
 
-  -- Build history file content
-  local timestamp = os.date('%Y-%m-%d %H:%M:%S')
+  -- Build history file content (human-readable timestamp for metadata)
+  local readable_timestamp = os.date('%Y-%m-%d %H:%M:%S')
   local history_content = string.format([[---
 shot: %s
 source: %s
@@ -121,7 +140,7 @@ timestamp: %s
 # Full Message Sent
 
 %s
-]], shot_num, source_filepath, user, repo, timestamp, shot_content, full_message)
+]], shot_num, source_filepath, user, repo, readable_timestamp, shot_content, full_message)
 
   -- Write the file
   local success, err = utils.write_file(file_path, history_content)
@@ -133,7 +152,8 @@ timestamp: %s
 end
 
 -- Save shot message as a sendable file (just the message, no metadata)
--- Returns: filepath on success, nil and error on failure
+-- Returns: filepath, timestamp on success (timestamp for use with save_shot)
+-- Returns: nil, error on failure
 function M.save_sendable(full_message, shot_num, source_filepath)
   local user, repo = M.get_git_remote_info()
 
@@ -143,8 +163,10 @@ function M.save_sendable(full_message, shot_num, source_filepath)
     repo = utils.get_basename(cwd)
   end
 
+  local project = M.detect_project_from_path(source_filepath)
   local source_filename = utils.get_filename(source_filepath)
-  local file_path, dir_path = M.build_history_path(user, repo, source_filename, shot_num)
+  local timestamp = M.get_file_timestamp()
+  local file_path, dir_path = M.build_history_path(user, repo, source_filename, shot_num, timestamp, project)
 
   -- Ensure directory exists
   utils.ensure_dir(dir_path)
@@ -155,7 +177,7 @@ function M.save_sendable(full_message, shot_num, source_filepath)
     return nil, err
   end
 
-  return file_path, nil
+  return file_path, timestamp
 end
 
 -- Get history for a specific shot

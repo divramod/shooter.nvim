@@ -57,7 +57,7 @@ M.defaults = {
 
     -- Default layout config
     layout_config = {
-      width = 0.9,
+    width = 0.9,
       height = 0.9,
       preview_height = 0.5,
     },
@@ -122,6 +122,17 @@ M.defaults = {
     volume = 0.5,
   },
 
+  -- Highlighting configuration
+  highlight = {
+    -- Open shot header highlighting
+    -- Default: black text on light orange background (avoids confusion with search highlights)
+    open_shot = {
+      fg = '#000000', -- Black foreground
+      bg = '#ffb347', -- Light orange background
+      bold = true,
+    },
+  },
+
   -- Repository configuration for cross-repo shot creation
   repos = {
     -- Directories to search for git repos (e.g., {'~/cod', '~/projects'})
@@ -138,6 +149,12 @@ M.defaults = {
 
     -- Direct paths to markdown inbox files (e.g., {'~/art/me/me.md'})
     direct_paths = {},
+  },
+
+  -- Project picker configuration
+  projects = {
+    -- Folder names to exclude from project picker (e.g., {'_archive', '_template'})
+    exclude_folders = { '_archive', '_template' },
   },
 }
 

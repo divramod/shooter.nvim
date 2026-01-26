@@ -26,6 +26,10 @@ function M.setup(user_config)
   if M._config.keymaps.enabled then
     local keymaps = require('shooter.keymaps')
     keymaps.setup()
+
+    -- Setup Oil buffer keymaps
+    local oil_keymaps = require('shooter.keymaps.oil')
+    oil_keymaps.setup()
   end
 
   -- Setup syntax highlighting for prompt files
