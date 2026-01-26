@@ -6,9 +6,33 @@ local config = require('shooter.config')
 
 local M = {}
 
+-- Get git root for a specific filepath (or cwd if nil)
+function M.get_git_root_for_path(filepath)
+  local cmd
+  if filepath then
+    local dir = utils.get_dirname(filepath)
+    cmd = string.format('git -C "%s" rev-parse --show-toplevel 2>/dev/null', dir)
+  else
+    cmd = 'git rev-parse --show-toplevel 2>/dev/null'
+  end
+  local result = utils.system(cmd)
+  if not result or result == '' then
+    return nil
+  end
+  return utils.trim(result)
+end
+
 -- Get git remote info (returns user, repo or nil)
-function M.get_git_remote_info()
-  local result = utils.system('git remote get-url origin 2>/dev/null')
+-- filepath: optional path to determine which git repo to query
+function M.get_git_remote_info(filepath)
+  local cmd
+  if filepath then
+    local dir = utils.get_dirname(filepath)
+    cmd = string.format('git -C "%s" remote get-url origin 2>/dev/null', dir)
+  else
+    cmd = 'git remote get-url origin 2>/dev/null'
+  end
+  local result = utils.system(cmd)
   if not result or result == '' then
     return nil, nil
   end
@@ -72,8 +96,8 @@ end
 function M.detect_project_from_path(filepath)
   if not filepath then return '_root' end
 
-  local files_mod = require('shooter.core.files')
-  local git_root = files_mod.get_git_root()
+  -- Use filepath-aware git root detection
+  local git_root = M.get_git_root_for_path(filepath)
   if not git_root then return '_root' end
 
   -- Check if path contains /projects/<name>/
@@ -107,13 +131,14 @@ end
 -- @param timestamp: Optional timestamp to use (for consistency with save_sendable)
 -- @return success, error_message
 function M.save_shot(shot_content, full_message, shot_num, source_filepath, timestamp)
-  local user, repo = M.get_git_remote_info()
+  -- Use source_filepath to get git remote info from the correct repo
+  local user, repo = M.get_git_remote_info(source_filepath)
 
   if not user or not repo then
-    -- Fallback: use current directory name
-    local cwd = utils.cwd()
+    -- Fallback: use directory name of the source file
+    local dir = source_filepath and utils.get_dirname(source_filepath) or utils.cwd()
     user = 'local'
-    repo = utils.get_basename(cwd)
+    repo = utils.get_basename(M.get_git_root_for_path(source_filepath) or dir)
   end
 
   local project = M.detect_project_from_path(source_filepath)
@@ -155,12 +180,14 @@ end
 -- Returns: filepath, timestamp on success (timestamp for use with save_shot)
 -- Returns: nil, error on failure
 function M.save_sendable(full_message, shot_num, source_filepath)
-  local user, repo = M.get_git_remote_info()
+  -- Use source_filepath to get git remote info from the correct repo
+  local user, repo = M.get_git_remote_info(source_filepath)
 
   if not user or not repo then
-    local cwd = utils.cwd()
+    -- Fallback: use directory name of the source file
+    local dir = source_filepath and utils.get_dirname(source_filepath) or utils.cwd()
     user = 'local'
-    repo = utils.get_basename(cwd)
+    repo = utils.get_basename(M.get_git_root_for_path(source_filepath) or dir)
   end
 
   local project = M.detect_project_from_path(source_filepath)
