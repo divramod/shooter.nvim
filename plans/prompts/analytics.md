@@ -1,7 +1,8 @@
 # analytics
 
 ## shot 5
-add git commit stats to analytics
+add git commit stats to analytics.
+as you also created a nice bar chart for the shots i created, i want a similar bar chart for the number of commits i did
 
 ## shot 4
 add lines of code stats per to analytics
