@@ -18,6 +18,10 @@ CORE SHORTCUTS (root level for quick access)
   z         Yank shot             Yank current shot to clipboard
   e         Extract block         Extract ### subtask block to new shot
   E         Extract line          Extract current line to new shot
+  [         Prev open shot        Jump to previous open (undone) shot
+  ]         Next open shot        Jump to next open (undone) shot
+  {         Prev sent shot        Jump to previous (older) sent shot
+  }         Next sent shot        Jump to next (newer) sent shot
   1-4       Send to pane          Send current shot to Claude pane #1-4
 
 SHOTFILE NAMESPACE (f prefix)

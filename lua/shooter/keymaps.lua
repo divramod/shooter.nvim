@@ -34,6 +34,12 @@ function M.setup()
   map('n', 'e', ':ShooterShotExtractBlock<cr>', 'Extract block')
   map('n', 'E', ':ShooterShotExtractLine<cr>', 'Extract line')
 
+  -- Shot navigation - root level for speed
+  map('n', ']', ':ShooterShotNavNext<cr>', 'Next open shot')
+  map('n', '[', ':ShooterShotNavPrev<cr>', 'Prev open shot')
+  map('n', '}', ':ShooterShotNavNextSent<cr>', 'Next sent shot')
+  map('n', '{', ':ShooterShotNavPrevSent<cr>', 'Prev sent shot')
+
   -- Send to pane (1-4) - root level for speed
   for i = 1, 4 do
     map('n', tostring(i), ':ShooterShotSend' .. i .. '<cr>', 'Send to pane ' .. i)
