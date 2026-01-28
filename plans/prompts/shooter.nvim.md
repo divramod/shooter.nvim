@@ -1,5 +1,10 @@
 # shooter.nvim
 
+## x shot 355 (2026-01-28 21:09:09)
+i want you to also create the alias maps < >{}[] at the root level
+
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260128_210851.png
+
 ## x shot 354 (2026-01-26 18:17:50)
 maybe < >, should become the file opening and oil opening mapping namespace
 
@@ -50,14 +55,14 @@ please disable that. the coloring should only be active in files in plans/prompt
 ## x shot 344 (2026-01-26 07:00:58)
 add < >i to open root INBOX.md file in the current repo
 
-## shot 343
+## x shot 343 (2026-01-28 21:10:29)
 introduce namespaces in Shooter commands
 
 ## x shot 342 (2026-01-24 12:15:33)
 the shot picker < >o help is to distracting.
 remove the standard telescope help and just show the shooter.nvim specific help commands.
 
-## shot 341
+## x shot 341 (2026-01-28 21:10:48)
 in the shotfile picker, i want to be able to move a shot to a new shotfile, because its a whole feature for example.
 
 ## x shot 340 (2026-01-24 11:44:42)
