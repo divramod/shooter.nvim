@@ -29,11 +29,21 @@ local function parse_shot_info(line)
   }
 end
 
+-- Check if a line is a fenced code block delimiter (not inline code)
+-- Fenced code block: starts with ``` and does NOT have closing ``` on same line
+local function is_fence_delimiter(line)
+  -- Must start with ``` (optionally with leading whitespace)
+  if not line:match('^%s*```') then return false end
+  -- Count backtick sequences - if there's a second ``` it's inline code like ```foo```
+  local _, count = line:gsub('```', '')
+  return count == 1  -- Only one ``` sequence = fence delimiter
+end
+
 -- Check if line is inside a code block
 local function is_in_code_block(lines, line_num)
   local in_block = false
   for i = 1, line_num - 1 do
-    if lines[i]:match('^```') then
+    if is_fence_delimiter(lines[i]) then
       in_block = not in_block
     end
   end

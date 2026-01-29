@@ -342,5 +342,57 @@ describe('shooter.core.renumber', function()
       assert.truthy(open_b_pos < done_a_pos)  -- Open before done
       assert.truthy(done_a_pos < done_d_pos)  -- A (newer) before D (older, shot 1)
     end)
+
+    it('should ignore shot-like patterns in inline code', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## shot 2',
+        'This mentions ```## shot -1``` inline which should be ignored.',
+        'Also ```## shot 99``` should not be counted as a shot.',
+        '',
+        '## shot 1',
+        'Another real shot.',
+      })
+
+      local count = renumber.renumber_shots(test_bufnr)
+
+      -- Only 2 real shots, not the inline code mentions
+      assert.equals(2, count)
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- Inline code should be preserved exactly
+      assert.truthy(content:find('```## shot %-1```'))
+      assert.truthy(content:find('```## shot 99```'))
+    end)
+
+    it('should ignore shot headers inside fenced code blocks', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## shot 3',
+        'Real shot content.',
+        '',
+        '```markdown',
+        '## shot 99',
+        'This is inside a code block and should be ignored.',
+        '```',
+        '',
+        '## shot 2',
+        'Another real shot.',
+      })
+
+      local count = renumber.renumber_shots(test_bufnr)
+
+      -- Only 2 real shots, not the one in the code block
+      assert.equals(2, count)
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- Code block content should be preserved
+      assert.truthy(content:find('## shot 99'))
+      assert.truthy(content:find('This is inside a code block'))
+    end)
   end)
 end)
