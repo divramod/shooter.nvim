@@ -1,5 +1,10 @@
 # shotfile
 
+## x shot 5 (2026-01-29 07:44:12)
+the renaming of shotfiles is not working properly.
+when i try to rename a shotfile, it creates a new shotfile instead of renaming the existing one.
+the bad thing, the content of the file gets lost with renaming.
+
 ## x shot 4 (2026-01-24 22:38:15)
 can you create the mapping < >l to load the last shotfile which was worked on in the current repo?
 

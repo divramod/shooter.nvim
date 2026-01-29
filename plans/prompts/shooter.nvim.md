@@ -1,5 +1,11 @@
 # shooter.nvim
 
+## x shot 357 (2026-01-28 23:18:40)
+can you remap  < >C to < >?
+
+## x shot 356 (2026-01-28 23:11:09)
+i want you to create a ShooterCheatsheet command, which lists all available shooter.nvim commands and their mappings in a nice overview. it should be mapped to < >C
+
 ## x shot 355 (2026-01-28 21:09:09)
 i want you to also create the alias maps < >{}[] at the root level
 
