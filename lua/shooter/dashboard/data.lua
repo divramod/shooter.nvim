@@ -21,13 +21,13 @@ function M.get_shots(filepath)
   file:close()
 
   for i, line in ipairs(lines) do
-    -- Match done shots (## x shot N)
-    if line:match('^##%s+x%s+shot%s+%d+') then
+    -- Match done shots (## x shot N or ## x shot ?)
+    if line:match('^##%s+x%s+shot%s+[%d%?]+') then
       total_count = total_count + 1
-    -- Match open shots (## shot N)
-    elseif line:match('^##%s+shot%s+(%d+)') then
+    -- Match open shots (## shot N or ## shot ?)
+    elseif line:match('^##%s+shot%s+[%d%?]+') then
       total_count = total_count + 1
-      local shot_num = line:match('^##%s+shot%s+(%d+)')
+      local shot_num = line:match('^##%s+shot%s+(%d+)') or '?'
       -- Get preview from next non-empty line
       local preview = ''
       for j = i + 1, math.min(i + 3, #lines) do
@@ -38,7 +38,8 @@ function M.get_shots(filepath)
         end
       end
       table.insert(open_shots, {
-        number = tonumber(shot_num),
+        number = tonumber(shot_num),  -- nil for 'shot ?'
+        display_num = shot_num,       -- '?' or numeric string
         line = i,
         preview = preview,
       })

@@ -36,7 +36,7 @@ local function apply_syntax(bufnr)
   -- Find all shot headers and add matches only for those outside code blocks
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   for i, line in ipairs(lines) do
-    if line:match('^##%s+shot%s+%d+') and not is_in_code_block(bufnr, i) then
+    if line:match('^##%s+shot%s+[%d%?]+') and not is_in_code_block(bufnr, i) then
       -- matchaddpos uses 1-indexed line numbers
       vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
     end

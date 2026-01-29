@@ -262,6 +262,15 @@ local function setup_shot_commands()
     queue.clear_queue()
   end, { desc = 'Clear queue' }, 'ShooterQueueClear')
 
+  -- ShooterShotsRenumber - Renumber all shots sequentially
+  create_cmd('ShooterShotsRenumber', function()
+    local renumber = require('shooter.core.renumber')
+    local count = renumber.renumber_shots()
+    if count > 0 then
+      vim.notify(string.format('Renumbered %d shots', count), vim.log.levels.INFO)
+    end
+  end, { desc = 'Renumber shots sequentially' })
+
   -- ShooterShotCfg = ShooterCfgShot (bidirectional alias handled in Cfg)
 end
 

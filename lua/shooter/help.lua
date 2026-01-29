@@ -58,6 +58,7 @@ SHOT NAMESPACE (s prefix)
   se        Extract block         Extract ### subtask block (= e)
   sE        Extract line          Extract current line (= E)
   sp        Open shots picker     Telescope picker for open shots (= o)
+  sr        Renumber shots        Renumber all shots sequentially
 
   NAVIGATION
   s]        Next open shot        Jump to next open (undone) shot

@@ -36,7 +36,8 @@ local function find_current_shot()
 
   if not shot_line then return nil end
 
-  local shot_num = lines[shot_line]:match('shot%s+(%d+)')
+  local shot_num = lines[shot_line]:match('shot%s+(%d+)') or
+                   (lines[shot_line]:match('shot%s+%?') and '?')
   if not shot_num then return nil end
 
   return {

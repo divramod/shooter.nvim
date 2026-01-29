@@ -32,7 +32,7 @@ local function show_shots(file_entry, back_fn)
     finder = finders.new_table({
       results = file_entry.shots,
       entry_maker = function(shot)
-        local disp = string.format('shot %d: %s', shot.number, shot.preview or '')
+        local disp = string.format('shot %s: %s', shot.display_num or shot.number or '?', shot.preview or '')
         return { value = { shot = shot, file = file_entry }, display = disp, ordinal = disp }
       end,
     }),
@@ -102,7 +102,7 @@ local function show_files(repo, back_fn)
         if not entry or not entry.value then return end
         local lines = { '# ' .. (entry.value.title or entry.value.name), '' }
         for _, shot in ipairs(entry.value.shots) do
-          table.insert(lines, string.format('## shot %d', shot.number))
+          table.insert(lines, string.format('## shot %s', shot.display_num or shot.number or '?'))
           if shot.preview then table.insert(lines, shot.preview) end
           table.insert(lines, '')
         end

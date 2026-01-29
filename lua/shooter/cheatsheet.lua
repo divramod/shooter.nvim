@@ -28,9 +28,9 @@ M.sections = {
     { 'ss', 'New shot' }, { 'sS', 'New + whisper' }, { 'sd', 'Delete last' },
     { 's.', 'Toggle done' }, { 'sm', 'Move shot' }, { 'sM', 'Munition' },
     { 'sy', 'Yank' }, { 'se', 'Extract block' }, { 'sE', 'Extract line' },
-    { 'sp', 'Shots picker' }, { 'sL', 'Latest sent' }, { 'su', 'Undo sent' },
-    { 's1-4', 'Send to pane' }, { 'sR1-4', 'Resend' }, { 'sq1-4', 'Queue' },
-    { 'sqQ', 'View queue' },
+    { 'sp', 'Shots picker' }, { 'sr', 'Renumber' }, { 'sL', 'Latest sent' },
+    { 'su', 'Undo sent' }, { 's1-4', 'Send to pane' }, { 'sR1-4', 'Resend' },
+    { 'sq1-4', 'Queue' }, { 'sqQ', 'View queue' },
   }},
   { 'TMUX (t)', {
     { 'tz', 'Zoom toggle' }, { 'te', 'Edit in vim' }, { 'tg', 'Git status' },
