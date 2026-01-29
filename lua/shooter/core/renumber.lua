@@ -104,14 +104,19 @@ local function sort_shots(shots)
 end
 
 -- Generate new header line with updated shot number
--- Handles both "shot 123" and "shot ?" formats
+-- Handles: "shot 123", "shot ?", "shot 1.1", "shot -1" formats
 local function update_header_number(header_text, new_num)
-  -- First try to replace numeric shot number
-  local updated = header_text:gsub('shot%s+%d+', 'shot ' .. new_num)
-  if updated ~= header_text then
-    return updated
-  end
-  -- Also handle "shot ?" format
+  -- Try patterns in order of specificity:
+  -- 1. Decimal numbers (1.1, 2.5, -1.5, etc.)
+  local updated = header_text:gsub('shot%s+%-?%d+%.%d+', 'shot ' .. new_num)
+  if updated ~= header_text then return updated end
+  -- 2. Negative numbers (-1, -2, etc.)
+  updated = header_text:gsub('shot%s+%-%d+', 'shot ' .. new_num)
+  if updated ~= header_text then return updated end
+  -- 3. Regular numbers (1, 2, etc.)
+  updated = header_text:gsub('shot%s+%d+', 'shot ' .. new_num)
+  if updated ~= header_text then return updated end
+  -- 4. Question mark (?)
   return header_text:gsub('shot%s+%?', 'shot ' .. new_num)
 end
 

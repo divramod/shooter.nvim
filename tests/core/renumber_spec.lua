@@ -165,5 +165,103 @@ describe('shooter.core.renumber', function()
       -- Verify shot ? got a number
       assert.is_nil(content:find('shot %?'))
     end)
+
+    it('should handle decimal shot numbers (1.1, 1.2)', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## shot 1.1',
+        'decimal shot A',
+        '',
+        '## shot 1.2',
+        'decimal shot B',
+        '',
+        '## shot 2',
+        'regular shot',
+      })
+
+      local count = renumber.renumber_shots(test_bufnr)
+
+      assert.equals(3, count)
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- All decimal numbers should be replaced with integers
+      assert.is_nil(content:find('shot 1%.1'))
+      assert.is_nil(content:find('shot 1%.2'))
+      -- Should have sequential numbers (reversed: first=3, last=1)
+      assert.truthy(content:find('## shot 3\n'))
+      assert.truthy(content:find('## shot 2\n'))
+      assert.truthy(content:find('## shot 1\n'))
+    end)
+
+    it('should handle negative shot numbers (-1, -2)', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## shot -2',
+        'negative shot A',
+        '',
+        '## shot -1',
+        'negative shot B',
+        '',
+        '## shot 1',
+        'positive shot',
+      })
+
+      local count = renumber.renumber_shots(test_bufnr)
+
+      assert.equals(3, count)
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- All negative numbers should be replaced with positive integers
+      assert.is_nil(content:find('shot %-2'))
+      assert.is_nil(content:find('shot %-1'))
+      -- Should have sequential numbers (reversed: first=3, last=1)
+      assert.truthy(content:find('## shot 3\n'))
+      assert.truthy(content:find('## shot 2\n'))
+      assert.truthy(content:find('## shot 1\n'))
+    end)
+
+    it('should handle mixed formats (decimal, negative, ?, regular)', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## shot -1',
+        'negative',
+        '',
+        '## shot 1.5',
+        'decimal',
+        '',
+        '## shot ?',
+        'question mark',
+        '',
+        '## shot 99',
+        'regular',
+      })
+
+      local count = renumber.renumber_shots(test_bufnr)
+
+      assert.equals(4, count)
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- All special formats should be replaced
+      assert.is_nil(content:find('shot %-1'))
+      assert.is_nil(content:find('shot 1%.5'))
+      assert.is_nil(content:find('shot %?'))
+      assert.is_nil(content:find('shot 99'))
+
+      -- Content should be preserved in order
+      local neg_pos = content:find('negative')
+      local dec_pos = content:find('decimal')
+      local qm_pos = content:find('question mark')
+      local reg_pos = content:find('regular')
+
+      assert.truthy(neg_pos < dec_pos)
+      assert.truthy(dec_pos < qm_pos)
+      assert.truthy(qm_pos < reg_pos)
+    end)
   end)
 end)
