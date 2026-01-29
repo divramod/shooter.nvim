@@ -133,8 +133,11 @@ function M.renumber_shots(bufnr)
   local lines = utils.get_buf_lines(bufnr, 0, total_lines)
 
   -- Collect all shot blocks with new numbers
+  -- Number in reverse: first shot gets highest number, last shot gets 1
+  local total_shots = #sorted_shots
   local blocks = {}
-  for new_num, shot in ipairs(sorted_shots) do
+  for i, shot in ipairs(sorted_shots) do
+    local new_num = total_shots - i + 1  -- Reverse numbering
     local new_header = update_header_number(shot.header_text, new_num)
     local block_lines = { new_header }
     for i = shot.start_line + 1, shot.end_line do

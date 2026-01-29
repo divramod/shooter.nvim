@@ -108,9 +108,9 @@ describe('shooter.core.renumber', function()
 
       local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
       local content = table.concat(lines, '\n')
-      -- Shot 0 becomes shot 1, shot 1 becomes shot 2
-      assert.truthy(content:find('## shot 1\nshot zero'))
-      assert.truthy(content:find('## shot 2\nshot one'))
+      -- With reversed numbering: first shot (shot 0) becomes shot 2, second (shot 1) becomes shot 1
+      assert.truthy(content:find('## shot 2\nshot zero'))
+      assert.truthy(content:find('## shot 1\nshot one'))
     end)
 
     it('should return 0 when no shots found', function()
@@ -147,12 +147,12 @@ describe('shooter.core.renumber', function()
       local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
       local content = table.concat(lines, '\n')
 
-      -- Done shot should be first (shot 1)
-      -- Then open shots in order: shot 5 -> shot 2, shot ? -> shot 3, shot 10 -> shot 4
-      assert.truthy(content:find('## x shot 1'))
+      -- With reversed numbering: first shot gets highest (4), last gets lowest (1)
+      -- Order: done shot (shot 4), open A (shot 3), unnumbered (shot 2), open B (shot 1)
+      assert.truthy(content:find('## x shot 4'))
       assert.truthy(content:find('done shot'))
 
-      -- Find positions to verify order
+      -- Find positions to verify order (done first, then open shots in original order)
       local done_pos = content:find('done shot')
       local open_a_pos = content:find('open shot A')
       local unnumbered_pos = content:find('unnumbered shot')
