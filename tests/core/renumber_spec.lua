@@ -295,5 +295,52 @@ describe('shooter.core.renumber', function()
       assert.truthy(dec_pos < qm_pos)
       assert.truthy(qm_pos < neg_pos)
     end)
+
+    it('should preserve open/done status - open stays open, done stays done', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## x shot 5 (2026-01-29 10:00:00)',
+        'done shot A',
+        '',
+        '## shot 2.1',
+        'open shot B',
+        '',
+        '## shot 3',
+        'open shot C',
+        '',
+        '## x shot 1 (2026-01-28 09:00:00)',
+        'done shot D',
+      })
+
+      renumber.renumber_shots(test_bufnr)
+
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- Verify open shots remain open (no x prefix)
+      -- Open shots sorted by number: 3 > 2.1, so C first then B
+      local open_c_header = content:match('## shot %d+\nopen shot C')
+      local open_b_header = content:match('## shot %d+\nopen shot B')
+      assert.truthy(open_c_header)
+      assert.truthy(open_b_header)
+      -- Headers should NOT have 'x' prefix
+      assert.is_nil(open_c_header:match('^## x'))
+      assert.is_nil(open_b_header:match('^## x'))
+
+      -- Verify done shots remain done (have x prefix and timestamp)
+      assert.truthy(content:match('## x shot %d+ %(%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d%)\ndone shot A'))
+      assert.truthy(content:match('## x shot %d+ %(%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d%)\ndone shot D'))
+
+      -- Verify positions: open shots at top, done shots at bottom
+      local open_c_pos = content:find('open shot C')
+      local open_b_pos = content:find('open shot B')
+      local done_a_pos = content:find('done shot A')
+      local done_d_pos = content:find('done shot D')
+
+      assert.truthy(open_c_pos < open_b_pos)  -- C (3) before B (2.1)
+      assert.truthy(open_b_pos < done_d_pos)  -- Open before done
+      assert.truthy(done_d_pos < done_a_pos)  -- D (older) before A (newer)
+    end)
   end)
 end)

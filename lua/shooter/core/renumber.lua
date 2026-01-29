@@ -151,12 +151,12 @@ function M.renumber_shots(bufnr)
   -- Number in reverse: first shot gets highest number, last shot gets 1
   local total_shots = #sorted_shots
   local blocks = {}
-  for i, shot in ipairs(sorted_shots) do
-    local new_num = total_shots - i + 1  -- Reverse numbering
+  for idx, shot in ipairs(sorted_shots) do
+    local new_num = total_shots - idx + 1  -- Reverse numbering
     local new_header = update_header_number(shot.header_text, new_num)
     local block_lines = { new_header }
-    for i = shot.start_line + 1, shot.end_line do
-      table.insert(block_lines, lines[i])
+    for line_idx = shot.start_line + 1, shot.end_line do
+      table.insert(block_lines, lines[line_idx])
     end
     table.insert(blocks, block_lines)
   end
