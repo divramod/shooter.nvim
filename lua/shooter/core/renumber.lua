@@ -75,7 +75,7 @@ local function find_all_shots_with_info(bufnr)
   return shots
 end
 
--- Sort shots: done shots by timestamp (oldest first), then open shots
+-- Sort shots: open shots first (top), done shots at bottom (sorted by timestamp)
 local function sort_shots(shots)
   local done_shots = {}
   local open_shots = {}
@@ -95,10 +95,10 @@ local function sort_shots(shots)
     return ts_a < ts_b
   end)
 
-  -- Combine: done shots first (sorted by date), then open shots (keep order)
+  -- Combine: open shots first (top, keep order), then done shots (bottom, sorted by date)
   local sorted = {}
-  for _, shot in ipairs(done_shots) do table.insert(sorted, shot) end
   for _, shot in ipairs(open_shots) do table.insert(sorted, shot) end
+  for _, shot in ipairs(done_shots) do table.insert(sorted, shot) end
 
   return sorted
 end

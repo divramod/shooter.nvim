@@ -46,7 +46,7 @@ describe('shooter.core.renumber', function()
       assert.is_nil(content:find('## shot 15'))
     end)
 
-    it('should sort done shots by timestamp before open shots', function()
+    it('should put open shots at top and done shots at bottom', function()
       vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
         '# Test File',
         '',
@@ -70,10 +70,10 @@ describe('shooter.core.renumber', function()
       local newer_pos = content:find('newer done shot')
       local open_pos = content:find('open shot')
 
-      -- Older done shot should come first
+      -- Open shot should come first (top)
+      assert.truthy(open_pos < older_pos)
+      -- Done shots at bottom, sorted by timestamp (older before newer)
       assert.truthy(older_pos < newer_pos)
-      -- Both done shots should come before open shot
-      assert.truthy(newer_pos < open_pos)
     end)
 
     it('should preserve content of each shot', function()
@@ -148,19 +148,20 @@ describe('shooter.core.renumber', function()
       local content = table.concat(lines, '\n')
 
       -- With reversed numbering: first shot gets highest (4), last gets lowest (1)
-      -- Order: done shot (shot 4), open A (shot 3), unnumbered (shot 2), open B (shot 1)
-      assert.truthy(content:find('## x shot 4'))
+      -- Order: open A (shot 4), unnumbered (shot 3), open B (shot 2), done (shot 1)
+      assert.truthy(content:find('## x shot 1'))
       assert.truthy(content:find('done shot'))
 
-      -- Find positions to verify order (done first, then open shots in original order)
+      -- Find positions to verify order (open shots first, done last)
       local done_pos = content:find('done shot')
       local open_a_pos = content:find('open shot A')
       local unnumbered_pos = content:find('unnumbered shot')
       local open_b_pos = content:find('open shot B')
 
-      assert.truthy(done_pos < open_a_pos)
+      -- Open shots at top in original order, done shot at bottom
       assert.truthy(open_a_pos < unnumbered_pos)
       assert.truthy(unnumbered_pos < open_b_pos)
+      assert.truthy(open_b_pos < done_pos)
 
       -- Verify shot ? got a number
       assert.is_nil(content:find('shot %?'))
