@@ -185,6 +185,11 @@ local function setup_shot_commands()
   create_cmd('ShooterShotToggle', shot_actions.toggle_shot_done,
     { desc = 'Toggle shot done' }, 'ShooterToggleDone')
 
+  -- ShooterShotDeleteCursor (alias: ShooterDeleteShotUnderCursor)
+  create_cmd('ShooterShotDeleteCursor', function()
+    require('shooter.core.shot_delete').delete_shot_under_cursor()
+  end, { desc = 'Delete shot under cursor' }, 'ShooterDeleteShotUnderCursor')
+
   -- ShooterShotMove (alias: ShooterMoveShot)
   create_cmd('ShooterShotMove', function()
     require('shooter.core.shot_move').move_shot()

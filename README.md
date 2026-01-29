@@ -182,6 +182,7 @@ Commands are organized into 8 namespaces. Old command names work as aliases.
 | `:ShooterShotNewWhisper` | `:ShooterNewShotWhisper` | New shot + whisper |
 | `:ShooterShotDelete` | `:ShooterDeleteLastShot` | Delete last shot |
 | `:ShooterShotToggle` | `:ShooterToggleDone` | Toggle done status |
+| `:ShooterShotDeleteCursor` | `:ShooterDeleteShotUnderCursor` | Delete shot at cursor |
 | `:ShooterShotMove` | `:ShooterMoveShot` | Move shot to another file |
 | `:ShooterShotMunition` | `:ShooterMunition` | Import from inbox |
 | `:ShooterShotPicker` | `:ShooterOpenShots` | Open shots picker |
@@ -312,6 +313,7 @@ All keybindings use `<space>` prefix (customizable). Commands are organized into
 | `<space>ss` | New shot |
 | `<space>sS` | New shot + whisper |
 | `<space>sd` | Delete last shot |
+| `<space>sD` | Delete shot at cursor |
 | `<space>s.` | Toggle done |
 | `<space>sm` | Move shot to another file |
 | `<space>sM` | Import from inbox (Munition) |
