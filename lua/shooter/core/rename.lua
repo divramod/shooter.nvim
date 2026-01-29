@@ -35,10 +35,11 @@ end
 local function update_title_in_file(filepath, new_title)
   local content = utils.read_file(filepath)
   if not content then return false end
-  local updated = content:gsub('^(#%s+).+', '%1' .. new_title, 1)
+  -- Use [^\n]+ to match only until end of line (not across newlines)
+  local updated = content:gsub('^(#%s+)[^\n]+', '%1' .. new_title, 1)
   if updated == content then
     -- No heading found, try after first line (might have frontmatter)
-    updated = content:gsub('\n(#%s+).+', '\n%1' .. new_title, 1)
+    updated = content:gsub('\n(#%s+)[^\n]+', '\n%1' .. new_title, 1)
   end
   if updated ~= content then
     utils.write_file(filepath, updated)
@@ -91,6 +92,9 @@ function M.rename_current_file()
   local filepath = get_current_filepath()
   if not filepath then utils.notify('No file selected', vim.log.levels.WARN); return end
 
+  -- Get the buffer number for this file (if it's open)
+  local bufnr = vim.fn.bufnr(filepath)
+
   -- Extract current title from file
   local current_title = extract_title(filepath)
   if not current_title then
@@ -120,7 +124,20 @@ function M.rename_current_file()
       utils.notify('File already exists: ' .. new_filename, vim.log.levels.ERROR); return
     end
 
-    -- Update title heading in file first (before rename)
+    -- CRITICAL: Save and close the buffer before modifying file on disk
+    -- This prevents content loss when Neovim's buffer state conflicts with disk state
+    if bufnr ~= -1 and vim.api.nvim_buf_is_valid(bufnr) then
+      -- Save any unsaved changes first
+      if vim.bo[bufnr].modified then
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.cmd('write')
+        end)
+      end
+      -- Wipe the buffer so we can safely rename the underlying file
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+
+    -- Update title heading in file (on disk, buffer is now closed)
     local title_updated = update_title_in_file(filepath, new_title)
 
     -- Perform file rename
@@ -129,7 +146,7 @@ function M.rename_current_file()
       utils.notify('Rename failed: ' .. (err or 'unknown error'), vim.log.levels.ERROR); return
     end
 
-    -- Open the renamed file
+    -- Open the renamed file fresh
     vim.cmd('edit ' .. vim.fn.fnameescape(info.new_path))
 
     -- Report results

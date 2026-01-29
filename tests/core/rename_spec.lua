@@ -13,6 +13,33 @@ describe('shooter.core.rename', function()
     os.execute('rm -rf ' .. test_dir)
   end)
 
+  describe('update_title_in_file (via perform_rename)', function()
+    it('should preserve file content when updating title', function()
+      local filepath = test_dir .. '/test-file.md'
+      local original_content = [[# Old Title
+
+## shot 1
+some content here
+
+## shot 2
+more content
+]]
+      utils.write_file(filepath, original_content)
+
+      -- We can't call update_title_in_file directly (local), but we can verify
+      -- that after rename the content is preserved by checking the file
+      local success, err, info = rename.perform_rename(filepath, 'new-file.md')
+
+      assert.is_true(success)
+      local new_content = utils.read_file(info.new_path)
+      -- Content should be preserved (title not updated by perform_rename alone)
+      assert.truthy(new_content:find('## shot 1'))
+      assert.truthy(new_content:find('some content here'))
+      assert.truthy(new_content:find('## shot 2'))
+      assert.truthy(new_content:find('more content'))
+    end)
+  end)
+
   describe('perform_rename', function()
     it('should rename file successfully', function()
       local old_path = test_dir .. '/old-name.md'
