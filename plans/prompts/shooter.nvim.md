@@ -1,5 +1,25 @@
 # shooter.nvim
 
+## shot 361
+and also ```## shot 1.1``` and ```## shot 1.2``` should be possible and would become ```## shot 1``` and ```## shot 2``` respectively when renumbering the shots.
+write tests for each case i sent you here.
+
+## x shot 360 (2026-01-29 08:02:10)
+negative numbers should also be possible for preparing the shot numbering.
+so ```## shot -1```  would become ```## shot 1```
+```## shot -2``` would become ```## shot 1``` and so on.
+be awaere, that when you renumber a shot, the name of the shot history file needs also to be updated accordingly.
+
+## x shot 359 (2026-01-29 07:58:09)
+shots with the title "shot ?" should stay at their position in the queue of open shots, but should get a number too
+
+## x shot 358 (2026-01-29 07:56:03)
+i now need new commands ShooterShotsRenumber
+what should they do:
+ShooterShotsRenumber:
+- should renumber all shots in the current shotfile, so that there are no gaps in the numbering, if there is a shot 0 and a shot 1, shot 0 becomes shot 1 and shot 1 becomes shot 2 and so on.
+- if there are done shots, the done shots should be sorted by date so that the oldest done shot is shot 1 and the newest done shot is the last shot after that, the open shots should be numbered after the done shots.
+
 ## x shot 357 (2026-01-28 23:18:40)
 can you remap  < >C to < >?
 
