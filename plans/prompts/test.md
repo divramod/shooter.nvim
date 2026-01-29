@@ -4,6 +4,4 @@
 test shot
 
 ## shot 1
-
 hello
-

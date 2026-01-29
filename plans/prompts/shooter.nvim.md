@@ -1,6 +1,56 @@
 # shooter.nvim
 
-## shot 361
+## x shot 368 (2026-01-29 10:40:43)
+i have a session in a/ai, but it did not opened the in insert mode the telescope picker, when pressing < >v
+
+## x shot 367 (2026-01-29 10:36:45)
+the default for the telescope picker which is opening with < >v should be insert mode.
+please change that for all sessions and everywhere in the repo.
+
+## x shot 366 (2026-01-29 10:29:16)
+can you add a cmd ShooterDeleteShotUnderCursor
+which deletes a shot under the cursor in the current shotfile.
+it can be a done shot or an open shot.
+when deleting a done shot, also delete the corresponding history file in the history folder accordingly.
+when deleting an open shot, just delete the shot from the shotfile.
+also as always create a mapping
+
+## x shot 365 (2026-01-29 10:23:56)
+before
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260129_102222.png
+
+after
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260129_102257.png
+
+in the after picture
+shot 1 should be shot 2 and shot 2 should be shot 1.
+as shot 1 was solved later then shot 2
+
+
+## x shot 364 (2026-01-29 10:11:32)
+before sorting
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260129_101007.png
+
+after sorting
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260129_101033.png
+
+here something wrong happened.
+after sorting, it marked the kimi shot as done, even though it was open before.
+usually the shot " in dev i ran a shot" should have become shot 2 with its done date marked 
+
+## x shot 363 (2026-01-29 10:05:10)
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260129_100413.png
+in that case, where i have put 2.1 for the kimi task.
+when renumbering, it should become shot 3, as there is a shot 2 already (which could be seen as shot 2.0)
+
+## x shot 362 (2026-01-29 09:57:57)
+when renumbering shots, the result should be, that all done shots are at the bottom and the open shots are at the top.
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260129_095659.png
+i ran renubering here, but shot 10 is done and should be changed to shot 1 and be at the bottom.
+the open shots should be 2-10 then after renumbering.
+
+## x shot 361 (2026-01-29 08:14:06)
+looks good now
 and also ```## shot 1.1``` and ```## shot 1.2``` should be possible and would become ```## shot 1``` and ```## shot 2``` respectively when renumbering the shots.
 write tests for each case i sent you here.
 

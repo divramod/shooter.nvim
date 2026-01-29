@@ -5,7 +5,8 @@
     "core/coding-standards.md",
     "core/security.md",
     "core/commit-conventions.md",
-    "core/multi-agent-conventions.md"
+    "core/multi-agent-conventions.md",
+    "core/shot-workflow.md"
   ],
   "commands": [
     "review.md",
