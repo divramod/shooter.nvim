@@ -71,9 +71,9 @@ describe('shooter.core.renumber', function()
       local open_pos = content:find('open shot')
 
       -- Open shot should come first (top)
-      assert.truthy(open_pos < older_pos)
-      -- Done shots at bottom, sorted by timestamp (older before newer)
-      assert.truthy(older_pos < newer_pos)
+      assert.truthy(open_pos < newer_pos)
+      -- Done shots at bottom: newer (higher number) before older (shot 1)
+      assert.truthy(newer_pos < older_pos)
     end)
 
     it('should preserve content of each shot', function()
@@ -339,8 +339,8 @@ describe('shooter.core.renumber', function()
       local done_d_pos = content:find('done shot D')
 
       assert.truthy(open_c_pos < open_b_pos)  -- C (3) before B (2.1)
-      assert.truthy(open_b_pos < done_d_pos)  -- Open before done
-      assert.truthy(done_d_pos < done_a_pos)  -- D (older) before A (newer)
+      assert.truthy(open_b_pos < done_a_pos)  -- Open before done
+      assert.truthy(done_a_pos < done_d_pos)  -- A (newer) before D (older, shot 1)
     end)
   end)
 end)

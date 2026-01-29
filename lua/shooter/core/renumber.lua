@@ -98,11 +98,12 @@ local function sort_shots(shots)
     return a.original_num > b.original_num
   end)
 
-  -- Sort done shots by timestamp (oldest first)
+  -- Sort done shots by timestamp descending (newest first)
+  -- With reverse numbering, newest done shot gets highest number
   table.sort(done_shots, function(a, b)
     local ts_a = a.timestamp or '0000-00-00 00:00:00'
     local ts_b = b.timestamp or '0000-00-00 00:00:00'
-    return ts_a < ts_b
+    return ts_a > ts_b
   end)
 
   -- Combine: open shots first (top, sorted by number desc), then done shots (bottom)
