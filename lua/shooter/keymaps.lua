@@ -33,6 +33,7 @@ function M.setup()
   map('n', 'z', ':ShooterNavLastEditedFiles 10<cr>', 'Last 10 edited files')
   map('n', 'e', ':ShooterShotExtractBlock<cr>', 'Extract block')
   map('n', 'E', ':ShooterShotExtractLine<cr>', 'Extract line')
+  map('n', '?', ':ShooterCheatsheet<cr>', 'Cheatsheet')
 
   -- Shot navigation - root level for speed
   map('n', ']', ':ShooterShotNavNext<cr>', 'Next open shot')

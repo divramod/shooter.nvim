@@ -499,6 +499,11 @@ local function setup_help_commands()
   create_cmd('ShooterHelpDashboard', function()
     require('shooter.dashboard').open()
   end, { desc = 'Open dashboard' }, 'ShooterDashboard')
+
+  -- ShooterCheatsheet
+  create_cmd('ShooterCheatsheet', function()
+    require('shooter.cheatsheet').show()
+  end, { desc = 'Show cheatsheet' })
 end
 
 -- Setup Nav namespace commands (z prefix in keymaps)

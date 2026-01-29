@@ -22,6 +22,7 @@ CORE SHORTCUTS (root level for quick access)
   ]         Next open shot        Jump to next open (undone) shot
   {         Prev sent shot        Jump to previous (older) sent shot
   }         Next sent shot        Jump to next (newer) sent shot
+  ?         Cheatsheet            Show all keymaps cheatsheet
   1-4       Send to pane          Send current shot to Claude pane #1-4
 
 SHOTFILE NAMESPACE (f prefix)
