@@ -14,9 +14,13 @@ local function parse_timestamp(header_line)
 end
 
 -- Parse shot info from header line
+-- Captures: "shot 123", "shot ?", "shot 2.1", "shot -1", "shot -1.5"
 local function parse_shot_info(line)
   local is_done = line:match(config.get('patterns.executed_shot_header')) ~= nil
-  local shot_num = line:match('shot%s+(%d+)')
+  -- Try patterns in order: decimal, negative, integer, question mark
+  local shot_num = line:match('shot%s+(%-?%d+%.%d+)')  -- Decimal (2.1, -1.5)
+    or line:match('shot%s+(%-?%d+)')                   -- Integer or negative (-1, 5)
+    or (line:match('shot%s+%?') and '0')               -- Question mark → 0
   local timestamp = parse_timestamp(line)
   return {
     is_done = is_done,
@@ -75,7 +79,7 @@ local function find_all_shots_with_info(bufnr)
   return shots
 end
 
--- Sort shots: open shots first (top), done shots at bottom (sorted by timestamp)
+-- Sort shots: open shots first (top, by number descending), done shots at bottom (by timestamp)
 local function sort_shots(shots)
   local done_shots = {}
   local open_shots = {}
@@ -88,6 +92,12 @@ local function sort_shots(shots)
     end
   end
 
+  -- Sort open shots by original number descending (highest first)
+  -- This ensures 2.1 comes after 2 but before 3 in the final ordering
+  table.sort(open_shots, function(a, b)
+    return a.original_num > b.original_num
+  end)
+
   -- Sort done shots by timestamp (oldest first)
   table.sort(done_shots, function(a, b)
     local ts_a = a.timestamp or '0000-00-00 00:00:00'
@@ -95,7 +105,7 @@ local function sort_shots(shots)
     return ts_a < ts_b
   end)
 
-  -- Combine: open shots first (top, keep order), then done shots (bottom, sorted by date)
+  -- Combine: open shots first (top, sorted by number desc), then done shots (bottom)
   local sorted = {}
   for _, shot in ipairs(open_shots) do table.insert(sorted, shot) end
   for _, shot in ipairs(done_shots) do table.insert(sorted, shot) end

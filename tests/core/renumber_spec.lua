@@ -108,9 +108,10 @@ describe('shooter.core.renumber', function()
 
       local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
       local content = table.concat(lines, '\n')
-      -- With reversed numbering: first shot (shot 0) becomes shot 2, second (shot 1) becomes shot 1
-      assert.truthy(content:find('## shot 2\nshot zero'))
-      assert.truthy(content:find('## shot 1\nshot one'))
+      -- Sorted by number desc: shot 1 first, shot 0 second
+      -- With reversed numbering: shot 1 becomes shot 2, shot 0 becomes shot 1
+      assert.truthy(content:find('## shot 2\nshot one'))
+      assert.truthy(content:find('## shot 1\nshot zero'))
     end)
 
     it('should return 0 when no shots found', function()
@@ -124,7 +125,7 @@ describe('shooter.core.renumber', function()
       assert.equals(0, count)
     end)
 
-    it('should handle "shot ?" and keep position among open shots', function()
+    it('should handle "shot ?" and sort by number', function()
       vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
         '# Test File',
         '',
@@ -147,21 +148,21 @@ describe('shooter.core.renumber', function()
       local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
       local content = table.concat(lines, '\n')
 
-      -- With reversed numbering: first shot gets highest (4), last gets lowest (1)
-      -- Order: open A (shot 4), unnumbered (shot 3), open B (shot 2), done (shot 1)
+      -- Sorted by number desc: shot 10 first, shot 5 second, shot ? (=0) third
+      -- With reversed numbering: shot 10→4, shot 5→3, shot ?→2, done→1
       assert.truthy(content:find('## x shot 1'))
       assert.truthy(content:find('done shot'))
 
-      -- Find positions to verify order (open shots first, done last)
+      -- Find positions to verify order (sorted by number desc, done last)
       local done_pos = content:find('done shot')
       local open_a_pos = content:find('open shot A')
       local unnumbered_pos = content:find('unnumbered shot')
       local open_b_pos = content:find('open shot B')
 
-      -- Open shots at top in original order, done shot at bottom
+      -- Open shots sorted by number desc: B (10) < A (5) < ? (0), then done
+      assert.truthy(open_b_pos < open_a_pos)
       assert.truthy(open_a_pos < unnumbered_pos)
-      assert.truthy(unnumbered_pos < open_b_pos)
-      assert.truthy(open_b_pos < done_pos)
+      assert.truthy(unnumbered_pos < done_pos)
 
       -- Verify shot ? got a number
       assert.is_nil(content:find('shot %?'))
@@ -190,10 +191,40 @@ describe('shooter.core.renumber', function()
       -- All decimal numbers should be replaced with integers
       assert.is_nil(content:find('shot 1%.1'))
       assert.is_nil(content:find('shot 1%.2'))
-      -- Should have sequential numbers (reversed: first=3, last=1)
-      assert.truthy(content:find('## shot 3\n'))
-      assert.truthy(content:find('## shot 2\n'))
-      assert.truthy(content:find('## shot 1\n'))
+      -- Sorted by number desc: 2 > 1.2 > 1.1
+      -- regular shot → shot 3, decimal B → shot 2, decimal A → shot 1
+      assert.truthy(content:find('## shot 3\nregular'))
+      assert.truthy(content:find('## shot 2\ndecimal shot B'))
+      assert.truthy(content:find('## shot 1\ndecimal shot A'))
+    end)
+
+    it('should place 2.1 between 2 and 3 (becomes shot 3)', function()
+      vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, {
+        '# Test File',
+        '',
+        '## shot 3',
+        'shot three',
+        '',
+        '## shot 2.1',
+        'inserted shot',
+        '',
+        '## shot 2',
+        'shot two',
+      })
+
+      renumber.renumber_shots(test_bufnr)
+
+      local lines = vim.api.nvim_buf_get_lines(test_bufnr, 0, -1, false)
+      local content = table.concat(lines, '\n')
+
+      -- Sorted by number desc: 3 > 2.1 > 2
+      -- shot 3 → shot 3, shot 2.1 → shot 2, shot 2 → shot 1
+      local three_pos = content:find('shot three')
+      local inserted_pos = content:find('inserted shot')
+      local two_pos = content:find('shot two')
+
+      assert.truthy(three_pos < inserted_pos)
+      assert.truthy(inserted_pos < two_pos)
     end)
 
     it('should handle negative shot numbers (-1, -2)', function()
@@ -254,15 +285,15 @@ describe('shooter.core.renumber', function()
       assert.is_nil(content:find('shot %?'))
       assert.is_nil(content:find('shot 99'))
 
-      -- Content should be preserved in order
+      -- Sorted by number desc: 99 > 1.5 > 0 (?) > -1
       local neg_pos = content:find('negative')
       local dec_pos = content:find('decimal')
       local qm_pos = content:find('question mark')
       local reg_pos = content:find('regular')
 
-      assert.truthy(neg_pos < dec_pos)
+      assert.truthy(reg_pos < dec_pos)
       assert.truthy(dec_pos < qm_pos)
-      assert.truthy(qm_pos < reg_pos)
+      assert.truthy(qm_pos < neg_pos)
     end)
   end)
 end)
