@@ -466,7 +466,7 @@ local function setup_cfg_commands()
     local session = require('shooter.session')
     local current = session.get_current_session()
     local modes = { 'normal', 'insert' }
-    local current_mode = current.vimMode and current.vimMode.shotPicker or 'normal'
+    local current_mode = current.vimMode and current.vimMode.shotPicker or 'insert'
     local next_idx = 1
     for i, m in ipairs(modes) do
       if m == current_mode then next_idx = (i % #modes) + 1 end

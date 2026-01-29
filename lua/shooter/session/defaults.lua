@@ -8,9 +8,9 @@ local M = {}
 M.DEFAULT = {
   name = 'init',
   vimMode = {
-    shotfilePicker = 'normal',
-    projectPicker = 'normal',
-    sortPicker = 'normal',
+    shotfilePicker = 'insert',
+    projectPicker = 'insert',
+    sortPicker = 'insert',
   },
   layout = 'vertical', -- 'vertical' (preview top) or 'horizontal' (preview right)
   filters = {
@@ -71,9 +71,9 @@ function M.validate_session(session)
 
   -- Ensure vimMode exists with defaults
   session.vimMode = session.vimMode or {}
-  session.vimMode.shotfilePicker = session.vimMode.shotfilePicker or 'normal'
-  session.vimMode.projectPicker = session.vimMode.projectPicker or 'normal'
-  session.vimMode.sortPicker = session.vimMode.sortPicker or 'normal'
+  session.vimMode.shotfilePicker = session.vimMode.shotfilePicker or 'insert'
+  session.vimMode.projectPicker = session.vimMode.projectPicker or 'insert'
+  session.vimMode.sortPicker = session.vimMode.sortPicker or 'insert'
   session.layout = session.layout or 'vertical'
 
   session.filters = session.filters or {}

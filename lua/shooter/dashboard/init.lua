@@ -11,7 +11,7 @@ local action_state = require('telescope.actions.state')
 local previewers = require('telescope.previewers')
 local data = require('shooter.dashboard.data')
 
-local layout = { layout_strategy = 'vertical', layout_config = { width = 0.9, height = 0.9, preview_height = 0.4 }, initial_mode = 'normal' }
+local layout = { layout_strategy = 'vertical', layout_config = { width = 0.9, height = 0.9, preview_height = 0.4 }, initial_mode = 'insert' }
 
 -- Common mappings for all pickers
 local function common_mappings(pb, map, back_fn)

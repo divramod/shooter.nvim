@@ -99,7 +99,7 @@ function M.show_action_picker(filepath)
     }),
     layout_strategy = 'vertical',
     layout_config = { width = 0.9, height = 0.9, preview_height = 0.5 },
-    initial_mode = 'normal',
+    initial_mode = 'insert',
     attach_mappings = function(prompt_bufnr, map)
       -- Toggle selection with Tab (use telescope's built-in)
       map('n', '<Tab>', function()

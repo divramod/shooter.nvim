@@ -56,7 +56,7 @@ function M.show_project_picker(callback)
   local include_root = current.filters.projects.rootProject
   local git_root = files_mod.get_git_root()
   local root_name = git_root and vim.fn.fnamemodify(git_root, ':t') or 'root'
-  local vim_mode = current.vimMode and current.vimMode.projectPicker or 'normal'
+  local vim_mode = current.vimMode and current.vimMode.projectPicker or 'insert'
 
   local function make_entries()
     local entries = {}
@@ -144,7 +144,7 @@ function M.show_sort_picker(callback)
     vim.defer_fn(function() if picker.set_selection then picker:set_selection(row) end end, 10)
   end
 
-  local vim_mode = current.vimMode and current.vimMode.sortPicker or 'normal'
+  local vim_mode = current.vimMode and current.vimMode.sortPicker or 'insert'
   pickers.new({}, {
     prompt_title = 'Sort (Tab/Space=toggle, +/-=priority, d=direction)',
     finder = make_finder(), sorter = conf.generic_sorter({}), initial_mode = vim_mode,

@@ -143,8 +143,8 @@ local function create_file_picker(opts, get_files_fn, title_prefix)
     }), { reset_prompt = false })
   end
 
-  -- Get initial mode from session vimMode setting (default to normal)
-  local vim_mode = current.vimMode and current.vimMode.shotfilePicker or 'normal'
+  -- Get initial mode from session vimMode setting (default to insert)
+  local vim_mode = current.vimMode and current.vimMode.shotfilePicker or 'insert'
   local initial_mode = opts.initial_mode or vim_mode
   local layout = current.layout or 'vertical'
   local layout_config = layout == 'vertical'
@@ -323,7 +323,7 @@ function M.list_open_shots(opts)
     prompt_title = title,
     layout_strategy = 'vertical',
     layout_config = {width = 0.9, height = 0.9, preview_height = 0.5},
-    initial_mode = 'normal',
+    initial_mode = 'insert',
     finder = finders.new_table({
       results = shot_entries,
       entry_maker = function(e) return {value = e, display = e.display, ordinal = e.display} end,
