@@ -23,3 +23,11 @@ plugin/packer_compiled.lua
 
 # Luacheck cache
 .luacheckcache
+
+# AI rules (synced from ~/a/ai, not committed)
+.ai-rules/
+
+# Beads runtime files (database, local state)
+.beads/beads.db*
+.beads/.local_version
+.bv/

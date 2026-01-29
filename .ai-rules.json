@@ -1,0 +1,23 @@
+{
+  "source": "mod/ai",
+  "version": "0.1.0",
+  "rules": [
+    "core/coding-standards.md",
+    "core/security.md",
+    "core/commit-conventions.md",
+    "core/multi-agent-conventions.md"
+  ],
+  "commands": [
+    "review.md",
+    "refactor.md",
+    "test.md",
+    "debug.md"
+  ],
+  "agents": [
+    "unit-tester.md",
+    "formatter.md",
+    "linter.md",
+    "build.md"
+  ],
+  "restrictions": "development"
+}
