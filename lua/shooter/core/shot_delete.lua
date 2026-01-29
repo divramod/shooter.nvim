@@ -1,67 +1,20 @@
 -- Delete shot under cursor
--- For done shots: also deletes corresponding history file
--- For open shots: just removes from shotfile
+-- Removes shot from shotfile (no external history files to clean up)
 
 local utils = require('shooter.utils')
 local shots = require('shooter.core.shots')
-local history = require('shooter.history')
 local config = require('shooter.config')
 
 local M = {}
 
--- Convert header timestamp (YYYY-MM-DD HH:MM:SS) to file timestamp (YYYYMMDD_HHMMSS)
-local function header_ts_to_file_ts(header_timestamp)
-  if not header_timestamp then return nil end
-  -- "2026-01-29 10:09:19" -> "20260129_100919"
-  local y, m, d, h, min, s = header_timestamp:match('(%d%d%d%d)%-(%d%d)%-(%d%d)%s+(%d%d):(%d%d):(%d%d)')
-  if y then
-    return string.format('%s%s%s_%s%s%s', y, m, d, h, min, s)
-  end
-  return nil
-end
-
--- Parse shot header for number and timestamp
+-- Parse shot header for number and status
 local function parse_shot_header_full(line)
   local shot_num = line:match('shot%s+(%d+)')
-  local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
   local is_done = line:match(config.get('patterns.executed_shot_header')) ~= nil
   return {
     shot_num = shot_num,
-    timestamp = timestamp,
     is_done = is_done,
   }
-end
-
--- Find and delete history file for a done shot
-local function delete_history_file(source_filepath, shot_num, header_timestamp)
-  local user, repo = history.get_git_remote_info(source_filepath)
-  if not user or not repo then
-    local dir = source_filepath and utils.get_dirname(source_filepath) or utils.cwd()
-    user = 'local'
-    repo = utils.get_basename(history.get_git_root_for_path(source_filepath) or dir)
-  end
-
-  local project = history.detect_project_from_path(source_filepath)
-  local source_filename = utils.get_filename(source_filepath)
-  local file_ts = header_ts_to_file_ts(header_timestamp)
-
-  if not file_ts then
-    return false, 'Could not parse timestamp from shot header'
-  end
-
-  local history_path = history.build_history_path(user, repo, source_filename, shot_num, file_ts, project)
-
-  if utils.file_exists(history_path) then
-    local ok = os.remove(history_path)
-    if ok then
-      return true, history_path
-    else
-      return false, 'Failed to delete: ' .. history_path
-    end
-  else
-    -- History file doesn't exist, that's okay
-    return true, nil
-  end
 end
 
 -- Delete the shot under cursor
@@ -89,15 +42,6 @@ function M.delete_shot_under_cursor()
     return
   end
 
-  -- If done shot, delete history file first
-  local history_deleted = nil
-  if info.is_done and info.shot_num and info.timestamp then
-    local ok, result = delete_history_file(source_filepath, info.shot_num, info.timestamp)
-    if ok and result then
-      history_deleted = result
-    end
-  end
-
   -- Delete the shot lines from buffer
   -- Include one blank line above if present (for proper formatting)
   local delete_start = shot_start
@@ -116,12 +60,7 @@ function M.delete_shot_under_cursor()
     vim.cmd('write')
   end
 
-  -- Report what was done
-  if history_deleted then
-    utils.echo('Deleted ' .. shot_desc .. ' and history file')
-  else
-    utils.echo('Deleted ' .. shot_desc)
-  end
+  utils.echo('Deleted ' .. shot_desc)
 end
 
 return M

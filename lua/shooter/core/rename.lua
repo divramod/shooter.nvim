@@ -1,10 +1,8 @@
 -- File rename module for shooter.nvim
--- Interactive file renaming with history synchronization
 -- Flow: prompt for title -> generate filename slug -> update title heading -> rename file
 
 local utils = require('shooter.utils')
 local files = require('shooter.core.files')
-local sync = require('shooter.history.sync')
 
 local M = {}
 
@@ -77,13 +75,8 @@ function M.perform_rename(old_path, new_filename)
     return false, 'Failed to rename file'
   end
 
-  -- Sync history folder
-  local history_renamed, history_count = sync.rename_history_folder(old_path, new_path)
-
   return true, nil, {
     new_path = new_path,
-    history_renamed = history_renamed,
-    history_files_updated = history_count or 0,
   }
 end
 
@@ -152,7 +145,6 @@ function M.rename_current_file()
     -- Report results
     local msg = 'Renamed to "' .. new_title .. '"'
     if title_updated then msg = msg .. ' (title updated)' end
-    if info.history_renamed then msg = msg .. string.format(' (history: %d)', info.history_files_updated) end
     utils.notify(msg, vim.log.levels.INFO)
   end)
 end

@@ -1,5 +1,5 @@
 -- Greenkeep module for shooter.nvim
--- Migrates old formats: dates, headers, filenames, and history folders
+-- Migrates old formats: dates, headers, and filenames
 
 local utils = require('shooter.utils')
 local files = require('shooter.core.files')
@@ -75,54 +75,19 @@ function M.process_file_content(filepath)
 end
 
 -- Rename file if it has old naming pattern
--- Also syncs history folder when renaming
 function M.rename_file_if_needed(filepath)
   local dir = vim.fn.fnamemodify(filepath, ':h')
   local filename = vim.fn.fnamemodify(filepath, ':t')
   local slug = M.extract_slug_from_filename(filename)
-  if not slug then return filepath, false, 0 end
+  if not slug then return filepath, false end
 
   local new_path = dir .. '/' .. slug .. '.md'
-  if vim.fn.filereadable(new_path) == 1 then return filepath, false, 0 end
+  if vim.fn.filereadable(new_path) == 1 then return filepath, false end
 
   local ok = os.rename(filepath, new_path)
-  if not ok then return filepath, false, 0 end
+  if not ok then return filepath, false end
 
-  -- Sync history folder
-  local sync = require('shooter.history.sync')
-  local _, history_updated = sync.rename_history_folder(filepath, new_path)
-
-  return new_path, true, history_updated or 0
-end
-
--- Rename history folder if it has old naming pattern
-function M.rename_folder_if_needed(folderpath)
-  local parent = vim.fn.fnamemodify(folderpath, ':h')
-  local name = vim.fn.fnamemodify(folderpath, ':t')
-
-  -- Extract slug from folder name
-  local slug = name:match('^%d%d%d%d%d%d%d%d_%d%d%d%d_(.+)$')  -- 20260118_2338_title
-  if not slug then slug = name:match('^%d%d%d%d%-%d%d%-%d%d_(.+)$') end  -- 2026-01-18_title
-  if not slug then return false end
-
-  local new_path = parent .. '/' .. slug
-  if vim.fn.isdirectory(new_path) == 1 then return false end
-
-  return os.rename(folderpath, new_path) == true
-end
-
--- Get all history folders with old naming
-function M.get_old_history_folders()
-  local history_root = vim.fn.expand('~/.config/shooter.nvim/history')
-  if vim.fn.isdirectory(history_root) == 0 then return {} end
-
-  local folders = {}
-  local cmd = string.format('find %s -type d \\( -name "20*_*" -o -name "2026-*_*" \\) 2>/dev/null', history_root)
-  local result = vim.fn.system(cmd)
-  for folder in result:gmatch('[^\n]+') do
-    table.insert(folders, folder)
-  end
-  return folders
+  return new_path, true
 end
 
 -- Get all prompt files
@@ -136,7 +101,7 @@ end
 
 -- Main run function
 function M.run()
-  local stats = { shots = 0, headers = 0, files_renamed = 0, folders_renamed = 0, history_updated = 0 }
+  local stats = { shots = 0, headers = 0, files_renamed = 0 }
   local current_file = vim.fn.expand('%:p')
   local new_current_file = current_file
 
@@ -146,18 +111,10 @@ function M.run()
     stats.shots = stats.shots + shots
     if header_updated then stats.headers = stats.headers + 1 end
 
-    local new_path, renamed, history_count = M.rename_file_if_needed(filepath)
+    local new_path, renamed = M.rename_file_if_needed(filepath)
     if renamed then
       stats.files_renamed = stats.files_renamed + 1
-      stats.history_updated = stats.history_updated + history_count
       if filepath == current_file then new_current_file = new_path end
-    end
-  end
-
-  -- Process history folders
-  for _, folder in ipairs(M.get_old_history_folders()) do
-    if M.rename_folder_if_needed(folder) then
-      stats.folders_renamed = stats.folders_renamed + 1
     end
   end
 
@@ -173,8 +130,6 @@ function M.run()
   if stats.shots > 0 then table.insert(parts, stats.shots .. ' shot date(s)') end
   if stats.headers > 0 then table.insert(parts, stats.headers .. ' header(s)') end
   if stats.files_renamed > 0 then table.insert(parts, stats.files_renamed .. ' file(s) renamed') end
-  if stats.folders_renamed > 0 then table.insert(parts, stats.folders_renamed .. ' history folder(s) renamed') end
-  if stats.history_updated > 0 then table.insert(parts, stats.history_updated .. ' history file(s) updated') end
 
   if #parts == 0 then
     utils.notify('Greenkeep: Nothing to update', vim.log.levels.INFO)

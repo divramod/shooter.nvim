@@ -107,20 +107,6 @@ local function setup_shotfile_commands()
     vim.cmd('Oil ' .. prompts_dir)
   end, { desc = 'Open Oil in prompts folder' }, 'ShooterOpenPrompts')
 
-  -- ShooterShotfileHistory (alias: ShooterOpenHistory)
-  create_cmd('ShooterShotfileHistory', function()
-    local history = require('shooter.history')
-    local utils = require('shooter.utils')
-    local user, repo = history.get_git_remote_info()
-    if not user or not repo then
-      local cwd = utils.cwd()
-      user, repo = 'local', utils.get_basename(cwd)
-    end
-    local history_dir = string.format('%s/%s/%s', history.get_history_base_dir(), user, repo)
-    vim.fn.mkdir(history_dir, 'p')
-    vim.cmd('Oil ' .. history_dir)
-  end, { desc = 'Open history directory in Oil' }, 'ShooterOpenHistory')
-
   -- ShooterOpenPlans - Open plans folder in Oil
   create_cmd('ShooterOpenPlans', function()
     local files = require('shooter.core.files')
@@ -629,23 +615,6 @@ local function setup_utility_commands()
     vim.cmd('edit ' .. vim.fn.fnameescape(inbox_path))
   end, { desc = 'Open INBOX.md at git root' })
 
-  -- History commands
-  create_cmd('ShooterHistoryMigrate', function()
-    local history = require('shooter.history')
-    local migrated, skipped = history.migrate_history_files()
-    vim.notify(string.format('Migrated: %d, Skipped: %d', migrated, skipped))
-  end, { desc = 'Migrate history files' }, 'ShooterMigrateHistory')
-
-  create_cmd('ShooterHistoryAudit', function(opts)
-    require('shooter.history.audit_runner').run_async({ fix = opts.bang })
-  end, { bang = true, desc = 'Audit history (! to fix)' })
-
-  create_cmd('ShooterHistoryCleanup', function(opts)
-    local cleanup = require('shooter.history.cleanup')
-    local duplicates, total_files = cleanup.cleanup_duplicates(opts.bang)
-    local mode = opts.bang and 'Deleted' or 'Found'
-    vim.notify(string.format('%s %d duplicates (%d files)', mode, duplicates, total_files))
-  end, { bang = true, desc = 'Cleanup duplicates (! to delete)' })
 end
 
 -- Setup all vim commands

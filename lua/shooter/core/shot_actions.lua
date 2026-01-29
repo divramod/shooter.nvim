@@ -458,7 +458,7 @@ function M.undo_latest_sent_shot()
   utils.echo('Undone marking: Shot ' .. shot_num .. ' is now open')
 end
 
--- Yank current shot content to clipboard, mark as done, and save to history
+-- Yank current shot content to clipboard and mark as done
 function M.yank_shot()
   local bufnr = vim.api.nvim_get_current_buf()
   local cursor_line = utils.get_cursor()[1]
@@ -472,16 +472,6 @@ function M.yank_shot()
   local content = shots.get_shot_content(bufnr, start_line, end_line)
   local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
   local shot_num = shots.parse_shot_header(header_text) or '?'
-  local source_filepath = vim.api.nvim_buf_get_name(bufnr)
-
-  -- Build full message for history (same as when shooting)
-  local messages = require('shooter.tmux.messages')
-  local shot_info = { start_line = start_line, end_line = end_line, header_line = header_line }
-  local full_message = messages.build_shot_message(bufnr, shot_info)
-
-  -- Save to history
-  local history = require('shooter.history')
-  history.save_shot(content, full_message, shot_num, source_filepath)
 
   -- Mark shot as done
   shots.mark_shot_executed(bufnr, header_line)
@@ -489,7 +479,7 @@ function M.yank_shot()
   -- Yank to clipboard
   vim.fn.setreg('+', content)
   vim.fn.setreg('"', content)
-  utils.echo('Yanked shot ' .. shot_num .. ', marked done, saved to history')
+  utils.echo('Yanked shot ' .. shot_num .. ' and marked done')
 end
 
 -- Extract subtask under cursor into a new shot

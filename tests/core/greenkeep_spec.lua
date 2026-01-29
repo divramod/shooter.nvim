@@ -90,41 +90,6 @@ describe('shooter.core.greenkeep', function()
     end)
   end)
 
-  describe('rename_folder_if_needed', function()
-    local test_dir = '/tmp/greenkeep_test_folders'
-
-    before_each(function()
-      os.execute('mkdir -p ' .. test_dir)
-    end)
-
-    after_each(function()
-      os.execute('rm -rf ' .. test_dir)
-    end)
-
-    it('should rename YYYYMMDD_HHMM_slug folders', function()
-      local old_path = test_dir .. '/20260118_2338_my-feature'
-      os.execute('mkdir -p ' .. old_path)
-      local result = greenkeep.rename_folder_if_needed(old_path)
-      assert.is_true(result)
-      assert.equals(1, vim.fn.isdirectory(test_dir .. '/my-feature'))
-    end)
-
-    it('should rename YYYY-MM-DD_slug folders', function()
-      local old_path = test_dir .. '/2026-01-18_my-feature'
-      os.execute('mkdir -p ' .. old_path)
-      local result = greenkeep.rename_folder_if_needed(old_path)
-      assert.is_true(result)
-      assert.equals(1, vim.fn.isdirectory(test_dir .. '/my-feature'))
-    end)
-
-    it('should not rename folders with new naming', function()
-      local path = test_dir .. '/my-feature'
-      os.execute('mkdir -p ' .. path)
-      local result = greenkeep.rename_folder_if_needed(path)
-      assert.is_false(result)
-    end)
-  end)
-
   describe('process_file_content', function()
     local test_file = '/tmp/test_greenkeep_content.md'
     local utils = require('shooter.utils')

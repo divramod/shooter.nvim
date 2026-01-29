@@ -58,7 +58,6 @@ function M.setup()
   map('n', 'fr', ':ShooterShotfileRename<cr>', 'Rename current')
   map('n', 'fd', ':ShooterShotfileDelete<cr>', 'Delete current')
   map('n', 'fo', ':ShooterShotfileOpenPrompts<cr>', 'Oil prompts folder')
-  map('n', 'fi', ':ShooterShotfileHistory<cr>', 'History (Oil)')
 
   -- Shotfile move commands (fm prefix)
   map('n', 'fma', ':ShooterShotfileMoveArchive<cr>', 'Move to archive')

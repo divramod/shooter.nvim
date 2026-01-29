@@ -30,7 +30,6 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
 |------|-------------|
 | **Shots File** | The markdown file you edit in Neovim containing multiple shots (e.g., `20260118_0516_feature.md`) |
 | **Shot** | A numbered work item within a shots file (e.g., `## shot 5`) |
-| **Shot History File** | The file sent to Claude via `@filepath` syntax, saved to `~/.config/shooter.nvim/history/` |
 | **Context File** | Global or project-specific instructions injected with each shot |
 
 ## Features
@@ -163,7 +162,6 @@ Commands are organized into 8 namespaces. Old command names work as aliases.
 | `:ShooterShotfileRename` | | Rename current shotfile |
 | `:ShooterShotfileDelete` | | Delete current shotfile |
 | `:ShooterShotfileOpenPrompts` | `:ShooterOpenPrompts` | Oil prompts folder |
-| `:ShooterShotfileHistory` | `:ShooterOpenHistory` | History directory (Oil) |
 | `:ShooterShotfileMoveArchive` | `:ShooterArchive` | Move to archive/ |
 | `:ShooterShotfileMoveBacklog` | `:ShooterBacklog` | Move to backlog/ |
 | `:ShooterShotfileMoveDone` | `:ShooterDone` | Move to done/ |
@@ -261,14 +259,6 @@ Commands are organized into 8 namespaces. Old command names work as aliases.
 | `:ShooterHealth` | | Health check |
 | `:ShooterHelpDashboard` | `:ShooterDashboard` | Dashboard |
 
-### Utility Commands
-
-| Command | Description |
-|---------|-------------|
-| `:ShooterHistoryAudit` | Audit history (! to fix) |
-| `:ShooterHistoryCleanup` | Cleanup duplicates (! to delete) |
-| `:ShooterHistoryMigrate` | Migrate history files |
-
 ## Default Keybindings
 
 All keybindings use `<space>` prefix (customizable). Commands are organized into 8 namespaces:
@@ -295,7 +285,6 @@ All keybindings use `<space>` prefix (customizable). Commands are organized into
 | `<space>fr` | Rename current |
 | `<space>fd` | Delete current |
 | `<space>fo` | Oil prompts folder |
-| `<space>fi` | History (Oil) |
 | `<space>fma` | Move to archive |
 | `<space>fmb` | Move to backlog |
 | `<space>fmd` | Move to done |
@@ -730,8 +719,7 @@ When a `projects/` folder exists at git root:
 1. **Auto-detection**: If your cwd is inside `projects/<name>/`, that project is automatically used
 2. **Project picker**: If at repo root, `<space>n` and `<space>v` show a project picker first
 3. **Root option**: The picker includes "(root)" to create files at `plans/prompts/` instead
-4. **History paths**: Shot history includes project: `~/.config/.../history/user/repo/project/filename/`
-5. **Dashboard**: Shows files from all projects with project prefix (e.g., `frontend/add-login.md`)
+4. **Dashboard**: Shows files from all projects with project prefix (e.g., `frontend/add-login.md`)
 6. **All Repos picker**: `<space>T` includes files from all projects across all repos
 
 ### Project-Aware Commands
@@ -817,7 +805,7 @@ sound = {
 2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-global.md` to customize AI instructions
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
-5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability. The shot history file is saved to `~/.config/shooter.nvim/history/<user>/<repo>/<filename>/shot-NNNN-<timestamp>.md`. Note: This won't show blue like typed input in Claude Code, but Claude outputs the content at the start of each response for transparency.
+5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability
 6. **Sound notifications**: Enable `sound.enabled = true` to hear a sound when shots are sent
 
 ## Troubleshooting

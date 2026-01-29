@@ -1,5 +1,5 @@
 -- High-level tmux operations for shooter.nvim
--- Send shots, mark executed, save history
+-- Send shots to tmux panes, mark executed
 
 local utils = require('shooter.utils')
 local sound = require('shooter.sound')
@@ -8,18 +8,13 @@ local M = {}
 
 -- Lazy-load helpers to keep file concise
 local function get_shots() return require('shooter.core.shots') end
-local function get_history() return require('shooter.history') end
 local function get_files() return require('shooter.core.files') end
 local function get_providers() return require('shooter.providers') end
 
--- Mark shot and save to history
-local function mark_and_save(bufnr, shot_info, full_message, timestamp)
-  local shots, history = get_shots(), get_history()
+-- Mark shot as executed (no history saving - analytics reads from shotfiles)
+local function mark_shot(bufnr, shot_info)
+  local shots = get_shots()
   shots.mark_shot_executed(bufnr, shot_info.header_line)
-  local header_text = utils.get_buf_lines(bufnr, shot_info.header_line - 1, shot_info.header_line)[1]
-  local shot_num = shots.parse_shot_header(header_text)
-  local shot_content = shots.get_shot_content(bufnr, shot_info.start_line, shot_info.end_line)
-  history.save_shot(shot_content, full_message, shot_num, vim.api.nvim_buf_get_name(bufnr), timestamp)
 end
 
 -- Find pane and get provider info
@@ -43,6 +38,17 @@ local function send_file_ref(provider, send, pane_id, filepath)
   return send.send_file_reference(pane_id, filepath)
 end
 
+-- Save shot message to a temp file for sending
+-- Returns: filepath on success, nil on failure
+local function save_temp_sendable(full_message, shot_num)
+  local temp_dir = utils.expand_path('~/.config/shooter.nvim/tmp')
+  utils.ensure_dir(temp_dir)
+  local timestamp = os.date('%Y%m%d_%H%M%S')
+  local temp_path = string.format('%s/shot-%s-%s.md', temp_dir, shot_num, timestamp)
+  local success = utils.write_file(temp_path, full_message)
+  return success and temp_path or nil
+end
+
 -- Check if shot is executed
 local function is_shot_executed(bufnr, header_line)
   local config = require('shooter.config')
@@ -64,7 +70,7 @@ end
 -- Send current shot to AI pane using file reference
 function M.send_current_shot(pane_index, detect, send, messages)
   pane_index = pane_index or 1
-  local files, shots, history = get_files(), get_shots(), get_history()
+  local files, shots = get_files(), get_shots()
 
   if not files.is_shooter_file() then
     local pane_id = find_pane_or_error(detect, pane_index)
@@ -88,15 +94,16 @@ function M.send_current_shot(pane_index, detect, send, messages)
   local full_message = messages.build_shot_message(bufnr, shot_info)
   local shot_num = build_shots_str(bufnr, { shot_info })
 
-  local sendable_path, timestamp = history.save_sendable(full_message, shot_num, vim.api.nvim_buf_get_name(bufnr))
-  if not sendable_path then utils.echo('Failed to save sendable file'); return end
+  -- Write to temp file for sending
+  local temp_path = save_temp_sendable(full_message, shot_num)
+  if not temp_path then utils.echo('Failed to save temp file'); return end
 
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
 
-  local success, err = send_file_ref(provider, send, pane_id, sendable_path)
+  local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    mark_and_save(bufnr, shot_info, full_message, timestamp)
+    mark_shot(bufnr, shot_info)
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to %s%s (%s)', shot_num, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()
@@ -108,7 +115,7 @@ end
 -- Send all open shots to AI pane
 function M.send_all_shots(pane_index, detect, send, messages)
   pane_index = pane_index or 1
-  local files, shots, history = get_files(), get_shots(), get_history()
+  local files, shots = get_files(), get_shots()
 
   if not files.is_shooter_file() then utils.echo('Multishot only works in shooter files'); return end
 
@@ -118,15 +125,15 @@ function M.send_all_shots(pane_index, detect, send, messages)
 
   local full_message = messages.build_multishot_message(bufnr, open_shots)
   local shots_str = build_shots_str(bufnr, open_shots)
-  local sendable_path, timestamp = history.save_sendable(full_message, shots_str, vim.api.nvim_buf_get_name(bufnr))
-  if not sendable_path then utils.echo('Failed to save sendable file'); return end
+  local temp_path = save_temp_sendable(full_message, shots_str)
+  if not temp_path then utils.echo('Failed to save temp file'); return end
 
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
 
-  local success, err = send_file_ref(provider, send, pane_id, sendable_path)
+  local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    for _, shot_info in ipairs(open_shots) do mark_and_save(bufnr, shot_info, full_message, timestamp) end
+    for _, shot_info in ipairs(open_shots) do mark_shot(bufnr, shot_info) end
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #open_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()
@@ -158,21 +165,21 @@ end
 function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, messages)
   pane_index = pane_index or 1
   bufnr = bufnr or utils.current_buf()
-  local files, history = get_files(), get_history()
+  local files = get_files()
 
   if #shot_infos == 0 then utils.echo('No shots to send'); return end
 
   local full_message = messages.build_multishot_message(bufnr, shot_infos)
   local shots_str = build_shots_str(bufnr, shot_infos)
-  local sendable_path, timestamp = history.save_sendable(full_message, shots_str, vim.api.nvim_buf_get_name(bufnr))
-  if not sendable_path then utils.echo('Failed to save sendable file'); return end
+  local temp_path = save_temp_sendable(full_message, shots_str)
+  if not temp_path then utils.echo('Failed to save temp file'); return end
 
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
 
-  local success, err = send_file_ref(provider, send, pane_id, sendable_path)
+  local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    for _, shot_info in ipairs(shot_infos) do mark_and_save(bufnr, shot_info, full_message, timestamp) end
+    for _, shot_info in ipairs(shot_infos) do mark_shot(bufnr, shot_info) end
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #shot_infos, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()

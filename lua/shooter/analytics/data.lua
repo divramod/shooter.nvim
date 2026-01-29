@@ -1,44 +1,218 @@
--- Analytics data gathering
+-- Analytics data gathering from shotfiles
+-- Scans executed shots (## x shot N (YYYY-MM-DD HH:MM:SS)) directly from shotfiles
 local M = {}
 local utils = require('shooter.utils')
+local config = require('shooter.config')
 
--- Parse YAML frontmatter from shot file
-function M.parse_frontmatter(filepath)
-  local file = io.open(filepath, 'r')
-  if not file then return nil end
-  local content = file:read('*a')
-  file:close()
-  local fm, in_fm = {}, false
-  for line in content:gmatch('[^\n]+') do
-    if line == '---' then if in_fm then break end; in_fm = true
-    elseif in_fm then
-      local k, v = line:match('^([%w_]+):%s*(.+)$')
-      if k and v then fm[k] = v end
-    end
-  end
-  if fm.timestamp then
-    local y, m, d, h, min, s = fm.timestamp:match('(%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)')
-    if y then fm.time = os.time({ year = y, month = m, day = d, hour = h, min = min, sec = s }) end
-  end
-  local body = content:match('---\n.-\n---\n(.*)') or ''
-  fm.chars, fm.words = #body, select(2, body:gsub('%S+', '')) or 0
-  fm.sentences = select(2, body:gsub('[.!?]', '')) or 0
-  return fm
+-- Parse executed shot header: ## x shot N (YYYY-MM-DD HH:MM:SS)
+-- Returns: shot_num, timestamp_str, timestamp_epoch
+function M.parse_executed_shot_header(line)
+  local num, date = line:match('^##%s+x%s+shot%s+(%d+)%s+%((.-)%)%s*$')
+  if not num then return nil end
+  local y, m, d, h, min, s = date:match('(%d+)-(%d+)-(%d+)%s+(%d+):(%d+):(%d+)')
+  local epoch = y and os.time({ year = y, month = m, day = d, hour = h, min = min, sec = s }) or 0
+  return tonumber(num), date, epoch
 end
 
--- Get all shot files from history directory
-function M.get_all_shots(project_filter)
-  local history_dir = utils.expand_path('~/.config/shooter.nvim/history')
+-- Extract shot content between header_line and next_header_line (or end_line)
+-- Returns: content string, char count, word count, sentence count
+function M.get_shot_metrics(lines, start_idx, end_idx)
+  local content = {}
+  for i = start_idx, end_idx do
+    if lines[i] then table.insert(content, lines[i]) end
+  end
+  local body = table.concat(content, '\n')
+  local chars = #body
+  local words = select(2, body:gsub('%S+', '')) or 0
+  local sentences = select(2, body:gsub('[.!?]', '')) or 0
+  return body, chars, words, sentences
+end
+
+-- Parse all executed shots from a single shotfile
+-- Returns array of shot info tables
+function M.parse_shotfile(filepath)
+  local file = io.open(filepath, 'r')
+  if not file then return {} end
+  local content = file:read('*a')
+  file:close()
+
+  local lines = {}
+  for line in content:gmatch('[^\n]*') do
+    table.insert(lines, line)
+  end
+
   local shots = {}
-  local handle = io.popen('find "' .. history_dir .. '" -name "shot-*.md" -type f 2>/dev/null')
-  if not handle then return shots end
-  for filepath in handle:lines() do
-    local fm = M.parse_frontmatter(filepath)
-    if fm and fm.timestamp and (not project_filter or (fm.repo and fm.repo:find(project_filter, 1, true))) then
-      fm.filepath = filepath; table.insert(shots, fm)
+  local shot_pattern = config.get('patterns.executed_shot_header')
+  local i = 1
+  while i <= #lines do
+    local line = lines[i]
+    if line:match(shot_pattern) then
+      local shot_num, timestamp, epoch = M.parse_executed_shot_header(line)
+      if shot_num then
+        -- Find end of this shot (next shot header or end of file)
+        local shot_end = #lines
+        for j = i + 1, #lines do
+          if lines[j]:match('^##%s+x?%s*shot') then
+            shot_end = j - 1
+            break
+          end
+        end
+        -- Get content metrics
+        local _, chars, words, sents = M.get_shot_metrics(lines, i + 1, shot_end)
+        table.insert(shots, {
+          shot = shot_num,
+          timestamp = timestamp,
+          time = epoch,
+          source = filepath,
+          chars = chars,
+          words = words,
+          sentences = sents,
+        })
+        i = shot_end + 1
+      else
+        i = i + 1
+      end
+    else
+      i = i + 1
     end
   end
-  handle:close()
+  return shots
+end
+
+-- Get git remote info for determining repo name
+-- Returns: user, repo or nil
+function M.get_git_remote_info(filepath)
+  local cmd
+  if filepath then
+    local dir = utils.get_dirname(filepath)
+    cmd = string.format('git -C "%s" remote get-url origin 2>/dev/null', dir)
+  else
+    cmd = 'git remote get-url origin 2>/dev/null'
+  end
+  local result = utils.system(cmd)
+  if not result or result == '' then return nil, nil end
+  result = utils.trim(result)
+  -- Parse git@github.com:user/repo.git
+  local user, repo = result:match('git@[^:]+:([^/]+)/(.+)%.git$')
+  if user and repo then return user, repo end
+  -- Parse https://github.com/user/repo.git
+  user, repo = result:match('https?://[^/]+/([^/]+)/(.+)%.git$')
+  if user and repo then return user, repo end
+  -- Fallback without .git suffix
+  user, repo = result:match('git@[^:]+:([^/]+)/(.+)$')
+  if user and repo then return user, repo end
+  user, repo = result:match('https?://[^/]+/([^/]+)/(.+)$')
+  return user, repo
+end
+
+-- Detect project from filepath (for mono-repos with projects/ folder)
+function M.detect_project_from_path(filepath)
+  if not filepath then return nil end
+  local project = filepath:match('/projects/([^/]+)/')
+  return project
+end
+
+-- Get all configured repos from shooter config
+function M.get_all_repo_paths()
+  local repos_config = require('shooter.config')
+  local repos = {}
+  local seen = {}
+
+  -- Add current repo
+  local git_root = utils.system('git rev-parse --show-toplevel 2>/dev/null')
+  if git_root and git_root ~= '' then
+    git_root = utils.trim(git_root)
+    if not seen[git_root] then
+      seen[git_root] = true
+      table.insert(repos, git_root)
+    end
+  end
+
+  -- Add direct paths from config
+  local direct_paths = repos_config.get('repos.direct_paths') or {}
+  for _, path in ipairs(direct_paths) do
+    local expanded = utils.expand_path(path)
+    if not seen[expanded] and utils.dir_exists(expanded .. '/.git') then
+      seen[expanded] = true
+      table.insert(repos, expanded)
+    end
+  end
+
+  -- Search directories for git repos
+  local search_dirs = repos_config.get('repos.search_dirs') or {}
+  for _, dir in ipairs(search_dirs) do
+    local expanded_dir = utils.expand_path(dir)
+    if utils.dir_exists(expanded_dir) then
+      local handle = io.popen('ls -d "' .. expanded_dir .. '"/*/ 2>/dev/null')
+      if handle then
+        for subdir in handle:lines() do
+          subdir = subdir:gsub('/$', '')
+          if not seen[subdir] and utils.dir_exists(subdir .. '/.git') then
+            seen[subdir] = true
+            table.insert(repos, subdir)
+          end
+        end
+        handle:close()
+      end
+    end
+  end
+
+  return repos
+end
+
+-- Get all executed shots from all shotfiles in all configured repos
+function M.get_all_shots(project_filter)
+  local shots = {}
+  local repos = M.get_all_repo_paths()
+
+  for _, repo_path in ipairs(repos) do
+    local user, repo = M.get_git_remote_info(repo_path)
+    if not user then
+      user, repo = 'local', utils.get_basename(repo_path)
+    end
+    local repo_name = user .. '/' .. repo
+
+    -- Find all .md files in plans/prompts and subprojects
+    local prompts_dir = repo_path .. '/plans/prompts'
+    local handle = io.popen('find "' .. prompts_dir .. '" -name "*.md" -type f 2>/dev/null')
+    if handle then
+      for filepath in handle:lines() do
+        local project = M.detect_project_from_path(filepath)
+        -- Apply project filter if specified
+        if not project_filter or repo_name:find(project_filter, 1, true) then
+          local file_shots = M.parse_shotfile(filepath)
+          for _, shot in ipairs(file_shots) do
+            shot.repo = repo_name
+            shot.project = project
+            table.insert(shots, shot)
+          end
+        end
+      end
+      handle:close()
+    end
+
+    -- Also check projects/ subdirectories
+    local projects_dir = repo_path .. '/projects'
+    if utils.dir_exists(projects_dir) then
+      handle = io.popen('find "' .. projects_dir .. '" -path "*/plans/prompts/*.md" -type f 2>/dev/null')
+      if handle then
+        for filepath in handle:lines() do
+          local project = M.detect_project_from_path(filepath)
+          if not project_filter or repo_name:find(project_filter, 1, true) then
+            local file_shots = M.parse_shotfile(filepath)
+            for _, shot in ipairs(file_shots) do
+              shot.repo = repo_name
+              shot.project = project
+              table.insert(shots, shot)
+            end
+          end
+        end
+        handle:close()
+      end
+    end
+  end
+
+  -- Sort by timestamp (newest first)
   table.sort(shots, function(a, b) return (a.time or 0) > (b.time or 0) end)
   return shots
 end
@@ -122,10 +296,6 @@ function M.build_path_map(shots)
     if shot.source then
       local short = shot.source:match('[^/]+$') or shot.source
       if not map[short] then map[short] = shot.source end
-    end
-    if shot.filepath then
-      local short = shot.filepath:match('[^/]+$') or shot.filepath
-      map[short] = shot.filepath
     end
   end
   return map
