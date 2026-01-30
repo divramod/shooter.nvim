@@ -4,14 +4,16 @@ Source: ~/a/ai v0.1.0 | Generated: 2026-01-30
 
 ## Project Context
 
-@./.ai-context.md
+@./.ai-human-context.md
 
 ## Codebase
 
 @./.planning/codebase/STACK.md
 @./.planning/codebase/ARCHITECTURE.md
 @./.planning/codebase/STRUCTURE.md
-@./.planning/codebase/CONVENTIONS.md
+@./.planning/codebase/CONCERNS.md
+@./.planning/codebase/INTEGRATIONS.md
+@./.planning/codebase/TESTING.md
 
 ## Rules
 
