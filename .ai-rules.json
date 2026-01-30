@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "rules": [
     "~/a/ai/rules/core/coding-standards.md",
-    "~/a/ai/rules/core/security.md",
     "~/a/ai/rules/core/commit-conventions.md",
     "~/a/ai/rules/core/multi-agent-conventions.md",
-    "~/a/ai/rules/core/shot-workflow.md"
+    "~/a/ai/rules/core/security.md",
+    "~/a/ai/rules/core/shot-workflow.md",
+    "~/a/ai/rules/languages/lua.md"
   ],
   "commands": [],
   "agents": [],

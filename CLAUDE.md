@@ -18,10 +18,11 @@ Source: ~/a/ai v0.1.0 | Generated: 2026-01-30
 ## Rules
 
 @~/a/ai/rules/core/coding-standards.md
-@~/a/ai/rules/core/security.md
 @~/a/ai/rules/core/commit-conventions.md
 @~/a/ai/rules/core/multi-agent-conventions.md
+@~/a/ai/rules/core/security.md
 @~/a/ai/rules/core/shot-workflow.md
+@~/a/ai/rules/languages/lua.md
 
 ## Session Close
 

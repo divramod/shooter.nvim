@@ -1711,85 +1711,6 @@ Universal coding standards for all languages and projects.
 
 ---
 
-# Security Rules
-
-Security practices required across all projects and languages. These rules align with the [OWASP Top 10 2021](https://owasp.org/Top10/) security risks.
-
-## Secrets Management
-
-- Never commit secrets, keys, tokens, or passwords to version control
-- Use environment variables or secret managers for sensitive configuration
-- Add secret patterns to `.gitignore` and use git pre-commit hooks to catch leaks
-- Rotate any credential that was ever exposed, even briefly
-- Use `.env.example` with placeholder values, never real secrets
-
-## Input Validation
-
-*Addresses A03:2021 Injection*
-
-- Validate all user input at system boundaries
-- Never trust client-side validation alone — always validate server-side
-- Use allowlists over denylists for input validation
-- Reject unexpected input; don't try to sanitize it into validity
-- Validate types, ranges, lengths, and formats
-
-## Output Security
-
-*Addresses A03:2021 Injection*
-
-- Sanitize all output to prevent XSS (cross-site scripting)
-- Use context-aware encoding (HTML, URL, JavaScript, CSS)
-- Set `Content-Security-Policy` headers
-- Escape user-generated content before rendering
-
-## Database Security
-
-*Addresses A03:2021 Injection*
-
-- Use parameterized queries — never concatenate SQL strings
-- Apply principle of least privilege to database accounts
-- Never expose raw database errors to users
-- Sanitize and validate all query parameters
-
-## Authentication and Authorization
-
-*Addresses A01:2021 Broken Access Control, A07:2021 Identification and Authentication Failures*
-
-- Follow principle of least privilege for all access
-- Use established auth libraries — never roll your own crypto
-- Hash passwords with bcrypt/argon2 — never SHA/MD5
-- Implement rate limiting on auth endpoints
-- Use short-lived tokens; implement refresh token rotation
-
-## Dependency Security
-
-*Addresses A06:2021 Vulnerable and Outdated Components*
-
-- Keep dependencies updated; automate vulnerability scanning
-- Audit new dependencies before adding them
-- Use lockfiles for reproducible builds
-- Pin versions in production
-
-## Code Safety
-
-*Addresses A03:2021 Injection, A08:2021 Software and Data Integrity Failures*
-
-- No `eval()` or dynamic code execution from user input
-- No deserialization of untrusted data
-- Avoid shell command injection — use library APIs instead of exec
-- Disable debug mode and verbose errors in production
-
-## Infrastructure
-
-*Addresses A05:2021 Security Misconfiguration, A09:2021 Security Logging and Monitoring Failures*
-
-- HTTPS everywhere — no exceptions
-- Set secure cookie flags: `HttpOnly`, `Secure`, `SameSite`
-- Implement CORS with specific origins, not wildcards
-- Log security events; never log sensitive data
-
----
-
 # Commit Conventions
 
 Git commit standards for all repositories.
@@ -1958,7 +1879,7 @@ These rules prevent stale context and duplicated sources of truth across multi-a
 All repositories under `~/a/` should use consistent tooling configuration.
 
 1. **GSD initialization**: Projects using GSD should have `.planning/` directory with GSD state
-2. **Context file wiring**: Every repo has `.ai-context.md` referenced in context files (CLAUDE.md, GEMINI.md, AGENTS.md)
+2. **Context file wiring**: Every repo has `.ai-human-context.md` referenced in context files (CLAUDE.md, GEMINI.md, AGENTS.md)
 
 ---
 
@@ -1991,6 +1912,85 @@ When working with plans, use GSD for execution tracking:
 
 ### For quick tasks:
 - `/gsd:quick` — Execute quick task with GSD guarantees but skip optional agents
+
+---
+
+# Security Rules
+
+Security practices required across all projects and languages. These rules align with the [OWASP Top 10 2021](https://owasp.org/Top10/) security risks.
+
+## Secrets Management
+
+- Never commit secrets, keys, tokens, or passwords to version control
+- Use environment variables or secret managers for sensitive configuration
+- Add secret patterns to `.gitignore` and use git pre-commit hooks to catch leaks
+- Rotate any credential that was ever exposed, even briefly
+- Use `.env.example` with placeholder values, never real secrets
+
+## Input Validation
+
+*Addresses A03:2021 Injection*
+
+- Validate all user input at system boundaries
+- Never trust client-side validation alone — always validate server-side
+- Use allowlists over denylists for input validation
+- Reject unexpected input; don't try to sanitize it into validity
+- Validate types, ranges, lengths, and formats
+
+## Output Security
+
+*Addresses A03:2021 Injection*
+
+- Sanitize all output to prevent XSS (cross-site scripting)
+- Use context-aware encoding (HTML, URL, JavaScript, CSS)
+- Set `Content-Security-Policy` headers
+- Escape user-generated content before rendering
+
+## Database Security
+
+*Addresses A03:2021 Injection*
+
+- Use parameterized queries — never concatenate SQL strings
+- Apply principle of least privilege to database accounts
+- Never expose raw database errors to users
+- Sanitize and validate all query parameters
+
+## Authentication and Authorization
+
+*Addresses A01:2021 Broken Access Control, A07:2021 Identification and Authentication Failures*
+
+- Follow principle of least privilege for all access
+- Use established auth libraries — never roll your own crypto
+- Hash passwords with bcrypt/argon2 — never SHA/MD5
+- Implement rate limiting on auth endpoints
+- Use short-lived tokens; implement refresh token rotation
+
+## Dependency Security
+
+*Addresses A06:2021 Vulnerable and Outdated Components*
+
+- Keep dependencies updated; automate vulnerability scanning
+- Audit new dependencies before adding them
+- Use lockfiles for reproducible builds
+- Pin versions in production
+
+## Code Safety
+
+*Addresses A03:2021 Injection, A08:2021 Software and Data Integrity Failures*
+
+- No `eval()` or dynamic code execution from user input
+- No deserialization of untrusted data
+- Avoid shell command injection — use library APIs instead of exec
+- Disable debug mode and verbose errors in production
+
+## Infrastructure
+
+*Addresses A05:2021 Security Misconfiguration, A09:2021 Security Logging and Monitoring Failures*
+
+- HTTPS everywhere — no exceptions
+- Set secure cookie flags: `HttpOnly`, `Secure`, `SameSite`
+- Implement CORS with specific origins, not wildcards
+- Log security events; never log sensitive data
 
 ---
 
@@ -2028,6 +2028,74 @@ Shotfiles are **read-only input**. Never modify the source shot file.
 - All work products go to their designated locations (see `artifact-persistence.md`)
 - Git commits capture what was done and decisions made
 - Never leave work untracked — if you did it, commit it
+
+---
+
+# Lua Conventions
+
+Lua-specific coding standards and best practices.
+
+## Variables and Scope
+
+- Use `local` for all variables by default — global pollution is the top Lua mistake
+- Declare variables at the narrowest scope possible
+- Use `local` for functions too: `local function foo() end`
+- Avoid `_G` modifications except for intentional global registration
+
+## Modules
+
+- Modules return a table of public functions and values
+- One module per file
+- Use the module pattern:
+  ```lua
+  local M = {}
+  function M.greet(name) return "hello " .. name end
+  return M
+  ```
+- Never use the deprecated `module()` function
+
+## Tables
+
+- Use tables as the primary data structure (arrays, maps, objects)
+- Use `#t` for array length only on sequence tables (no gaps)
+- Prefer `ipairs` for array iteration, `pairs` for map iteration
+- Initialize tables with constructors: `{ x = 1, y = 2 }`
+
+## Strings
+
+- Prefer string methods over patterns when the task is simple
+- Use `string.format` for complex string building
+- Use `[[long strings]]` for multi-line text
+- Be aware: Lua strings are 1-indexed
+
+## Error Handling
+
+- Use `pcall`/`xpcall` for protected calls at boundaries
+- Return `nil, error_message` for expected failures (Lua convention)
+- Use `error()` for programmer errors (unexpected states)
+- Always check return values from functions that can fail
+
+## Performance
+
+- Cache frequently accessed global functions locally: `local insert = table.insert`
+- Avoid creating tables in hot loops — reuse when possible
+- Use `table.concat` over repeated `..` for string building
+- Pre-allocate tables with `table.create(n)` in Luau when size is known (Luau-specific, not standard Lua/LuaJIT)
+
+## Tooling
+
+- Use StyLua for formatting
+- Use LuaCheck for linting and static analysis
+- Use Busted or LuaUnit for testing
+- Specify Lua version (5.1, 5.4, LuaJIT, Luau) in project config
+
+## Style
+
+- Use `snake_case` for variables and functions
+- Use `PascalCase` for classes/constructors
+- Use `UPPER_SNAKE` for constants
+- Two-space or four-space indentation (be consistent within project)
+- Prefer early returns to reduce nesting
 
 ---
 
