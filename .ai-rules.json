@@ -8,5 +8,7 @@
     "core/multi-agent-conventions.md",
     "core/shot-workflow.md"
   ],
+  "commands": [],
+  "agents": [],
   "restrictions": "development"
 }
