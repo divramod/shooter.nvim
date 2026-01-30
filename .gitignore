@@ -25,4 +25,3 @@ plugin/packer_compiled.lua
 .luacheckcache
 
 # AI rules (synced from ~/a/ai, not committed)
-.ai-rules/
