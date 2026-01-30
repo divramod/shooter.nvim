@@ -8,17 +8,5 @@
     "core/multi-agent-conventions.md",
     "core/shot-workflow.md"
   ],
-  "commands": [
-    "review.md",
-    "refactor.md",
-    "test.md",
-    "debug.md"
-  ],
-  "agents": [
-    "unit-tester.md",
-    "formatter.md",
-    "linter.md",
-    "build.md"
-  ],
   "restrictions": "development"
 }
