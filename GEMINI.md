@@ -1,1 +1,29 @@
-AGENTS.md
+# AI Agent Configuration (Gemini CLI)
+
+Source: ~/a/ai v0.1.0 | Generated: 2026-01-30
+
+## Project Context
+
+@./.ai-context.md
+
+## Codebase
+
+@./.planning/codebase/STACK.md
+@./.planning/codebase/ARCHITECTURE.md
+@./.planning/codebase/STRUCTURE.md
+@./.planning/codebase/CONVENTIONS.md
+
+## Rules
+
+Shared rules from ~/a/ai/rules/:
+- `core/coding-standards.md`
+- `core/security.md`
+- `core/commit-conventions.md`
+- `core/multi-agent-conventions.md`
+- `core/shot-workflow.md`
+
+## Session Close
+
+```bash
+git status && git add <files> && git commit -m "..." && git push
+```

@@ -1,1 +1,28 @@
-AGENTS.md
+# AI Agent Configuration (Claude Code)
+
+Source: ~/a/ai v0.1.0 | Generated: 2026-01-30
+
+## Project Context
+
+@.ai-context.md
+
+## Codebase
+
+@.planning/codebase/STACK.md
+@.planning/codebase/ARCHITECTURE.md
+@.planning/codebase/STRUCTURE.md
+@.planning/codebase/CONVENTIONS.md
+
+## Rules
+
+@~/a/ai/rules/core/coding-standards.md
+@~/a/ai/rules/core/security.md
+@~/a/ai/rules/core/commit-conventions.md
+@~/a/ai/rules/core/multi-agent-conventions.md
+@~/a/ai/rules/core/shot-workflow.md
+
+## Session Close
+
+```bash
+git status && git add <files> && git commit -m "..." && git push
+```
