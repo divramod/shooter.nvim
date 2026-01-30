@@ -365,7 +365,7 @@ Images are saved to `<repo>/.shooter.nvim/images/clipboard_YYYYMMDD_HHMMSS.png`.
 |-----|--------|
 | `p` | Smart paste after (image or text) |
 | `P` | Smart paste before (image or text) |
-| `<C-v>` | Smart paste from clipboard (normal & insert mode) |
+| `<C-v>` | Smart paste from clipboard (insert mode only) |
 
 Disable with `keymaps.smart_paste = false` in config.
 

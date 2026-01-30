@@ -161,7 +161,7 @@ HISTORY
 SMART PASTE (global keymaps, disable with keymaps.smart_paste = false)
   p         Smart paste after     Paste image if in clipboard, else normal paste
   P         Smart paste before    Paste image before if in clipboard, else normal paste
-  <C-v>     Clipboard paste       Paste image if in clipboard, else paste + register
+  <C-v>     Clipboard paste       Insert mode only - paste image or + register
   Images saved to: <repo>/.shooter.nvim/images/clipboard_YYYYMMDD_HHMMSS.png
 
 Press 'q' to close this help window.

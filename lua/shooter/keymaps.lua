@@ -206,13 +206,7 @@ function M.setup()
     vim.keymap.set('n', 'P', clipboard.smart_paste_before,
       vim.tbl_extend('force', opts, { desc = 'Smart paste before (image or text)' }))
 
-    -- Ctrl-V in normal and insert mode
-    vim.keymap.set('n', '<C-v>', function()
-      if not clipboard.smart_paste_insert() then
-        vim.cmd('normal! "+p')
-      end
-    end, vim.tbl_extend('force', opts, { desc = 'Smart paste from clipboard' }))
-
+    -- Ctrl-V in insert mode only (normal mode <C-v> is visual block selection)
     vim.keymap.set('i', '<C-v>', function()
       if not clipboard.smart_paste_insert() then
         -- Use Ctrl-R + to paste from clipboard register (native vim way)
