@@ -16,12 +16,20 @@ local function define_highlights()
   })
 end
 
+-- Check if a line is a fenced code block delimiter (not inline code)
+-- Fenced code block: starts with ``` and does NOT have closing ``` on same line
+local function is_fence_delimiter(line)
+  if not line:match('^%s*```') then return false end
+  local _, count = line:gsub('```', '')
+  return count == 1  -- Only one ``` sequence = fence delimiter
+end
+
 -- Check if a line number is inside a code block
 local function is_in_code_block(bufnr, line_num)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, line_num, false)
   local in_block = false
   for _, line in ipairs(lines) do
-    if line:match('^```') then
+    if is_fence_delimiter(line) then
       in_block = not in_block
     end
   end
@@ -47,8 +55,8 @@ end
 local function is_prompts_file(filepath)
   -- Exclude Oil buffers
   if filepath:match('^oil://') then return false end
-  -- Must be a .md file in plans/prompts folder
-  return filepath:match('plans/prompts/[^/]+%.md$') ~= nil
+  -- Must be a .md file in plans/prompts folder (including subdirectories like backlog/, archive/, etc.)
+  return filepath:match('plans/prompts/.+%.md$') ~= nil
 end
 
 -- Setup autocommands for syntax highlighting
