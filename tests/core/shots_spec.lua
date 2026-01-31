@@ -1,5 +1,6 @@
 -- Test suite for shooter.core.shots module
 local shots = require('shooter.core.shots')
+local normalize = require('shooter.core.shot_normalize')
 
 describe('shots module', function()
   before_each(function()
@@ -147,6 +148,105 @@ describe('shots module', function()
 
       local content = shots.get_shot_content(bufnr, 1, 5)
       assert.are.equal('Content', content)
+    end)
+  end)
+
+  describe('normalize_shot', function()
+    it('removes empty lines between header and content', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '## shot 1',
+        '',
+        '',
+        'Content here',
+        '',
+        '## shot 2',
+        'More content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local modified = normalize.normalize_shot(bufnr, 1)
+      assert.is_true(modified)
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      assert.are.equal('## shot 1', result[1])
+      assert.are.equal('Content here', result[2])
+    end)
+
+    it('ensures exactly one empty line before next shot', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '## shot 1',
+        'Content here',
+        '',
+        '',
+        '',
+        '## shot 2',
+        'More content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local modified = normalize.normalize_shot(bufnr, 1)
+      assert.is_true(modified)
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      assert.are.equal('## shot 1', result[1])
+      assert.are.equal('Content here', result[2])
+      assert.are.equal('', result[3])
+      assert.are.equal('## shot 2', result[4])
+    end)
+
+    it('adds empty line if none exists before next shot', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '## shot 1',
+        'Content here',
+        '## shot 2',
+        'More content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local modified = normalize.normalize_shot(bufnr, 1)
+      assert.is_true(modified)
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      assert.are.equal('## shot 1', result[1])
+      assert.are.equal('Content here', result[2])
+      assert.are.equal('', result[3])
+      assert.are.equal('## shot 2', result[4])
+    end)
+
+    it('returns false when no modifications needed', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '## shot 1',
+        'Content here',
+        '',
+        '## shot 2',
+        'More content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local modified = normalize.normalize_shot(bufnr, 1)
+      assert.is_false(modified)
+    end)
+
+    it('handles last shot in file (no next shot)', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '## shot 1',
+        '',
+        '',
+        'Content here',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local modified = normalize.normalize_shot(bufnr, 1)
+      assert.is_true(modified)
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      assert.are.equal('## shot 1', result[1])
+      assert.are.equal('Content here', result[2])
     end)
   end)
 end)

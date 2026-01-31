@@ -175,6 +175,10 @@ function M.mark_shot_executed(bufnr, header_line)
 
   utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
 
+  -- Normalize shot whitespace (remove empty lines after header, ensure one before next)
+  local normalize = require('shooter.core.shot_normalize')
+  normalize.normalize_shot(bufnr, header_line)
+
   -- Only write if buffer has a filename
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname ~= '' then
