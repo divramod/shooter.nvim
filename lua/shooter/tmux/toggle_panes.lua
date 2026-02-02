@@ -77,8 +77,9 @@ end
 ---@param height number Height percentage (1-100)
 ---@return string|nil pane_id
 local function create_bottom_pane(height)
+  -- Use -l with % suffix for tmux 3.4+ compatibility (replaces deprecated -p)
   local pane_id = tmux_exec(string.format(
-    "tmux split-window -v -p %d -P -F '#{pane_id}'",
+    "tmux split-window -v -l %d%% -P -F '#{pane_id}'",
     height
   ))
   return pane_id and pane_id ~= '' and pane_id or nil
