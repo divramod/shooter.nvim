@@ -1,17 +1,19 @@
 -- Toggle panes - show/hide configured panes from tmux.yml
--- Panes persist when hidden (broken to separate window)
+-- Panes persist when hidden (moved to dedicated hidden session)
 
 local M = {}
 
 local config_panes = require('shooter.tmux.config_panes')
 local detect = require('shooter.tmux.detect')
+local hidden_session = require('shooter.tmux.hidden_session')
 local utils = require('shooter.utils')
 
--- State tracking: { [name] = { pane_id, window_id, last_height, commands_run } }
+-- State tracking: { [name] = { pane_id, window_name, last_height, commands_run, folder } }
 -- pane_id: tmux pane ID when visible
--- window_id: tmux window ID when hidden (pane broken to separate window)
+-- window_name: window name in hidden session when hidden
 -- last_height: remembered height percentage
 -- commands_run: boolean, true if initial commands have been executed
+-- folder: folder name used in window naming
 local state = {}
 
 -- Execute tmux command and return output
@@ -51,17 +53,6 @@ local function get_pane_height_percent(pane_id)
   return 30
 end
 
--- Check if a window exists
----@param window_id string
----@return boolean
-local function window_exists(window_id)
-  local result = tmux_exec(string.format(
-    "tmux list-windows -F '#{window_id}' 2>/dev/null | grep -q '%s' && echo yes",
-    window_id
-  ))
-  return result == 'yes'
-end
-
 -- Check if a pane exists
 ---@param pane_id string
 ---@return boolean
@@ -89,23 +80,12 @@ local function create_bottom_pane(height, focus)
   return pane_id and pane_id ~= '' and pane_id or nil
 end
 
--- Get the hidden window name for a pane
+-- Get the hidden window name for a pane (includes folder for clarity)
+---@param folder string Folder name
 ---@param name string Pane name
 ---@return string
-local function get_hidden_window_name(name)
-  return 'shooter-hidden-' .. name
-end
-
--- Find a hidden window by name
----@param name string Pane name
----@return string|nil window_id
-local function find_hidden_window(name)
-  local window_name = get_hidden_window_name(name)
-  local window_id = tmux_exec(string.format(
-    "tmux list-windows -a -F '#{window_id} #{window_name}' | grep ' %s$' | cut -d' ' -f1",
-    window_name
-  ))
-  return window_id and window_id ~= '' and window_id or nil
+local function get_hidden_window_name(folder, name)
+  return hidden_session.get_window_name(folder, name)
 end
 
 -- Get temp file path for storing pane name
@@ -115,6 +95,14 @@ local function get_pane_name_file(pane_id)
   -- Remove % prefix from pane_id for filename
   local clean_id = pane_id:gsub('%%', '')
   return '/tmp/shooter-pane-' .. clean_id
+end
+
+-- Get temp file path for storing folder name
+---@param pane_id string
+---@return string
+local function get_folder_file(pane_id)
+  local clean_id = pane_id:gsub('%%', '')
+  return '/tmp/shooter-folder-' .. clean_id
 end
 
 -- Set up pane tracking for hiding via tmux keybinding
@@ -127,6 +115,15 @@ local function setup_pane_for_hiding(pane_id, name)
   if file then
     file:write(name)
     file:close()
+  end
+
+  -- Write folder name to temp file
+  local folder = hidden_session.get_folder_name()
+  local folder_path = get_folder_file(pane_id)
+  local folder_file = io.open(folder_path, 'w')
+  if folder_file then
+    folder_file:write(folder)
+    folder_file:close()
   end
 end
 
@@ -143,7 +140,7 @@ local function run_commands(pane_id, commands)
   end
 end
 
--- Hide a pane by breaking it to a new window
+-- Hide a pane by moving it to the hidden session
 ---@param name string Pane name
 ---@return boolean success
 function M.hide(name)
@@ -163,26 +160,26 @@ function M.hide(name)
   -- Remember current height before hiding
   pane_state.last_height = get_pane_height_percent(pane_state.pane_id)
 
-  -- Break pane to a new window with a known name (stays in background with -d)
-  -- Use -s for source pane, -d to not switch, -n for window name
-  local window_name = get_hidden_window_name(name)
-  tmux_run(string.format("tmux break-pane -d -s %s -n '%s'", pane_state.pane_id, window_name))
+  -- Get folder name for window naming
+  local folder = pane_state.folder or hidden_session.get_folder_name()
+  pane_state.folder = folder
 
-  -- Find the window by name (more reliable than getting last window)
-  local window_id = find_hidden_window(name)
+  -- Create window name: folder-panename
+  local window_name = get_hidden_window_name(folder, name)
 
-  if window_id then
-    pane_state.window_id = window_id
+  -- Move pane to hidden session
+  if hidden_session.hide_pane(pane_state.pane_id, window_name) then
+    pane_state.window_name = window_name
     pane_state.pane_id = nil
     utils.notify('Pane "' .. name .. '" hidden', vim.log.levels.INFO)
     return true
   end
 
-  utils.notify('Failed to track hidden pane', vim.log.levels.ERROR)
+  utils.notify('Failed to hide pane', vim.log.levels.ERROR)
   return false
 end
 
--- Show a pane (create new or restore from hidden)
+-- Show a pane (create new or restore from hidden session)
 ---@param name string Pane name
 ---@return boolean success
 function M.show(name)
@@ -208,43 +205,35 @@ function M.show(name)
     return true
   end
 
-  -- If pane is hidden (tracked via nvim), restore it
-  if pane_state.window_id and window_exists(pane_state.window_id) then
+  -- If pane is hidden in the hidden session, restore it
+  if pane_state.window_name then
     local height = pane_state.last_height or config.height or 30
+    local pane_id = hidden_session.restore_pane(pane_state.window_name, height)
 
-    -- Join the pane back from the hidden window
-    -- -v = vertical (below), -l = size in lines/percent
-    tmux_run(string.format(
-      "tmux join-pane -v -l %d%% -s %s",
-      height,
-      pane_state.window_id
-    ))
-
-    -- Get the pane ID of the joined pane (it's now the active one in current window)
-    local pane_id = tmux_exec("tmux display -p '#{pane_id}'")
-
-    pane_state.pane_id = pane_id
-    pane_state.window_id = nil
-    utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
-    return true
+    if pane_id then
+      pane_state.pane_id = pane_id
+      pane_state.window_name = nil
+      hidden_session.cleanup_session()
+      utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
+      return true
+    end
   end
 
   -- Check if pane was hidden via tmux keybinding (search by window name)
-  local hidden_window = find_hidden_window(name)
-  if hidden_window then
+  local folder = pane_state.folder or hidden_session.get_folder_name()
+  local window_name = get_hidden_window_name(folder, name)
+  if hidden_session.find_window(window_name) then
     local height = pane_state.last_height or config.height or 30
+    local pane_id = hidden_session.restore_pane(window_name, height)
 
-    tmux_run(string.format(
-      "tmux join-pane -v -l %d%% -s %s",
-      height,
-      hidden_window
-    ))
-
-    local pane_id = tmux_exec("tmux display -p '#{pane_id}'")
-    pane_state.pane_id = pane_id
-    pane_state.window_id = nil
-    utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
-    return true
+    if pane_id then
+      pane_state.pane_id = pane_id
+      pane_state.window_name = nil
+      pane_state.folder = folder
+      hidden_session.cleanup_session()
+      utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
+      return true
+    end
   end
 
   -- Create new pane
@@ -259,6 +248,7 @@ function M.show(name)
 
   pane_state.pane_id = pane_id
   pane_state.last_height = height
+  pane_state.folder = folder
 
   -- Set up environment for tmux keybinding hiding
   setup_pane_for_hiding(pane_id, name)
@@ -298,14 +288,18 @@ function M.is_visible(name)
     and pane_exists(pane_state.pane_id)
 end
 
--- Check if a pane is hidden (exists but not visible)
+-- Check if a pane is hidden (exists in hidden session)
 ---@param name string Pane name
 ---@return boolean
 function M.is_hidden(name)
   local pane_state = state[name]
-  return pane_state ~= nil
-    and pane_state.window_id ~= nil
-    and window_exists(pane_state.window_id)
+  if pane_state and pane_state.window_name then
+    return hidden_session.find_window(pane_state.window_name) ~= nil
+  end
+  -- Check if hidden via tmux keybinding
+  local folder = (pane_state and pane_state.folder) or hidden_session.get_folder_name()
+  local window_name = get_hidden_window_name(folder, name)
+  return hidden_session.find_window(window_name) ~= nil
 end
 
 -- Get list of visible pane names
@@ -339,17 +333,29 @@ function M.setup_tmux_keybinding()
     return
   end
 
-  -- Create a keybinding that reads the pane name from temp file and hides
+  local session_name = hidden_session.get_session_name()
+
+  -- Create a keybinding that reads the pane name from temp file and hides to hidden session
   -- The keybinding: prefix + H (e.g., Ctrl+b then H)
   -- Using prefix table (not -n) for better terminal compatibility
-  local keybind_cmd = [[tmux bind-key H run-shell '
-    PANE_ID=$(tmux display -p "#{pane_id}" | tr -d "%")
+  local keybind_cmd = string.format([[tmux bind-key H run-shell '
+    PANE_ID=$(tmux display -p "#{pane_id}" | tr -d "%%")
     NAME_FILE="/tmp/shooter-pane-$PANE_ID"
     if [ -f "$NAME_FILE" ]; then
       NAME=$(cat "$NAME_FILE")
-      tmux break-pane -d -n "shooter-hidden-$NAME"
+      FOLDER_FILE="/tmp/shooter-folder-$PANE_ID"
+      if [ -f "$FOLDER_FILE" ]; then
+        FOLDER=$(cat "$FOLDER_FILE")
+      else
+        FOLDER=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+      fi
+      WINDOW_NAME="$FOLDER-$NAME"
+      # Ensure hidden session exists
+      tmux has-session -t "%s" 2>/dev/null || tmux new-session -d -s "%s" -n "placeholder"
+      # Move pane to hidden session
+      tmux break-pane -d -t "%s:" -n "$WINDOW_NAME"
     fi
-  ']]
+  ']], session_name, session_name, session_name)
   tmux_run(keybind_cmd)
 end
 
