@@ -1,7 +1,9 @@
 -- Configuration loading for toggle panes
--- Parses .shooter.nvim/tmux.yml for pane definitions
+-- Parses .shooter.nvim/tmux.yml and merges with auto-generated script panes
 
 local M = {}
+
+local script_panes = require('shooter.tmux.script_panes')
 
 -- Cache: { [git_root] = { config = {...}, mtime = number } }
 local cache = {}
@@ -134,18 +136,33 @@ function M.load(git_root)
   return config
 end
 
--- Get config for current buffer's git root
+-- Get config for current buffer's git root (includes script panes)
 ---@return table[]|nil
 function M.get_current()
   local files = require('shooter.core.files')
   local git_root = files.get_git_root()
-  return M.load(git_root)
+  local yaml_panes = M.load(git_root) or {}
+
+  -- Get auto-generated script panes
+  local auto_panes = script_panes.get_script_panes()
+
+  -- Merge: YAML panes first, then script panes
+  local all_panes = {}
+  for _, pane in ipairs(yaml_panes) do
+    all_panes[#all_panes + 1] = pane
+  end
+  for _, pane in ipairs(auto_panes) do
+    all_panes[#all_panes + 1] = pane
+  end
+
+  return #all_panes > 0 and all_panes or nil
 end
 
--- Find a pane config by name
+-- Find a pane config by name (searches YAML and script panes)
 ---@param name string
 ---@return table|nil
 function M.find_by_name(name)
+  -- get_current() already merges YAML and script panes
   local config = M.get_current()
   if not config then
     return nil
