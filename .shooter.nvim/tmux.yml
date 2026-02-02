@@ -1,9 +1,11 @@
 panes:
   - name: test1
     commands:
-    - echo "hell"
+    - echo "hello"
     - echo "world"
+    focus: false
   - name: test2
     commands:
     - ls -la
     - pwd
+    focus: true

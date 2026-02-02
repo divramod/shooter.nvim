@@ -75,11 +75,15 @@ end
 
 -- Create a new pane at the bottom with given height percentage
 ---@param height number Height percentage (1-100)
+---@param focus boolean Whether to focus the new pane (default: true)
 ---@return string|nil pane_id
-local function create_bottom_pane(height)
+local function create_bottom_pane(height, focus)
   -- Use -l with % suffix for tmux 3.4+ compatibility (replaces deprecated -p)
+  -- Use -d to not switch focus to the new pane when focus is false
+  local flags = focus and '' or '-d '
   local pane_id = tmux_exec(string.format(
-    "tmux split-window -v -l %d%% -P -F '#{pane_id}'",
+    "tmux split-window %s-v -l %d%% -P -F '#{pane_id}'",
+    flags,
     height
   ))
   return pane_id and pane_id ~= '' and pane_id or nil
@@ -185,7 +189,8 @@ function M.show(name)
 
   -- Create new pane
   local height = config.height or 30
-  local pane_id = create_bottom_pane(height)
+  local focus = config.focus or false
+  local pane_id = create_bottom_pane(height, focus)
 
   if not pane_id then
     utils.notify('Failed to create pane', vim.log.levels.ERROR)

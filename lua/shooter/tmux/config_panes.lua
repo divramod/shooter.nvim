@@ -57,6 +57,7 @@ local function parse_yaml(content)
         name = name and name:gsub('%s+$', '') or 'unnamed',
         commands = {},
         height = 30,
+        focus = false, -- default: don't steal focus
       }
       in_commands = false
     elseif current_pane then
@@ -68,6 +69,13 @@ local function parse_yaml(content)
         local height = line:match('height:%s*(%d+)')
         if height then
           current_pane.height = tonumber(height) or 30
+        end
+        in_commands = false
+      -- Check for focus
+      elseif line:match('focus:') then
+        local focus_val = line:match('focus:%s*(.+)$')
+        if focus_val then
+          current_pane.focus = focus_val:gsub('%s+$', '') == 'true'
         end
         in_commands = false
       -- Check for command list item (line with dash that's NOT a name line)

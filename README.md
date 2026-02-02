@@ -657,17 +657,20 @@ panes:
     commands:
       - npm run test:watch
     height: 30
+    focus: false
 
   - name: logs
     commands:
       - tail -f /var/log/app.log
     height: 20
+    focus: true
 ```
 
 **Fields:**
 - `name`: Display name for the pane (shown in picker)
 - `commands`: List of commands to run when pane is first created
 - `height`: Initial height percentage (default: 30)
+- `focus`: Whether to focus the new pane when opened (default: false)
 
 **Behavior:**
 - Press `<space>tt` to open a Telescope picker showing configured panes
