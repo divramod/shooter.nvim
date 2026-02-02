@@ -12,50 +12,78 @@ local previewers = require('telescope.previewers')
 
 local config_panes = require('shooter.tmux.config_panes')
 local toggle_panes = require('shooter.tmux.toggle_panes')
+local hidden_session = require('shooter.tmux.hidden_session')
 local utils = require('shooter.utils')
 
--- Create previewer that shows pane YAML config
+-- Get pane history/content
+---@param pane_target string Pane ID or session:window target
+---@return string[] lines
+local function get_pane_history(pane_target)
+  local handle = io.popen(string.format(
+    "tmux capture-pane -p -t '%s' 2>/dev/null",
+    pane_target
+  ))
+  if not handle then
+    return { '(unable to capture pane content)' }
+  end
+  local content = handle:read('*a')
+  handle:close()
+
+  local lines = {}
+  for line in content:gmatch('[^\n]*') do
+    lines[#lines + 1] = line
+  end
+  return lines
+end
+
+-- Create previewer that shows pane history or YAML config
 local function create_previewer()
   return previewers.new_buffer_previewer({
-    title = 'Pane YAML',
+    title = 'Pane Preview',
     define_preview = function(self, entry)
       local pane = entry.value
+      local pane_state = toggle_panes.get_state(pane.name)
       local lines = {}
+      local filetype = 'yaml'
 
-      -- Build YAML representation
-      lines[#lines + 1] = '- name: ' .. pane.name
-
-      -- Add height if present
-      if pane.height then
-        lines[#lines + 1] = '  height: ' .. pane.height
-      end
-
-      -- Add focus if present
-      if pane.focus ~= nil then
-        lines[#lines + 1] = '  focus: ' .. tostring(pane.focus)
-      end
-
-      -- Add commands
-      if pane.commands and #pane.commands > 0 then
-        lines[#lines + 1] = '  commands:'
-        for _, cmd in ipairs(pane.commands) do
-          lines[#lines + 1] = '  - ' .. cmd
+      -- Check if pane is visible - show history
+      if pane_state and pane_state.pane_id then
+        lines = get_pane_history(pane_state.pane_id)
+        filetype = 'text'
+      -- Check if pane is hidden - show history from hidden session
+      elseif toggle_panes.is_hidden(pane.name) then
+        local folder = (pane_state and pane_state.folder) or hidden_session.get_folder_name()
+        local window_name = hidden_session.get_window_name(folder, pane.name)
+        local window_target = hidden_session.find_window(window_name)
+        if window_target then
+          lines = get_pane_history(window_target)
+          filetype = 'text'
         end
       end
 
-      -- Add status comment
-      lines[#lines + 1] = ''
-      lines[#lines + 1] = '# Status:'
-      if toggle_panes.is_visible(pane.name) then
-        lines[#lines + 1] = '#   VISIBLE'
-      elseif toggle_panes.is_hidden(pane.name) then
-        lines[#lines + 1] = '#   HIDDEN (will restore)'
-      else
-        lines[#lines + 1] = '#   NOT CREATED'
+      -- If no history, show YAML config
+      if #lines == 0 or (#lines == 1 and lines[1] == '') then
+        lines = {}
+        lines[#lines + 1] = '# Pane not created yet'
+        lines[#lines + 1] = ''
+        lines[#lines + 1] = '- name: ' .. pane.name
+        if pane.height then
+          lines[#lines + 1] = '  height: ' .. pane.height
+        end
+        if pane.focus ~= nil then
+          lines[#lines + 1] = '  focus: ' .. tostring(pane.focus)
+        end
+        if pane.commands and #pane.commands > 0 then
+          lines[#lines + 1] = '  commands:'
+          for _, cmd in ipairs(pane.commands) do
+            lines[#lines + 1] = '  - ' .. cmd
+          end
+        end
+        filetype = 'yaml'
       end
 
       vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_set_option(self.state.bufnr, 'filetype', 'yaml')
+      vim.api.nvim_buf_set_option(self.state.bufnr, 'filetype', filetype)
     end,
   })
 end
