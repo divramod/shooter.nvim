@@ -14,40 +14,48 @@ local config_panes = require('shooter.tmux.config_panes')
 local toggle_panes = require('shooter.tmux.toggle_panes')
 local utils = require('shooter.utils')
 
--- Create previewer that shows pane commands
+-- Create previewer that shows pane YAML config
 local function create_previewer()
   return previewers.new_buffer_previewer({
-    title = 'Pane Commands',
+    title = 'Pane YAML',
     define_preview = function(self, entry)
       local pane = entry.value
-      local lines = {
-        '# ' .. pane.name,
-        '',
-        'Height: ' .. (pane.height or 30) .. '%',
-        '',
-        '## Commands:',
-      }
+      local lines = {}
 
-      if pane.commands and #pane.commands > 0 then
-        for _, cmd in ipairs(pane.commands) do
-          table.insert(lines, '  ' .. cmd)
-        end
-      else
-        table.insert(lines, '  (no commands)')
+      -- Build YAML representation
+      lines[#lines + 1] = '- name: ' .. pane.name
+
+      -- Add height if present
+      if pane.height then
+        lines[#lines + 1] = '  height: ' .. pane.height
       end
 
-      -- Add status
-      table.insert(lines, '')
+      -- Add focus if present
+      if pane.focus ~= nil then
+        lines[#lines + 1] = '  focus: ' .. tostring(pane.focus)
+      end
+
+      -- Add commands
+      if pane.commands and #pane.commands > 0 then
+        lines[#lines + 1] = '  commands:'
+        for _, cmd in ipairs(pane.commands) do
+          lines[#lines + 1] = '  - ' .. cmd
+        end
+      end
+
+      -- Add status comment
+      lines[#lines + 1] = ''
+      lines[#lines + 1] = '# Status:'
       if toggle_panes.is_visible(pane.name) then
-        table.insert(lines, '## Status: VISIBLE')
+        lines[#lines + 1] = '#   VISIBLE'
       elseif toggle_panes.is_hidden(pane.name) then
-        table.insert(lines, '## Status: HIDDEN (will restore)')
+        lines[#lines + 1] = '#   HIDDEN (will restore)'
       else
-        table.insert(lines, '## Status: NOT CREATED')
+        lines[#lines + 1] = '#   NOT CREATED'
       end
 
       vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_set_option(self.state.bufnr, 'filetype', 'markdown')
+      vim.api.nvim_buf_set_option(self.state.bufnr, 'filetype', 'yaml')
     end,
   })
 end
