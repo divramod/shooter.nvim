@@ -326,8 +326,9 @@ function M.clear_state()
   state = {}
 end
 
--- Set up tmux keybinding for hiding panes (prefix + H)
+-- Set up tmux keybinding for hiding panes (opt+shift+A / M-A)
 -- This should be called once during plugin setup
+-- Note: Requires terminal configured to send Meta for Option key
 function M.setup_tmux_keybinding()
   if not detect.check_tmux_installed() or not detect.in_tmux() then
     return
@@ -335,10 +336,13 @@ function M.setup_tmux_keybinding()
 
   local session_name = hidden_session.get_session_name()
 
+  -- Remove old keybinding (prefix + H) if it exists
+  tmux_run("tmux unbind-key H 2>/dev/null")
+
   -- Create a keybinding that reads the pane name from temp file and hides to hidden session
-  -- The keybinding: prefix + H (e.g., Ctrl+b then H)
-  -- Using prefix table (not -n) for better terminal compatibility
-  local keybind_cmd = string.format([[tmux bind-key H run-shell '
+  -- The keybinding: opt+shift+A (M-A in tmux terms)
+  -- Using -n for root table (no prefix needed)
+  local keybind_cmd = string.format([[tmux bind-key -n M-A run-shell '
     PANE_ID=$(tmux display -p "#{pane_id}" | tr -d "%%")
     NAME_FILE="/tmp/shooter-pane-$PANE_ID"
     if [ -f "$NAME_FILE" ]; then
