@@ -342,8 +342,9 @@ function M.setup_tmux_keybinding()
 
   local session_name = hidden_session.get_session_name()
 
-  -- Remove old keybinding (prefix + H) if it exists
-  tmux_run("tmux unbind-key H 2>/dev/null")
+  -- Remove old keybindings from previous versions
+  tmux_run("tmux unbind-key H 2>/dev/null")      -- old: prefix + H
+  tmux_run("tmux unbind-key -n M-H 2>/dev/null") -- old: opt+shift+H (blocked nvim H)
 
   -- Create a keybinding that reads the pane name from temp file and hides to hidden session
   -- The keybinding: opt+shift+A (M-A in tmux terms)
