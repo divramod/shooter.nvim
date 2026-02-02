@@ -53,12 +53,13 @@ local function get_pane_height_percent(pane_id)
   return 30
 end
 
--- Check if a pane exists
+-- Check if a pane exists in the current session (not globally)
 ---@param pane_id string
 ---@return boolean
 local function pane_exists(pane_id)
+  -- Only check current session's panes, not all panes (-a would include hidden session)
   local result = tmux_exec(string.format(
-    "tmux list-panes -a -F '#{pane_id}' 2>/dev/null | grep -q '%s' && echo yes",
+    "tmux list-panes -s -F '#{pane_id}' 2>/dev/null | grep -q '%s' && echo yes",
     pane_id
   ))
   return result == 'yes'
@@ -203,6 +204,11 @@ function M.show(name)
   if pane_state.pane_id and pane_exists(pane_state.pane_id) then
     utils.notify('Pane "' .. name .. '" is already visible', vim.log.levels.INFO)
     return true
+  end
+
+  -- Clear stale pane_id if pane no longer exists in current session
+  if pane_state.pane_id and not pane_exists(pane_state.pane_id) then
+    pane_state.pane_id = nil
   end
 
   -- If pane is hidden in the hidden session, restore it
