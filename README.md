@@ -686,6 +686,11 @@ panes:
 - `h`: Hide selected pane
 - `H`: Hide all visible panes
 
+**Hiding from inside the pane:**
+- Press `opt+shift+H` (M-H) when focused in a toggle pane to hide it
+- This tmux keybinding is automatically set up when you first use `<space>tt`
+- You can also run `:ShooterTmuxSetupHideKey` to set it up manually
+
 ## Template System
 
 Shooter uses customizable templates for the context instructions sent with each shot.

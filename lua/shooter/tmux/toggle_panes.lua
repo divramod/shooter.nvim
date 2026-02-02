@@ -89,6 +89,47 @@ local function create_bottom_pane(height, focus)
   return pane_id and pane_id ~= '' and pane_id or nil
 end
 
+-- Get the hidden window name for a pane
+---@param name string Pane name
+---@return string
+local function get_hidden_window_name(name)
+  return 'shooter-hidden-' .. name
+end
+
+-- Find a hidden window by name
+---@param name string Pane name
+---@return string|nil window_id
+local function find_hidden_window(name)
+  local window_name = get_hidden_window_name(name)
+  local window_id = tmux_exec(string.format(
+    "tmux list-windows -a -F '#{window_id} #{window_name}' | grep ' %s$' | cut -d' ' -f1",
+    window_name
+  ))
+  return window_id and window_id ~= '' and window_id or nil
+end
+
+-- Get temp file path for storing pane name
+---@param pane_id string
+---@return string
+local function get_pane_name_file(pane_id)
+  -- Remove % prefix from pane_id for filename
+  local clean_id = pane_id:gsub('%%', '')
+  return '/tmp/shooter-pane-' .. clean_id
+end
+
+-- Set up pane tracking for hiding via tmux keybinding
+---@param pane_id string
+---@param name string
+local function setup_pane_for_hiding(pane_id, name)
+  -- Write pane name to temp file so tmux keybinding can read it
+  local filepath = get_pane_name_file(pane_id)
+  local file = io.open(filepath, 'w')
+  if file then
+    file:write(name)
+    file:close()
+  end
+end
+
 -- Run commands in a pane
 ---@param pane_id string
 ---@param commands string[]
@@ -122,14 +163,15 @@ function M.hide(name)
   -- Remember current height before hiding
   pane_state.last_height = get_pane_height_percent(pane_state.pane_id)
 
-  -- Break pane to a new window (stays in background with -d)
-  -- Use -s for source pane, -d to not switch to the new window
-  tmux_run(string.format("tmux break-pane -d -s %s", pane_state.pane_id))
+  -- Break pane to a new window with a known name (stays in background with -d)
+  -- Use -s for source pane, -d to not switch, -n for window name
+  local window_name = get_hidden_window_name(name)
+  tmux_run(string.format("tmux break-pane -d -s %s -n '%s'", pane_state.pane_id, window_name))
 
-  -- Get the window ID of the newly created window (last one)
-  local window_id = tmux_exec("tmux list-windows -F '#{window_id}' | tail -1")
+  -- Find the window by name (more reliable than getting last window)
+  local window_id = find_hidden_window(name)
 
-  if window_id and window_id ~= '' then
+  if window_id then
     pane_state.window_id = window_id
     pane_state.pane_id = nil
     utils.notify('Pane "' .. name .. '" hidden', vim.log.levels.INFO)
@@ -166,7 +208,7 @@ function M.show(name)
     return true
   end
 
-  -- If pane is hidden, restore it
+  -- If pane is hidden (tracked via nvim), restore it
   if pane_state.window_id and window_exists(pane_state.window_id) then
     local height = pane_state.last_height or config.height or 30
 
@@ -187,6 +229,24 @@ function M.show(name)
     return true
   end
 
+  -- Check if pane was hidden via tmux keybinding (search by window name)
+  local hidden_window = find_hidden_window(name)
+  if hidden_window then
+    local height = pane_state.last_height or config.height or 30
+
+    tmux_run(string.format(
+      "tmux join-pane -v -l %d%% -s %s",
+      height,
+      hidden_window
+    ))
+
+    local pane_id = tmux_exec("tmux display -p '#{pane_id}'")
+    pane_state.pane_id = pane_id
+    pane_state.window_id = nil
+    utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
+    return true
+  end
+
   -- Create new pane
   local height = config.height or 30
   local focus = config.focus or false
@@ -199,6 +259,9 @@ function M.show(name)
 
   pane_state.pane_id = pane_id
   pane_state.last_height = height
+
+  -- Set up environment for tmux keybinding hiding
+  setup_pane_for_hiding(pane_id, name)
 
   -- Run commands if not already run
   if not pane_state.commands_run and config.commands and #config.commands > 0 then
@@ -267,6 +330,26 @@ end
 -- Clear all state (useful for testing)
 function M.clear_state()
   state = {}
+end
+
+-- Set up tmux keybinding for hiding panes (M-H = opt+shift+H)
+-- This should be called once during plugin setup
+function M.setup_tmux_keybinding()
+  if not detect.check_tmux_installed() or not detect.in_tmux() then
+    return
+  end
+
+  -- Create a keybinding that reads the pane name from temp file and hides
+  -- The keybinding: M-H (Meta/Alt + Shift + H)
+  local keybind_cmd = [[tmux bind-key -n M-H run-shell '
+    PANE_ID=$(tmux display -p "#{pane_id}" | tr -d "%")
+    NAME_FILE="/tmp/shooter-pane-$PANE_ID"
+    if [ -f "$NAME_FILE" ]; then
+      NAME=$(cat "$NAME_FILE")
+      tmux break-pane -d -n "shooter-hidden-$NAME"
+    fi
+  ']]
+  tmux_run(keybind_cmd)
 end
 
 return M

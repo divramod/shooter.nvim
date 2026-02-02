@@ -16,6 +16,7 @@ describe('toggle_panes module', function()
       assert.is_function(toggle_panes.get_visible_panes)
       assert.is_function(toggle_panes.get_state)
       assert.is_function(toggle_panes.clear_state)
+      assert.is_function(toggle_panes.setup_tmux_keybinding)
     end)
   end)
 
