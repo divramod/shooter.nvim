@@ -124,17 +124,40 @@ function M.restore_pane(window_name, height)
     return nil
   end
 
-  -- Join the pane back to current window
-  -- -v = vertical (below), -l = size
-  tmux_run(string.format(
-    "tmux join-pane -v -l %d%% -s '%s'",
-    height,
+  -- Get the pane ID from the hidden window BEFORE joining
+  -- (the window has only one pane, which is the hidden pane)
+  local source_pane_id = tmux_exec(string.format(
+    "tmux list-panes -t '%s' -F '#{pane_id}'",
     window_target
   ))
 
-  -- Get the new pane ID (it becomes the active pane)
-  local pane_id = tmux_exec("tmux display -p '#{pane_id}'")
-  return pane_id
+  if not source_pane_id or source_pane_id == '' then
+    return nil
+  end
+
+  -- Get current session and window to join to
+  local current_window = tmux_exec("tmux display -p '#{session_name}:#{window_index}'")
+
+  -- Join the pane back to current window
+  -- -v = vertical (below), -l = size, -t = target window
+  tmux_run(string.format(
+    "tmux join-pane -v -l %d%% -s '%s' -t '%s'",
+    height,
+    window_target,
+    current_window or ''
+  ))
+
+  -- Verify pane was moved by checking it exists in current session
+  local verify = tmux_exec(string.format(
+    "tmux list-panes -s -F '#{pane_id}' | grep -q '%s' && echo yes",
+    source_pane_id
+  ))
+
+  if verify == 'yes' then
+    return source_pane_id
+  end
+
+  return nil
 end
 
 -- Clean up empty hidden session (remove placeholder if only window left)
