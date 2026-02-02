@@ -109,6 +109,7 @@ function M.setup()
   -- ============================================================
   -- TMUX NAMESPACE (t prefix)
   -- ============================================================
+  map('n', 'tt', ':ShooterTmuxTogglePanes<cr>', 'Toggle configured panes')
   map('n', 'tz', ':ShooterTmuxZoom<cr>', 'Zoom toggle')
   map('n', 'te', ':ShooterTmuxEdit<cr>', 'Edit pane in vim')
   map('n', 'tg', ':ShooterTmuxGit<cr>', 'Git status toggle')

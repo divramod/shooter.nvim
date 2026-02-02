@@ -1,0 +1,9 @@
+panes:
+  - name: test1
+    commands:
+    - echo "hell"
+    - echo "world"
+  - name: test2
+    commands:
+    - ls -la
+    - pwd

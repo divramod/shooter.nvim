@@ -292,6 +292,11 @@ local function setup_tmux_commands()
       require('shooter.tmux.panes').toggle(i)
     end, { desc = 'Toggle pane ' .. i }, 'ShooterPaneToggle' .. i)
   end
+
+  -- Toggle panes picker (configured panes from tmux.yml)
+  create_cmd('ShooterTmuxTogglePanes', function()
+    require('shooter.telescope.toggle_panes_picker').show_picker()
+  end, { desc = 'Tmux: toggle configured panes' })
 end
 
 -- Setup Subproject namespace commands (p prefix in keymaps)

@@ -215,6 +215,7 @@ Commands are organized into 8 namespaces. Old command names work as aliases.
 | `:ShooterTmuxSwitch` | Switch to last |
 | `:ShooterTmuxWatch` | Watch pane |
 | `:ShooterTmuxPaneToggle{0-9}` | Toggle pane visibility |
+| `:ShooterTmuxTogglePanes` | Toggle configured panes (from tmux.yml) |
 
 ### Subproject Commands (`ShooterSubproject*`)
 
@@ -322,6 +323,7 @@ All keybindings use `<space>` prefix (customizable). Commands are organized into
 
 | Key | Action |
 |-----|--------|
+| `<space>tt` | Toggle configured panes (from tmux.yml) |
 | `<space>tz` | Zoom toggle |
 | `<space>te` | Edit pane in vim |
 | `<space>tg` | Git status toggle |
@@ -640,6 +642,46 @@ Shooter.nvim injects context when sending shots to AI:
 2. **Project Context** (`.shooter.nvim/shooter-context-project.md` at git root)
    - Project-specific instructions
    - Auto-created from template on first use
+
+3. **Toggle Panes** (`.shooter.nvim/tmux.yml` at git root)
+   - Configure persistent tmux panes that can be shown/hidden with `<space>tt`
+   - Useful for test runners, log watchers, or development servers
+
+### Toggle Panes Configuration
+
+Create `.shooter.nvim/tmux.yml` to configure panes that can be toggled on/off:
+
+```yaml
+panes:
+  - name: tests
+    commands:
+      - npm run test:watch
+    height: 30
+
+  - name: logs
+    commands:
+      - tail -f /var/log/app.log
+    height: 20
+```
+
+**Fields:**
+- `name`: Display name for the pane (shown in picker)
+- `commands`: List of commands to run when pane is first created
+- `height`: Initial height percentage (default: 30)
+
+**Behavior:**
+- Press `<space>tt` to open a Telescope picker showing configured panes
+- Select a pane to show it (creates at bottom with configured height)
+- Commands run only on first creation; subsequent shows restore the pane
+- If a pane is already visible, you can choose to hide it
+- Multiple panes can be visible at once
+- Panes remember their last height when hidden and restored
+
+**Picker keymaps:**
+- `<CR>`: Toggle selected pane (show/hide)
+- `s`: Show selected pane
+- `h`: Hide selected pane
+- `H`: Hide all visible panes
 
 ## Template System
 
