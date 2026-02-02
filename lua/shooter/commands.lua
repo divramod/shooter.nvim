@@ -300,11 +300,11 @@ local function setup_tmux_commands()
     require('shooter.telescope.toggle_panes_picker').show_picker()
   end, { desc = 'Tmux: toggle configured panes' })
 
-  -- Manually set up tmux keybinding for hiding panes (M-H)
+  -- Manually set up tmux keybinding for hiding panes (prefix + H)
   create_cmd('ShooterTmuxSetupHideKey', function()
     require('shooter.tmux.toggle_panes').setup_tmux_keybinding()
-    vim.notify('Tmux keybinding M-H (opt+shift+H) set up for hiding panes', vim.log.levels.INFO)
-  end, { desc = 'Tmux: set up M-H keybinding for hiding panes' })
+    vim.notify('Tmux keybinding prefix+H set up for hiding panes', vim.log.levels.INFO)
+  end, { desc = 'Tmux: set up prefix+H keybinding for hiding panes' })
 end
 
 -- Setup Subproject namespace commands (p prefix in keymaps)

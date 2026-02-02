@@ -332,7 +332,7 @@ function M.clear_state()
   state = {}
 end
 
--- Set up tmux keybinding for hiding panes (M-H = opt+shift+H)
+-- Set up tmux keybinding for hiding panes (prefix + H)
 -- This should be called once during plugin setup
 function M.setup_tmux_keybinding()
   if not detect.check_tmux_installed() or not detect.in_tmux() then
@@ -340,8 +340,9 @@ function M.setup_tmux_keybinding()
   end
 
   -- Create a keybinding that reads the pane name from temp file and hides
-  -- The keybinding: M-H (Meta/Alt + Shift + H)
-  local keybind_cmd = [[tmux bind-key -n M-H run-shell '
+  -- The keybinding: prefix + H (e.g., Ctrl+b then H)
+  -- Using prefix table (not -n) for better terminal compatibility
+  local keybind_cmd = [[tmux bind-key H run-shell '
     PANE_ID=$(tmux display -p "#{pane_id}" | tr -d "%")
     NAME_FILE="/tmp/shooter-pane-$PANE_ID"
     if [ -f "$NAME_FILE" ]; then
