@@ -119,7 +119,8 @@ function M.hide(name)
   pane_state.last_height = get_pane_height_percent(pane_state.pane_id)
 
   -- Break pane to a new window (stays in background with -d)
-  tmux_run(string.format("tmux break-pane -d -t %s", pane_state.pane_id))
+  -- Use -s for source pane, -d to not switch to the new window
+  tmux_run(string.format("tmux break-pane -d -s %s", pane_state.pane_id))
 
   -- Get the window ID of the newly created window (last one)
   local window_id = tmux_exec("tmux list-windows -F '#{window_id}' | tail -1")
