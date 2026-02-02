@@ -101,7 +101,7 @@ function M.show_picker()
     sorter = conf.generic_sorter({}),
     previewer = create_previewer(),
     attach_mappings = function(prompt_bufnr, map)
-      -- Default action: toggle
+      -- Default action: toggle directly without confirmation
       actions.select_default:replace(function()
         local selection = action_state.get_selected_entry()
         if not selection then
@@ -111,21 +111,8 @@ function M.show_picker()
         local pane = selection.value
         actions.close(prompt_bufnr)
 
-        -- If pane is visible, ask what to do
-        if toggle_panes.is_visible(pane.name) then
-          vim.ui.select(
-            { 'Hide this pane', 'Keep visible' },
-            { prompt = 'Pane "' .. pane.name .. '" is visible:' },
-            function(choice)
-              if choice == 'Hide this pane' then
-                toggle_panes.hide(pane.name)
-              end
-            end
-          )
-        else
-          -- Show the pane
-          toggle_panes.show(pane.name)
-        end
+        -- Toggle the pane (show if hidden, hide if visible)
+        toggle_panes.toggle(pane.name)
       end)
 
       -- 'h' to hide selected pane
