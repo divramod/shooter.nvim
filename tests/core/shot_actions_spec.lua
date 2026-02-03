@@ -30,14 +30,16 @@ describe('shot_actions module', function()
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
       -- Expected structure:
       -- 1: # Test Title
-      -- 2: (empty line)
+      -- 2: (empty line - separator before)
       -- 3: ## shot 1
-      -- 4: (empty line for cursor)
+      -- 4: (empty line - cursor/content)
+      -- 5: (empty line - separator after)
       assert.are.equal('# Test Title', result[1])
       assert.are.equal('', result[2], 'Should have blank line between title and shot')
       assert.is_truthy(result[3]:match('^## shot 1$'), 'Shot header on line 3')
       assert.are.equal('', result[4], 'Blank line after header for cursor')
-      assert.are.equal(4, #result, 'Should have exactly 4 lines')
+      assert.are.equal('', result[5], 'Blank line as separator after shot')
+      assert.are.equal(5, #result, 'Should have exactly 5 lines')
     end)
 
     it('inserts after title when no shots and no orphan text', function()

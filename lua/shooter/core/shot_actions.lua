@@ -76,15 +76,15 @@ function M.create_new_shot()
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  -- Structure: [blank before], header, blank (cursor)
+  -- Structure: [blank before], header, blank (cursor), blank (separator)
   local lines_to_add
   local cursor_offset
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '' }
-    cursor_offset = 2  -- cursor on blank after header
+    lines_to_add = { '', shot_header, '', '' }
+    cursor_offset = 2  -- cursor on first blank after header
   else
-    lines_to_add = { shot_header, '' }
-    cursor_offset = 1  -- cursor on blank after header
+    lines_to_add = { shot_header, '', '' }
+    cursor_offset = 1  -- cursor on first blank after header
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
@@ -105,15 +105,15 @@ function M.create_new_shot_with_whisper()
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  -- Structure: [blank before], header, blank (cursor)
+  -- Structure: [blank before], header, blank (cursor), blank (separator)
   local lines_to_add
   local cursor_offset
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '' }
-    cursor_offset = 2  -- cursor on blank after header
+    lines_to_add = { '', shot_header, '', '' }
+    cursor_offset = 2  -- cursor on first blank after header
   else
-    lines_to_add = { shot_header, '' }
-    cursor_offset = 1  -- cursor on blank after header
+    lines_to_add = { shot_header, '', '' }
+    cursor_offset = 1  -- cursor on first blank after header
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
