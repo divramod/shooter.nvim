@@ -80,6 +80,13 @@ local function parse_yaml(content)
           current_pane.focus = focus_val:gsub('%s+$', '') == 'true'
         end
         in_commands = false
+      -- Check for hidden
+      elseif line:match('hidden:') then
+        local hidden_val = line:match('hidden:%s*(.+)$')
+        if hidden_val then
+          current_pane.hidden = hidden_val:gsub('%s+$', '') == 'true'
+        end
+        in_commands = false
       -- Check for command list item (line with dash that's NOT a name line)
       elseif in_commands and line:match('^%s*%-') and not line:match('name:') then
         local cmd = line:match('^%s*%-%s*(.+)$')

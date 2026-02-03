@@ -105,10 +105,23 @@ end
 -- If a visible pane is selected, offer hide/switch options
 -- If no pane is visible or hidden pane selected, show it
 function M.show_picker()
-  local config = config_panes.get_current()
+  local all_config = config_panes.get_current()
 
-  if not config or #config == 0 then
+  if not all_config or #all_config == 0 then
     utils.notify('No panes configured in .shooter.nvim/tmux.yml', vim.log.levels.WARN)
+    return
+  end
+
+  -- Filter out hidden panes
+  local config = {}
+  for _, pane in ipairs(all_config) do
+    if not pane.hidden then
+      config[#config + 1] = pane
+    end
+  end
+
+  if #config == 0 then
+    utils.notify('All panes are hidden', vim.log.levels.WARN)
     return
   end
 
