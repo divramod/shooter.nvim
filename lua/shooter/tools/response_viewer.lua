@@ -52,10 +52,10 @@ local function find_response_in_jsonl(jsonl_path, shot_pattern)
 
   -- Build set of related UUIDs (user message and all its descendants)
   local related = { [user_uuid] = true }
-  for _ = 1, 10 do -- Max depth to prevent infinite loops
+  for _ = 1, 20 do -- Max depth to prevent infinite loops
     local added = false
     for _, entry in ipairs(entries) do
-      if entry.parentUuid and related[entry.parentUuid] and entry.uuid and not related[entry.uuid] then
+      if entry.parentUuid and type(entry.parentUuid) == 'string' and related[entry.parentUuid] and entry.uuid and type(entry.uuid) == 'string' and not related[entry.uuid] then
         related[entry.uuid] = true
         added = true
       end
@@ -63,15 +63,18 @@ local function find_response_in_jsonl(jsonl_path, shot_pattern)
     if not added then break end
   end
 
-  -- Collect text from related assistant messages
+  -- Collect text and tool calls from related assistant messages
   local response_text = nil
+  local tool_calls = {}
   for _, entry in ipairs(entries) do
-    if entry.uuid and related[entry.uuid] and entry.message and entry.message.role == 'assistant' then
+    if entry.uuid and type(entry.uuid) == 'string' and related[entry.uuid] and entry.message and entry.message.role == 'assistant' then
       local content = entry.message.content
       if type(content) == 'table' then
         for _, block in ipairs(content) do
           if block.type == 'text' and block.text then
             response_text = (response_text or '') .. block.text .. '\n'
+          elseif block.type == 'tool_use' and block.name then
+            table.insert(tool_calls, block.name)
           end
         end
       elseif type(content) == 'string' then
@@ -79,6 +82,28 @@ local function find_response_in_jsonl(jsonl_path, shot_pattern)
       end
     end
   end
+
+  -- If we only have the echo (code block) and tool calls, create a summary
+  if response_text and #tool_calls > 0 then
+    -- Check if response_text is just a code block (echo)
+    local trimmed = response_text:gsub('^%s*', ''):gsub('%s*$', '')
+    if trimmed:match('^```') and trimmed:match('```%s*$') then
+      -- Response is only the echo, add tool summary
+      response_text = response_text .. '\n---\n\n**Tool calls performed:**\n'
+      for _, tool in ipairs(tool_calls) do
+        response_text = response_text .. '- ' .. tool .. '\n'
+      end
+      response_text = response_text .. '\n*Note: Response may have been truncated due to context compaction.*\n'
+    end
+  elseif not response_text and #tool_calls > 0 then
+    -- No text at all, just tool calls
+    response_text = '**Tool calls performed:**\n'
+    for _, tool in ipairs(tool_calls) do
+      response_text = response_text .. '- ' .. tool .. '\n'
+    end
+    response_text = response_text .. '\n*Note: Response may have been truncated due to context compaction.*\n'
+  end
+
   return response_text
 end
 
