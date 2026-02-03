@@ -6,10 +6,14 @@ local M = {}
 local utils = require('shooter.utils')
 
 -- Get content hash for a shot (first 200 chars of body, excluding header)
+-- Trims trailing blank lines for consistent matching after renumbering
 function M.get_shot_content_hash(bufnr, start_line, end_line)
   -- start_line is 1-indexed header line, get_buf_lines uses 0-indexed start
-  -- Fetch from start_line (0-indexed = start_line, which skips header at start_line-1)
   local lines = utils.get_buf_lines(bufnr, start_line, end_line)
+  -- Trim trailing blank lines (shot end boundary changes after renumber)
+  while #lines > 0 and lines[#lines]:match('^%s*$') do
+    table.remove(lines)
+  end
   local content = table.concat(lines, '\n'):sub(1, 200)
   return content
 end
@@ -31,10 +35,13 @@ function M.find_shot_by_content(bufnr, content_hash)
           break
         end
       end
-      -- Check if this shot's content matches
+      -- Check if this shot's content matches (trim trailing blanks)
       local shot_lines = {}
       for k = shot_start + 1, shot_end do
         table.insert(shot_lines, lines[k])
+      end
+      while #shot_lines > 0 and shot_lines[#shot_lines]:match('^%s*$') do
+        table.remove(shot_lines)
       end
       local shot_content = table.concat(shot_lines, '\n'):sub(1, 200)
       if shot_content == content_hash then
