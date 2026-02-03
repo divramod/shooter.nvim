@@ -275,6 +275,26 @@ describe('shot_actions module', function()
       assert.are.equal('## shot 1', result[3])
     end)
 
+    it('removes @ref when marking done shot as open', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00) @shot-1-20260121_143000',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })  -- Position in shot 1
+
+      shot_actions.toggle_shot_done()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot should now be open (no x, no timestamp, no @ref)
+      assert.are.equal('## shot 1', result[3])
+      assert.is_falsy(result[3]:match('@shot%-'))
+    end)
+
     it('works when cursor is in shot content (not header)', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
       local lines = {
@@ -358,6 +378,25 @@ describe('shot_actions module', function()
       -- Shot 1 (latest timestamp) should be undone, shot 2 should remain done
       assert.is_truthy(result[3]:match('^## x shot 2'))
       assert.are.equal('## shot 1', result[6])
+    end)
+
+    it('removes @ref when undoing latest sent shot', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00) @shot-1-20260121_143000',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      shot_actions.undo_latest_sent_shot()
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Shot should be open with no x, no timestamp, no @ref
+      assert.are.equal('## shot 1', result[3])
+      assert.is_falsy(result[3]:match('@shot%-'))
     end)
   end)
 end)

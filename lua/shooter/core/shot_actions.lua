@@ -274,10 +274,12 @@ function M.toggle_shot_done()
   local is_done = line:match(config.get('patterns.executed_shot_header')) ~= nil
 
   if is_done then
-    -- Remove x and timestamp → make open
-    -- Pattern: ## x shot N (date) → ## shot N
+    -- Remove x, timestamp, and @ref → make open
+    -- Pattern: ## x shot N (date) @shot-N-... → ## shot N
     line = line:gsub('^(##)%s+x%s+shot', '%1 shot')
-    line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)%s*$', '')
+    line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)', '')
+    line = line:gsub('%s*@shot%-[%d_%-]+', '')
+    line = line:gsub('%s+$', '') -- trim trailing whitespace
     utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
     utils.echo('Shot ' .. shot_num .. ' marked open')
   else
@@ -404,8 +406,8 @@ function M.undo_latest_sent_shot()
   for i, line in ipairs(lines) do
     -- Match executed shot headers with timestamp
     if line:match(config.get('patterns.executed_shot_header')) then
-      -- Extract timestamp: (YYYY-MM-DD HH:MM:SS)
-      local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
+      -- Extract timestamp: (YYYY-MM-DD HH:MM:SS) - may have @ref after
+      local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
       if timestamp then
         if not latest_timestamp or timestamp > latest_timestamp then
           latest_timestamp = timestamp
@@ -423,10 +425,12 @@ function M.undo_latest_sent_shot()
   local line = lines[latest_line]
   local shot_num = shots.parse_shot_header(line)
 
-  -- Remove x and timestamp → make open
-  -- Pattern: ## x shot N (date) → ## shot N
+  -- Remove x, timestamp, and @ref → make open
+  -- Pattern: ## x shot N (date) @shot-N-... → ## shot N
   line = line:gsub('^(##)%s+x%s+shot', '%1 shot')
-  line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)%s*$', '')
+  line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)', '')
+  line = line:gsub('%s*@shot%-[%d_%-]+', '')
+  line = line:gsub('%s+$', '') -- trim trailing whitespace
   utils.set_buf_lines(bufnr, latest_line - 1, latest_line, { line })
 
   -- Move cursor to the undone shot
