@@ -54,4 +54,24 @@ function M.renumber_and_find_shot(bufnr, original_start, original_end)
   return M.find_shot_by_content(bufnr, content_hash)
 end
 
+-- Find all executed shots in buffer
+function M.find_executed_shots(bufnr)
+  local config = require('shooter.config')
+  local total_lines = utils.buf_line_count(bufnr)
+  local lines = utils.get_buf_lines(bufnr, 0, total_lines)
+  local executed = {}
+  local i = 1
+  while i <= total_lines do
+    if lines[i]:match(config.get('patterns.executed_shot_header')) then
+      local start_line, end_line = i, total_lines
+      for j = i + 1, total_lines do
+        if lines[j]:match(config.get('patterns.shot_header')) then end_line = j - 1; break end
+      end
+      table.insert(executed, { start_line = start_line, end_line = end_line, header_line = start_line })
+      i = end_line + 1
+    else i = i + 1 end
+  end
+  return executed
+end
+
 return M

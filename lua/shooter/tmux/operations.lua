@@ -14,7 +14,7 @@ local function mark_shot(bufnr, shot_info)
   get_shots().mark_shot_executed(bufnr, shot_info.header_line)
 end
 
-local function find_pane_or_error(detect, pane_index)
+local function find_pane_or_error(_, pane_index)
   local create = require('shooter.tmux.create')
   local pane_id, err = create.find_or_create_ai_pane(pane_index)
   if not pane_id then
@@ -25,16 +25,11 @@ local function find_pane_or_error(detect, pane_index)
   return pane_id, provider_name or 'AI', provider
 end
 
--- Send file reference using provider-specific method if available
 local function send_file_ref(provider, send, pane_id, filepath)
-  if provider and provider.send_file_reference then
-    return provider.send_file_reference(pane_id, filepath)
-  end
+  if provider and provider.send_file_reference then return provider.send_file_reference(pane_id, filepath) end
   return send.send_file_reference(pane_id, filepath)
 end
 
--- Save shot message to a temp file for sending
--- Returns: filepath on success, nil on failure
 local function save_temp_sendable(full_message, shot_num)
   local temp_dir = utils.expand_path('~/.config/shooter.nvim/tmp')
   utils.ensure_dir(temp_dir)
@@ -44,14 +39,11 @@ local function save_temp_sendable(full_message, shot_num)
   return success and temp_path or nil
 end
 
--- Check if shot is executed
 local function is_shot_executed(bufnr, header_line)
-  local config = require('shooter.config')
   local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
-  return header_text:match(config.get('patterns.executed_shot_header')) ~= nil
+  return header_text:match(require('shooter.config').get('patterns.executed_shot_header')) ~= nil
 end
 
--- Build shot numbers string from shot_infos
 local function build_shots_str(bufnr, shot_infos)
   local shots = get_shots()
   local nums = {}
@@ -62,7 +54,6 @@ local function build_shots_str(bufnr, shot_infos)
   return table.concat(nums, '-')
 end
 
--- Send current shot to AI pane using file reference
 function M.send_current_shot(pane_index, detect, send, messages)
   pane_index = pane_index or 1
   local files, shots = get_files(), get_shots()
@@ -78,11 +69,18 @@ function M.send_current_shot(pane_index, detect, send, messages)
   if not shot_start then utils.echo('No shot found at cursor position'); return end
 
   -- Confirm resend for already-executed shots
-  if is_shot_executed(bufnr, header_line) then
+  local already_executed = is_shot_executed(bufnr, header_line)
+  if already_executed then
     local header = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
     if vim.fn.confirm('Shot ' .. shots.parse_shot_header(header) .. ' already sent. Resend?', '&Yes\n&No', 2) ~= 1 then
       utils.echo('Resend cancelled'); return
     end
+  end
+
+  -- Mark as executed FIRST (so renumbering treats it as a done shot)
+  if not already_executed then
+    local shot_info = { start_line = shot_start, end_line = shot_end, header_line = header_line }
+    mark_shot(bufnr, shot_info)
   end
 
   -- Renumber shots and find the same shot by content hash
@@ -106,7 +104,6 @@ function M.send_current_shot(pane_index, detect, send, messages)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    mark_shot(bufnr, shot_info)
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to %s%s (%s)', shot_num, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()
@@ -123,15 +120,18 @@ function M.send_all_shots(pane_index, detect, send, messages)
   if not files.is_shooter_file() then utils.echo('Multishot only works in shooter files'); return end
 
   local bufnr = utils.current_buf()
-
-  -- Renumber first, then get open shots (order doesn't matter for "all" send)
-  require('shooter.core.renumber').renumber_shots(bufnr)
-
   local open_shots = shots.find_open_shots(bufnr)
   if #open_shots == 0 then utils.echo('No open shots found'); return end
 
-  local full_message = messages.build_multishot_message(bufnr, open_shots)
-  local shots_str = build_shots_str(bufnr, open_shots)
+  -- Mark all as executed FIRST, then renumber (so they get final done-shot numbers)
+  for _, shot_info in ipairs(open_shots) do mark_shot(bufnr, shot_info) end
+  require('shooter.core.renumber').renumber_shots(bufnr)
+
+  -- Re-fetch executed shots (they moved after renumber) - get only the ones just marked
+  local executed_shots = get_renumber_helper().find_executed_shots(bufnr)
+
+  local full_message = messages.build_multishot_message(bufnr, executed_shots)
+  local shots_str = build_shots_str(bufnr, executed_shots)
   local temp_path = save_temp_sendable(full_message, shots_str)
   if not temp_path then utils.echo('Failed to save temp file'); return end
 
@@ -140,9 +140,8 @@ function M.send_all_shots(pane_index, detect, send, messages)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    for _, shot_info in ipairs(open_shots) do mark_shot(bufnr, shot_info) end
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
-    utils.echo(string.format('Sent %d shots to %s%s (%s)', #open_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
+    utils.echo(string.format('Sent %d shots to %s%s (%s)', #executed_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
