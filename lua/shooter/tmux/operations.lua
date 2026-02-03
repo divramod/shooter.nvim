@@ -9,8 +9,6 @@ local function get_shots() return require('shooter.core.shots') end
 local function get_files() return require('shooter.core.files') end
 local function get_providers() return require('shooter.providers') end
 
-local function auto_renumber(bufnr) require('shooter.core.renumber').renumber_shots(bufnr) end
-
 local function mark_shot(bufnr, shot_info)
   get_shots().mark_shot_executed(bufnr, shot_info.header_line)
 end
@@ -75,10 +73,6 @@ function M.send_current_shot(pane_index, detect, send, messages)
   end
 
   local bufnr = utils.current_buf()
-
-  -- Auto-renumber before sending to ensure correct shot numbers in commit messages
-  auto_renumber(bufnr)
-
   local shot_start, shot_end, header_line = shots.find_current_shot(bufnr, utils.get_cursor()[1])
   if not shot_start then utils.echo('No shot found at cursor position'); return end
 
@@ -120,10 +114,6 @@ function M.send_all_shots(pane_index, detect, send, messages)
   if not files.is_shooter_file() then utils.echo('Multishot only works in shooter files'); return end
 
   local bufnr = utils.current_buf()
-
-  -- Auto-renumber before sending to ensure correct shot numbers in commit messages
-  auto_renumber(bufnr)
-
   local open_shots = shots.find_open_shots(bufnr)
   if #open_shots == 0 then utils.echo('No open shots found'); return end
 
