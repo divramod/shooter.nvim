@@ -7,9 +7,10 @@ local shots = require('shooter.core.shots')
 local M = {}
 
 -- Get Claude projects directory for current repo
+-- Claude escapes: / -> -, . -> - (keeps leading dash)
 local function get_claude_projects_dir()
   local cwd = vim.fn.getcwd()
-  local escaped = cwd:gsub('/', '-'):gsub('^-', '')
+  local escaped = cwd:gsub('/', '-'):gsub('%.', '-')
   return utils.expand_path('~/.claude/projects/' .. escaped)
 end
 
