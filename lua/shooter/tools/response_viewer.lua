@@ -39,7 +39,9 @@ local function find_response_in_jsonl(jsonl_path, shot_pattern)
     if ok and data then
       -- Look for user message containing our shot file
       if data.type == 'user' and data.message and data.message.content then
-        if data.message.content:match(shot_pattern) then
+        local content = data.message.content
+        local content_str = type(content) == 'string' and content or vim.fn.json_encode(content)
+        if content_str:match(shot_pattern) then
           found_user_msg = true
         end
       end
