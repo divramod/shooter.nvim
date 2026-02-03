@@ -26,48 +26,59 @@ local function header_ts_to_file_ts(header_ts)
   return file_date .. '_' .. file_time
 end
 
--- Find assistant response after a user message in JSONL
+-- Find assistant response by tracking parentUuid chain from user message
 local function find_response_in_jsonl(jsonl_path, shot_pattern)
   local file = io.open(jsonl_path, 'r')
   if not file then return nil end
 
-  local found_user_msg = false
-  local response_text = nil
-
+  -- First pass: find user message UUID and collect all entries
+  local user_uuid = nil
+  local entries = {}
   for line in file:lines() do
     local ok, data = pcall(vim.fn.json_decode, line)
     if ok and data then
-      if not found_user_msg then
-        -- Look for user message containing our shot file
-        if data.type == 'user' and data.message and data.message.content then
-          local content = data.message.content
-          local content_str = type(content) == 'string' and content or vim.fn.json_encode(content)
-          if content_str:match(shot_pattern) then
-            found_user_msg = true
-          end
-        end
-      else
-        -- After finding user message, collect text from assistant responses
-        if data.message and data.message.role == 'assistant' then
-          local content = data.message.content
-          if type(content) == 'table' then
-            for _, block in ipairs(content) do
-              if block.type == 'text' and block.text then
-                response_text = (response_text or '') .. block.text .. '\n'
-              end
-            end
-          elseif type(content) == 'string' then
-            response_text = (response_text or '') .. content .. '\n'
-          end
-        -- Stop when we hit next user message (response complete)
-        elseif data.type == 'user' then
-          break
+      table.insert(entries, data)
+      if not user_uuid and data.type == 'user' and data.message and data.message.content then
+        local content = data.message.content
+        local content_str = type(content) == 'string' and content or vim.fn.json_encode(content)
+        if content_str:match(shot_pattern) then
+          user_uuid = data.uuid
         end
       end
     end
   end
-
   file:close()
+  if not user_uuid then return nil end
+
+  -- Build set of related UUIDs (user message and all its descendants)
+  local related = { [user_uuid] = true }
+  for _ = 1, 10 do -- Max depth to prevent infinite loops
+    local added = false
+    for _, entry in ipairs(entries) do
+      if entry.parentUuid and related[entry.parentUuid] and entry.uuid and not related[entry.uuid] then
+        related[entry.uuid] = true
+        added = true
+      end
+    end
+    if not added then break end
+  end
+
+  -- Collect text from related assistant messages
+  local response_text = nil
+  for _, entry in ipairs(entries) do
+    if entry.uuid and related[entry.uuid] and entry.message and entry.message.role == 'assistant' then
+      local content = entry.message.content
+      if type(content) == 'table' then
+        for _, block in ipairs(content) do
+          if block.type == 'text' and block.text then
+            response_text = (response_text or '') .. block.text .. '\n'
+          end
+        end
+      elseif type(content) == 'string' then
+        response_text = (response_text or '') .. content .. '\n'
+      end
+    end
+  end
   return response_text
 end
 
