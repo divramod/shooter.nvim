@@ -7,7 +7,9 @@ local utils = require('shooter.utils')
 
 -- Get content hash for a shot (first 200 chars of body, excluding header)
 function M.get_shot_content_hash(bufnr, start_line, end_line)
-  local lines = utils.get_buf_lines(bufnr, start_line, end_line)  -- skip header
+  -- start_line is the header, so fetch from start_line+1 to skip it
+  local lines = utils.get_buf_lines(bufnr, start_line, end_line)
+  if #lines > 0 then table.remove(lines, 1) end  -- remove header (first element)
   local content = table.concat(lines, '\n'):sub(1, 200)
   return content
 end
