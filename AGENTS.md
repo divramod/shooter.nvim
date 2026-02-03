@@ -1,14 +1,20 @@
 # AI Agent Configuration
 
-Source: ~/a/ai v0.1.0 | Generated: 2026-01-30
+Source: ~/a/ai v0.8.11 | Generated: 2026-02-03
 
-> For OpenCode and Codex CLI. Claude Code uses CLAUDE.md, Gemini CLI uses GEMINI.md.
+> For OpenCode, Codex CLI, and Copilot CLI. Claude Code uses CLAUDE.md, Gemini CLI uses GEMINI.md.
 
 ---
 
 # Human Context
 
 <!-- This file is for human-written project context. AI agents should NEVER edit this file. -->
+
+---
+
+# AI Context
+
+<!-- This file is for AI-generated project context. AI agents can update this file. -->
 
 ---
 
@@ -1709,6 +1715,49 @@ Universal coding standards for all languages and projects.
 - Pin dependency versions for reproducible builds
 - One package manager per project — no mixing npm/yarn/pnpm
 
+## Script Organization
+
+Utility scripts live in `scripts/` organized by language:
+
+| Language   | Directory          |
+|------------|--------------------|
+| Bash/Shell | `scripts/shell/`   |
+| Python     | `scripts/python/`  |
+| Node.js    | `scripts/nodejs/`  |
+| Go         | `scripts/go/`      |
+| Lua        | `scripts/lua/`     |
+| Rust       | `scripts/rust/`    |
+
+This applies only to standalone utility scripts (build helpers, sync tools, etc.), not application source code.
+
+Projects should have a `.envrc` file that adds `scripts/shell` to PATH:
+
+```bash
+PATH_add scripts/shell
+```
+
+## Script Naming Convention
+
+All utility scripts must follow the naming pattern: `<alias>_<scriptname>.<ext>`
+
+- `<alias>` is the project's short alias from the `ALIAS` file
+- `<scriptname>` is the descriptive name using kebab-case
+- `<ext>` is the file extension matching the language
+
+| Language   | Pattern                      | Example                  |
+|------------|------------------------------|--------------------------|
+| Bash/Shell | `<alias>_scriptname.sh`      | `ai_sync.sh`             |
+| Python     | `<alias>_scriptname.py`      | `hal_process-data.py`    |
+| Node.js    | `<alias>_scriptname.js`      | `dev_build-assets.js`    |
+| Go         | `<alias>_scriptname.go`      | `ops_deploy.go`          |
+| Lua        | `<alias>_scriptname.lua`     | `game_init-state.lua`    |
+| Rust       | `<alias>_scriptname.rs`      | `cli_parse-args.rs`      |
+
+This convention:
+- Prevents naming collisions when scripts are added to PATH
+- Makes script origin clear when running from any directory
+- Enables automated validation via doctor-check scripts
+
 ---
 
 # Commit Conventions
@@ -1718,7 +1767,7 @@ Git commit standards for all repositories.
 ## Format
 
 ```
-type(scope): description
+type(scope): description (vX.Y.Z)
 
 Optional body explaining WHY, not WHAT.
 
@@ -1727,10 +1776,11 @@ Co-Authored-By: <name> <email>
 
 ## Subject Line
 
-- Use conventional commits: `type(scope): description`
-- Keep under 72 characters
+- Use conventional commits: `type(scope): description (vX.Y.Z)`
+- Keep under **60 characters** (including version)
 - Use imperative mood: "add feature" not "added feature"
 - Lowercase after the colon
+- End with version in parentheses: `(v0.2.1)`
 
 ## Types
 
@@ -1764,12 +1814,62 @@ Co-Authored-By: <name> <email>
 - **Co-Authored-By** (required for AI commits): `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 - Place trailers after the body, separated by a blank line
 
+## Version Bumping
+
+Every repository has a `VERSION` file containing the current SemVer version.
+
+**Before every commit:**
+1. Bump the version in `VERSION` (patch only for AI agents)
+2. Include the new version in the commit message subject line
+
+**AI agents: PATCH ONLY**
+
+AI agents must **only bump patch versions**. Minor and major version bumps are reserved for human decision-making.
+
+| Change Type | Bump    | Who           | Example           |
+|-------------|---------|---------------|-------------------|
+| Breaking    | major   | **Human only** | `1.0.0` → `2.0.0` |
+| Feature     | minor   | **Human only** | `1.0.0` → `1.1.0` |
+| Fix/Other   | patch   | AI or Human   | `1.0.0` → `1.0.1` |
+
+Even if an AI agent adds a new feature, it should bump **patch** only. The human will decide when to bump minor/major during review or release.
+
+**Example workflow:**
+```bash
+# 1. Bump version
+echo "0.2.1" > VERSION
+
+# 2. Stage changes including VERSION
+git add VERSION <other-files>
+
+# 3. Commit with version in message
+git commit -m "feat(auth): add login (v0.2.1)"
+```
+
+**Monorepos (Turborepo/Nx):**
+
+For monorepo projects using Turborepo or Nx, also update the version in the root `package.json`:
+
+```bash
+# 1. Bump VERSION file
+echo "0.2.1" > VERSION
+
+# 2. Update package.json version (use npm or edit manually)
+npm version 0.2.1 --no-git-tag-version
+
+# 3. Stage both files
+git add VERSION package.json <other-files>
+```
+
+The VERSION file remains the source of truth; package.json is kept in sync.
+
 ## Rules
 
 - One logical change per commit — don't mix refactoring with features
 - Never commit broken code to main
 - Squash fixup commits before merge
 - Rebase feature branches; merge to main
+- Always bump VERSION before committing
 
 ---
 
@@ -1879,7 +1979,7 @@ These rules prevent stale context and duplicated sources of truth across multi-a
 All repositories under `~/a/` should use consistent tooling configuration.
 
 1. **GSD initialization**: Projects using GSD should have `.planning/` directory with GSD state
-2. **Context file wiring**: Every repo has `.ai-human-context.md` referenced in context files (CLAUDE.md, GEMINI.md, AGENTS.md)
+2. **Context file wiring**: Every repo has `.ai-context-human.md` and `.ai-context-ai.md` referenced in context files (CLAUDE.md, GEMINI.md, AGENTS.md)
 
 ---
 
@@ -1907,8 +2007,11 @@ When working with plans, use GSD for execution tracking:
 - `/gsd:new-project` — Initialize project with deep context gathering
 
 ### For phases:
+- `/gsd:discuss-phase` — Gather phase context through adaptive questioning before planning
 - `/gsd:plan-phase` — Create detailed execution plan for a phase
 - `/gsd:execute-phase` — Execute plans with atomic commits
+
+**Recommended workflow**: discuss → plan → execute
 
 ### For quick tasks:
 - `/gsd:quick` — Execute quick task with GSD guarantees but skip optional agents
@@ -2103,10 +2206,13 @@ Lua-specific coding standards and best practices.
 
 | File | Owner | AI Can Edit |
 |------|-------|-------------|
-| `.ai-human-context.md` | Human | **NO** - Human-written context only |
+| `.ai-context-human.md` | Human | **NO** - Human-written context only |
+| `.ai-context-ai.md` | AI | **YES** - AI-generated project context |
 | `.planning/codebase/*` | GSD | **NO** - Auto-generated by `/gsd:map-codebase` |
 | `.ai-rules.json` | Both | Yes - Add missing rules as needed |
-| `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` | Script | **NO** - Auto-generated by `sync.sh` |
+| `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` | Script | **NO** - Auto-generated by `ai_sync.sh` |
+| `.github/copilot-instructions.md` | Script | **NO** - Symlink to AGENTS.md |
+| `.antigravity/rules.md` | Script | **NO** - Symlink to GEMINI.md |
 
 ---
 

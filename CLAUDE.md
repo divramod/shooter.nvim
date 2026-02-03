@@ -1,10 +1,11 @@
 # AI Agent Configuration (Claude Code)
 
-Source: ~/a/ai v0.1.0 | Generated: 2026-01-30
+Source: ~/a/ai v0.8.11 | Generated: 2026-02-03
 
 ## Project Context
 
-@.ai-human-context.md
+@.ai-context-human.md
+@.ai-context-ai.md
 
 ## Codebase
 

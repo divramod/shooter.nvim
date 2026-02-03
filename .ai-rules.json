@@ -1,6 +1,6 @@
 {
   "source": "mod/ai",
-  "version": "0.1.0",
+  "version": "0.8.11",
   "rules": [
     "~/a/ai/rules/core/coding-standards.md",
     "~/a/ai/rules/core/commit-conventions.md",
