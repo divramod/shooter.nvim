@@ -15,6 +15,31 @@ describe('shot_actions module', function()
   end)
 
   describe('find_insertion_line (via create_new_shot)', function()
+    it('creates blank line between title and first shot in empty file', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      -- Just a title, no content
+      local lines = {
+        '# Test Title',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      shot_actions.create_new_shot()
+      vim.cmd('stopinsert')
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- Expected structure:
+      -- 1: # Test Title
+      -- 2: (empty line)
+      -- 3: ## shot 1
+      -- 4: (empty line for cursor)
+      assert.are.equal('# Test Title', result[1])
+      assert.are.equal('', result[2], 'Should have blank line between title and shot')
+      assert.is_truthy(result[3]:match('^## shot 1$'), 'Shot header on line 3')
+      assert.are.equal('', result[4], 'Blank line after header for cursor')
+      assert.are.equal(4, #result, 'Should have exactly 4 lines')
+    end)
+
     it('inserts after title when no shots and no orphan text', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
       local lines = {
@@ -30,8 +55,9 @@ describe('shot_actions module', function()
       vim.cmd('stopinsert')
 
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      -- New shot should be after title
-      assert.is_truthy(result[2]:match('^## shot %d+'))
+      -- New shot should be after title with blank line before it
+      assert.are.equal('', result[2], 'Blank line before shot')
+      assert.is_truthy(result[3]:match('^## shot %d+'))
     end)
 
     it('inserts before first shot when no orphan text', function()

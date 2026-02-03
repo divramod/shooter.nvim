@@ -62,9 +62,8 @@ local function find_insertion_line(bufnr)
   end
 
   -- No shots and no orphan text, insert after title
-  local next_line = lines[title_line + 1] or ''
-  local needs_blank = not next_line:match('^%s*$')
-  return title_line + 1, needs_blank
+  -- Always need a blank line between title and first shot
+  return title_line + 1, true
 end
 
 -- Create a new shot at the top (below title, above other shots)
@@ -77,19 +76,19 @@ function M.create_new_shot()
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  -- Structure: [blank before], header, blank (cursor), blank (spacing below)
+  -- Structure: [blank before], header, blank (cursor)
   local lines_to_add
   local cursor_offset
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '', '' }
-    cursor_offset = 2  -- cursor on first blank after header
+    lines_to_add = { '', shot_header, '' }
+    cursor_offset = 2  -- cursor on blank after header
   else
-    lines_to_add = { shot_header, '', '' }
-    cursor_offset = 1  -- cursor on first blank after header
+    lines_to_add = { shot_header, '' }
+    cursor_offset = 1  -- cursor on blank after header
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  -- Position cursor on the first blank line after header (blank below for spacing)
+  -- Position cursor on the blank line after header
   vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
@@ -106,19 +105,19 @@ function M.create_new_shot_with_whisper()
   local shot_header = '## shot ' .. next_num
 
   -- Insert new shot at the top (after title)
-  -- Structure: [blank before], header, blank (cursor), blank (spacing below)
+  -- Structure: [blank before], header, blank (cursor)
   local lines_to_add
   local cursor_offset
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '', '' }
-    cursor_offset = 2  -- cursor on first blank after header
+    lines_to_add = { '', shot_header, '' }
+    cursor_offset = 2  -- cursor on blank after header
   else
-    lines_to_add = { shot_header, '', '' }
-    cursor_offset = 1  -- cursor on first blank after header
+    lines_to_add = { shot_header, '' }
+    cursor_offset = 1  -- cursor on blank after header
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  -- Position cursor on the first blank line after header (blank below for spacing)
+  -- Position cursor on the blank line after header
   vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
