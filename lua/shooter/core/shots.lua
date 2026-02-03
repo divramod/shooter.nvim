@@ -107,6 +107,7 @@ function M.find_all_shots(bufnr)
 end
 
 -- Find all open shots (not marked with x) in the file
+-- Ignores shot headers inside code blocks
 function M.find_open_shots(bufnr)
   bufnr = bufnr or 0
   local total_lines = utils.buf_line_count(bufnr)
@@ -115,16 +116,17 @@ function M.find_open_shots(bufnr)
 
   local i = 1
   while i <= total_lines do
-    -- Find open shot header (## shot, not ## x shot)
+    -- Find open shot header (## shot, not ## x shot), skip headers in code blocks
     if lines[i]:match(config.get('patterns.open_shot_header'))
-        and not lines[i]:match(config.get('patterns.executed_shot_header')) then
+        and not lines[i]:match(config.get('patterns.executed_shot_header'))
+        and not is_in_code_block(lines, i) then
 
       local shot_start = i
       local shot_end = total_lines
 
-      -- Find the next shot header (or end of file)
+      -- Find the next shot header (or end of file), skip headers in code blocks
       for j = shot_start + 1, total_lines do
-        if lines[j]:match(config.get('patterns.shot_header')) then
+        if lines[j]:match(config.get('patterns.shot_header')) and not is_in_code_block(lines, j) then
           shot_end = j - 1
           break
         end

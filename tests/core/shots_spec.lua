@@ -106,6 +106,29 @@ describe('shots module', function()
       local open_shots = shots.find_open_shots(bufnr)
       assert.are.equal(0, #open_shots)
     end)
+
+    it('ignores shot headers inside code blocks', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test',
+        '## shot 1',
+        'Some content with a code block:',
+        '```markdown',
+        '## shot 99',
+        'This is an example shot inside code',
+        '```',
+        '',
+        '## shot 2',
+        'Real shot 2 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local open_shots = shots.find_open_shots(bufnr)
+      -- Should only find shots 1 and 2, not shot 99 inside code block
+      assert.are.equal(2, #open_shots)
+      assert.are.equal(2, open_shots[1].header_line)  -- shot 1
+      assert.are.equal(9, open_shots[2].header_line)  -- shot 2
+    end)
   end)
 
   describe('parse_shot_header', function()
