@@ -1,18 +1,13 @@
 -- High-level tmux operations: send shots to AI panes
-
 local utils = require('shooter.utils')
 local sound = require('shooter.sound')
-
 local M = {}
 
 local function get_shots() return require('shooter.core.shots') end
 local function get_files() return require('shooter.core.files') end
 local function get_providers() return require('shooter.providers') end
 local function get_renumber_helper() return require('shooter.tmux.renumber_helper') end
-
-local function mark_shot(bufnr, shot_info)
-  get_shots().mark_shot_executed(bufnr, shot_info.header_line)
-end
+local function mark_shot(bufnr, shot_info) get_shots().mark_shot_executed(bufnr, shot_info.header_line) end
 
 local function find_pane_or_error(_, pane_index)
   local create = require('shooter.tmux.create')
@@ -33,15 +28,21 @@ end
 local function save_temp_sendable(full_message, shot_num)
   local temp_dir = utils.expand_path('~/.config/shooter.nvim/tmp')
   utils.ensure_dir(temp_dir)
-  local timestamp = os.date('%Y%m%d_%H%M%S')
-  local temp_path = string.format('%s/shot-%s-%s.md', temp_dir, shot_num, timestamp)
-  local success = utils.write_file(temp_path, full_message)
-  return success and temp_path or nil
+  local ts = os.date('%Y%m%d_%H%M%S')
+  local temp_path = string.format('%s/shot-%s-%s.md', temp_dir, shot_num, ts)
+  return utils.write_file(temp_path, full_message) and temp_path or nil
+end
+
+local function add_temp_ref_to_header(bufnr, header_line, temp_filename)
+  local line = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
+  line = line:gsub('%s*@shot%-[%d_%-]+', '') .. ' @' .. temp_filename
+  utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
+  if vim.api.nvim_buf_get_name(bufnr) ~= '' then vim.cmd('write') end
 end
 
 local function is_shot_executed(bufnr, header_line)
-  local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
-  return header_text:match(require('shooter.config').get('patterns.executed_shot_header')) ~= nil
+  local h = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
+  return h:match(require('shooter.config').get('patterns.executed_shot_header')) ~= nil
 end
 
 local function build_shots_str(bufnr, shot_infos)
@@ -104,6 +105,10 @@ function M.send_current_shot(pane_index, detect, send, messages)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
+    -- Add temp file reference to header for response lookup
+    local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
+    add_temp_ref_to_header(bufnr, header_line, temp_filename)
+
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to %s%s (%s)', shot_num, provider_name, pane_msg, files.get_file_title(bufnr)))
     vim.api.nvim_win_set_cursor(0, { header_line, 0 })  -- Stay on sent shot
@@ -117,25 +122,18 @@ end
 function M.send_all_shots(pane_index, detect, send, messages)
   pane_index = pane_index or 1
   local files, shots = get_files(), get_shots()
-
   if not files.is_shooter_file() then utils.echo('Multishot only works in shooter files'); return end
-
   local bufnr = utils.current_buf()
   local open_shots = shots.find_open_shots(bufnr)
   if #open_shots == 0 then utils.echo('No open shots found'); return end
-
-  -- Mark all as executed FIRST, then renumber (so they get final done-shot numbers)
+  -- Mark all as executed FIRST, then renumber
   for _, shot_info in ipairs(open_shots) do mark_shot(bufnr, shot_info) end
   require('shooter.core.renumber').renumber_shots(bufnr)
-
-  -- Re-fetch executed shots (they moved after renumber) - get only the ones just marked
   local executed_shots = get_renumber_helper().find_executed_shots(bufnr)
-
   local full_message = messages.build_multishot_message(bufnr, executed_shots)
   local shots_str = build_shots_str(bufnr, executed_shots)
   local temp_path = save_temp_sendable(full_message, shots_str)
   if not temp_path then utils.echo('Failed to save temp file'); return end
-
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
 

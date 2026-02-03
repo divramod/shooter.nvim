@@ -85,21 +85,27 @@ function M.view_response()
   local header = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
   local shot_num = shots.parse_shot_header(header)
 
-  -- Check if shot was executed (has timestamp)
-  local header_ts = header:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
-  if not header_ts then
-    utils.echo('Shot ' .. shot_num .. ' has not been sent yet (no timestamp)')
-    return
-  end
+  -- Check for @ref in header (new format with direct temp file reference)
+  local temp_ref = header:match('@(shot%-[%d_%-]+)')
+  local shot_pattern
 
-  local file_ts = header_ts_to_file_ts(header_ts)
-  if not file_ts then
-    utils.echo('Could not parse timestamp from shot header')
-    return
+  if temp_ref then
+    -- Use direct reference (reliable)
+    shot_pattern = temp_ref:gsub('%-', '%%-')
+  else
+    -- Fallback: try timestamp-based lookup (older shots)
+    local header_ts = header:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
+    if not header_ts then
+      utils.echo('Shot ' .. shot_num .. ' has not been sent yet')
+      return
+    end
+    local file_ts = header_ts_to_file_ts(header_ts)
+    if not file_ts then
+      utils.echo('Could not parse timestamp from shot header')
+      return
+    end
+    shot_pattern = 'shot%-' .. shot_num .. '%-' .. file_ts
   end
-
-  -- Search pattern for temp file in JSONL
-  local shot_pattern = 'shot%-' .. shot_num .. '%-' .. file_ts
 
   -- Find JSONL files in Claude projects dir
   local projects_dir = get_claude_projects_dir()
