@@ -106,6 +106,7 @@ function M.send_current_shot(pane_index, detect, send, messages)
   if success then
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to %s%s (%s)', shot_num, provider_name, pane_msg, files.get_file_title(bufnr)))
+    vim.api.nvim_win_set_cursor(0, { header_line, 0 })  -- Stay on sent shot
     sound.play()
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
