@@ -1,24 +1,20 @@
--- High-level tmux operations for shooter.nvim
--- Send shots to tmux panes, mark executed
+-- High-level tmux operations: send shots to AI panes
 
 local utils = require('shooter.utils')
 local sound = require('shooter.sound')
 
 local M = {}
 
--- Lazy-load helpers to keep file concise
 local function get_shots() return require('shooter.core.shots') end
 local function get_files() return require('shooter.core.files') end
 local function get_providers() return require('shooter.providers') end
 
--- Mark shot as executed (no history saving - analytics reads from shotfiles)
+local function auto_renumber(bufnr) require('shooter.core.renumber').renumber_shots(bufnr) end
+
 local function mark_shot(bufnr, shot_info)
-  local shots = get_shots()
-  shots.mark_shot_executed(bufnr, shot_info.header_line)
+  get_shots().mark_shot_executed(bufnr, shot_info.header_line)
 end
 
--- Find pane and get provider info
--- Returns: pane_id, provider_name, provider_object
 local function find_pane_or_error(detect, pane_index)
   local create = require('shooter.tmux.create')
   local pane_id, err = create.find_or_create_ai_pane(pane_index)
@@ -79,6 +75,10 @@ function M.send_current_shot(pane_index, detect, send, messages)
   end
 
   local bufnr = utils.current_buf()
+
+  -- Auto-renumber before sending to ensure correct shot numbers in commit messages
+  auto_renumber(bufnr)
+
   local shot_start, shot_end, header_line = shots.find_current_shot(bufnr, utils.get_cursor()[1])
   if not shot_start then utils.echo('No shot found at cursor position'); return end
 
@@ -120,6 +120,10 @@ function M.send_all_shots(pane_index, detect, send, messages)
   if not files.is_shooter_file() then utils.echo('Multishot only works in shooter files'); return end
 
   local bufnr = utils.current_buf()
+
+  -- Auto-renumber before sending to ensure correct shot numbers in commit messages
+  auto_renumber(bufnr)
+
   local open_shots = shots.find_open_shots(bufnr)
   if #open_shots == 0 then utils.echo('No open shots found'); return end
 
@@ -162,6 +166,8 @@ function M.send_visual_selection(pane_index, start_line, end_line, detect, send)
 end
 
 -- Send specific shots to AI pane (used by telescope multi-select)
+-- Note: No auto-renumber here since shot_infos have specific line numbers
+-- that would become invalid after renumber. User should renumber before opening picker.
 function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, messages)
   pane_index = pane_index or 1
   bufnr = bufnr or utils.current_buf()
