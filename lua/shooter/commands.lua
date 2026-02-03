@@ -184,6 +184,11 @@ local function setup_shot_commands()
   -- ShooterShotYank
   create_cmd('ShooterShotYank', shot_actions.yank_shot, { desc = 'Yank shot to clipboard' })
 
+  -- ShooterShotViewResponse
+  create_cmd('ShooterShotViewResponse', function()
+    require('shooter.tools.response_viewer').view_response()
+  end, { desc = 'View Claude response for shot' })
+
   -- ShooterShotExtractBlock (alias: ShooterShotExtract for backward compat)
   create_cmd('ShooterShotExtractBlock', shot_actions.extract_subtask,
     { desc = 'Extract ### subtask block to new shot' }, 'ShooterShotExtract')

@@ -93,6 +93,7 @@ function M.setup()
   map('n', 's{', ':ShooterShotNavPrevSent<cr>', 'Prev sent shot')
   map('n', 'sL', ':ShooterShotNavLatest<cr>', 'Latest sent')
   map('n', 'su', ':ShooterShotNavUndo<cr>', 'Undo sent marking')
+  map('n', 'sv', ':ShooterShotViewResponse<cr>', 'View Claude response')
 
   -- Shot send (also at root, but available with s prefix too)
   for i = 1, 4 do
