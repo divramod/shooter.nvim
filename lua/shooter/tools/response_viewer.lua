@@ -151,9 +151,11 @@ function M.view_response()
   vim.api.nvim_buf_set_option(resp_bufnr, 'buftype', 'nofile')
   vim.api.nvim_buf_set_name(resp_bufnr, 'Shot ' .. shot_num .. ' Response')
 
-  -- Open in split
-  vim.cmd('vsplit')
+  -- Open in horizontal split below, 80% height
+  vim.cmd('belowright split')
   vim.api.nvim_set_current_buf(resp_bufnr)
+  local total_height = vim.o.lines - vim.o.cmdheight - 1
+  vim.api.nvim_win_set_height(0, math.floor(total_height * 0.8))
   utils.echo('Response for shot ' .. shot_num)
 end
 
