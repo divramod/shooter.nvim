@@ -218,24 +218,26 @@ local function setup_shot_commands()
   create_cmd('ShooterShotNavUndo', shot_actions.undo_latest_sent_shot,
     { desc = 'Undo latest sent' }, 'ShooterUndoLatestSent')
 
-  -- Send commands (1-9)
-  for i = 1, 9 do
-    create_cmd('ShooterShotSend' .. i, function()
-      tmux.send_current_shot(i)
-    end, { desc = 'Send shot to pane ' .. i }, 'ShooterSend' .. i)
+  -- Send commands with optional pane argument (defaults to 1)
+  create_cmd('ShooterShotSend', function(opts)
+    local pane = tonumber(opts.args) or 1
+    tmux.send_current_shot(pane)
+  end, { nargs = '?', desc = 'Send shot to pane [1-9]' }, 'ShooterSend')
 
-    create_cmd('ShooterShotSendAll' .. i, function()
-      tmux.send_all_shots(i)
-    end, { desc = 'Send all shots to pane ' .. i }, 'ShooterSendAll' .. i)
+  create_cmd('ShooterShotSendAll', function(opts)
+    local pane = tonumber(opts.args) or 1
+    tmux.send_all_shots(pane)
+  end, { nargs = '?', desc = 'Send all shots to pane [1-9]' }, 'ShooterSendAll')
 
-    create_cmd('ShooterShotSendVisual' .. i, function(opts)
-      tmux.send_visual_selection(i, opts.line1, opts.line2)
-    end, { range = true, desc = 'Send selection to pane ' .. i }, 'ShooterSendVisual' .. i)
+  create_cmd('ShooterShotSendVisual', function(opts)
+    local pane = tonumber(opts.args) or 1
+    tmux.send_visual_selection(pane, opts.line1, opts.line2)
+  end, { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' }, 'ShooterSendVisual')
 
-    create_cmd('ShooterShotResend' .. i, function()
-      tmux.resend_latest_shot(i)
-    end, { desc = 'Resend to pane ' .. i }, 'ShooterResend' .. i)
-  end
+  create_cmd('ShooterShotResend', function(opts)
+    local pane = tonumber(opts.args) or 1
+    tmux.resend_latest_shot(pane)
+  end, { nargs = '?', desc = 'Resend to pane [1-9]' }, 'ShooterResend')
 
   -- Queue commands (1-4)
   local queue = require('shooter.queue')

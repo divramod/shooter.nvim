@@ -43,8 +43,8 @@ function M.setup()
 
   -- Send to pane (1-4) - root level for speed
   for i = 1, 4 do
-    map('n', tostring(i), ':ShooterShotSend' .. i .. '<cr>', 'Send to pane ' .. i)
-    map('v', tostring(i), ':ShooterShotSendVisual' .. i .. '<cr>', 'Send selection to pane ' .. i)
+    map('n', tostring(i), ':ShooterShotSend ' .. i .. '<cr>', 'Send to pane ' .. i)
+    map('v', tostring(i), ':ShooterShotSendVisual ' .. i .. '<cr>', 'Send selection to pane ' .. i)
   end
 
   -- ============================================================
@@ -96,8 +96,8 @@ function M.setup()
 
   -- Shot send (also at root, but available with s prefix too)
   for i = 1, 4 do
-    map('n', 's' .. i, ':ShooterShotSend' .. i .. '<cr>', 'Send to pane ' .. i)
-    map('n', 'sR' .. i, ':ShooterShotResend' .. i .. '<cr>', 'Resend to pane ' .. i)
+    map('n', 's' .. i, ':ShooterShotSend ' .. i .. '<cr>', 'Send to pane ' .. i)
+    map('n', 'sR' .. i, ':ShooterShotResend ' .. i .. '<cr>', 'Resend to pane ' .. i)
   end
 
   -- Shot queue
@@ -190,7 +190,7 @@ function M.setup()
   -- SEND ALL (double prefix)
   -- ============================================================
   for i = 1, 4 do
-    vim.keymap.set('n', prefix .. prefix .. tostring(i), ':ShooterShotSendAll' .. i .. '<cr>',
+    vim.keymap.set('n', prefix .. prefix .. tostring(i), ':ShooterShotSendAll ' .. i .. '<cr>',
       vim.tbl_extend('force', opts, { desc = 'Send ALL to pane ' .. i }))
   end
 
