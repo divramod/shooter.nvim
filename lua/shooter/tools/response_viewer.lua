@@ -37,29 +37,32 @@ local function find_response_in_jsonl(jsonl_path, shot_pattern)
   for line in file:lines() do
     local ok, data = pcall(vim.fn.json_decode, line)
     if ok and data then
-      -- Look for user message containing our shot file
-      if data.type == 'user' and data.message and data.message.content then
-        local content = data.message.content
-        local content_str = type(content) == 'string' and content or vim.fn.json_encode(content)
-        if content_str:match(shot_pattern) then
-          found_user_msg = true
-        end
-      end
-      -- After finding user message, collect text from assistant responses
-      if found_user_msg and data.message and data.message.role == 'assistant' then
-        local content = data.message.content
-        if type(content) == 'table' then
-          for _, block in ipairs(content) do
-            if block.type == 'text' and block.text then
-              response_text = (response_text or '') .. block.text .. '\n'
-            end
+      if not found_user_msg then
+        -- Look for user message containing our shot file
+        if data.type == 'user' and data.message and data.message.content then
+          local content = data.message.content
+          local content_str = type(content) == 'string' and content or vim.fn.json_encode(content)
+          if content_str:match(shot_pattern) then
+            found_user_msg = true
           end
-        elseif type(content) == 'string' then
-          response_text = (response_text or '') .. content .. '\n'
         end
-      -- Stop when we hit next user message (response complete)
-      elseif found_user_msg and data.type == 'user' then
-        break
+      else
+        -- After finding user message, collect text from assistant responses
+        if data.message and data.message.role == 'assistant' then
+          local content = data.message.content
+          if type(content) == 'table' then
+            for _, block in ipairs(content) do
+              if block.type == 'text' and block.text then
+                response_text = (response_text or '') .. block.text .. '\n'
+              end
+            end
+          elseif type(content) == 'string' then
+            response_text = (response_text or '') .. content .. '\n'
+          end
+        -- Stop when we hit next user message (response complete)
+        elseif data.type == 'user' then
+          break
+        end
       end
     end
   end
