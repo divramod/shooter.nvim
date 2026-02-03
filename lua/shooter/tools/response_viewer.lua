@@ -45,20 +45,20 @@ local function find_response_in_jsonl(jsonl_path, shot_pattern)
           found_user_msg = true
         end
       end
-      -- After finding user message, get next assistant response
+      -- After finding user message, collect text from assistant responses
       if found_user_msg and data.message and data.message.role == 'assistant' then
         local content = data.message.content
         if type(content) == 'table' then
-          local parts = {}
           for _, block in ipairs(content) do
             if block.type == 'text' and block.text then
-              table.insert(parts, block.text)
+              response_text = (response_text or '') .. block.text .. '\n'
             end
           end
-          response_text = table.concat(parts, '\n')
         elseif type(content) == 'string' then
-          response_text = content
+          response_text = (response_text or '') .. content .. '\n'
         end
+      -- Stop when we hit next user message (response complete)
+      elseif found_user_msg and data.type == 'user' then
         break
       end
     end
