@@ -7,7 +7,7 @@ local shots = require('shooter.core.shots')
 local M = {}
 
 -- Find the insertion point for new shots (after title, before first shot or orphan text)
--- Returns: insert_line, needs_blank_before (whether to add blank line before header)
+-- Returns: insert_line, needs_blank_before, has_content_below
 local function find_insertion_line(bufnr)
   local lines = utils.get_buf_lines(bufnr, 0, -1)
 
@@ -21,9 +21,7 @@ local function find_insertion_line(bufnr)
   end
 
   -- If no title, insert at line 1
-  if not title_line then
-    return 1, true
-  end
+  if not title_line then return 1, true, false end
 
   -- Find the first shot header after title
   local first_shot_line = nil
@@ -39,59 +37,50 @@ local function find_insertion_line(bufnr)
   local orphan_start = nil
 
   for i = title_line + 1, search_end do
-    local line = lines[i]
-    -- Non-blank text = orphan text (should become part of new shot)
-    if not line:match('^%s*$') then
+    if not lines[i]:match('^%s*$') then
       orphan_start = i
       break
     end
   end
 
   if orphan_start then
-    -- Insert above orphan text so it becomes part of the new shot
+    -- Insert above orphan text (content below = true)
     local prev_line = lines[orphan_start - 1] or ''
-    local needs_blank = not prev_line:match('^%s*$')
-    return orphan_start, needs_blank
+    return orphan_start, not prev_line:match('^%s*$'), true
   end
 
   if first_shot_line then
-    -- Insert before first shot
+    -- Insert before first shot (content below = true)
     local prev_line = lines[first_shot_line - 1] or ''
-    local needs_blank = not prev_line:match('^%s*$')
-    return first_shot_line, needs_blank
+    return first_shot_line, not prev_line:match('^%s*$'), true
   end
 
-  -- No shots and no orphan text, insert after title
-  -- Always need a blank line between title and first shot
-  return title_line + 1, true
+  -- No shots and no orphan text, insert after title (content below = false)
+  return title_line + 1, true, false
 end
 
 -- Create a new shot at the top (below title, above other shots)
 function M.create_new_shot()
   local bufnr = 0
   local next_num = shots.get_next_shot_number(bufnr)
-  local insert_line, needs_blank_before = find_insertion_line(bufnr)
+  local insert_line, needs_blank_before, has_content_below = find_insertion_line(bufnr)
 
-  -- Build the new shot header
   local shot_header = '## shot ' .. next_num
-
-  -- Insert new shot at the top (after title)
-  -- Structure: [blank before], header, blank (cursor), blank (separator)
   local lines_to_add
   local cursor_offset
+
+  -- Structure: [blank before], header, blank (cursor), [blank separator if content below]
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '', '' }
-    cursor_offset = 2  -- cursor on first blank after header
+    lines_to_add = has_content_below and { '', shot_header, '', '' } or { '', shot_header, '' }
+    cursor_offset = 2
   else
-    lines_to_add = { shot_header, '', '' }
-    cursor_offset = 1  -- cursor on first blank after header
+    lines_to_add = has_content_below and { shot_header, '', '' } or { shot_header, '' }
+    cursor_offset = 1
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  -- Position cursor on the blank line after header
   vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
-
   utils.echo('Created shot ' .. next_num)
 end
 
@@ -99,29 +88,24 @@ end
 function M.create_new_shot_with_whisper()
   local bufnr = 0
   local next_num = shots.get_next_shot_number(bufnr)
-  local insert_line, needs_blank_before = find_insertion_line(bufnr)
+  local insert_line, needs_blank_before, has_content_below = find_insertion_line(bufnr)
 
-  -- Build the new shot header
   local shot_header = '## shot ' .. next_num
-
-  -- Insert new shot at the top (after title)
-  -- Structure: [blank before], header, blank (cursor), blank (separator)
   local lines_to_add
   local cursor_offset
+
   if needs_blank_before then
-    lines_to_add = { '', shot_header, '', '' }
-    cursor_offset = 2  -- cursor on first blank after header
+    lines_to_add = has_content_below and { '', shot_header, '', '' } or { '', shot_header, '' }
+    cursor_offset = 2
   else
-    lines_to_add = { shot_header, '', '' }
-    cursor_offset = 1  -- cursor on first blank after header
+    lines_to_add = has_content_below and { shot_header, '', '' } or { shot_header, '' }
+    cursor_offset = 1
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  -- Position cursor on the blank line after header
   vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
   vim.cmd('startinsert')
 
-  -- Start whisper after a short delay to ensure insert mode is active
   vim.defer_fn(function()
     if vim.fn.exists(':GpWhisper') == 2 then
       vim.cmd('GpWhisper')

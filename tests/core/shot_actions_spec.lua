@@ -15,7 +15,7 @@ describe('shot_actions module', function()
   end)
 
   describe('find_insertion_line (via create_new_shot)', function()
-    it('creates blank line between title and first shot in empty file', function()
+    it('creates shot without trailing blank when first shot in empty file', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
       -- Just a title, no content
       local lines = {
@@ -28,18 +28,42 @@ describe('shot_actions module', function()
       vim.cmd('stopinsert')
 
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      -- Expected structure:
+      -- Expected structure (no content below, so no trailing separator):
       -- 1: # Test Title
       -- 2: (empty line - separator before)
       -- 3: ## shot 1
       -- 4: (empty line - cursor/content)
-      -- 5: (empty line - separator after)
       assert.are.equal('# Test Title', result[1])
       assert.are.equal('', result[2], 'Should have blank line between title and shot')
       assert.is_truthy(result[3]:match('^## shot 1$'), 'Shot header on line 3')
       assert.are.equal('', result[4], 'Blank line after header for cursor')
-      assert.are.equal('', result[5], 'Blank line as separator after shot')
-      assert.are.equal(5, #result, 'Should have exactly 5 lines')
+      assert.are.equal(4, #result, 'Should have exactly 4 lines (no trailing separator)')
+    end)
+
+    it('creates shot with trailing blank when inserting before existing shots', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## shot 1',
+        'Shot 1 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      shot_actions.create_new_shot()
+      vim.cmd('stopinsert')
+
+      local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      -- New shot 2 inserted before shot 1, with trailing blank as separator
+      local shot2_line = nil
+      for i, line in ipairs(result) do
+        if line:match('^## shot 2') then shot2_line = i; break end
+      end
+      assert.is_not_nil(shot2_line)
+      -- Should have blank line after cursor position (separator before existing shot)
+      assert.are.equal('', result[shot2_line + 1], 'Cursor line')
+      assert.are.equal('', result[shot2_line + 2], 'Trailing separator')
     end)
 
     it('inserts after title when no shots and no orphan text', function()
