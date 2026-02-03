@@ -332,9 +332,13 @@ function M.clear_state()
   state = {}
 end
 
--- Set up tmux keybinding for hiding panes (opt+shift+A / M-A)
+-- Set up tmux keybinding for toggle panes (opt+shift+A / M-A)
 -- This should be called once during plugin setup
 -- Note: Requires terminal configured to send Meta for Option key
+-- Behavior:
+--   - In nvim pane: calls ShooterTmuxTogglePanes command
+--   - In toggled pane (created by ShooterTmuxTogglePanes): hides the pane
+--   - Otherwise: does nothing
 function M.setup_tmux_keybinding()
   if not detect.check_tmux_installed() or not detect.in_tmux() then
     return
@@ -346,12 +350,18 @@ function M.setup_tmux_keybinding()
   tmux_run("tmux unbind-key H 2>/dev/null")      -- old: prefix + H
   tmux_run("tmux unbind-key -n M-H 2>/dev/null") -- old: opt+shift+H (blocked nvim H)
 
-  -- Create a keybinding that reads the pane name from temp file and hides to hidden session
+  -- Create a keybinding that:
+  -- 1. If in nvim pane: send command to open toggle panes picker
+  -- 2. If in toggled pane (has /tmp/shooter-pane-*): hide the pane
+  -- 3. Otherwise: do nothing
   -- The keybinding: opt+shift+A (M-A in tmux terms)
   -- Using -n for root table (no prefix needed)
   local keybind_cmd = string.format([[tmux bind-key -n M-A run-shell '
     PANE_ID=$(tmux display -p "#{pane_id}" | tr -d "%%")
+    PANE_CMD=$(tmux display -p "#{pane_current_command}")
     NAME_FILE="/tmp/shooter-pane-$PANE_ID"
+
+    # Check if this is a toggled pane (has marker file)
     if [ -f "$NAME_FILE" ]; then
       NAME=$(cat "$NAME_FILE")
       FOLDER_FILE="/tmp/shooter-folder-$PANE_ID"
@@ -365,7 +375,12 @@ function M.setup_tmux_keybinding()
       tmux has-session -t "%s" 2>/dev/null || tmux new-session -d -s "%s" -n "placeholder"
       # Move pane to hidden session
       tmux break-pane -d -t "%s:" -n "$WINDOW_NAME"
+    # Check if this is nvim
+    elif [ "$PANE_CMD" = "nvim" ] || [ "$PANE_CMD" = "vim" ]; then
+      # Send command to nvim to open toggle panes picker
+      tmux send-keys -t "%%$PANE_ID" Escape ":ShooterTmuxTogglePanes" Enter
     fi
+    # Otherwise do nothing
   ']], session_name, session_name, session_name)
   tmux_run(keybind_cmd)
 end
