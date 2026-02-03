@@ -295,29 +295,45 @@ function M.list_all_repos_files(opts)
   return create_file_picker(opts, get_files_fn, 'All Repos')
 end
 
--- List open shots in current or last edited file
+-- Shot picker mode state: 'current' (single file) or 'all' (repo-wide)
+M.shot_picker_mode = 'current'
+
+-- Build shot entries based on mode
+local function build_shot_entries(mode)
+  if mode == 'all' then
+    return helpers.get_all_repo_shots(), nil, false
+  else
+    local target_file, is_current = helpers.get_target_file()
+    if not target_file then return {}, nil, false end
+    local lines = helpers.read_lines(target_file, is_current)
+    if not lines then return {}, nil, false end
+    local shot_list = helpers.find_open_shots(lines)
+    local entries = {}
+    for _, shot in ipairs(shot_list) do
+      table.insert(entries, helpers.make_shot_entry(shot, lines, target_file, is_current, false))
+    end
+    return entries, target_file, is_current
+  end
+end
+
+-- List open shots in current file or all repo shotfiles
 function M.list_open_shots(opts)
   opts = opts or {}
-  local target_file, is_current = helpers.get_target_file()
-  if not target_file then utils.echo('No next-action files found'); return end
+  local shot_entries, target_file, is_current = build_shot_entries(M.shot_picker_mode)
 
-  local lines = helpers.read_lines(target_file, is_current)
-  if not lines then utils.echo('Failed to read file'); return end
-
-  local shot_list = helpers.find_open_shots(lines)
-  if #shot_list == 0 then
+  if #shot_entries == 0 then
     utils.echo('No open shots found')
     return
   end
 
-  local shot_entries = {}
-  for _, shot in ipairs(shot_list) do
-    table.insert(shot_entries, helpers.make_shot_entry(shot, lines, target_file, is_current))
+  local title
+  if M.shot_picker_mode == 'all' then
+    title = 'All Repo Shots (a=toggle mode, 1-4=send, h=hide, q=quit)'
+  else
+    local filename = target_file and vim.fn.fnamemodify(target_file, ':t') or ''
+    title = is_current and 'Open Shots (a=all files, 1-4=send, h=hide, q=quit)'
+      or 'Open Shots: ' .. filename .. ' (a=all files, 1-4=send, h=hide, q=quit)'
   end
-
-  local filename = vim.fn.fnamemodify(target_file, ':t')
-  local title = is_current and 'Open Shots (Tab/Space=select, n=new, c=clear, 1-4=send, h=hide, q=quit)'
-    or 'Open Shots: ' .. filename .. ' (Tab/Space=select, n=new, c=clear, 1-4=send, h=hide, q=quit)'
 
   local picker_instance = pickers.new(opts, {
     prompt_title = title,
@@ -408,23 +424,27 @@ function M.list_open_shots(opts)
         vim.cmd('ShooterCreate')
       end)
 
+      -- Toggle between current file and all repo shots
+      map('n', 'a', function()
+        actions.close(prompt_bufnr)
+        M.shot_picker_mode = M.shot_picker_mode == 'current' and 'all' or 'current'
+        local picker = M.list_open_shots(opts)
+        if picker then picker:find() end
+      end, { desc = 'Toggle all/current mode' })
+
       -- Delete shot (d and namespaced sd)
       local function delete_shot_fn()
         local refresh_fn = function(pb)
-          local new_lines = helpers.read_lines(target_file, is_current)
-          if not new_lines then return end
-          local new_shots = helpers.find_open_shots(new_lines)
-          local new_entries = {}
-          for _, shot in ipairs(new_shots) do
-            table.insert(new_entries, helpers.make_shot_entry(shot, new_lines, target_file, is_current))
-          end
+          local new_entries = build_shot_entries(M.shot_picker_mode)
           local picker = action_state.get_current_picker(pb)
           picker:refresh(finders.new_table({
             results = new_entries,
             entry_maker = function(e) return {value = e, display = e.display, ordinal = e.display} end,
           }), { reset_prompt = false })
         end
-        telescope_actions.delete_shot(prompt_bufnr, target_file, refresh_fn)
+        local entry = action_state.get_selected_entry()
+        local del_target = entry and entry.value and entry.value.target_file or target_file
+        telescope_actions.delete_shot(prompt_bufnr, del_target, refresh_fn)
       end
       map('n', prefix .. 'sd', delete_shot_fn, { desc = 'Delete shot' })
 

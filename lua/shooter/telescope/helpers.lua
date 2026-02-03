@@ -84,7 +84,8 @@ function M.find_open_shots(lines)
 end
 
 -- Create shot entry for telescope picker
-function M.make_shot_entry(shot, lines, target_file, is_current)
+-- show_file: if true, include filename in display (for multi-file mode)
+function M.make_shot_entry(shot, lines, target_file, is_current, show_file)
   local header = lines[shot.header_line]
   local shot_num = header:match('shot%s+(%d+)') or '?'
   local preview_lines = {}
@@ -96,12 +97,48 @@ function M.make_shot_entry(shot, lines, target_file, is_current)
   end
   local preview = table.concat(preview_lines, ' | ')
   if #preview > 60 then preview = preview:sub(1, 60) .. '...' end
+
+  local display
+  if show_file then
+    local filename = vim.fn.fnamemodify(target_file, ':t:r')  -- filename without extension
+    display = string.format('[%s] Shot %s: %s', filename, shot_num, preview)
+  else
+    display = string.format('Shot %s: %s', shot_num, preview)
+  end
+
   return {
     shot_num = shot_num, header_line = shot.header_line,
     start_line = shot.start_line, end_line = shot.end_line,
-    display = string.format('Shot %s: %s', shot_num, preview),
-    lines = lines, target_file = target_file, is_current_file = is_current,
+    display = display, lines = lines, target_file = target_file, is_current_file = is_current,
   }
+end
+
+-- Get all prompt files from current repo
+function M.get_repo_prompt_files()
+  local files_mod = require('shooter.core.files')
+  local git_root = files_mod.get_git_root()
+  if not git_root then return {} end
+  local prompts_dir = git_root .. '/plans/prompts'
+  if not utils.dir_exists(prompts_dir) then return {} end
+  return vim.fn.globpath(prompts_dir, '**/*.md', false, true)
+end
+
+-- Get all open shots from all shotfiles in the repo
+function M.get_all_repo_shots()
+  local all_shots = {}
+  local prompt_files = M.get_repo_prompt_files()
+
+  for _, filepath in ipairs(prompt_files) do
+    local lines = M.read_lines(filepath, false)
+    if lines then
+      local shots = M.find_open_shots(lines)
+      for _, shot in ipairs(shots) do
+        table.insert(all_shots, M.make_shot_entry(shot, lines, filepath, false, true))
+      end
+    end
+  end
+
+  return all_shots
 end
 
 -- Save current multi-selection and cursor position to persistent storage
