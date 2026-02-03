@@ -310,8 +310,8 @@ function M.goto_latest_sent_shot()
   for i, line in ipairs(lines) do
     -- Match executed shot headers with timestamp
     if line:match(config.get('patterns.executed_shot_header')) then
-      -- Extract timestamp: (YYYY-MM-DD HH:MM:SS)
-      local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
+      -- Extract timestamp - may have @ref after, so don't anchor to end
+      local timestamp = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
       if timestamp then
         if not latest_timestamp or timestamp > latest_timestamp then
           latest_timestamp = timestamp
@@ -332,13 +332,15 @@ function M.goto_latest_sent_shot()
 end
 
 -- Get all sent shots sorted by timestamp (oldest first)
+-- Supports both old format (no @ref) and new format (with @ref at end)
 local function get_sent_shots_sorted(bufnr)
   local config = require('shooter.config')
   local lines = utils.get_buf_lines(bufnr, 0, -1)
   local sent = {}
   for i, line in ipairs(lines) do
     if line:match(config.get('patterns.executed_shot_header')) then
-      local ts = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)%s*$')
+      -- Extract timestamp - may have @ref after, so don't anchor to end
+      local ts = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
       if ts then table.insert(sent, { line_num = i, timestamp = ts, shot_num = shots.parse_shot_header(line) }) end
     end
   end

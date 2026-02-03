@@ -399,4 +399,108 @@ describe('shot_actions module', function()
       assert.is_falsy(result[3]:match('@shot%-'))
     end)
   end)
+
+  describe('goto_latest_sent_shot', function()
+    it('finds shots with @ref format', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00) @shot-1-20260121_143000',
+        'Shot 1 content',
+        '',
+        '## x shot 2 (2026-01-21 15:00:00) @shot-2-20260121_150000',
+        'Shot 2 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+      shot_actions.goto_latest_sent_shot()
+
+      -- Should jump to shot 2 (latest timestamp)
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      assert.are.equal(6, cursor[1])
+    end)
+
+    it('finds mix of old and new format shots', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00)',  -- old format
+        'Shot 1 content',
+        '',
+        '## x shot 2 (2026-01-21 15:00:00) @shot-2-20260121_150000',  -- new format
+        'Shot 2 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+      shot_actions.goto_latest_sent_shot()
+
+      -- Should jump to shot 2 (latest timestamp)
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      assert.are.equal(6, cursor[1])
+    end)
+  end)
+
+  describe('goto_prev_sent_shot and goto_next_sent_shot', function()
+    it('navigates through shots with @ref format', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00) @shot-1-20260121_143000',
+        'Shot 1 content',
+        '',
+        '## x shot 2 (2026-01-21 15:00:00) @shot-2-20260121_150000',
+        'Shot 2 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      -- Start at shot 1
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+
+      -- Go to next (should go to shot 2)
+      shot_actions.goto_next_sent_shot()
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      assert.are.equal(6, cursor[1])
+
+      -- Go to prev (should go back to shot 1)
+      shot_actions.goto_prev_sent_shot()
+      cursor = vim.api.nvim_win_get_cursor(0)
+      assert.are.equal(3, cursor[1])
+    end)
+
+    it('navigates through mix of old and new format', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local lines = {
+        '# Test Title',
+        '',
+        '## x shot 1 (2026-01-21 14:30:00)',  -- old format
+        'Shot 1 content',
+        '',
+        '## x shot 2 (2026-01-21 15:00:00) @shot-2-20260121_150000',  -- new format
+        'Shot 2 content',
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_set_current_buf(bufnr)
+
+      -- Start at shot 1 (old format)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+
+      -- Go to next (should go to shot 2 with new format)
+      shot_actions.goto_next_sent_shot()
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      assert.are.equal(6, cursor[1])
+
+      -- Go to prev (should go back to shot 1 with old format)
+      shot_actions.goto_prev_sent_shot()
+      cursor = vim.api.nvim_win_get_cursor(0)
+      assert.are.equal(3, cursor[1])
+    end)
+  end)
 end)
