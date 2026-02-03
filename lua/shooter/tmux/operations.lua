@@ -8,6 +8,7 @@ local M = {}
 local function get_shots() return require('shooter.core.shots') end
 local function get_files() return require('shooter.core.files') end
 local function get_providers() return require('shooter.providers') end
+local function get_renumber_helper() return require('shooter.tmux.renumber_helper') end
 
 local function mark_shot(bufnr, shot_info)
   get_shots().mark_shot_executed(bufnr, shot_info.header_line)
@@ -84,6 +85,14 @@ function M.send_current_shot(pane_index, detect, send, messages)
     end
   end
 
+  -- Renumber shots and find the same shot by content hash
+  local new_start, new_end, new_header = get_renumber_helper().renumber_and_find_shot(bufnr, shot_start, shot_end)
+  if not new_start then
+    utils.echo('Failed to locate shot after renumbering')
+    return
+  end
+  shot_start, shot_end, header_line = new_start, new_end, new_header
+
   local shot_info = { start_line = shot_start, end_line = shot_end, header_line = header_line }
   local full_message = messages.build_shot_message(bufnr, shot_info)
   local shot_num = build_shots_str(bufnr, { shot_info })
@@ -114,6 +123,10 @@ function M.send_all_shots(pane_index, detect, send, messages)
   if not files.is_shooter_file() then utils.echo('Multishot only works in shooter files'); return end
 
   local bufnr = utils.current_buf()
+
+  -- Renumber first, then get open shots (order doesn't matter for "all" send)
+  require('shooter.core.renumber').renumber_shots(bufnr)
+
   local open_shots = shots.find_open_shots(bufnr)
   if #open_shots == 0 then utils.echo('No open shots found'); return end
 
