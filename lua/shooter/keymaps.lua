@@ -21,8 +21,8 @@ function M.setup()
   -- ============================================================
   -- CORE SHORTCUTS (root level for quick access)
   -- ============================================================
-  map('n', 'n', ':ShooterShotfileNew<cr>', 'New shotfile')
-  map('n', 's', ':ShooterShotNew<cr>', 'New shot')
+  map('n', 'N', ':ShooterShotfileNew<cr>', 'New shotfile')
+  map('n', 'n', ':ShooterShotNew<cr>', 'New shot')
   map('n', 'o', ':ShooterShotPicker<cr>', 'Open shots picker')
   map('n', 'v', ':ShooterShotfilePicker<cr>', 'Shotfile picker')
   map('n', 'l', ':ShooterShotfileLast<cr>', 'Last shotfile')
