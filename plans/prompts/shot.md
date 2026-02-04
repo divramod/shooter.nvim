@@ -1,12 +1,18 @@
 # shot
 
-## shot 37
+## shot 39
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
 
-## shot 36
+## shot 38
 when answering questions from claude, can i also use the shooter?
+
+## x shot 37 (2026-02-04 08:05:15) @shot-37-20260204_080516
+i want you to remap < >n to < >N and remap < >s to < >n
+
+## x shot 36 (2026-02-04 08:02:38) @shot-36-20260204_080238
+i want you to unmap the < >e and < >E mappings
 
 ## x shot 35 (2026-02-03 10:38:48) @shot-35-20260203_103848
 /Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260203_103817.png
