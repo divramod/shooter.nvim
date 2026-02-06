@@ -2,18 +2,10 @@
 -- Construct context-enriched messages for Claude
 
 local utils = require('shooter.utils')
-local context = require('shooter.core.context')
 local shots = require('shooter.core.shots')
-local files = require('shooter.core.files')
 local templates = require('shooter.core.templates')
 
 local M = {}
-
--- Trim trailing whitespace (fixes double empty lines)
-local function trim_trailing(content)
-  if not content then return "" end
-  return content:gsub('%s+$', '')
-end
 
 -- Trim leading and trailing whitespace from message
 local function trim_message(msg)
@@ -27,11 +19,6 @@ function M.format_shot_content(content)
   return content:match("^%s*(.-)%s*$") or content
 end
 
--- Build context section for message
-function M.build_context_section()
-  return context.build_context_section()
-end
-
 -- Build message for single shot
 function M.build_shot_message(bufnr, shot_info)
   bufnr = bufnr or 0
@@ -41,7 +28,6 @@ function M.build_shot_message(bufnr, shot_info)
   local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
   local shot_num = shots.parse_shot_header(header_text)
 
-  local ctx = M.build_context_section()
   shot_content = M.format_shot_content(shot_content)
 
   -- Build variables and load instructions template
@@ -54,21 +40,11 @@ function M.build_shot_message(bufnr, shot_info)
 # shot %s (%s)
 %s
 
-%s
-
-# Shooter global context (%s)
-%s
-
-# Shooter project context (%s)
 %s]],
     shot_num,
     vars.file_title,
     shot_content,
-    instructions,
-    ctx.global_file,
-    trim_trailing(ctx.global_content),
-    ctx.project_file,
-    trim_trailing(ctx.project_content)
+    instructions
   )
 
   -- Remove any leading/trailing whitespace from final message
@@ -78,8 +54,6 @@ end
 -- Build message for multiple shots
 function M.build_multishot_message(bufnr, shot_list)
   bufnr = bufnr or 0
-
-  local ctx = M.build_context_section()
 
   local shot_parts = {}
   local shot_nums = {}
@@ -106,21 +80,11 @@ function M.build_multishot_message(bufnr, shot_list)
 
 %s
 
-%s
-
-# Shooter global context (%s)
-%s
-
-# Shooter project context (%s)
 %s]],
     vars.shot_nums,
     vars.file_title,
     all_shots_content,
-    instructions,
-    ctx.global_file,
-    trim_trailing(ctx.global_content),
-    ctx.project_file,
-    trim_trailing(ctx.project_content)
+    instructions
   )
 
   -- Remove any leading/trailing whitespace from final message
