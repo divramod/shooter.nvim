@@ -204,8 +204,6 @@ function M.send_visual_selection(pane_index, start_line, end_line, detect, send)
 end
 
 -- Send specific shots to AI pane (used by telescope multi-select)
--- Note: No auto-renumber here since shot_infos have specific line numbers
--- that would become invalid after renumber. User should renumber before opening picker.
 function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, messages)
   pane_index = pane_index or 1
   bufnr = bufnr or utils.current_buf()
@@ -213,20 +211,41 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
 
   if #shot_infos == 0 then utils.echo('No shots to send'); return end
 
+  -- Build message BEFORE marking (so headers show original shot numbers)
   local full_message = messages.build_multishot_message(bufnr, shot_infos)
   local shots_str = build_shots_str(bufnr, shot_infos)
   local temp_path = save_temp_sendable(full_message, shots_str)
   if not temp_path then utils.echo('Failed to save temp file'); return end
 
+  -- Lock buffer during pane creation (same protection as send_current_shot)
+  local was_modifiable = vim.bo[bufnr].modifiable
+  vim.bo[bufnr].modifiable = false
+
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
+
+  -- Drain typeahead before unlocking (iTerm2 OSC 1337 protection)
+  vim.cmd('stopinsert')
+  vim.wait(150, function() return false end, 30)
+  while vim.fn.getchar(0) ~= 0 do end
+  vim.cmd('stopinsert')
+  vim.bo[bufnr].modifiable = was_modifiable
+
   if not pane_id then return end
+
+  -- Mark all shots as executed, then renumber
+  for _, shot_info in ipairs(shot_infos) do mark_shot(bufnr, shot_info) end
+  require('shooter.core.renumber').renumber_shots(bufnr)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    for _, shot_info in ipairs(shot_infos) do mark_shot(bufnr, shot_info) end
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #shot_infos, provider_name, pane_msg, files.get_file_title(bufnr)))
+    vim.cmd('stopinsert')
     sound.play()
+    vim.schedule(function()
+      while vim.fn.getchar(0) ~= 0 do end
+      vim.cmd('stopinsert')
+    end)
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end

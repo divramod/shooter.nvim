@@ -56,33 +56,48 @@ function M.send_multiple_shots(prompt_bufnr, pane_num)
   pane_num = pane_num or 1
   local multi = action_state.get_current_picker(prompt_bufnr):get_multi_selection()
 
-  -- If only one or no multi-select, use single shot
+  -- If only one or no multi-select, use single shot send
   if #multi <= 1 then
     M.send_shot(prompt_bufnr, pane_num)
     return
   end
 
-  actions.close(prompt_bufnr)
-
-  local first = multi[1].value
-  if not first.is_current_file then
-    vim.cmd('edit ' .. vim.fn.fnameescape(first.target_file))
-  end
-
-  -- Build shot_infos array
-  local shot_infos = {}
+  -- Capture shot data before closing picker (entries become invalid after close)
+  local shot_entries = {}
   for _, e in ipairs(multi) do
-    table.insert(shot_infos, {
+    table.insert(shot_entries, {
       start_line = e.value.start_line,
       end_line = e.value.end_line,
       header_line = e.value.header_line,
+      target_file = e.value.target_file,
+      is_current_file = e.value.is_current_file,
     })
   end
-  table.sort(shot_infos, function(a, b) return a.header_line < b.header_line end)
+  table.sort(shot_entries, function(a, b) return a.header_line < b.header_line end)
 
-  -- Send using new shooter.tmux module (includes history saving)
-  local bufnr = vim.api.nvim_get_current_buf()
-  require('shooter.tmux').send_specific_shots(pane_num, shot_infos, bufnr)
+  local target_file = shot_entries[1].target_file
+  local is_current = shot_entries[1].is_current_file
+
+  actions.close(prompt_bufnr)
+
+  -- Defer to next event loop iteration so telescope buffer cleanup completes
+  vim.schedule(function()
+    if not is_current then
+      vim.cmd('edit ' .. vim.fn.fnameescape(target_file))
+    end
+
+    local shot_infos = {}
+    for _, e in ipairs(shot_entries) do
+      table.insert(shot_infos, {
+        start_line = e.start_line,
+        end_line = e.end_line,
+        header_line = e.header_line,
+      })
+    end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    require('shooter.tmux').send_specific_shots(pane_num, shot_infos, bufnr)
+  end)
 end
 
 -- Helper: Refresh file picker
