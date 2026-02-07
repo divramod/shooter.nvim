@@ -466,6 +466,13 @@ function M.yank_shot()
   -- Mark shot as done
   shots.mark_shot_executed(bufnr, header_line)
 
+  -- Renumber and resort shots (open shots top, done shots bottom)
+  local renumber_helper = require('shooter.tmux.renumber_helper')
+  local new_start, _, new_header = renumber_helper.renumber_and_find_shot(bufnr, start_line, end_line)
+  if new_header then
+    vim.api.nvim_win_set_cursor(0, { new_header, 0 })
+  end
+
   -- Yank to clipboard
   vim.fn.setreg('+', content)
   vim.fn.setreg('"', content)
