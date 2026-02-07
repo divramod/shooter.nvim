@@ -40,12 +40,27 @@
 
 ## Task Management
 
-1. **Plan First**: Write plan to `.shooter/plans-ai/<plan>.md` with checkable items
+1. **Plan First**: Write plan to `.shooter/plans-shooter/<plan>.md` with checkable items
 2. **Verify Plan**: Check in before starting implementation
 3. **Track Progress**: Mark items complete as you go
 4. **Explain Changes**: High-level summary at each step
-5. **Document Results**: Add review section to `.shooter/plans-ai/<plan>.md`
+5. **Document Results**: Add review section to `.shooter/plans-shooter/<plan>.md`
 6. **Capture Lessons**: Update `.shooter/context-ai-learnings.md` after corrections
+
+## Command Logging
+
+Every shooter command and skill invocation must be logged for usage tracking and repo registry.
+
+**Banner step addition:** Before reading `.shooter/VERSION`, run:
+```bash
+bash <shooter-dir>/scripts/shell/shooter_log-command.sh "<command-name>"
+```
+
+Where `<shooter-dir>` is `~/.claude/shooter` (Claude), `~/.gemini/shooter` (Gemini), or the equivalent for other CLIs. This:
+1. Appends an entry to `.shooter/command-log.jsonl` (timestamp, command, CLI)
+2. Registers/updates the repo in `~/.config/shooter/repos.json` (global registry)
+
+The registry enables `shooter:update` to batch-update all repos with latest rules.
 
 ## Core Principles
 

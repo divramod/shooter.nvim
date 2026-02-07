@@ -11,7 +11,7 @@ All AI output of lasting value must be persisted to the filesystem. Conversation
 | Artifact Type     | Location                            | Example                                 |
 |-------------------|-------------------------------------|-----------------------------------------|
 | Research reports  | `.shooter/research/<topic-slug>.md` | `.shooter/research/auth-providers.md`   |
-| Project plans     | `.shooter/plans-ai/<plan-name>.md`  | `.shooter/plans/web-app/init-plan.md`   |
+| Project plans     | `.shooter/plans-shooter/<plan-name>.md`  | `.shooter/plans-shooter/web-app-init.md`     |
 | Decision log      | `.shooter/decisions.md`             | Centralized, newest first               |
 | Learning records  | `.shooter/context-ai-learnings.md`  | `.shooter/context-ai-learnings.md`      |
 | Q&A records       | `.shooter/q-and-a.md`               | `.shooter/q-and-a.md`                   |
@@ -21,11 +21,29 @@ All AI output of lasting value must be persisted to the filesystem. Conversation
 - **Decisions must be saved** — after closing a bead that involved decisions, record them in `.shooter/decisions.md`
 - **Learnings must be saved** — if you discover something important about the project, add it to `.shooter/context-ai-learnings.md`
 - **Research must be saved** — if you researched something, write it to `.shooter/research/`
-- **Plans must be saved** — execution plans go under `plans-ai/<plan-name>.md`
+- **Plans must be saved** — execution plans go under `.shooter/plans-shooter/<plan-name>.md`
+- **CLI plan mode uses `.shooter/plans-shooter/`** — when using a CLI's plan mode (Claude Code `EnterPlanMode`, Gemini plan tool, etc.), write the plan to `.shooter/plans-shooter/` instead of the CLI's default global directory. This keeps plans project-local and version-controlled.
 - Use kebab-case for all file slugs: `topic-name.md`, not `topicName.md`
 - Include a YAML frontmatter block with `date`, `author`, and `status` fields
 - Keep artifacts self-contained — a reader should understand without conversation context
 - Update existing artifacts rather than creating duplicates
+
+## Theme README Updates
+
+After completing a bead that added or changed user-facing features, commands, APIs, or architecture within a theme, consider whether the theme's `README.md` (at `<theme-path>/README.md`) needs updating. This is a soft guideline — not every bead warrants a README change.
+
+**Update the README when:**
+- New commands, skills, or agents were added to the theme
+- The theme's architecture or directory structure changed
+- Public APIs or interfaces were added/modified
+- The theme's purpose or scope expanded
+
+**Skip the README update when:**
+- The bead was a bug fix, refactor, or internal change
+- The change is already documented in codebase analysis (`.shooter/codebase/`)
+- The bead was a small shot (1-2 line changes)
+
+For bulk README maintenance across all themes, use `/shooter:readme-updater`.
 
 ## Naming Conventions
 
