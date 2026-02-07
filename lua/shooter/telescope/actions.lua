@@ -71,9 +71,11 @@ function M.send_multiple_shots(prompt_bufnr, pane_num)
       header_line = e.value.header_line,
       target_file = e.value.target_file,
       is_current_file = e.value.is_current_file,
+      shot_num = tonumber(e.value.shot_num) or 0,
     })
   end
-  table.sort(shot_entries, function(a, b) return a.header_line < b.header_line end)
+  -- Sort by shot number ascending (lowest first = execute in order)
+  table.sort(shot_entries, function(a, b) return a.shot_num < b.shot_num end)
 
   local target_file = shot_entries[1].target_file
   local is_current = shot_entries[1].is_current_file
