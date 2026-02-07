@@ -24,9 +24,10 @@ function M.start_ai_in_pane(pane_id, provider_name)
   local cmd = PROVIDER_CMDS[provider_name] or PROVIDER_CMDS.claude
   -- Send Ctrl-C to cancel any pending input (handles vi normal mode too)
   -- Then Ctrl-U to clear the line, then the command
-  os.execute(string.format("tmux send-keys -t %s C-c C-u 2>/dev/null", pane_id))
+  -- Use vim.fn.system instead of os.execute to prevent terminal bleed
+  vim.fn.system(string.format("{ tmux send-keys -t %s C-c C-u; } 2>/dev/null", pane_id))
   vim.wait(100, function() return false end, 20)  -- Brief pause for shell to process
-  os.execute(string.format("tmux send-keys -t %s '%s' Enter 2>/dev/null", pane_id, cmd))
+  vim.fn.system(string.format("{ tmux send-keys -t %s '%s' Enter; } 2>/dev/null", pane_id, cmd))
   return true, nil
 end
 
@@ -45,6 +46,9 @@ function M.create_new_pane()
     return nil, "Not running in tmux"
   end
 
+  -- Get nvim's own pane ID for validation
+  local nvim_pane = vim.trim(vim.fn.system({"tmux", "display-message", "-p", "#{pane_id}"}))
+
   -- Create pane below with 50% height (horizontal split, -d keeps focus on nvim)
   local result = vim.fn.system({"tmux", "split-window", "-d", "-l", "50%", "-P", "-F", "#{pane_id}"})
   local pane_id = vim.trim(result)
@@ -52,6 +56,12 @@ function M.create_new_pane()
   if vim.v.shell_error ~= 0 or pane_id == "" then
     return nil, "Failed to create pane: " .. pane_id
   end
+
+  -- Safety: ensure we didn't get nvim's own pane ID
+  if pane_id == nvim_pane then
+    return nil, "New pane ID matches nvim pane, aborting"
+  end
+
   return pane_id, nil
 end
 

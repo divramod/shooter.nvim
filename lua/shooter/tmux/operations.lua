@@ -9,11 +9,21 @@ local function get_providers() return require('shooter.providers') end
 local function get_renumber_helper() return require('shooter.tmux.renumber_helper') end
 local function mark_shot(bufnr, shot_info) get_shots().mark_shot_executed(bufnr, shot_info.header_line) end
 
+local function get_nvim_pane_id()
+  return vim.trim(vim.fn.system({"tmux", "display-message", "-p", "#{pane_id}"}))
+end
+
 local function find_pane_or_error(_, pane_index)
   local create = require('shooter.tmux.create')
   local pane_id, err = create.find_or_create_ai_pane(pane_index)
   if not pane_id then
     utils.echo(err or 'Failed to find or create AI pane')
+    return nil, nil, nil
+  end
+  -- Safety: never send to nvim's own pane
+  local nvim_pane = get_nvim_pane_id()
+  if pane_id == nvim_pane then
+    utils.echo('Error: AI pane ID matches nvim pane, aborting')
     return nil, nil, nil
   end
   local provider_name, provider = get_providers().detect_provider_for_pane(pane_id)
@@ -82,6 +92,9 @@ function M.send_current_shot(pane_index, detect, send, messages)
   -- Must happen before buffer modifications to avoid state loss during waits
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
+
+  -- Recover clean nvim state after pane creation (tmux split can cause terminal bleed)
+  vim.cmd('stopinsert')
 
   -- All buffer modifications happen quickly in sequence after pane is ready
   -- Mark as executed (so renumbering treats it as a done shot)

@@ -53,8 +53,8 @@ end
 
 -- Execute tmux command with error handling (silently, no vim prompt)
 function M.execute_tmux_command(cmd)
-  -- Use vim.fn.system to run silently without "Press ENTER" prompt
-  local result = vim.fn.system(cmd .. " 2>/dev/null")
+  -- Wrap in subshell with full stderr redirect to prevent terminal bleed
+  local result = vim.fn.system("{ " .. cmd .. "; } 2>/dev/null")
   local exit_code = vim.v.shell_error
   if exit_code == 0 then
     return true, nil

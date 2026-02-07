@@ -24,7 +24,7 @@ function M.send_file_reference(pane_id, filepath)
     pane_id, pane_id, filepath, pane_id, pane_id
   )
 
-  local result = vim.fn.system(cmd .. " 2>/dev/null")
+  local result = vim.fn.system("{ " .. cmd .. "; } 2>/dev/null")
   local exit_code = vim.v.shell_error
   if exit_code == 0 then
     return true, nil
