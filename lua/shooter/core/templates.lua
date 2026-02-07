@@ -155,6 +155,39 @@ function M.load_instructions(is_multishot)
   return content
 end
 
+-- Resolve theme README path from themes.json for the current shotfile
+-- Returns relative path (e.g., "ai/README.md") if found, nil otherwise
+function M.get_theme_readme(bufnr)
+  bufnr = bufnr or 0
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+  local git_root = files.get_git_root()
+  if not git_root or not filepath or filepath == '' then return nil end
+
+  -- Read themes.json
+  local themes_path = git_root .. '/.shooter/themes.json'
+  local content = utils.read_file(themes_path)
+  if not content then return nil end
+
+  local ok, data = pcall(vim.json.decode, content)
+  if not ok or not data or not data.themes then return nil end
+
+  -- Find theme by matching shotfile path
+  for _, theme in ipairs(data.themes) do
+    if theme.shotfile and theme.slug then
+      local shotfile_abs = git_root .. '/' .. theme.shotfile
+      if filepath == shotfile_abs then
+        local readme_path = git_root .. '/' .. theme.slug .. '/README.md'
+        if vim.fn.filereadable(readme_path) == 1 then
+          return theme.slug .. '/README.md'
+        end
+        return nil
+      end
+    end
+  end
+
+  return nil
+end
+
 -- Get documentation of all available template variables
 -- @return string Markdown documentation of all variables
 function M.get_variable_docs()
