@@ -7,12 +7,20 @@ local M = {}
 local function define_highlights()
   local config = require('shooter.config')
   local open_shot = config.get('highlight.open_shot') or {}
+  local latest_sent = config.get('highlight.latest_sent_shot') or {}
 
   -- Default: black text on light orange background (avoids search highlight confusion)
   vim.api.nvim_set_hl(0, 'ShooterOpenShot', {
     fg = open_shot.fg or '#000000',
     bg = open_shot.bg or '#ffb347',
     bold = open_shot.bold ~= false, -- default true
+  })
+
+  -- Green background for the most recently sent shot
+  vim.api.nvim_set_hl(0, 'ShooterLatestSentShot', {
+    fg = latest_sent.fg or '#000000',
+    bg = latest_sent.bg or '#77dd77',
+    bold = latest_sent.bold ~= false, -- default true
   })
 end
 
@@ -41,12 +49,30 @@ local function apply_syntax(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   pcall(vim.fn.clearmatches)
 
-  -- Find all shot headers and add matches only for those outside code blocks
+  local config = require('shooter.config')
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  -- Find the latest sent shot by timestamp
+  local latest_sent_line = nil
+  local latest_timestamp = nil
   for i, line in ipairs(lines) do
-    if line:match('^##%s+shot%s+[%d%?]+') and not is_in_code_block(bufnr, i) then
-      -- matchaddpos uses 1-indexed line numbers
-      vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
+    if line:match(config.get('patterns.executed_shot_header')) then
+      local ts = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
+      if ts and (not latest_timestamp or ts > latest_timestamp) then
+        latest_timestamp = ts
+        latest_sent_line = i
+      end
+    end
+  end
+
+  -- Highlight open shots (orange) and latest sent shot (green)
+  for i, line in ipairs(lines) do
+    if not is_in_code_block(bufnr, i) then
+      if i == latest_sent_line then
+        vim.fn.matchaddpos('ShooterLatestSentShot', { { i } }, 10)
+      elseif line:match('^##%s+shot%s+[%d%?]+') then
+        vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
+      end
     end
   end
 end

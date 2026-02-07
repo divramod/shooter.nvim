@@ -134,6 +134,13 @@ M.defaults = {
       bg = '#ffb347', -- Light orange background
       bold = true,
     },
+    -- Latest sent shot header highlighting
+    -- Default: black text on green background
+    latest_sent_shot = {
+      fg = '#000000',
+      bg = '#77dd77', -- Pastel green background
+      bold = true,
+    },
   },
 
   -- Repository configuration for cross-repo shot creation
