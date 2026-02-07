@@ -199,4 +199,40 @@ function M.get_last_edited_file(project)
   return M.find_last_file(project)
 end
 
+-- Ensure theme shotfiles exist based on .shooter/themes.json
+-- Creates missing shotfiles with a simple "# <title>" header
+function M.ensure_theme_shotfiles()
+  local git_root = M.get_git_root()
+  if not git_root then return 0 end
+
+  local themes_path = git_root .. '/.shooter/themes.json'
+  local f = io.open(themes_path, 'r')
+  if not f then return 0 end
+
+  local content = f:read('*a')
+  f:close()
+
+  local ok, data = pcall(vim.json.decode, content)
+  if not ok or not data or not data.themes then return 0 end
+
+  local created = 0
+  for _, theme in ipairs(data.themes) do
+    if theme.shotfile and theme.title then
+      local shotfile_path = git_root .. '/' .. theme.shotfile
+      if vim.fn.filereadable(shotfile_path) ~= 1 then
+        local dir = vim.fn.fnamemodify(shotfile_path, ':h')
+        vim.fn.mkdir(dir, 'p')
+        local sf = io.open(shotfile_path, 'w')
+        if sf then
+          sf:write('# ' .. theme.title .. '\n')
+          sf:close()
+          created = created + 1
+        end
+      end
+    end
+  end
+
+  return created
+end
+
 return M

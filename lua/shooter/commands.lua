@@ -104,6 +104,11 @@ local function setup_shotfile_commands()
     local config = require('shooter.config')
     local prompts_dir = config.get('paths.prompts_dir')
     vim.fn.mkdir(prompts_dir, 'p')
+    -- Auto-create missing theme shotfiles from .shooter/themes.json
+    local created = files.ensure_theme_shotfiles()
+    if created > 0 then
+      vim.notify(string.format('Created %d theme shotfiles', created), vim.log.levels.INFO)
+    end
     vim.cmd('Oil ' .. prompts_dir)
   end, { desc = 'Open Oil in prompts folder' }, 'ShooterOpenPrompts')
 
@@ -187,7 +192,7 @@ local function setup_shot_commands()
   -- ShooterShotViewResponse
   create_cmd('ShooterShotViewResponse', function()
     require('shooter.tools.response_viewer').view_response()
-  end, { desc = 'View Claude response for shot' })
+  end, { desc = 'View response for shot' })
 
   -- ShooterShotExtractBlock (alias: ShooterShotExtract for backward compat)
   create_cmd('ShooterShotExtractBlock', shot_actions.extract_subtask,
@@ -368,7 +373,8 @@ local function setup_subproject_commands()
 
   -- ShooterSubprojectEnsure
   create_cmd('ShooterSubprojectEnsure', function()
-    local git_root = files.get_git_root()
+    local core_files = require('shooter.core.files')
+    local git_root = core_files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
@@ -380,7 +386,13 @@ local function setup_subproject_commands()
     for _, folder in ipairs(folders) do
       vim.fn.mkdir(base .. '/' .. folder, 'p')
     end
-    vim.notify('Standard folders ensured', vim.log.levels.INFO)
+    -- Also ensure theme shotfiles from .shooter/themes.json
+    local created = core_files.ensure_theme_shotfiles()
+    local msg = 'Standard folders ensured'
+    if created > 0 then
+      msg = msg .. string.format(' + %d theme shotfiles created', created)
+    end
+    vim.notify(msg, vim.log.levels.INFO)
   end, { desc = 'Ensure standard folders exist' })
 end
 
