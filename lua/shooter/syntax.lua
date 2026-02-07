@@ -22,6 +22,14 @@ local function define_highlights()
     bg = latest_sent.bg or '#77dd77',
     bold = latest_sent.bold ~= false, -- default true
   })
+
+  -- Lighter green for done shots without @shot- reference (manually marked done)
+  local done_shot = config.get('highlight.done_shot') or {}
+  vim.api.nvim_set_hl(0, 'ShooterDoneShot', {
+    fg = done_shot.fg or '#555555',
+    bg = done_shot.bg or '#c8e6c9',
+    bold = done_shot.bold or false, -- default not bold
+  })
 end
 
 -- Check if a line is a fenced code block delimiter (not inline code)
@@ -65,13 +73,16 @@ local function apply_syntax(bufnr)
     end
   end
 
-  -- Highlight open shots (orange) and latest sent shot (green)
+  -- Highlight shot headers: open (orange), latest sent (green), done without ref (light green)
+  local exec_pattern = config.get('patterns.executed_shot_header')
   for i, line in ipairs(lines) do
     if not is_in_code_block(bufnr, i) then
       if i == latest_sent_line then
         vim.fn.matchaddpos('ShooterLatestSentShot', { { i } }, 10)
       elseif line:match('^##%s+shot%s+[%d%?]+') then
         vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
+      elseif line:match(exec_pattern) and not line:match('@shot%-') then
+        vim.fn.matchaddpos('ShooterDoneShot', { { i } }, -1)
       end
     end
   end

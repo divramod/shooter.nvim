@@ -176,6 +176,12 @@ function M.send_all_shots(pane_index, detect, send, messages)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
+    -- Add temp file reference to each sent shot's header
+    local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
+    for _, ex in ipairs(executed_shots) do
+      add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
+    end
+
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #executed_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()
@@ -232,12 +238,31 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
 
   if not pane_id then return end
 
+  -- Capture sent shot numbers before marking (headers change after mark+renumber)
+  local sent_nums = {}
+  for _, shot_info in ipairs(shot_infos) do
+    local header = utils.get_buf_lines(bufnr, shot_info.header_line - 1, shot_info.header_line)[1]
+    local num = get_shots().parse_shot_header(header)
+    if num then sent_nums[num] = true end
+  end
+
   -- Mark all shots as executed, then renumber
   for _, shot_info in ipairs(shot_infos) do mark_shot(bufnr, shot_info) end
   require('shooter.core.renumber').renumber_shots(bufnr)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
+    -- Add temp file reference to each sent shot's header (like single send does)
+    local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
+    local executed = get_renumber_helper().find_executed_shots(bufnr)
+    for _, ex in ipairs(executed) do
+      local h = utils.get_buf_lines(bufnr, ex.header_line - 1, ex.header_line)[1]
+      local num = get_shots().parse_shot_header(h)
+      if num and sent_nums[num] then
+        add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
+      end
+    end
+
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #shot_infos, provider_name, pane_msg, files.get_file_title(bufnr)))
     vim.cmd('stopinsert')

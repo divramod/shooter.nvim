@@ -141,6 +141,13 @@ M.defaults = {
       bg = '#77dd77', -- Pastel green background
       bold = true,
     },
+    -- Done shot without @shot- reference (manually marked done)
+    -- Default: lighter green, not bold
+    done_shot = {
+      fg = '#555555',
+      bg = '#c8e6c9', -- Light green background
+      bold = false,
+    },
   },
 
   -- Repository configuration for cross-repo shot creation
