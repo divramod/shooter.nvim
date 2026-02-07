@@ -12,12 +12,13 @@ All AI output of lasting value must be persisted to the filesystem. Conversation
 |-------------------|-------------------------------------|-----------------------------------------|
 | Research reports  | `.shooter/research/<topic-slug>.md` | `.shooter/research/auth-providers.md`   |
 | Project plans     | `.shooter/plans-ai/<plan-name>.md`  | `.shooter/plans/web-app/init-plan.md`   |
-| Decision records  | `.shooter/decisions/<decision>.md`  | `.shooter/decisions/db-choice.md`       |
+| Decision log      | `.shooter/decisions.md`             | Centralized, newest first               |
 | Learning records  | `.shooter/context-ai-learnings.md`  | `.shooter/context-ai-learnings.md`      |
 | Q&A records       | `.shooter/q-and-a.md`               | `.shooter/q-and-a.md`                   |
 
 ## Rules
 
+- **Decisions must be saved** — after closing a bead that involved decisions, record them in `.shooter/decisions.md`
 - **Learnings must be saved** — if you discover something important about the project, add it to `.shooter/context-ai-learnings.md`
 - **Research must be saved** — if you researched something, write it to `.shooter/research/`
 - **Plans must be saved** — execution plans go under `plans-ai/<plan-name>.md`
@@ -89,3 +90,34 @@ Keep entries concise and actionable:
 - If you see `Error: Cannot find module 'xyz'`, it means you need to run `pnpm install` first
 - If you see `SyntaxError: Unexpected token`, check if it's a missing dependency or a version mismatch
 ```
+
+## Decision Tracking
+
+After closing a bead that involved meaningful decisions, record them in `.shooter/decisions.md`. This file is included in agent instruction files, giving future agents context about past choices.
+
+### When to Record
+
+Record a decision when it would help future agents avoid re-litigating settled choices:
+- Architecture or pattern choices (e.g., "chose hooks over polling for file change detection")
+- Technology or library selections (e.g., "chose SQLite over PostgreSQL for beads")
+- Approach decisions when alternatives existed (e.g., "single file over per-decision files")
+- Design trade-offs that weren't obvious (e.g., "sonnet over haiku for setup skill")
+
+Do NOT record trivial implementation details (variable names, formatting choices, obvious fixes).
+
+### Format
+
+**Prepend** new decisions below the `# Decisions` heading (newest first). Use this format:
+
+```markdown
+## YYYY-MM-DD HH:MM: <short decision title>
+
+**Decision:** <what was decided>
+**Reason:** <why this choice over alternatives>
+```
+
+Optionally add `**Alternatives:**` or `**Context:** <bead-id>` if they add value.
+
+### Reference Before Deciding
+
+Before making a significant decision, read `.shooter/decisions.md` to check if a similar decision was already made. Follow existing decisions unless there's a strong reason to change course.

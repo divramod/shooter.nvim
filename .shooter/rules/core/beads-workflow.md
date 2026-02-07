@@ -174,9 +174,10 @@ Note: `bd dep add X Y --type parent-child` means "X depends on Y" internally, wh
 When ending a work session, ALL of these must happen:
 
 1. Close finished beads with descriptive reasons
-2. Create beads for any remaining/discovered work
-3. `bd sync` to export changes
-4. `git push` — work is NOT complete until pushed
-5. Verify: `git status` must show "up to date with origin"
+2. Record any meaningful decisions to `.shooter/decisions.md` (see Artifact Persistence rules)
+3. Create beads for any remaining/discovered work
+4. `bd sync` to export changes
+5. `git push` — work is NOT complete until pushed
+6. Verify: `git status` must show "up to date with origin"
 
 **CRITICAL**: Never stop before pushing. Never say "ready to push when you are" — YOU must push.

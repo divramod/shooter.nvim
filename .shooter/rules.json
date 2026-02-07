@@ -1,0 +1,13 @@
+[
+    "./rules/core/instructions-for-agents.md",
+    "./rules/core/shot-workflow.md",
+    "./rules/core/beads-workflow.md",
+    "./rules/core/commit-conventions.md",
+    "./rules/core/quality-gates.md",
+    "./rules/core/artifact-persistence.md",
+    "./codebase/SUMMARY.md",
+    "./rules/core/boundaries.md",
+    "./context-human-learnings.md",
+    "./context-ai-learnings.md",
+    "./q-and-a.md"
+]

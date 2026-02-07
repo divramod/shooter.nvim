@@ -49,20 +49,48 @@ bd children <theme-id> --type=epic --json | grep "shots"
 
 If the theme or shots epic cannot be found, fall back to creating a plain `--type=task` bead without a parent.
 
-## Task Workflow (Simple Shots)
+## Step 3: Read Theme Context
+
+If the `# context` section includes a `- Theme context:` or `- Theme README:` line, read that file before executing. It contains module-specific documentation (codebase summary or README) that helps you understand the theme's purpose, architecture, and conventions. This is on-demand context — only read it when referenced, and use it to inform your execution.
+
+## Task Workflow (Simple Shots — 1-2 steps)
 
 1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..."`)
 2. **Claim it** (`bd update <id> --status=in_progress`)
 3. **Execute** the task directly
 4. **Close the bead** (`bd close <id> --reason="what was done"`)
-5. **Bump version** (`bash ~/.claude/shooter/scripts/shell/shooter_increment-version.sh patch`)
-6. **Commit** with a clear message including the version
-7. **Push** and `bd sync` — work is not done until pushed
+5. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
+6. **Bump version** (`bash ~/.claude/shooter/scripts/shell/shooter_increment-version.sh patch`)
+7. **Commit** with a clear message including the version
+8. **Push** and `bd sync` — work is not done until pushed
+
+## Task Workflow (Multi-Step Shots — 3+ steps)
+
+When a shot requires 3 or more distinct steps (but isn't large enough to escalate to an epic):
+
+1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..."`)
+2. **Claim it** (`bd update <id> --status=in_progress`)
+3. **Create child beads for each step** BEFORE starting work:
+   ```bash
+   bd create --type=task --parent=<shot-id> --title="Step 1: ..."
+   bd create --type=task --parent=<shot-id> --title="Step 2: ..."
+   bd create --type=task --parent=<shot-id> --title="Step 3: ..."
+   ```
+4. **For each step:** mark in_progress → execute → mark closed with reason
+5. **Close the parent shot bead** when all children are done
+6. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
+7. **Bump version**, **commit**, **push**, and `bd sync`
+
+**Why:** If Claude crashes mid-work, `bd list --status=in_progress` shows exactly where to resume. TaskCreate is ephemeral (lost on crash) — beads persist across sessions. Use TaskCreate for UI spinners only, never as a substitute for beads.
 
 ## Question Workflow
 
 1. **Answer** the question directly in the conversation
-2. **Persist** the Q&A to `.shooter/q-and-a.md` — append the question and a concise answer summary
+2. **Persist** the Q&A to `.shooter/q-and-a.md` — **prepend** (newest first) below the `# Q&A` heading. Format:
+   ```
+   ## YYYY-MM-DD HH:MM: <short question title>
+   ```
+   Include full timestamp so newest questions are always at the top and easy to spot.
 3. **No bead, no version bump, no commit required** — the Q&A file gets committed with the next task naturally
 
 The Q&A file is included in agent instruction files (AGENTS.md, CLAUDE.md, GEMINI.md) when non-empty, giving future agents context from past questions.

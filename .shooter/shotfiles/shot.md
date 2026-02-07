@@ -1,12 +1,57 @@
 # shot
 
-## shot 41
+## shot 51
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
 
-## shot 40
-when answering questions from claude, can i also use the shooter?
+## x shot 50 (2026-02-07 18:48:34) @shot-53-20260207_184834
+the shots are sorted in the way, the picker gave them back.
+the picker gave them back with the highest number first.
+can you put the lowest shotnumber first in the shotfile?
+so that the will be solved in order from starting with the smallest number, then the second smallest and so on.
+
+## x shot 49 (2026-02-07 18:33:28) @shot-49-20260207_183328
+sending multiple shots via < >sp and then marking them with tab and then going to normal mode and then sending them with 1 does not create a shotfile and sent the shots.
+it also does not renumber and it also does not mark the sent shots as done.
+
+## x shot 48 (2026-02-07 18:28:39) @shot-51-20260207_182839
+here, shot 51 should be the only green one.
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260207_182728.png
+sometimes there is no shotfile added, for example, when i manually yank a shot
+
+here, shot 50 should be the only green one
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260207_182807.png
+
+per shotfile only one shot can be green.
+i want you to choose the lighter green color
+
+## x shot 47 (2026-02-07 18:24:31) @shot-50-20260207_182432
+sending multiple shots at once does not add the shotfile to the shot header still, like it is done with the single shot sending command. please adapt the multiple shot sending command to also add the shotfile reference to the sent shots.
+and also, sometimes there is no shotfile to reference.
+in that case, please also color it in a lighter green then currently
+
+## x shot 46 (2026-02-07 18:20:58) @shot-46-20260207_182058
+you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
+
+## x shot 45 (2026-02-07 18:13:22)
+color the background color of the last shot made green
+
+## x shot 44 (2026-02-07 18:13:22)
+selecting multiple shot pickers and then hitting 1 to send them does not 
+
+## x shot 43 (2026-02-07 18:13:22)
+the < >sy command should also mark the shot as done and call the renumber function
+i call this command usually, when i want to manually paste a shot to a agent cli
+
+## x shot 42 (2026-02-07 18:13:22)
+the command < >. should also call the renumber function, after is marked a shot as done
+
+## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
+test
+
+## x shot 40 (2026-02-07 03:25:28) @shot-40-20260207_032528
+when i hit < >., it marks the shot as done, but it forgets the resorting of all the shots, the repositioning of the shot like a real shot doese
 
 ## x shot 39 (2026-02-04 10:09:28) @shot-39-20260204_100928
 this is a test shot to see, if i can review the opencode response viewer functionality.
