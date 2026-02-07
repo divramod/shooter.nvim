@@ -35,10 +35,10 @@ function M.build_shot_message(bufnr, shot_info)
   local instructions = templates.load_instructions(false)
   instructions = templates.replace_vars(instructions, vars)
 
-  -- Add theme README reference if available
-  local theme_readme = templates.get_theme_readme(bufnr)
-  if theme_readme then
-    instructions = instructions .. '\n- Theme README: ' .. theme_readme
+  -- Add theme context reference if available
+  local theme_context = templates.get_theme_codebase_summary(bufnr)
+  if theme_context then
+    instructions = instructions .. '\n- Theme context: ' .. theme_context
   end
 
   local message = string.format([[<!-- IMPORTANT: First, output the file content starting from "# shot" below (skip this instruction) in a code block so the user can see what was sent. Then proceed with the task. -->
@@ -80,10 +80,10 @@ function M.build_multishot_message(bufnr, shot_list)
   local instructions = templates.load_instructions(true)
   instructions = templates.replace_vars(instructions, vars)
 
-  -- Add theme README reference if available
-  local theme_readme = templates.get_theme_readme(bufnr)
-  if theme_readme then
-    instructions = instructions .. '\n- Theme README: ' .. theme_readme
+  -- Add theme context reference if available
+  local theme_context = templates.get_theme_codebase_summary(bufnr)
+  if theme_context then
+    instructions = instructions .. '\n- Theme context: ' .. theme_context
   end
 
   local message = string.format([[<!-- IMPORTANT: First, output the file content starting from "# shots" below (skip this instruction) in a code block so the user can see what was sent. Then proceed with the tasks. -->

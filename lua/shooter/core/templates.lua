@@ -155,9 +155,10 @@ function M.load_instructions(is_multishot)
   return content
 end
 
--- Resolve theme README path from themes.json for the current shotfile
--- Returns relative path (e.g., "ai/README.md") if found, nil otherwise
-function M.get_theme_readme(bufnr)
+-- Resolve theme codebase summary path from themes.json for the current shotfile
+-- Checks for .shooter/codebase/<slug>/SUMMARY.md first, falls back to <slug>/README.md
+-- Returns relative path if found, nil otherwise
+function M.get_theme_codebase_summary(bufnr)
   bufnr = bufnr or 0
   local filepath = vim.api.nvim_buf_get_name(bufnr)
   local git_root = files.get_git_root()
@@ -176,9 +177,16 @@ function M.get_theme_readme(bufnr)
     if theme.shotfile and theme.slug then
       local shotfile_abs = git_root .. '/' .. theme.shotfile
       if filepath == shotfile_abs then
-        local readme_path = git_root .. '/' .. theme.slug .. '/README.md'
+        -- Priority 1: Theme codebase summary
+        local summary_path = git_root .. '/.shooter/codebase/' .. theme.slug .. '/SUMMARY.md'
+        if vim.fn.filereadable(summary_path) == 1 then
+          return '.shooter/codebase/' .. theme.slug .. '/SUMMARY.md'
+        end
+        -- Priority 2: Fallback to theme README
+        local slug_path = theme.path or theme.slug
+        local readme_path = git_root .. '/' .. slug_path .. '/README.md'
         if vim.fn.filereadable(readme_path) == 1 then
-          return theme.slug .. '/README.md'
+          return slug_path .. '/README.md'
         end
         return nil
       end
