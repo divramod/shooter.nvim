@@ -858,7 +858,7 @@ IMPLEMENTATION PLAN (if pursuing):
   * Updated Health Check section to mention new dependencies
 
 [2026-01-22 08:10] Shot 240 - 2026-01-18 - shooter.nvim
-- Changed <space>t to only show files directly in plans/prompts/ by default
+- Changed <space>t to only show files directly in .shooter/shotfiles/ by default
 - Subfolders (archive, backlog, done, etc.) only shown when filter is applied
 - Fixed in lua/shooter/telescope/helpers.lua:
   * get_prompt_files(): uses *.md (root only) when no filter, **/*.md with filter

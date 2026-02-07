@@ -340,8 +340,8 @@ local function setup_subproject_commands()
         return
       end
       -- Create standard folder structure
-      local folders = { 'plans/prompts', 'plans/prompts/archive', 'plans/prompts/backlog',
-        'plans/prompts/done', 'plans/prompts/reqs', 'plans/prompts/test', 'plans/prompts/wait' }
+      local folders = { '.shooter/shotfiles', '.shooter/shotfiles/archive', '.shooter/shotfiles/backlog',
+        '.shooter/shotfiles/done', '.shooter/shotfiles/reqs', '.shooter/shotfiles/test', '.shooter/shotfiles/wait' }
       for _, folder in ipairs(folders) do
         vim.fn.mkdir(project_path .. '/' .. folder, 'p')
       end
@@ -381,8 +381,8 @@ local function setup_subproject_commands()
     end
     local project = project_mod.detect_from_cwd()
     local base = project and (git_root .. '/projects/' .. project) or git_root
-    local folders = { 'plans/prompts', 'plans/prompts/archive', 'plans/prompts/backlog',
-      'plans/prompts/done', 'plans/prompts/reqs', 'plans/prompts/test', 'plans/prompts/wait' }
+    local folders = { '.shooter/shotfiles', '.shooter/shotfiles/archive', '.shooter/shotfiles/backlog',
+      '.shooter/shotfiles/done', '.shooter/shotfiles/reqs', '.shooter/shotfiles/test', '.shooter/shotfiles/wait' }
     for _, folder in ipairs(folders) do
       vim.fn.mkdir(base .. '/' .. folder, 'p')
     end

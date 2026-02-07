@@ -123,8 +123,8 @@ Source: ~/a/ai v0.8.11 | Generated: 2026-02-03
 - Global context: `~/.config/shooter.nvim/shooter-context-global.md`
 - Project context: `.shooter.nvim/shooter-context-project.md` (per-repo)
 - Session storage: `~/.config/shooter.nvim/sessions/<owner>_<repo>/`
-- Queue file: `plans/prompts/.shot-queue.json`
-- Prompts directory: `plans/prompts/` (customizable)
+- Queue file: `.shooter/shotfiles/.shot-queue.json`
+- Prompts directory: `.shooter/shotfiles/` (customizable)
 
 **Feature Flags:**
 - Located in `lua/shooter/config.lua` - `features` section
@@ -413,7 +413,7 @@ Source: ~/a/ai v0.8.11 | Generated: 2026-02-03
 
 **Shotfile:**
 - Purpose: Markdown file containing multiple shots
-- Examples: `plans/prompts/*.md`
+- Examples: `.shooter/shotfiles/*.md`
 - Pattern: One file per feature/task, title (# ...) at top, shots (## shot N) below
 - Naming: title-slug.md (auto-generated from title, can be renamed)
 
@@ -680,7 +680,7 @@ shooter.nvim/
 │   │
 │   └── filter_state_spec.lua       # Filter state tests
 │
-├── plans/prompts/                  # Development tasks (shot files)
+├── .shooter/shotfiles/                  # Development tasks (shot files)
 │   └── *.md                        # One shotfile per feature
 │
 ├── after/syntax/                   # Neovim after/syntax directory
@@ -802,7 +802,7 @@ shooter.nvim/
 - Key files: shooter.txt (230+ lines)
 - Pattern: Generated from README and commands, viewable in `:help shooter`
 
-**`plans/prompts/`:**
+**`.shooter/shotfiles/`:**
 - Purpose: Development tasks tracked as shots
 - Contains: Markdown shotfiles for features, fixes, refactoring
 - Key files: *.md files, one per task
@@ -934,7 +934,7 @@ shooter.nvim/
 - Committed: Yes (part of repo)
 - Contents: `shooter-context-project.md` (project-specific context), images, settings
 
-**`plans/prompts/`:**
+**`.shooter/shotfiles/`:**
 - Purpose: Development tasks (shots)
 - Generated: Yes (created via `ShooterShotfileNew` command)
 - Committed: Yes (part of repo)
@@ -1165,9 +1165,9 @@ shooter.nvim/
 
 **File Storage:**
 - **Local filesystem only**
-  - Shot files: Markdown format in `plans/prompts/` (user configurable in `lua/shooter/config.lua`)
+  - Shot files: Markdown format in `.shooter/shotfiles/` (user configurable in `lua/shooter/config.lua`)
   - Session files: YAML format in `~/.config/shooter.nvim/sessions/<owner>_<repo>/` per-repository
-  - Queue file: JSON format at `plans/prompts/.shot-queue.json`
+  - Queue file: JSON format at `.shooter/shotfiles/.shot-queue.json`
   - Images: `~/.clipboard-images/` or `.shooter.nvim/images/` (configurable)
   - Context files: Global `~/.config/shooter.nvim/shooter-context-global.md` and project `.shooter.nvim/shooter-context-project.md`
 
@@ -1344,7 +1344,7 @@ shooter.nvim/
 
 **JSON Queue:**
 - Queue file format for batched shot execution
-- Location: `plans/prompts/.shot-queue.json` (default)
+- Location: `.shooter/shotfiles/.shot-queue.json` (default)
 - Structure: `lua/shooter/queue/storage.lua`
 
 **Markdown Shot Files:**
@@ -2107,7 +2107,7 @@ Shotfiles are **read-only input**. Never modify the source shot file.
 
 ## Workflow
 
-1. **Receive** a shot from `plans/prompts/` or a plan file
+1. **Receive** a shot from `.shooter/shotfiles/` or a plan file
 2. **Execute** the work described in the shot
 3. **Commit** changes with a clear commit message referencing the shot
 4. **Push** to persist the work
@@ -2122,7 +2122,7 @@ Shotfiles are **read-only input**. Never modify the source shot file.
 
 ## Shot Sources
 
-- `plans/prompts/*.md` — standalone shot files
+- `.shooter/shotfiles/*.md` — standalone shot files
 - Inline shots within plan documents
 - Shots may reference other shots; follow the dependency chain
 

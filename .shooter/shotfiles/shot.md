@@ -1,12 +1,21 @@
 # shot
 
-## shot 39
+## shot 41
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
 
-## shot 38
+## shot 40
 when answering questions from claude, can i also use the shooter?
+
+## x shot 39 (2026-02-04 10:09:28) @shot-39-20260204_100928
+this is a test shot to see, if i can review the opencode response viewer functionality.
+
+## x shot 38 (2026-02-04 09:28:39) @shot-38-20260204_092839
+the shot response viewer is only working for claude code.
+is there a way, that you make it also work for opencode?
+go into plan mode and also research the web for it, if you are not sure.
+also interview me, if you think its needed.
 
 ## x shot 37 (2026-02-04 08:05:15) @shot-37-20260204_080516
 i want you to remap < >n to < >N and remap < >s to < >n
@@ -136,10 +145,10 @@ when shooting a shot from inside a code block, the shot shooter needs to go out 
 
 ## x shot 7 (2026-01-26 06:24:01)
 for the extract command. instead of having the extracted shot like this:
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260126_062240.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260126_062240.png
 
 i want it like this:
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260126_062337.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260126_062337.png
 
 ## x shot 6 (2026-01-26 06:21:19)
 please do not color the shot header, when it is inside a code block.
@@ -169,7 +178,7 @@ please add a ShooterShotYank command and map it to namespaced commands and also 
 moving worked as expected.
 but as i watched the result in the file where the shot was moved to, i noticed, that the formatiing of the file was of.
 
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_123612.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_123612.png
 
 there is one rule to follow always.
 there should be only one empty line above the shot header. independent of where the shot is moved from.

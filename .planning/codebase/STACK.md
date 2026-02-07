@@ -99,8 +99,8 @@
 - Global context: `~/.config/shooter.nvim/shooter-context-global.md`
 - Project context: `.shooter.nvim/shooter-context-project.md` (per-repo)
 - Session storage: `~/.config/shooter.nvim/sessions/<owner>_<repo>/`
-- Queue file: `plans/prompts/.shot-queue.json`
-- Prompts directory: `plans/prompts/` (customizable)
+- Queue file: `.shooter/shotfiles/.shot-queue.json`
+- Prompts directory: `.shooter/shotfiles/` (customizable)
 
 **Feature Flags:**
 - Located in `lua/shooter/config.lua` - `features` section

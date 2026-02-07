@@ -5,26 +5,26 @@ local M = {}
 
 local defaults = require('shooter.session.defaults')
 
--- Known folder names (subdirectories of plans/prompts/)
+-- Known folder names (subdirectories of .shooter/shotfiles/)
 local FOLDER_NAMES = defaults.get_folder_names()
 
 -- Detect which folder a file belongs to
--- Files in plans/prompts/<folder>/ belong to that folder
--- Files directly in plans/prompts/ belong to "prompts"
+-- Files in .shooter/shotfiles/<folder>/ belong to that folder
+-- Files directly in .shooter/shotfiles/ belong to "prompts"
 ---@param filepath string Full file path
 ---@return string Folder name ('prompts', 'archive', 'backlog', etc.)
 function M.detect_file_folder(filepath)
   -- Check for known subdirectories
   for _, folder in ipairs(FOLDER_NAMES) do
     if folder ~= 'prompts' then
-      local pattern = '/plans/prompts/' .. folder .. '/'
+      local pattern = '/.shooter/shotfiles/' .. folder .. '/'
       if filepath:find(pattern, 1, true) then
         return folder
       end
     end
   end
-  -- Files directly in plans/prompts/ are "prompts"
-  if filepath:find('/plans/prompts/[^/]+%.md$') then
+  -- Files directly in .shooter/shotfiles/ are "prompts"
+  if filepath:find('/.shooter/shotfiles/[^/]+%.md$') then
     return 'prompts'
   end
   return 'prompts' -- default
@@ -37,7 +37,7 @@ end
 ---@return string|nil Project name or nil for root
 function M.detect_file_project(filepath, git_root)
   if not git_root then return nil end
-  -- Check if file is in projects/<name>/plans/prompts/
+  -- Check if file is in projects/<name>/.shooter/shotfiles/
   local pattern = vim.pesc(git_root) .. '/projects/([^/]+)/'
   local project_name = filepath:match(pattern)
   return project_name

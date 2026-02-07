@@ -1,8 +1,8 @@
 " Shooter.nvim syntax extensions for markdown files
 " Highlights open shot headers (done shots not highlighted)
 
-" Only apply to files in plans/prompts directory
-if expand('%:p') !~# 'plans/prompts'
+" Only apply to files in .shooter/shotfiles directory
+if expand('%:p') !~# '.shooter/shotfiles'
   finish
 endif
 

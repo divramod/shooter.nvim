@@ -23,9 +23,9 @@
 
 **File Storage:**
 - **Local filesystem only**
-  - Shot files: Markdown format in `plans/prompts/` (user configurable in `lua/shooter/config.lua`)
+  - Shot files: Markdown format in `.shooter/shotfiles/` (user configurable in `lua/shooter/config.lua`)
   - Session files: YAML format in `~/.config/shooter.nvim/sessions/<owner>_<repo>/` per-repository
-  - Queue file: JSON format at `plans/prompts/.shot-queue.json`
+  - Queue file: JSON format at `.shooter/shotfiles/.shot-queue.json`
   - Images: `~/.clipboard-images/` or `.shooter.nvim/images/` (configurable)
   - Context files: Global `~/.config/shooter.nvim/shooter-context-global.md` and project `.shooter.nvim/shooter-context-project.md`
 
@@ -202,7 +202,7 @@
 
 **JSON Queue:**
 - Queue file format for batched shot execution
-- Location: `plans/prompts/.shot-queue.json` (default)
+- Location: `.shooter/shotfiles/.shot-queue.json` (default)
 - Structure: `lua/shooter/queue/storage.lua`
 
 **Markdown Shot Files:**

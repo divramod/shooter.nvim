@@ -118,7 +118,7 @@ function M.get_repo_prompt_files()
   local files_mod = require('shooter.core.files')
   local git_root = files_mod.get_git_root()
   if not git_root then return {} end
-  local prompts_dir = git_root .. '/plans/prompts'
+  local prompts_dir = git_root .. '/.shooter/shotfiles'
   if not utils.dir_exists(prompts_dir) then return {} end
   return vim.fn.globpath(prompts_dir, '**/*.md', false, true)
 end
@@ -228,7 +228,7 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
   end
 end
 
--- Get files for telescope picker (returns display paths without plans/prompts prefix)
+-- Get files for telescope picker (returns display paths without .shooter/shotfiles prefix)
 -- opts table supports:
 --   folder_filter: 'a', 'b', 'd', 'r', 'w', 'p' or full folder name
 --   project: single project name (legacy support)
@@ -279,11 +279,11 @@ function M.get_prompt_files(folder_filter_or_opts, project)
     -- Include root + all projects
     local git_root = files_mod.get_git_root() or utils.cwd()
     -- Add root prompts
-    add_from_prompts_dir(git_root .. '/plans/prompts', '', nil)
+    add_from_prompts_dir(git_root .. '/.shooter/shotfiles', '', nil)
     -- Add all project prompts
     local projects = project_mod.list_projects()
     for _, p in ipairs(projects) do
-      add_from_prompts_dir(p.path .. '/plans/prompts', p.name .. '/', p.name)
+      add_from_prompts_dir(p.path .. '/.shooter/shotfiles', p.name .. '/', p.name)
     end
   elseif opts.projects and #opts.projects > 0 then
     -- Include only specified projects
@@ -352,7 +352,7 @@ function M.get_all_repos_prompt_files(folder_filter_or_opts)
   -- Helper to add files from a repo (root + all projects)
   local function add_repo_files(repo_path, repo_name)
     -- Add root prompts
-    add_prompts_dir(repo_path .. '/plans/prompts', repo_name .. '/', repo_name)
+    add_prompts_dir(repo_path .. '/.shooter/shotfiles', repo_name .. '/', repo_name)
 
     -- Add project prompts if projects/ folder exists
     local projects_dir = repo_path .. '/projects'
@@ -360,7 +360,7 @@ function M.get_all_repos_prompt_files(folder_filter_or_opts)
       local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')
       if handle then
         for project in handle:lines() do
-          local project_prompts = projects_dir .. '/' .. project .. '/plans/prompts'
+          local project_prompts = projects_dir .. '/' .. project .. '/.shooter/shotfiles'
           add_prompts_dir(project_prompts, repo_name .. '/' .. project .. '/', repo_name)
         end
         handle:close()

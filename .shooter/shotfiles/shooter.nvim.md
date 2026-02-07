@@ -17,7 +17,7 @@ i need to undo that mapping, because its my way to visually select text in norma
 
 ## x shot 373 (2026-01-30 03:19:46)
 the shots are not colored anymore sometimes.
-for example the file /Users/mod/a/tudolearna/plans/prompts/backlog/cmd-erm-generator.md
+for example the file /Users/mod/a/tudolearna/.shooter/shotfiles/backlog/cmd-erm-generator.md
 /Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260130_031944.png
 
 
@@ -101,7 +101,7 @@ for local ./plans/... is enough
 
 ## shot 366
 when i press yes to open the audit report, it throws an error
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_110923.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110923.png
 
 ## shot 365
 please add pleanary also to the checkhealth cmd of shooter.nvim
@@ -282,7 +282,7 @@ yes, you can get rid of all features regarding history files.
 also, please remove the history files created until now.
 
 ## x shot 324 (2026-01-29 11:35:43)
-i ran ShooterShotsRenumber in the file plans/prompts/shooter.nvim.md
+i ran ShooterShotsRenumber in the file .shooter/shotfiles/shooter.nvim.md
 but it was not working.
 can you ensure, that ShooterShotsRenumber works in all shotfiles and renumbers the shots accordingly without losing data in the history files.
 especially this file is long and complex and should be the benchmark, for the renumbering functionality.
@@ -424,9 +424,9 @@ when i open a non shotfile and the open oil, its not colored.
 when i open a shotfile and then open oil, its colored.
 
 ## x shot 298 (2026-01-26 08:18:09)
-the coloring takes over files, which are in non plans/prompts folders and in oil in nvim.
-please disable that. the coloring should only be active in files in plans/prompts folders.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260126_081751.png
+the coloring takes over files, which are in non .shooter/shotfiles folders and in oil in nvim.
+please disable that. the coloring should only be active in files in .shooter/shotfiles folders.
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260126_081751.png
 
 ## x shot 297 (2026-01-26 07:00:58)
 add < >i to open root INBOX.md file in the current repo
@@ -442,7 +442,7 @@ in analytics < >a, all files mentioned somewhere in the report, should be openab
 c-n and c-p does not work in the shotfile picker
 
 ## x shot 293 (2026-01-24 11:57:08)
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_115636.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_115636.png
 fix help, its to distrating.
 remove all standard telescope mappings.
 describe all commands, which have anonymous description there.
@@ -453,7 +453,7 @@ the folders _archive and _template should always be excluded from the project pi
 ## x shot 291 (2026-01-24 11:47:45)
 pressing < >l like i can do outside of the picker, should always work.
 now it shows me an error.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_110950.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_110950.png
 < >l should always lead me to the last edited shot file in the current repo.
 < >L should lead me to the last opened shot file in the current repo.
 
@@ -468,7 +468,7 @@ the list should be
 - md: move done
 - mr: move reqs
 - mw: move wait
-- mp: move plans/prompts
+- mp: move .shooter/shotfiles
 rename mf to mp
 
 ## x shot 288 (2026-01-24 11:42:04)
@@ -516,7 +516,7 @@ if i have three with priorieties 1, 2, 4 and i disable 1. 2 and 4 should become 
 
 ## x shot 279 (2026-01-24 11:18:20)
 instead of using A and C
-i want to just use A, to toggle between all and only plans/prompts
+i want to just use A, to toggle between all and only .shooter/shotfiles
 
 ## x shot 278 (2026-01-24 11:17:15)
 changing priority of in the sort picker, jumps always back to the first entry in the telescope list. it should stay on the current entry.
@@ -528,7 +528,7 @@ pressing A and C in the shotfile picker has no effect on the result list, even t
 the priority change for one item in the sort picker should be updating the other items.
 no two items should have the same priority number.
 
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_111332.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_111332.png
 
 ## x shot 275 (2026-01-24 11:05:43)
 i want to be able to press S in normal mode in all 3 pickers and then the session config yaml file should be opened in a new tab for editing.
@@ -541,7 +541,7 @@ i also want to add the sortPicker to default start in normal mode and add it to 
 ## x shot 273 (2026-01-24 11:02:18)
 the sort function can be changed from S to s mapping.
 also it is empty.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_110214.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_110214.png
 
 ## x shot 272 (2026-01-24 10:58:47)
 when i select a project, it selects it and jumps up to the first.
@@ -549,7 +549,7 @@ instead, i want it to stay at the current position, so that i can select multipl
 
 ## x shot 271 (2026-01-24 10:53:33)
 the projects picker shows no projects even though i have some
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_105309.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_105309.png
 
 ## x shot 270 (2026-01-24 10:51:07)
 the user should also be able to decide, if he wants to start the shotfile picker in insert mode or normal mode, that should go to the session settings also to vimMode: insert | normal
@@ -563,21 +563,21 @@ vimMode:
 the default is normal mode for both
 
 ## x shot 269 (2026-01-24 10:49:12)
-pressing A in the root of the telescope shotfile picker should switch on all folders (archived, backlog, done, reqs, wait, plans/prompts)
-pressing C should clear all folder filters (archived, backlog, done, reqs, wait, plans/prompts) and enable only plans/prompts
+pressing A in the root of the telescope shotfile picker should switch on all folders (archived, backlog, done, reqs, wait, .shooter/shotfiles)
+pressing C should clear all folder filters (archived, backlog, done, reqs, wait, .shooter/shotfiles) and enable only .shooter/shotfiles
 
 ## x shot 268 (2026-01-24 10:46:22)
 here, i want to be able to:
 - select with tab or space
 when i press enter, the new filter state should be applied/saved
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_104614.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_104614.png
 
 ## x shot 267 (2026-01-24 10:20:55)
 ok, i thought about it. and have the following things:
 1. when i run < >v, it should open the last session i had, when i ran that command for the current repository.
 2. when there is no last session, it should create a session automatically, named <repo-name-slug>
 3. the filtering in general should work as whitelist
-4. so when the session is created, only the shotfiles of the plans/prompts folder of the root project and all subprojects should be shown. this is the DEFAULT filter settings. which would end up in a filter state like this:
+4. so when the session is created, only the shotfiles of the .shooter/shotfiles folder of the root project and all subprojects should be shown. this is the DEFAULT filter settings. which would end up in a filter state like this:
 ```yaml
 name: init
 filters:
@@ -697,7 +697,7 @@ to get this running, the sort settings could look like this in the sessions yaml
 
 ## x shot 266 (2026-01-24 09:41:50)
 looks good, can you put something in the description texts where we have anonymous stated there now?
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_094136.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_094136.png
 
 ## x shot 265 (2026-01-24 09:37:09)
 the notification, which shows the help, should stay open, until i close it.
@@ -708,7 +708,7 @@ if so, i want to use them
 ## x shot 264 (2026-01-24 09:35:29)
 instead of showing me, please show the whole path to the root project.
 also replace the home directory with ~
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_093459.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_093459.png
 
 ## x shot 263 (2026-01-24 09:31:46)
 also, i usually go into normal mode to open help, or apply a filter.
@@ -729,7 +729,7 @@ the picker also needs to show, when the result list is empty.
 ## x shot 259 (2026-01-24 09:00:26)
 < >v should open recent shot files from the whole repo, sorted by most recently edited
 < >V should open recent global shot files, sorted by most recently edited
-as there are filters already for the folders like archive, backlog, done, reqs, wait, plans/promptswhich can be triggered with  a, b, d, r, w, p
+as there are filters already for the folders like archive, backlog, done, reqs, wait, .shooter/shotfileswhich can be triggered with  a, b, d, r, w, p
 i want also a filter for recently edited files triggered by l
 i want to get rid of the second step, which asks me to choose a project, when in a repo with a projects folder and instead show all recents, all archived and so on.
 addionally in that view, i want to be able to add a projects filter with P.
@@ -742,7 +742,7 @@ do all, that the analytics command shows everything correctly now and nothing is
 
 ## x shot 257 (2026-01-23 12:04:52)
 after the cleanup, why is a file with a date in the begining still at the first place?
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_120451.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_120451.png
 
 ## x shot 256 (2026-01-23 11:40:03)
 ,,ns i want you to add a new command to my next action commands list.
@@ -805,15 +805,15 @@ please fix that
 ## x shot 252 (2026-01-23 11:18:22)
 nice, now its not blocking anymore.
 only thing is, that only one file was checked.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_111820.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_111820.png
 
 ## x shot 251 (2026-01-23 11:06:35)
 now i have a error again:
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_110633.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110633.png
 
 ## x shot 250 (2026-01-23 11:03:56)
 ShooterHistoryAudit is still blocking the gui in nvim.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_110303.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110303.png
 i press something and then some seconds later, the gui is responsive again.
 if you want, you can remove the progress bar. i suspect, that this could be the problem.
 
@@ -822,7 +822,7 @@ this is still blocking.
 cant you run it completely in the background?
 please research the web, on how its done correctly with lua and then come up with a plan.
 also there was a error message as i pressed 1 yes to open the report.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_105552.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_105552.png
 it also asked me to press enter there. 
 
 ## x shot 248 (2026-01-23 10:52:26)
@@ -920,7 +920,7 @@ one adaption to the < >n command, after the file is created, i want to go direct
 
 ## x shot 237 (2026-01-23 08:54:18)
 i want you to adapt the < >n in a that, if there is a projects folder in the root of the repository, it first asks for the project name, where to create the shot file in.
-instead of the root, it should create the shot file in the projects/<project name>/plans/prompts folder.
+instead of the root, it should create the shot file in the projects/<project name>/.shooter/shotfiles folder.
 
 also the sending shots functionality from a file or from the telescope opened by < >o should be aware of that and change the pathes for the history files accordingly with adding subpathes.
 
@@ -946,7 +946,7 @@ instead of yellow as background can you define a little lighter orange as defaul
 i want a command < >Oo which opens the current file in obsidian, when its in my obsidian vault.
 
 ## x shot 233 (2026-01-23 07:33:44)
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260123_073213.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_073213.png
 instead of having yellow on black i want to have black as foreground and yellow as backgound color, so that i can see the cursor position better.
 please also make this the default but changeable in the shooter config.
 please also make a paragraph in the readme about the configuration overall with all possible configuration entries.
@@ -956,7 +956,7 @@ inserting a new shot, when oil is open should in general be forbidden.
 
 ## x shot 231 (2026-01-23 00:24:08)
 < >ttc write a command ShooterToolTokenCounter, which counts the tokens of the current file.
-you can use ttok < plans/prompts/agents.md
+you can use ttok < .shooter/shotfiles/agents.md
 please add to the healthcheck, that ttok is installed and working
 and that python is installed and working
 
@@ -1020,7 +1020,7 @@ dashboard improvements: it looks already nice, please improve it:
 ## x shot 219 (2026-01-22 09:27:49)
 some things about the dashboard
 first, there is an error
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260122_092610.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260122_092610.png
 
 next, i want you to search for shot files in all git repos defined in the shooter config under repos
 
@@ -1050,7 +1050,7 @@ i am using the plugin 'alexghergh/nvim-tmux-navigation'
 can you add that to the health check and the readme of shooter.nvim?
 
 ## x shot 213 (2026-01-22 08:06:49)
-in the < >t command, there should only be the files from the ~/plans/prompts folder in the beginning. getting the others, will happen with the filters.
+in the < >t command, there should only be the files from the ~/.shooter/shotfiles folder in the beginning. getting the others, will happen with the filters.
 
 ## x shot 212 (2026-01-22 01:03:59)
 i shoot also from shooter.nvim, from the current directory.
@@ -1061,7 +1061,7 @@ origin  git@github.com:divramod/shooter.nvim.git (push)
 
 ## x shot 211 (2026-01-22 00:17:13)
 move to archive folder is broken, when in oil
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260122_001652.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260122_001652.png
 
 ## x shot 210 (2026-01-22 00:13:44)
 < >o i want to also be able to press d on a shot in the telescope and telescope then deletes it.
@@ -1074,13 +1074,13 @@ the tmux wrapper commands should start with < >U
 
 ## x shot 208 (2026-01-21 23:41:29)
 the shotfiles created by shooter should look like this: 
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260121_234112.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260121_234112.png
 
 ## x shot 207 (2026-01-21 22:59:41)
 < >n is not working as expected.
 it did not asked for a feature name and just created a shot file with wrong naming.
 
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260121_225938.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260121_225938.png
 
 ## x shot 206 (2026-01-21 22:43:45)
 Switch to a shooter directory?
@@ -1104,7 +1104,7 @@ worked nearly, can you ensure there is also only one empty line after the insert
 ## x shot 202 (2026-01-21 21:31:34)
 looks better already, but the distance to line one is to big.
 the next shot header should always be inserted at line 3
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_213118.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_213118.png
 
 ## x shot 201 (2026-01-21 21:27:51)
 < >M the import seems to be working, but i want to have the right format.
@@ -1126,23 +1126,23 @@ add to the analytics < >a and < >A, what was the longest and the shortest prompt
 
 ## x shot 197 (2026-01-21 21:19:07)
 < >M throws an error after entering on a next action
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_211707.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_211707.png
 
 also, selection with tab and space in normal mode in the next action selection does not work
 it exactly should look like in < >o
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_211836.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_211836.png
 
 ## x shot 196 (2026-01-21 21:16:04)
 make it easy to switch between project shots files.
 < >t shows the projects shot files from the current repo
 write a new cmd < >T to open a telescope list, which shows all shot files from all repos configured in the repos.search_dirs and repos.direct_paths of the shooter.nvim config.
 in < >t and < >T telescope windows, add the commands:
-1. a which filters only the shot files which are in the plans/prompts/archive folder
-1. b which filters only the shot files which are in the plans/prompts/backlog folder
-1. d which filters only the shot files which are in the plans/prompts/done folder
-1. r which filters only the shot files which are in the plans/prompts/reqs folder
-1. w which filters only the shot files which are in the plans/prompts/wait folder
-1. p which filters only the shot files which are in the plans/prompts folder
+1. a which filters only the shot files which are in the .shooter/shotfiles/archive folder
+1. b which filters only the shot files which are in the .shooter/shotfiles/backlog folder
+1. d which filters only the shot files which are in the .shooter/shotfiles/done folder
+1. r which filters only the shot files which are in the .shooter/shotfiles/reqs folder
+1. w which filters only the shot files which are in the .shooter/shotfiles/wait folder
+1. p which filters only the shot files which are in the .shooter/shotfiles folder
 
 pressing c removes all filters again.
 
@@ -1260,7 +1260,7 @@ commands to open shooter files:
 
 ## x shot 177 (2026-01-21 15:32:57)
 < >o the clear selection function is not working, when i press c in normal mode in telescope
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_152947.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_152947.png
 
 ## x shot 176 (2026-01-21 15:28:16)
 < >o pressing q in normal mode should close telescope also like ctrl-c
@@ -1276,15 +1276,15 @@ hal i wrote on my own, its located in ~/cod/hal, there you can find out the gith
 
 ## x shot 173 (2026-01-21 15:06:22)
 please seperate between system dependencies and nvim dependencies
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_150531.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_150531.png
 
 ## x shot 172 (2026-01-21 15:01:19)
 < >g is not working. please fix it
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_145757.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_145757.png
 
 ## x shot 171 (2026-01-21 15:01:19)
 < >l is not working
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_145857.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_145857.png
 
 ## x shot 170 (2026-01-21 15:01:19)
 go to latest send shot with < >L
@@ -1306,7 +1306,7 @@ can you fix the shot titles of the old shots, which had the old date format?
 what to do, when the shot file becomes to big?
 
 ## x shot 165 (2026-01-21 14:50:36)
-make the colors nice in next actions markdown files (files which are in plans/prompts)
+make the colors nice in next actions markdown files (files which are in .shooter/shotfiles)
 i have ```## shot ...``` headers and ```## x shot ... (...)``` headers.
 these two mark done and not done.
 can you color them differently?
@@ -1314,7 +1314,7 @@ so for example the undone shots have a light yellow background?
 
 ## x shot 164 (2026-01-21 14:49:48)
 when sending multiple shots with the telescope shot chooser, the templates are not added to the bottom of the file, like we do it in single shot mode.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_144701.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_144701.png
 
 ## x shot 163 (2026-01-21 14:49:48)
 when in telescope < >o, the space should also select files to shoot like tab and not offer to run the mappings. so all space maps should be disabled, when telescope shot chooser is open
@@ -1325,7 +1325,7 @@ telescope < >o should react to ctrl-c also in normal mode and close the telescop
 ## x shot 161 (2026-01-21 14:46:20)
 the coloring of the open shots looks nice.
 but remove the coloring of the done shots.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_144523.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_144523.png
 
 ## x shot 160 (2026-01-21 14:44:37)
 i want to be able to resend, when the shot i am currently at was already sent.
@@ -1354,13 +1354,13 @@ i want them to work also in normal mode.
 
 ## x shot 155 (2026-01-21 14:29:43)
 < >d does not leave a empty line between the title and the first shot in the list.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_142935.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_142935.png
 
 ## x shot 154 (2026-01-21 14:28:15)
 the telesope sending is not working anymore.
 please go back in history and have a look at the old < >o functions.
 ensure, that everything working again.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_142739.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_142739.png
 when i press the number, nothing happens in telescope.
 
 ## x shot 153 (2026-01-21 14:22:16)
@@ -1389,7 +1389,7 @@ that way, the user sees only, what is relevant.
 ## x shot 149 (2026-01-21 14:13:53)
 i still need to enter, after you sent the shot.
 i do not want to enter to save time.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_141337.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_141337.png
 
 ## x shot 148 (2026-01-21 14:13:04)
 please rename the created history files to shot-0156.md instead of send-0156.md
@@ -1399,15 +1399,15 @@ so i mean, when the files are created, they should have the name shot-... instea
 now it looks good again. except there is one special case.
 when i have text already in between the first line (with the title) and the next shot header then i want to place the shot title over that text.
 so basically, when there is text without a shot header.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_140645.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_140645.png
 
 ## x shot 146 (2026-01-21 14:03:27)
 when i create a new shot with < >s, there needs to be one more empty line under the cursor
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_140251.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_140251.png
 
 ## x shot 145 (2026-01-21 14:01:48)
 can you avoid, that i have to press enter, after the message was sent?
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_140144.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_140144.png
 
 ## x shot 144 (2026-01-21 14:00:37)
 test
@@ -1456,31 +1456,31 @@ but it should ensure, that only one empty line lies between line 1 and the shot 
 
 ## x shot 132 (2026-01-21 13:18:05)
 the shot pasting problem is still there
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_131834.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_131834.png
 
 ## x shot 131 (2026-01-21 13:15:52)
 the paste problem is still there.
 it seems, that now its always also pasting an image into claude.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_131613.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_131613.png
 
 ## x shot 130 (2026-01-21 13:15:52)
 it is still creating the shot at the bottom of the file and now shows me a notification instead of showing it at the bottom of vim.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_131439.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_131439.png
 
 ## x shot 129 (2026-01-21 13:13:29)
 also, the shot sending is now kind of broken
 it only sended the first line, then entered, then pasted the second line.
 or did i do something wrong?
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_131230.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_131230.png
 
 ## x shot 128 (2026-01-21 13:11:58)
 now it adds the shot at the bottom and still shows a error message
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_131133.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_131133.png
 
 ## x shot 127 (2026-01-21 13:08:36)
 < >s is not working anymore
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_130734.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_130734.png
 
 ## x shot 126 (2026-01-21 13:07:07)
 < >o opens the telescope list of the open shots in the current file.
@@ -1494,7 +1494,7 @@ i still see the old mappings to dmnextactions functions in the mappings file.
 now, that shooter is working, they should be removed, right?
 because the mappings should be added by default from the plugin, right?
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_123554.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_123554.png
 
 please go into planning mode and think, how you can safely remove everything from the dev/dotfiles/nvim-divramod/lua folder, what you moved over to the shooter.nvim repo.
 i want to make it clean now.
@@ -1507,13 +1507,13 @@ after you compacted it, you lost the state, at which task you where working on.
 so you just took the three next shots.
 that should not happen, because the user is maybe not ready with the next shots yet.
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_124608.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_124608.png
 
 ## x shot 122 (2026-01-21 12:33:00)
 when i run ShooterOpenShots manually, it does not show the preview in the telescope list.
 have you really moved all code to the plugin folder?
 or why are they differing?
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_123241.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_123241.png
 
 ## x shot 121 (2026-01-21 12:33:00)
 create a tmux pane to the left of the vim pane and start claude automatically, when there is no tmux pane with claude in the current window and send the shot(s) there, after claude is ready
@@ -1521,12 +1521,12 @@ create a tmux pane to the left of the vim pane and start claude automatically, w
 ## x shot 120 (2026-01-21 12:33:00)
 there needs to be a empty line between the first and the second line in the multishots prompt.
 also, in the ```# context``` area of the prompt, please begin every sentence with a big letter.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_122813.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122813.png
 
 ## x shot 119 (2026-01-21 12:27:00)
 in the readme, the shot order is wrong at different places.
 the latest shot is always at the top 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_122450.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122450.png
 
 ## x shot 118 (2026-01-21 12:27:00)
 please add to the shooter.nvim claude.md that you always update the readme, when you add a feature or change one.
@@ -1552,11 +1552,11 @@ please name them all systematically and tell me how to use them
 there are two empty lines above shooter project context.
 i only want to have one.
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_120733.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120733.png
 
 and while you are at it.
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_120901.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120901.png
 this part of the message is hard coded in the code i think.
 i want you to instead load it from a template file, which is either located in
 1. ~/.config/shooter.nvim/shooter-contexts-instructions.md
@@ -1574,22 +1574,22 @@ please, with every new job, kill the old one and ensure, that the ci is passing.
 in the prompt text, still the old files are shown in the prompt.
 i thought you fixed it?
 do i have to sync lazy?
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_120214.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120214.png
 
 ## x shot 109 (2026-01-21 12:03:00)
 when i go up in the claude history, i still have this cryptic messages, with which i cant do anything.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_120405.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120405.png
 when i go up in the history, i want to be able to read the full text.
 or is that not possible from claudes side?
 
 ## x shot 108 (2026-01-21 12:01:00)
 i want to have human readable format for the date and time in the shot header
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_120006.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120006.png
 YYYY-MM-DD HH:MM:SS
 
 ## x shot 107 (2026-01-21 11:57:00)
 there is something wrong with the file naming in the prompt.
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_115650.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_115650.png
 the shooter files should be loaded from:
 - ~/.config/shooter.nvim/shooter-context-global.md (global context)
 - ./.shooter.nvim/shooter-context-project.md (project context)
@@ -1605,7 +1605,7 @@ but this cryptic placeholder does not say me anything.
 ## x shot 105 (2026-01-21 11:48:00)
 is it also saved, when triggering from the telescope popup?
 also, when i send multiple shots at once?
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_114806.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_114806.png
 
 ## x shot 104 (2026-01-21 11:42:00)
 now i want to introduce a shot history functionality to shooter
@@ -1664,10 +1664,10 @@ there should be checks, which check, if tmux and claude are installed.
 i personally want everything working as right now, after you finished implementing this task.
 
 ## x shot 100 (2026-01-21 09:43:00)
-please move all the implementation notes from /Users/mod/dev/plans/prompts/20260118_0516_nvim-next-action-commands.md into the progress.txt file at the right place
+please move all the implementation notes from /Users/mod/dev/.shooter/shotfiles/20260118_0516_nvim-next-action-commands.md into the progress.txt file at the right place
 
 ## x shot 99 (2026-01-21 09:36:00)
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_093040.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_093040.png
 1. add empty line after line ```# Shooter general context```
 2. add empty line after line ```# Shooter project context```
 3. before ```# context``` max only one empty line should be there
@@ -1678,11 +1678,11 @@ please move all the implementation notes from /Users/mod/dev/plans/prompts/20260
 
 ## x shot 98 (2026-01-21 09:29:00)
 i dont want to press enter, after i sent a shot
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_091822.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_091822.png
 
 ## x shot 97 (2026-01-21 09:26:00)
 i am not completely ok with the layout of the prompt, which is sent to claude
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_090559.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_090559.png
 
 ```## General Context (file)``` should be ```# Shooter general context (file)```
 after general context header, there should be one empty line
@@ -1702,30 +1702,30 @@ i want to switch the mapping <space>w with the mapping lw
 please reintroduce <ctrl>c to close the current nvim window.
 in an earlier shot, you changed <ctrl>c to close the command mode 
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_090331.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_090331.png
 
 but instead of closing it completely, it jumps to the next level of the command mode.
 see cursor in the picture.
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_090408.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_090408.png
 
 with <ctrl>c i want to close both command input panes completely and go back to normal mode.
 
 ## x shot 93 (2026-01-21 08:58:00)
 the shot preview window is shown to the right.
 as i have most of the time smaller width window, i want to have the preview at the bottom
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_085729.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_085729.png
 
 ## x shot 92 (2026-01-21 08:55:00)
 <space>o is not working anymore
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_085139.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_085139.png
 
 ## x shot 91 (2026-01-21 08:54:00)
 notifications are still shown in the top right.
 if you cant get it working, please write the message in the bottom bar instead of showing a notification.
 or you research the web for a way to show notifications in the bottom right of the nvim window
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_084836.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_084836.png
 
 ## x shot 90 (2026-01-21 08:44:00)
 the notifications are still shown in the top right.
@@ -1777,7 +1777,7 @@ please also update the help content
 now only the <space>c mappings are left. it is possible, that they are somewhere else.
 please search.
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260121_082015.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_082015.png
 
 ## x shot 77 (2026-01-21 08:18:00)
 now please:
@@ -1833,7 +1833,7 @@ and please help me getting the whisper functionality back
 
 ## x shot 68 (2026-01-20 11:20:00)
 i have a problem with whisper. what can i do?
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_112032.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_112032.png
 
 ## x shot 67 (2026-01-20 11:17:00)
 please add < >< >w for write all
@@ -1858,7 +1858,7 @@ please change that in general for all the notifications i send from my lua funct
 ## x shot 63 (2026-01-20 11:02:00)
 
 ## x shot 62 (2026-01-20 11:01:00)
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_110036.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_110036.png
 
 <spa><spa>o has a mapping oasis in it. search the whole nvim folder files and find it and remove it
 
@@ -1872,7 +1872,7 @@ please map <space><space>x to wqa
 
 ## x shot 59 (2026-01-20 10:54:00)
 i do not want to press enter, after i ran <sp><sp>g to get image links
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_105111.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_105111.png
 
 ## x shot 58 (2026-01-20 10:51:00)
 in <sp><sp>O in telescope, i want to be able to select multiple shots to send them at once like <sp><sp><sp>1 ...
@@ -1901,10 +1901,10 @@ please rename <spa><spa>L to <space><spa>t (for telescope)
 ## x shot 52 (2026-01-20 10:33:00)
 <space><spa>h is broken, please fix it
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_103328.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_103328.png
 
 ## x shot 51 (2026-01-20 10:29:00)
-the move command to move to the ~/plans/prompts folder is missing.
+the move command to move to the ~/.shooter/shotfiles folder is missing.
 please add a m to all move commands so that 
 
   a     Archive    Move current file to prompts/archive
@@ -1932,10 +1932,10 @@ can you update the na help
 
 ## x shot 49 (2026-01-20 10:24:00)
 please remove the empty space between the two file references at the bottom
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_102355.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_102355.png
 
 ## x shot 48 (2026-01-20 10:23:00)
-<space><space>p is not open the oil folder in the plans/prompts folder of the current git repo anymore. fix it please
+<space><space>p is not open the oil folder in the .shooter/shotfiles folder of the current git repo anymore. fix it please
 
 ## x shot 47 (2026-01-20 10:17:00)
 in general i have one problem, now that you write the implementation notes back to the file, i have write conflicts. 
@@ -1950,7 +1950,7 @@ that way its easier to identify for me later
 ## x shot 45 (2026-01-20 10:13:00)
 in the first line, can you write # shot <shot_number> instead of # shot?
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_101304.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_101304.png
 
 ## x shot 44 (2026-01-20 10:12:00)
 test shot
@@ -1997,7 +1997,7 @@ instead of ,,n i now want to use <space><space> without n.
 for that you first need to remove the current mapping <space><space>a, then we have that mapping prefix <space><space> for all the ,,... commands.
 
 ## x shot 34 (2026-01-20 09:21:00)
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_091619.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_091619.png
 the \e[200 and 201 look ugly in the code i sent you.
 can you remove that from the lua code?
 we need to find a cleaner way here.
@@ -2015,13 +2015,13 @@ if so, then please put it to ~/dev/na-context.md for now and add the @ link in t
 ## x shot 31 (2026-01-20 08:57:00)
 in the edit bar, the message can stay until something comes and removes it, there, the one second is to short. also, for all the ,,... next action commands, i want you to write also to the bottom bar instead of showing the notification on the top left
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_085533.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_085533.png
 
 ## x shot 30 (2026-01-20 08:49:00)
 i have that notification in the top right when i paste.
 can you remove it after one second?
 
-/Users/mod/dev/plans/prompts/images/clipboard_20260120_084844.png
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_084844.png
 
 ## x shot 29 (2026-01-20 08:37:00)
 when i am in vim and there is a picture in the clipboard, it cannot be pasted.

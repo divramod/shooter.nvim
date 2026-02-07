@@ -62,7 +62,7 @@ end
 -- Create a new shot file in a specific repo
 function M.create_file_in_repo(repo_path, title)
   local files = require('shooter.core.files')
-  local prompts_dir = repo_path .. '/plans/prompts'
+  local prompts_dir = repo_path .. '/.shooter/shotfiles'
   vim.fn.mkdir(prompts_dir, 'p')
 
   -- Generate filename

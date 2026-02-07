@@ -162,7 +162,7 @@ shooter.nvim/
 │   │
 │   └── filter_state_spec.lua       # Filter state tests
 │
-├── plans/prompts/                  # Development tasks (shot files)
+├── .shooter/shotfiles/                  # Development tasks (shot files)
 │   └── *.md                        # One shotfile per feature
 │
 ├── after/syntax/                   # Neovim after/syntax directory
@@ -284,7 +284,7 @@ shooter.nvim/
 - Key files: shooter.txt (230+ lines)
 - Pattern: Generated from README and commands, viewable in `:help shooter`
 
-**`plans/prompts/`:**
+**`.shooter/shotfiles/`:**
 - Purpose: Development tasks tracked as shots
 - Contains: Markdown shotfiles for features, fixes, refactoring
 - Key files: *.md files, one per task
@@ -416,7 +416,7 @@ shooter.nvim/
 - Committed: Yes (part of repo)
 - Contents: `shooter-context-project.md` (project-specific context), images, settings
 
-**`plans/prompts/`:**
+**`.shooter/shotfiles/`:**
 - Purpose: Development tasks (shots)
 - Generated: Yes (created via `ShooterShotfileNew` command)
 - Committed: Yes (part of repo)

@@ -233,7 +233,7 @@
 
 **Shotfile:**
 - Purpose: Markdown file containing multiple shots
-- Examples: `plans/prompts/*.md`
+- Examples: `.shooter/shotfiles/*.md`
 - Pattern: One file per feature/task, title (# ...) at top, shots (## shot N) below
 - Naming: title-slug.md (auto-generated from title, can be renamed)
 

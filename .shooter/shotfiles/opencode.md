@@ -21,12 +21,12 @@ opencode asks me now for permissions. i want to start it with a flag like --dang
 ## x shot 3 (2026-01-24 22:09:51)
 its bringing the file over, nice.
 but its not autostarting it.
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_220948.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_220948.png
 
 ## x shot 2 (2026-01-24 22:07:18)
 does not seem to work.
 
-/Users/mod/cod/shooter.nvim/plans/prompts/images/clipboard_20260124_220656.png
+/Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260124_220656.png
 
 ## x shot 1 (2026-01-24 21:55:53)
 i now want to abstract the shooting.

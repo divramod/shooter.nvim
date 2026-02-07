@@ -7,7 +7,7 @@ local config = require('shooter.config')
 -- Parse executed shot header: ## x shot N (YYYY-MM-DD HH:MM:SS)
 -- Returns: shot_num, timestamp_str, timestamp_epoch
 function M.parse_executed_shot_header(line)
-  local num, date = line:match('^##%s+x%s+shot%s+(%d+)%s+%((.-)%)%s*$')
+  local num, date = line:match('^##%s+x%s+shot%s+(%d+)%s+%((.-)%)')
   if not num then return nil end
   local y, m, d, h, min, s = date:match('(%d+)-(%d+)-(%d+)%s+(%d+):(%d+):(%d+)')
   local epoch = y and os.time({ year = y, month = m, day = d, hour = h, min = min, sec = s }) or 0
@@ -84,7 +84,7 @@ end
 function M.get_git_remote_info(filepath)
   local cmd
   if filepath then
-    local dir = utils.get_dirname(filepath)
+    local dir = utils.dir_exists(filepath .. '/.git') and filepath or utils.get_dirname(filepath)
     cmd = string.format('git -C "%s" remote get-url origin 2>/dev/null', dir)
   else
     cmd = 'git remote get-url origin 2>/dev/null'
@@ -110,6 +110,15 @@ function M.detect_project_from_path(filepath)
   if not filepath then return nil end
   local project = filepath:match('/projects/([^/]+)/')
   return project
+end
+
+function M.repo_matches_filter(repo_name, project_filter)
+  if not project_filter or project_filter == '' then return true end
+  if project_filter:find('/', 1, true) then
+    return repo_name == project_filter
+  end
+  local short = repo_name:match('/([^/]+)$') or repo_name
+  return short == project_filter
 end
 
 -- Get all configured repos from shooter config
@@ -172,14 +181,14 @@ function M.get_all_shots(project_filter)
     end
     local repo_name = user .. '/' .. repo
 
-    -- Find all .md files in plans/prompts and subprojects
-    local prompts_dir = repo_path .. '/plans/prompts'
+    -- Find all .md files in .shooter/shotfiles and subprojects
+    local prompts_dir = repo_path .. '/.shooter/shotfiles'
     local handle = io.popen('find "' .. prompts_dir .. '" -name "*.md" -type f 2>/dev/null')
     if handle then
       for filepath in handle:lines() do
         local project = M.detect_project_from_path(filepath)
         -- Apply project filter if specified
-        if not project_filter or repo_name:find(project_filter, 1, true) then
+        if M.repo_matches_filter(repo_name, project_filter) then
           local file_shots = M.parse_shotfile(filepath)
           for _, shot in ipairs(file_shots) do
             shot.repo = repo_name
@@ -194,11 +203,11 @@ function M.get_all_shots(project_filter)
     -- Also check projects/ subdirectories
     local projects_dir = repo_path .. '/projects'
     if utils.dir_exists(projects_dir) then
-      handle = io.popen('find "' .. projects_dir .. '" -path "*/plans/prompts/*.md" -type f 2>/dev/null')
+      handle = io.popen('find "' .. projects_dir .. '" -path "*/.shooter/shotfiles/*.md" -type f 2>/dev/null')
       if handle then
         for filepath in handle:lines() do
           local project = M.detect_project_from_path(filepath)
-          if not project_filter or repo_name:find(project_filter, 1, true) then
+          if M.repo_matches_filter(repo_name, project_filter) then
             local file_shots = M.parse_shotfile(filepath)
             for _, shot in ipairs(file_shots) do
               shot.repo = repo_name

@@ -5,27 +5,27 @@ local defaults = require('shooter.session.defaults')
 describe('session.filter', function()
   describe('detect_file_folder', function()
     it('should detect archive folder', function()
-      local folder = filter.detect_file_folder('/repo/plans/prompts/archive/file.md')
+      local folder = filter.detect_file_folder('/repo/.shooter/shotfiles/archive/file.md')
       assert.equals('archive', folder)
     end)
 
     it('should detect backlog folder', function()
-      local folder = filter.detect_file_folder('/repo/plans/prompts/backlog/task.md')
+      local folder = filter.detect_file_folder('/repo/.shooter/shotfiles/backlog/task.md')
       assert.equals('backlog', folder)
     end)
 
     it('should detect prompts (root) for direct files', function()
-      local folder = filter.detect_file_folder('/repo/plans/prompts/feature.md')
+      local folder = filter.detect_file_folder('/repo/.shooter/shotfiles/feature.md')
       assert.equals('prompts', folder)
     end)
 
     it('should handle nested paths', function()
-      local folder = filter.detect_file_folder('/repo/plans/prompts/done/2024/file.md')
+      local folder = filter.detect_file_folder('/repo/.shooter/shotfiles/done/2024/file.md')
       assert.equals('done', folder)
     end)
 
     it('should handle project paths', function()
-      local folder = filter.detect_file_folder('/repo/projects/myapp/plans/prompts/archive/old.md')
+      local folder = filter.detect_file_folder('/repo/projects/myapp/.shooter/shotfiles/archive/old.md')
       assert.equals('archive', folder)
     end)
   end)
@@ -34,12 +34,12 @@ describe('session.filter', function()
     local git_root = '/Users/mod/cod/shooter.nvim'
 
     it('should return nil for root project files', function()
-      local project = filter.detect_file_project(git_root .. '/plans/prompts/file.md', git_root)
+      local project = filter.detect_file_project(git_root .. '/.shooter/shotfiles/file.md', git_root)
       assert.is_nil(project)
     end)
 
     it('should detect subproject name', function()
-      local project = filter.detect_file_project(git_root .. '/projects/myapp/plans/prompts/file.md', git_root)
+      local project = filter.detect_file_project(git_root .. '/projects/myapp/.shooter/shotfiles/file.md', git_root)
       assert.equals('myapp', project)
     end)
 
@@ -51,9 +51,9 @@ describe('session.filter', function()
 
   describe('apply_folder_filter', function()
     local files = {
-      { path = '/repo/plans/prompts/file.md', display = 'file.md' },
-      { path = '/repo/plans/prompts/archive/old.md', display = 'archive/old.md' },
-      { path = '/repo/plans/prompts/backlog/todo.md', display = 'backlog/todo.md' },
+      { path = '/repo/.shooter/shotfiles/file.md', display = 'file.md' },
+      { path = '/repo/.shooter/shotfiles/archive/old.md', display = 'archive/old.md' },
+      { path = '/repo/.shooter/shotfiles/backlog/todo.md', display = 'backlog/todo.md' },
     }
 
     it('should filter to only enabled folders', function()
@@ -79,9 +79,9 @@ describe('session.filter', function()
   describe('apply_project_filter', function()
     local git_root = '/repo'
     local files = {
-      { path = '/repo/plans/prompts/root.md' },
-      { path = '/repo/projects/app-a/plans/prompts/a.md' },
-      { path = '/repo/projects/app-b/plans/prompts/b.md' },
+      { path = '/repo/.shooter/shotfiles/root.md' },
+      { path = '/repo/projects/app-a/.shooter/shotfiles/a.md' },
+      { path = '/repo/projects/app-b/.shooter/shotfiles/b.md' },
     }
 
     it('should filter to root only', function()
