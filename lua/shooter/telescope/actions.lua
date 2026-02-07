@@ -80,24 +80,22 @@ function M.send_multiple_shots(prompt_bufnr, pane_num)
 
   actions.close(prompt_bufnr)
 
-  -- Defer to next event loop iteration so telescope buffer cleanup completes
-  vim.schedule(function()
-    if not is_current then
-      vim.cmd('edit ' .. vim.fn.fnameescape(target_file))
-    end
+  -- Open target file if not current (same pattern as send_shot)
+  if not is_current then
+    vim.cmd('edit ' .. vim.fn.fnameescape(target_file))
+  end
 
-    local shot_infos = {}
-    for _, e in ipairs(shot_entries) do
-      table.insert(shot_infos, {
-        start_line = e.start_line,
-        end_line = e.end_line,
-        header_line = e.header_line,
-      })
-    end
+  local shot_infos = {}
+  for _, e in ipairs(shot_entries) do
+    table.insert(shot_infos, {
+      start_line = e.start_line,
+      end_line = e.end_line,
+      header_line = e.header_line,
+    })
+  end
 
-    local bufnr = vim.api.nvim_get_current_buf()
-    require('shooter.tmux').send_specific_shots(pane_num, shot_infos, bufnr)
-  end)
+  local bufnr = vim.api.nvim_get_current_buf()
+  require('shooter.tmux').send_specific_shots(pane_num, shot_infos, bufnr)
 end
 
 -- Helper: Refresh file picker
