@@ -1,0 +1,30 @@
+{
+  "project": "shooter.nvim",
+  "rules": [
+    {
+      "name": "core/coding-standards",
+      "category": "core",
+      "enabled": true
+    },
+    {
+      "name": "core/commit-conventions",
+      "category": "core",
+      "enabled": true
+    },
+    {
+      "name": "core/security",
+      "category": "core",
+      "enabled": true
+    },
+    {
+      "name": "core/shot-workflow",
+      "category": "core",
+      "enabled": true
+    },
+    {
+      "name": "languages/lua",
+      "category": "languages",
+      "enabled": true
+    }
+  ]
+}
