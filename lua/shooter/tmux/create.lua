@@ -35,9 +35,9 @@ function M.start_claude_in_pane(pane_id)
   return M.start_ai_in_pane(pane_id, 'claude')
 end
 
--- Create a new pane to the left
+-- Create a new pane below with horizontal split
 -- Returns pane_id on success, nil and error message on failure
-function M.create_left_pane()
+function M.create_new_pane()
   if not detect.check_tmux_installed() then
     return nil, "tmux is not installed"
   end
@@ -45,8 +45,8 @@ function M.create_left_pane()
     return nil, "Not running in tmux"
   end
 
-  -- Create pane to the left with 50% width
-  local handle = io.popen("tmux split-window -hb -p 50 -P -F '#{pane_id}' 2>/dev/null")
+  -- Create pane below with 50% height (horizontal split)
+  local handle = io.popen("tmux split-window -p 50 -P -F '#{pane_id}' 2>/dev/null")
   if not handle then
     return nil, "Failed to create tmux pane"
   end
@@ -59,10 +59,13 @@ function M.create_left_pane()
   return pane_id, nil
 end
 
+-- Backward compatibility alias
+M.create_left_pane = M.create_new_pane
+
 -- Create a new pane to the left and start Claude
 -- Returns pane_id on success, nil and error message on failure
 function M.create_claude_pane()
-  local pane_id, err = M.create_left_pane()
+  local pane_id, err = M.create_new_pane()
   if not pane_id then
     return nil, err
   end
@@ -143,7 +146,7 @@ function M.start_ai_with_prompt(pane_index)
       string.format("Starting %s in shell pane...", display_name))
   else
     utils.echo(string.format("Creating pane for %s...", display_name))
-    local new_pane_id, create_err = M.create_left_pane()
+    local new_pane_id, create_err = M.create_new_pane()
     if not new_pane_id then
       return nil, create_err
     end
@@ -165,7 +168,7 @@ function M.find_or_create_claude_pane(pane_index)
       return M.start_and_wait_for_ai(shell_pane, 'claude', "Starting Claude in shell pane...")
     else
       utils.echo("Creating pane for Claude...")
-      local new_pane_id, create_err = M.create_left_pane()
+      local new_pane_id, create_err = M.create_new_pane()
       if not new_pane_id then return nil, create_err end
       vim.wait(500, function() return false end, 50)
       return M.start_and_wait_for_ai(new_pane_id, 'claude', "Starting Claude in new pane...")
@@ -185,8 +188,8 @@ function M.find_or_create_ai_pane(pane_index)
     return pane_id, nil
   end
 
-  -- No AI pane found - prompt user to select which AI to start
-  if err and err:match("No tmux pane with") then
+  -- No AI pane found (or not enough) - prompt user to select which AI to start
+  if err and (err:match("No tmux pane with") or err:match("No AI pane")) then
     return M.start_ai_with_prompt(pane_index)
   end
 
