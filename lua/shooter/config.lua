@@ -134,15 +134,8 @@ M.defaults = {
       bg = '#ffb347', -- Light orange background
       bold = true,
     },
-    -- Latest sent shot header highlighting
-    -- Default: black text on green background
-    latest_sent_shot = {
-      fg = '#000000',
-      bg = '#77dd77', -- Pastel green background
-      bold = true,
-    },
-    -- Done shot without @shot- reference (manually marked done)
-    -- Default: lighter green, not bold
+    -- Latest executed shot highlighting (single most recent by timestamp)
+    -- Default: light green background
     done_shot = {
       fg = '#555555',
       bg = '#c8e6c9', -- Light green background

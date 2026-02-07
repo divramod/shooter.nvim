@@ -7,7 +7,7 @@ local M = {}
 local function define_highlights()
   local config = require('shooter.config')
   local open_shot = config.get('highlight.open_shot') or {}
-  local latest_sent = config.get('highlight.latest_sent_shot') or {}
+  local done_shot = config.get('highlight.done_shot') or {}
 
   -- Default: black text on light orange background (avoids search highlight confusion)
   vim.api.nvim_set_hl(0, 'ShooterOpenShot', {
@@ -16,19 +16,11 @@ local function define_highlights()
     bold = open_shot.bold ~= false, -- default true
   })
 
-  -- Green background for the most recently sent shot
-  vim.api.nvim_set_hl(0, 'ShooterLatestSentShot', {
-    fg = latest_sent.fg or '#000000',
-    bg = latest_sent.bg or '#77dd77',
-    bold = latest_sent.bold ~= false, -- default true
-  })
-
-  -- Lighter green for done shots without @shot- reference (manually marked done)
-  local done_shot = config.get('highlight.done_shot') or {}
+  -- Light green for the single latest executed shot (most recent by timestamp)
   vim.api.nvim_set_hl(0, 'ShooterDoneShot', {
     fg = done_shot.fg or '#555555',
     bg = done_shot.bg or '#c8e6c9',
-    bold = done_shot.bold or false, -- default not bold
+    bold = done_shot.bold or false,
   })
 end
 
@@ -60,29 +52,27 @@ local function apply_syntax(bufnr)
   local config = require('shooter.config')
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  -- Find the latest SENT shot (actually fired to a pane, identified by @shot- reference)
-  local latest_sent_line = nil
+  -- Find the single latest executed shot by timestamp (regardless of @shot- ref)
+  local latest_done_line = nil
   local latest_timestamp = nil
+  local exec_pattern = config.get('patterns.executed_shot_header')
   for i, line in ipairs(lines) do
-    if line:match(config.get('patterns.executed_shot_header')) and line:match('@shot%-') then
+    if line:match(exec_pattern) then
       local ts = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
       if ts and (not latest_timestamp or ts > latest_timestamp) then
         latest_timestamp = ts
-        latest_sent_line = i
+        latest_done_line = i
       end
     end
   end
 
-  -- Highlight shot headers: open (orange), latest sent (green), done without ref (light green)
-  local exec_pattern = config.get('patterns.executed_shot_header')
+  -- Highlight: open shots (orange), latest executed shot only (light green)
   for i, line in ipairs(lines) do
     if not is_in_code_block(bufnr, i) then
-      if i == latest_sent_line then
-        vim.fn.matchaddpos('ShooterLatestSentShot', { { i } }, 10)
+      if i == latest_done_line then
+        vim.fn.matchaddpos('ShooterDoneShot', { { i } }, 10)
       elseif line:match('^##%s+shot%s+[%d%?]+') then
         vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
-      elseif line:match(exec_pattern) and not line:match('@shot%-') then
-        vim.fn.matchaddpos('ShooterDoneShot', { { i } }, -1)
       end
     end
   end
