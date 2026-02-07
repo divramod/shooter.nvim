@@ -88,13 +88,21 @@ function M.send_current_shot(pane_index, detect, send, messages)
     end
   end
 
+  -- Lock buffer during pane creation to prevent terminal escape sequences
+  -- (e.g., iTerm2 OSC 1337 clipboard responses) from being inserted during
+  -- vim.wait event processing when the tmux split triggers a resize
+  local was_modifiable = vim.bo[bufnr].modifiable
+  vim.bo[bufnr].modifiable = false
+
   -- Find/create pane FIRST (potentially long: prompt + split + AI startup wait)
   -- Must happen before buffer modifications to avoid state loss during waits
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
-  if not pane_id then return end
 
-  -- Recover clean nvim state after pane creation (tmux split can cause terminal bleed)
+  -- Unlock buffer and recover clean state
+  vim.bo[bufnr].modifiable = was_modifiable
   vim.cmd('stopinsert')
+
+  if not pane_id then return end
 
   -- All buffer modifications happen quickly in sequence after pane is ready
   -- Mark as executed (so renumbering treats it as a done shot)
