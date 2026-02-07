@@ -46,7 +46,7 @@ function M.create_new_pane()
   end
 
   -- Create pane below with 50% height (horizontal split, -d keeps focus on nvim)
-  local result = vim.fn.system("tmux split-window -d -p 50 -P -F '#{pane_id}' 2>&1")
+  local result = vim.fn.system({"tmux", "split-window", "-d", "-l", "50%", "-P", "-F", "#{pane_id}"})
   local pane_id = vim.trim(result)
 
   if vim.v.shell_error ~= 0 or pane_id == "" then
