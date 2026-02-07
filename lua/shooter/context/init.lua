@@ -17,18 +17,11 @@ function M.is_oil_buffer()
   return bufname:match('^oil://') ~= nil
 end
 
--- Check if a filepath is a shotfile (in prompts folder)
+-- Check if a filepath is a shotfile (in .shooter/shotfiles folder)
 function M.is_shotfile(filepath)
   if not filepath or filepath == '' then return false end
-  local config = require('shooter.config')
-  local prompts_dir = config.get('paths.prompts_dir')
-  if prompts_dir:match('^%./') then
-    prompts_dir = prompts_dir:sub(3)
-  end
-  -- Check if path contains prompts directory
-  return filepath:match('/' .. vim.pesc(prompts_dir) .. '/') ~= nil
-    or filepath:match('/' .. vim.pesc(prompts_dir) .. '$') ~= nil
-    or filepath:match('/prompts/') ~= nil
+  return filepath:match('/.shooter/shotfiles/') ~= nil
+    or filepath:match('/.shooter/shotfiles$') ~= nil
 end
 
 -- Check if current buffer is a shotfile

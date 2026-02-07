@@ -67,15 +67,20 @@ end
 -- Helper: Check if path is in prompts folder (checks both root and project paths)
 function M.is_in_prompts_folder(path)
   if not path then return false end
-  -- Check root prompts path
+  -- Check root prompts path (cwd-based)
   local root_prompts = utils.cwd() .. '/' .. config.get('paths.prompts_root')
   if path:find(root_prompts, 1, true) then
     return true
   end
-  -- Check project prompts paths
+  -- Check using git root (handles cwd != repo root)
   local git_root = M.get_git_root()
-  if git_root and path:find(git_root .. '/projects/.+/.shooter/shotfiles') then
-    return true
+  if git_root then
+    if path:find(git_root .. '/.shooter/shotfiles', 1, true) then
+      return true
+    end
+    if path:find(git_root .. '/projects/.+/.shooter/shotfiles') then
+      return true
+    end
   end
   return false
 end
