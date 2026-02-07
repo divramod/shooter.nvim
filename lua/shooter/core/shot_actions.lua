@@ -260,7 +260,7 @@ function M.toggle_shot_done()
   local cursor_line = utils.get_cursor()[1]
 
   -- Find the current shot
-  local shot_start, _, header_line = shots.find_current_shot(bufnr, cursor_line)
+  local shot_start, shot_end, header_line = shots.find_current_shot(bufnr, cursor_line)
   if not shot_start then
     utils.echo('Not in a shot')
     return
@@ -291,10 +291,11 @@ function M.toggle_shot_done()
     utils.echo('Shot ' .. shot_num .. ' marked done')
   end
 
-  -- Save the file
-  local bufname = vim.api.nvim_buf_get_name(bufnr)
-  if bufname ~= '' then
-    vim.cmd('write')
+  -- Renumber and resort shots (open shots top, done shots bottom)
+  local renumber_helper = require('shooter.tmux.renumber_helper')
+  local new_start, _, new_header = renumber_helper.renumber_and_find_shot(bufnr, shot_start, shot_end)
+  if new_header then
+    vim.api.nvim_win_set_cursor(0, { new_header, 0 })
   end
 end
 
