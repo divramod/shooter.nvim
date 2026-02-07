@@ -24,9 +24,14 @@ function M.send_file_reference(pane_id, filepath)
     pane_id, pane_id, filepath, pane_id, pane_id
   )
 
-  local result = vim.fn.system("{ " .. cmd .. "; } 2>/dev/null")
-  local exit_code = vim.v.shell_error
-  if exit_code == 0 then
+  -- Use jobstart/jobwait to prevent terminal bleed into nvim
+  local job_id = vim.fn.jobstart({"sh", "-c", cmd .. " 2>/dev/null"}, {
+    stdout_buffered = true,
+    stderr_buffered = true,
+  })
+  if job_id <= 0 then return false, "Failed to start tmux job" end
+  local result = vim.fn.jobwait({job_id}, 30000)
+  if result[1] == 0 then
     return true, nil
   end
   return false, "tmux command failed"

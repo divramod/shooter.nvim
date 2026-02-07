@@ -24,10 +24,16 @@ function M.start_ai_in_pane(pane_id, provider_name)
   local cmd = PROVIDER_CMDS[provider_name] or PROVIDER_CMDS.claude
   -- Send Ctrl-C to cancel any pending input (handles vi normal mode too)
   -- Then Ctrl-U to clear the line, then the command
-  -- Use vim.fn.system instead of os.execute to prevent terminal bleed
-  vim.fn.system(string.format("{ tmux send-keys -t %s C-c C-u; } 2>/dev/null", pane_id))
+  -- Use jobstart/jobwait to prevent terminal bleed into nvim
+  local j1 = vim.fn.jobstart({"tmux", "send-keys", "-t", pane_id, "C-c", "C-u"}, {
+    stdout_buffered = true, stderr_buffered = true,
+  })
+  if j1 > 0 then vim.fn.jobwait({j1}, 5000) end
   vim.wait(100, function() return false end, 20)  -- Brief pause for shell to process
-  vim.fn.system(string.format("{ tmux send-keys -t %s '%s' Enter; } 2>/dev/null", pane_id, cmd))
+  local j2 = vim.fn.jobstart({"tmux", "send-keys", "-t", pane_id, cmd, "Enter"}, {
+    stdout_buffered = true, stderr_buffered = true,
+  })
+  if j2 > 0 then vim.fn.jobwait({j2}, 5000) end
   return true, nil
 end
 
