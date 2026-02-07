@@ -45,8 +45,8 @@ function M.create_new_pane()
     return nil, "Not running in tmux"
   end
 
-  -- Create pane below with 50% height (horizontal split)
-  local handle = io.popen("tmux split-window -p 50 -P -F '#{pane_id}' 2>/dev/null")
+  -- Create pane below with 50% height (horizontal split, -d keeps focus on nvim)
+  local handle = io.popen("tmux split-window -d -p 50 -P -F '#{pane_id}' 2>/dev/null")
   if not handle then
     return nil, "Failed to create tmux pane"
   end
