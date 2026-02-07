@@ -78,7 +78,13 @@ function M.send_current_shot(pane_index, detect, send, messages)
     end
   end
 
-  -- Mark as executed FIRST (so renumbering treats it as a done shot)
+  -- Find/create pane FIRST (potentially long: prompt + split + AI startup wait)
+  -- Must happen before buffer modifications to avoid state loss during waits
+  local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
+  if not pane_id then return end
+
+  -- All buffer modifications happen quickly in sequence after pane is ready
+  -- Mark as executed (so renumbering treats it as a done shot)
   if not already_executed then
     local shot_info = { start_line = shot_start, end_line = shot_end, header_line = header_line }
     mark_shot(bufnr, shot_info)
@@ -100,9 +106,6 @@ function M.send_current_shot(pane_index, detect, send, messages)
   local temp_path = save_temp_sendable(full_message, shot_num)
   if not temp_path then utils.echo('Failed to save temp file'); return end
 
-  local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
-  if not pane_id then return end
-
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
     -- Add temp file reference to header for response lookup
@@ -111,6 +114,7 @@ function M.send_current_shot(pane_index, detect, send, messages)
 
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to %s%s (%s)', shot_num, provider_name, pane_msg, files.get_file_title(bufnr)))
+    vim.cmd('stopinsert')
     vim.api.nvim_win_set_cursor(0, { header_line, 0 })  -- Stay on sent shot
     sound.play()
   else
