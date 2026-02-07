@@ -52,11 +52,11 @@ local function apply_syntax(bufnr)
   local config = require('shooter.config')
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  -- Find the latest sent shot by timestamp
+  -- Find the latest SENT shot (actually fired to a pane, identified by @shot- reference)
   local latest_sent_line = nil
   local latest_timestamp = nil
   for i, line in ipairs(lines) do
-    if line:match(config.get('patterns.executed_shot_header')) then
+    if line:match(config.get('patterns.executed_shot_header')) and line:match('@shot%-') then
       local ts = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
       if ts and (not latest_timestamp or ts > latest_timestamp) then
         latest_timestamp = ts
