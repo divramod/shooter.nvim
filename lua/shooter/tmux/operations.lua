@@ -98,9 +98,16 @@ function M.send_current_shot(pane_index, detect, send, messages)
   -- Must happen before buffer modifications to avoid state loss during waits
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
 
-  -- Unlock buffer and recover clean state
-  vim.bo[bufnr].modifiable = was_modifiable
+  -- Recover clean state BEFORE unlocking buffer:
+  -- iTerm2 OSC 1337 escape sequences arrive as typeahead during vim.wait().
+  -- With buffer locked they can't insert text, but unlocking too early lets
+  -- the remaining typeahead characters through. So: force normal mode,
+  -- wait for in-flight sequences to arrive, drain them, THEN unlock.
   vim.cmd('stopinsert')
+  vim.wait(150, function() return false end, 30)  -- let in-flight escapes arrive
+  while vim.fn.getchar(0) ~= 0 do end             -- drain typeahead
+  vim.cmd('stopinsert')                             -- ensure normal mode after drain
+  vim.bo[bufnr].modifiable = was_modifiable
 
   if not pane_id then return end
 
@@ -138,6 +145,11 @@ function M.send_current_shot(pane_index, detect, send, messages)
     vim.cmd('stopinsert')
     vim.api.nvim_win_set_cursor(0, { header_line, 0 })  -- Stay on sent shot
     sound.play()
+    -- Late-arriving escape sequence safety net: schedule a deferred cleanup
+    vim.schedule(function()
+      while vim.fn.getchar(0) ~= 0 do end
+      vim.cmd('stopinsert')
+    end)
   else
     utils.echo('Failed to send: ' .. (err or 'unknown error'))
   end
