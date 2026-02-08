@@ -2,6 +2,32 @@
 
 Bash and shell scripting standards.
 
+## Script Header
+
+Every script must have a header comment block with these sections in order:
+
+1. **Description** — what the script does (1-3 lines)
+2. **Usage** — how to invoke it with flags and arguments
+3. **Steps** — numbered list of what the script does, one step per line
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Short description of what the script does
+#
+# Usage: script_name.sh [--flag <value>]
+#   --flag: description
+#
+# Steps:
+#   1. Parse arguments
+#   2. Validate preconditions
+#   3. Do the main work
+#   4. Output results
+```
+
+The Steps section is mandatory. It gives readers an instant overview of the script's logic without reading the implementation.
+
 ## Shebang and Safety
 
 - Always start with: `#!/usr/bin/env bash`

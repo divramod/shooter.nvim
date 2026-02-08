@@ -20,3 +20,4 @@ AI agents are non-deterministic; shell scripts are deterministic. For critical p
 3. **Idempotent** — safe to run multiple times
 4. **Accept `--repo-root`** — never assume working directory
 5. **Self-contained** — handle edge cases internally
+6. **Steps header** — every script must include a `# Steps:` section in its header listing each logical step (see Shell Script Conventions)
