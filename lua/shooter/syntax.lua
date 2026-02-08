@@ -110,7 +110,7 @@ local function show_shotfile_info(bufnr)
       and vim.fn.fnamemodify(git_root[1], ':t') or ''
 
     local msg = string.format('%s/%s  %d/%d shots open', repo, filename, #open, #all)
-    vim.notify(msg, vim.log.levels.INFO)
+    vim.notify(msg, vim.log.levels.INFO, { timeout = 3000 })
   end)
 end
 
