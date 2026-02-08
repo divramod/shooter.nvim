@@ -1,11 +1,20 @@
 # shotfile
 
-## shot 13
-when i press ctrl+g in claude, i like to have a shortcut, which cuts the complete text from the current file, closes it and goes over to the right pane in tmux (nvim is running there) and creates a new shot at the top and pastes the text there. this way i can quickly move text from claude to nvim without having to copy and paste manually.
 
-## shot 12
+## shot 15
+test
+
+## shot 14
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 13 (2026-02-08 06:42:18) @shot-13-20260208_064218
+it jumps over to the pane in the right file but does this:
+/Users/mod/a/shooter.nvim/.shooter.nvim/images/clipboard_20260208_064216.png
+
+## x shot 12 (2026-02-08 06:35:33) @shot-12-20260208_063533
+when i press ctrl+g in claude, nvim is opening with the current text of the claude cmd line.
+i like to have a command ShooterShotCreateFromClaude, which cuts the complete text from the temp file opened by claude, closes it and goes over to the right pane in tmux (nvim is running there) and creates a new shot at the top and pastes the text there. this way i can quickly move text from claude to nvim without having to copy and paste manually.
 
 ## x shot 11 (2026-02-08 06:06:52) @shot-11-20260208_060652
 please adapt the shotfile notification to show the notification for 3 seconds
