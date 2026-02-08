@@ -50,18 +50,18 @@ Theme (--type=theme)              Top-level grouping (e.g., myproject/api, mypro
 ### Theme CRUD
 
 ```bash
-bd create --type=theme --title="<alias>/<theme>"                # Create theme
-bd list --type=theme                                           # List all themes
-bd show <theme-id>                                             # Show theme details
-bd children <theme-id>                                         # List epics under theme
-bd update <theme-id> --title="new title"                       # Rename theme
+bd create --type=theme --title="<alias>/<theme>" --labels="theme:<slug>"  # Create theme
+bd list --type=theme                                                      # List all themes
+bd show <theme-id>                                                        # Show theme details
+bd children <theme-id>                                                    # List epics under theme
+bd update <theme-id> --title="new title"                                  # Rename theme
 ```
 
 ### Epic CRUD
 
 ```bash
-bd create --type=epic --parent=<theme-id> --title="Auth System"  # Create epic
-bd list --type=epic --parent=<theme-id>                          # Epics under a theme
+bd create --type=epic --parent=<theme-id> --title="Auth System" --labels="theme:<slug>"  # Create epic
+bd list --type=epic --parent=<theme-id>                                                  # Epics under a theme
 bd show <epic-id>                                                # Show epic details
 bd children <epic-id>                                            # Issues under epic
 bd epic status <epic-id>                                         # Epic progress
@@ -75,9 +75,9 @@ bd close <epic-id> --reason="All child issues complete"          # Close epic
 ### Issue CRUD
 
 ```bash
-bd create --type=task --parent=<epic-id> --title="Implement login"  # Create issue
-bd create --type=bug --parent=<epic-id> --title="Fix token expiry"  # Create bug
-bd create --type=shot --parent=<shots-epic-id> --title="Quick fix"  # Create shot
+bd create --type=task --parent=<epic-id> --title="Implement login" --labels="theme:<slug>"  # Create issue
+bd create --type=bug --parent=<epic-id> --title="Fix token expiry" --labels="theme:<slug>"  # Create bug
+bd create --type=shot --parent=<shots-epic-id> --title="Quick fix" --labels="theme:<slug>"  # Create shot
 bd show <issue-id>                                                   # Show details
 bd update <issue-id> --status=in_progress                            # Claim work
 bd close <issue-id> --reason="Implemented with tests"                # Close
@@ -110,9 +110,31 @@ bd stats                                     # Project statistics
 
 ## Label Conventions
 
+### Required Labels
+
+Every bead MUST have labels set at creation time using `--labels`. This enables `bv` label filtering.
+
+| Bead Type | Required Labels | Example |
+|-----------|----------------|---------|
+| Theme | `theme:<slug>` | `--labels="theme:ai"` |
+| Epic | `theme:<slug>` | `--labels="theme:ai"` |
+| Task/Bug/Feature/Shot | `theme:<slug>` | `--labels="theme:ai"` |
+
+The theme slug comes from the shotfile → theme mapping (e.g., `ai`, `cli`, `web`). When working under an epic, the parent relationship already provides epic context — no separate `epic:` label needed.
+
+### Workflow Labels
+
 - `wave:1`, `wave:2`, `wave:3` — parallel execution groups within an epic
 - `autonomous:true` / `autonomous:false` — checkpoint control for executors
 - `gap-closure` — issues created from verification gap analysis
+
+### Querying by Label
+
+```bash
+bd list --label="theme:ai"                   # All beads in the ai theme
+bd list --label="theme:cli" --status=open    # Open beads in cli theme
+bd list --label="wave:1" --parent=<epic-id>  # Wave 1 issues in an epic
+```
 
 ## Shooter Commands Reference
 
@@ -165,6 +187,7 @@ Every bead should be self-contained — a human reading it in `bv` or an agent p
 |-------|------|-------------------|------|
 | **Title** | Short, imperative | Short, imperative | Short, descriptive |
 | **Description** | Shot content (what was requested) | What to do + why | Scope + objectives |
+| **Labels** | `theme:<slug>` | `theme:<slug>` | `theme:<slug>` |
 | **Close reason** | What was done + files touched | What was done + files touched | Summary + child issue count |
 | **Acceptance** | — | Testable criteria | Epic-level done criteria |
 | **Design** | — | — | Architecture decisions |

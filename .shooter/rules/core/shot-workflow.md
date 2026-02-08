@@ -55,8 +55,9 @@ If the `# context` section includes a `- Theme context:` or `- Theme README:` li
 
 ## Task Workflow (Simple Shots — 1-2 steps)
 
-1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>"`)
+1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>" --labels="theme:<slug>"`)
    The `--description` MUST contain the shot content (the user's instruction from the shotfile). This preserves what was requested — the temp file will be deleted, and without the description, future agents and the human in `bv` only see the title.
+   The `--labels` MUST include `theme:<slug>` (e.g., `theme:ai`) to enable `bv` label filtering.
 2. **Claim it** (`bd update <id> --status=in_progress`)
 3. **Execute** the task directly
 4. **Close the bead** (`bd close <id> --reason="what was done"`)
@@ -69,8 +70,9 @@ If the `# context` section includes a `- Theme context:` or `- Theme README:` li
 
 When a shot requires 3 or more distinct steps (but isn't large enough to escalate to an epic):
 
-1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>"`)
+1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>" --labels="theme:<slug>"`)
    The `--description` MUST contain the shot content (the user's instruction from the shotfile). This preserves what was requested — the temp file will be deleted, and without the description, future agents and the human in `bv` only see the title.
+   The `--labels` MUST include `theme:<slug>` (e.g., `theme:ai`) to enable `bv` label filtering.
 2. **Claim it** (`bd update <id> --status=in_progress`)
 3. **Create child beads for each step** BEFORE starting work:
    ```bash
@@ -101,8 +103,8 @@ The Q&A file is included in agent instruction files (AGENTS.md, CLAUDE.md, GEMIN
 
 When a shot requires 3+ steps or architectural decisions:
 
-1. **Create an epic** under the theme: `bd create --type=epic --parent=<theme-id> --title="<shot title>" --description="<shot content>"`
-   Include the shot content in the epic description so the scope and original request are preserved.
+1. **Create an epic** under the theme: `bd create --type=epic --parent=<theme-id> --title="<shot title>" --description="<shot content>" --labels="theme:<slug>"`
+   Include the shot content in the epic description so the scope and original request are preserved. Set `--labels="theme:<slug>"` for `bv` filtering.
 2. **Enter plan mode** or run `shooter:plan-epic` to break it into child issues
 3. **Execute** via `shooter:execute-epic` or manually work through child issues
 4. The original shot is NOT tracked as a `--type=shot` — it becomes an epic directly
