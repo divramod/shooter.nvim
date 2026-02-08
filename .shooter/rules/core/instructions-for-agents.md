@@ -73,11 +73,11 @@ Every shooter command invocation must be logged for usage tracking and repo regi
 
 **Banner step addition:** Before reading `.shooter/VERSION`, run:
 ```bash
-bash <shooter-dir>/scripts/shell/shooter_log-command.sh "<command-name>"
+bash <shooter-dir>/scripts/shell/shooter_log-command.sh "<command-name>" --model "<model>"
 ```
 
-Where `<shooter-dir>` is `~/.claude/shooter` (Claude), `~/.gemini/shooter` (Gemini), or the equivalent for other CLIs. This:
-1. Appends an entry to `.shooter/command-log.jsonl` (timestamp, command, CLI)
+Where `<shooter-dir>` is `~/.claude/shooter` (Claude), `~/.gemini/shooter` (Gemini), or the equivalent for other CLIs. `<model>` is the model you are running on (e.g., `opus`, `sonnet`, `gemini-2.5-pro`). The CLI is auto-detected from the script's install path — no `--cli` flag needed. This:
+1. Appends an entry to `.shooter/command-log.jsonl` (timestamp, command, CLI, model)
 2. Registers/updates the repo in `~/.config/shooter/repos.json` (global registry)
 
 The registry enables `shooter:update` to batch-update all repos with latest rules.
