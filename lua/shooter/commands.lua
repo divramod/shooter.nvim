@@ -265,6 +265,9 @@ local function setup_shot_commands()
     queue.clear_queue()
   end, { desc = 'Clear queue' }, 'ShooterQueueClear')
 
+  -- ShooterFileStats - Show stats for current shotfile
+  create_cmd('ShooterFileStats', shot_actions.file_stats, { desc = 'Shotfile stats (total/open/closed)' })
+
   -- ShooterShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
   create_cmd('ShooterShotCreateFromClaude', shot_actions.create_shot_from_claude,
     { desc = 'Cut Claude text, create shot in right pane' })

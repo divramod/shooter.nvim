@@ -610,6 +610,26 @@ function M.extract_line()
   utils.echo('Extracted line to shot ' .. next_num)
 end
 
+-- Show stats for the current shotfile (total, open, closed shots)
+function M.file_stats()
+  local bufnr = 0
+  local all = shots.find_all_shots(bufnr)
+  local total = #all
+  local closed = 0
+  for _, shot in ipairs(all) do
+    if shot.is_executed then closed = closed + 1 end
+  end
+  local open = total - closed
+
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local filename = bufname ~= '' and vim.fn.fnamemodify(bufname, ':t') or 'untitled'
+
+  vim.notify(
+    string.format('%s  |  total: %d  open: %d  closed: %d', filename, total, open, closed),
+    vim.log.levels.INFO
+  )
+end
+
 -- Create a shot from text stored in a file (called via tmux send-keys from another pane)
 function M.create_shot_from_file(filepath)
   local content, err = utils.read_file(filepath)
