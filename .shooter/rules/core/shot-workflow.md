@@ -55,35 +55,35 @@ If the `# context` section includes a `- Theme context:` or `- Theme README:` li
 
 ## Task Workflow (Simple Shots — 1-2 steps)
 
-1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>" --labels="theme:<slug>"`)
+1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>" --labels="type:issue:shot,theme:<slug>"`)
    The `--description` MUST contain the shot content (the user's instruction from the shotfile). This preserves what was requested — the temp file will be deleted, and without the description, future agents and the human in `bv` only see the title.
-   The `--labels` MUST include `theme:<slug>` (e.g., `theme:ai`) to enable `bv` label filtering.
+   The `--labels` MUST include `type:issue:shot,theme:<slug>` (e.g., `type:issue:shot,theme:ai`) to enable `bv` label filtering.
 2. **Claim it** (`bd update <id> --status=in_progress`)
 3. **Execute** the task directly
 4. **Close the bead** (`bd close <id> --reason="what was done"`)
 5. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
 6. **Bump version** (`bash ~/.claude/shooter/scripts/shell/shooter_increment-version.sh patch`)
-7. **Commit** with a clear message including the version
+7. **Commit** with a clear message including the version and a `Beads:` trailer referencing the shot bead ID
 8. **Push** and `bd sync` — work is not done until pushed
 
 ## Task Workflow (Multi-Step Shots — 3+ steps)
 
 When a shot requires 3 or more distinct steps (but isn't large enough to escalate to an epic):
 
-1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>" --labels="theme:<slug>"`)
+1. **Create a shot bead** (`bd create --type=shot --parent=<shots-epic-id> --title="..." --description="<shot content>" --labels="type:issue:shot,theme:<slug>"`)
    The `--description` MUST contain the shot content (the user's instruction from the shotfile). This preserves what was requested — the temp file will be deleted, and without the description, future agents and the human in `bv` only see the title.
-   The `--labels` MUST include `theme:<slug>` (e.g., `theme:ai`) to enable `bv` label filtering.
+   The `--labels` MUST include `type:issue:shot,theme:<slug>` (e.g., `type:issue:shot,theme:ai`) to enable `bv` label filtering.
 2. **Claim it** (`bd update <id> --status=in_progress`)
 3. **Create child beads for each step** BEFORE starting work:
    ```bash
-   bd create --type=task --parent=<shot-id> --title="Step 1: ..."
-   bd create --type=task --parent=<shot-id> --title="Step 2: ..."
-   bd create --type=task --parent=<shot-id> --title="Step 3: ..."
+   bd create --type=task --parent=<shot-id> --title="Step 1: ..." --labels="type:issue:task,theme:<slug>"
+   bd create --type=task --parent=<shot-id> --title="Step 2: ..." --labels="type:issue:task,theme:<slug>"
+   bd create --type=task --parent=<shot-id> --title="Step 3: ..." --labels="type:issue:task,theme:<slug>"
    ```
 4. **For each step:** mark in_progress → execute → mark closed with reason
 5. **Close the parent shot bead** when all children are done
 6. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
-7. **Bump version**, **commit**, **push**, and `bd sync`
+7. **Bump version**, **commit** (include `Beads:` trailer with all related bead IDs), **push**, and `bd sync`
 
 **Why:** If Claude crashes mid-work, `bd list --status=in_progress` shows exactly where to resume. TaskCreate is ephemeral (lost on crash) — beads persist across sessions. Use TaskCreate for UI spinners only, never as a substitute for beads.
 
@@ -103,8 +103,8 @@ The Q&A file is included in agent instruction files (AGENTS.md, CLAUDE.md, GEMIN
 
 When a shot requires 3+ steps or architectural decisions:
 
-1. **Create an epic** under the theme: `bd create --type=epic --parent=<theme-id> --title="<shot title>" --description="<shot content>" --labels="theme:<slug>"`
-   Include the shot content in the epic description so the scope and original request are preserved. Set `--labels="theme:<slug>"` for `bv` filtering.
+1. **Create an epic** under the theme: `bd create --type=epic --parent=<theme-id> --title="<shot title>" --description="<shot content>" --labels="type:epic,theme:<slug>"`
+   Include the shot content in the epic description so the scope and original request are preserved. Set `--labels="type:epic,theme:<slug>"` for `bv` filtering.
 2. **Enter plan mode** or run `shooter:plan-epic` to break it into child issues
 3. **Execute** via `shooter:execute-epic` or manually work through child issues
 4. The original shot is NOT tracked as a `--type=shot` — it becomes an epic directly

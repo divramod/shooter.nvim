@@ -9,6 +9,7 @@ type(scope): description (vX.Y.Z)
 
 Optional body explaining WHY, not WHAT.
 
+Beads: <bead-id-1>, <bead-id-2>
 Co-Authored-By: <name> <email>
 ```
 
@@ -50,7 +51,27 @@ Co-Authored-By: <name> <email>
 ## Trailers
 
 - **Co-Authored-By** (required for AI commits): `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
+- **Beads** (required when working on beads): `Beads: sho-abc.1, sho-abc.2`
 - Place trailers after the body, separated by a blank line
+
+## Bead References
+
+Every commit related to bead work MUST include a `Beads:` trailer:
+
+- Format: `Beads: sho-abc.1, sho-abc.2`
+- Comma-separated list of bead IDs that the commit addresses
+- Place after the body, alongside `Co-Authored-By`
+- If the commit is not related to any bead (e.g., standalone chore), omit the trailer
+
+Example:
+```
+feat(auth): add JWT validation (v0.2.1)
+
+Implement RS256 token validation with refresh support.
+
+Beads: sho-abc.1
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
 
 ## Version Bumping
 

@@ -79,6 +79,10 @@ This auto-installs all 4 major CLIs, clones shooter, distributes, and verifies.
 /shooter:update
 ```
 
+## Bead Aggregation in Releases
+
+Release commits should aggregate all `Beads:` trailers from commits since the last tag. The release script collects all bead IDs referenced in `Beads:` trailers between the previous tag and HEAD, deduplicates them, and includes a single `Beads:` trailer in the release commit with the full list. This provides a complete audit trail of which beads were addressed in each release.
+
 ## Rules for AI Agents
 
 - **Never create releases** — releases are human decisions via `shooter:release`

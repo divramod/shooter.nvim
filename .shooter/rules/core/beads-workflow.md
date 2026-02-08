@@ -50,18 +50,18 @@ Theme (--type=theme)              Top-level grouping (e.g., myproject/api, mypro
 ### Theme CRUD
 
 ```bash
-bd create --type=theme --title="<alias>/<theme>" --labels="theme:<slug>"  # Create theme
-bd list --type=theme                                                      # List all themes
-bd show <theme-id>                                                        # Show theme details
-bd children <theme-id>                                                    # List epics under theme
-bd update <theme-id> --title="new title"                                  # Rename theme
+bd create --type=theme --title="<alias>/<theme>" --labels="type:theme,theme:<slug>"  # Create theme
+bd list --type=theme                                                                 # List all themes
+bd show <theme-id>                                                                   # Show theme details
+bd children <theme-id>                                                               # List epics under theme
+bd update <theme-id> --title="new title"                                             # Rename theme
 ```
 
 ### Epic CRUD
 
 ```bash
-bd create --type=epic --parent=<theme-id> --title="Auth System" --labels="theme:<slug>"  # Create epic
-bd list --type=epic --parent=<theme-id>                                                  # Epics under a theme
+bd create --type=epic --parent=<theme-id> --title="Auth System" --labels="type:epic,theme:<slug>"  # Create epic
+bd list --type=epic --parent=<theme-id>                                                            # Epics under a theme
 bd show <epic-id>                                                # Show epic details
 bd children <epic-id>                                            # Issues under epic
 bd epic status <epic-id>                                         # Epic progress
@@ -75,9 +75,9 @@ bd close <epic-id> --reason="All child issues complete"          # Close epic
 ### Issue CRUD
 
 ```bash
-bd create --type=task --parent=<epic-id> --title="Implement login" --labels="theme:<slug>"  # Create issue
-bd create --type=bug --parent=<epic-id> --title="Fix token expiry" --labels="theme:<slug>"  # Create bug
-bd create --type=shot --parent=<shots-epic-id> --title="Quick fix" --labels="theme:<slug>"  # Create shot
+bd create --type=task --parent=<epic-id> --title="Implement login" --labels="type:issue:task,theme:<slug>"  # Create issue
+bd create --type=bug --parent=<epic-id> --title="Fix token expiry" --labels="type:issue:bug,theme:<slug>"  # Create bug
+bd create --type=shot --parent=<shots-epic-id> --title="Quick fix" --labels="type:issue:shot,theme:<slug>"  # Create shot
 bd show <issue-id>                                                   # Show details
 bd update <issue-id> --status=in_progress                            # Claim work
 bd close <issue-id> --reason="Implemented with tests"                # Close
@@ -89,9 +89,9 @@ bd close <id1> <id2> <id3> --reason="Batch complete"                 # Close mul
 ```bash
 bd dep add <issue-id> <depends-on-id>       # Add dependency
 bd dep tree <issue-id>                       # Show dependency tree
-bd label add <issue-id> "wave:1"             # Add wave label
-bd label add <issue-id> "autonomous:true"    # Mark autonomous
-bd list --label="wave:1" --parent=<epic-id>  # Issues in wave 1
+bd label add <issue-id> "plan:wave:1"             # Add wave label
+bd label add <issue-id> "plan:autonomous:true"    # Mark autonomous
+bd list --label="plan:wave:1" --parent=<epic-id>  # Issues in wave 1
 ```
 
 ### Querying
@@ -110,30 +110,66 @@ bd stats                                     # Project statistics
 
 ## Label Conventions
 
-### Required Labels
+Labels use a four-namespace taxonomy. Every label is prefixed with its namespace.
 
-Every bead MUST have labels set at creation time using `--labels`. This enables `bv` label filtering.
+Full reference: `docs/beads-labels-and-types-system.md`
+
+### Namespace: `type:` -- Type Labels
+
+Auto-applied at creation time, maps to the bead's `issue_type` field.
+
+| Label | Maps to |
+|-------|---------|
+| `type:theme` | `--type=theme` |
+| `type:epic` | `--type=epic` |
+| `type:issue:task` | `--type=task` |
+| `type:issue:bug` | `--type=bug` |
+| `type:issue:feature` | `--type=feature` |
+| `type:issue:shot` | `--type=shot` |
+| `type:issue:chore` | `--type=chore` |
+
+### Namespace: `theme:` -- Theme Labels
+
+Required on every bead. One per bead. The slug comes from the shotfile-to-theme mapping (e.g., `ai`, `cli`, `web`).
 
 | Bead Type | Required Labels | Example |
 |-----------|----------------|---------|
-| Theme | `theme:<slug>` | `--labels="theme:ai"` |
-| Epic | `theme:<slug>` | `--labels="theme:ai"` |
-| Task/Bug/Feature/Shot | `theme:<slug>` | `--labels="theme:ai"` |
+| Theme | `type:theme,theme:<slug>` | `--labels="type:theme,theme:ai"` |
+| Epic | `type:epic,theme:<slug>` | `--labels="type:epic,theme:ai"` |
+| Task/Bug/Feature/Shot | `type:issue:<kind>,theme:<slug>` | `--labels="type:issue:task,theme:ai"` |
 
-The theme slug comes from the shotfile → theme mapping (e.g., `ai`, `cli`, `web`). When working under an epic, the parent relationship already provides epic context — no separate `epic:` label needed.
+When working under an epic, the parent relationship already provides epic context -- no separate `epic:` label needed.
 
-### Workflow Labels
+### Namespace: `plan:` -- Workflow Labels
 
-- `wave:1`, `wave:2`, `wave:3` — parallel execution groups within an epic
-- `autonomous:true` / `autonomous:false` — checkpoint control for executors
-- `gap-closure` — issues created from verification gap analysis
+Used by agents to organize and control execution flow within epics.
+
+- `plan:wave:1`, `plan:wave:2`, `plan:wave:3` -- parallel execution groups within an epic
+- `plan:phase:1`, `plan:phase:2` -- sequential phases for multi-phase work
+- `plan:autonomous:true` / `plan:autonomous:false` -- checkpoint control for executors
+- `plan:gap-closure` -- issues created from verification gap analysis
+- `plan:todo` -- marks issues needing attention
+
+### Namespace: `meta:` -- Analysis Metadata
+
+Used for categorization, severity, and historical tracking.
+
+- `meta:concern` -- flags a concern on the bead
+- `meta:severity:critical`, `meta:severity:high`, `meta:severity:medium`, `meta:severity:low` -- severity levels
+- `meta:category:<name>` -- categorization (e.g., `meta:category:security`, `meta:category:performance`)
+- `meta:history:<tag>` -- historical markers (e.g., `meta:history:migrated`, `meta:history:split-from`)
+
+### Label Governance
+
+Labels are governed by `labels.json` and a three-source merge strategy: template labels (from shooter), project labels (from `.shooter/labels.json`), and inline labels (from `--labels` flag). Template labels define the schema; project labels extend it for project-specific needs; inline labels are applied per-bead at creation time.
 
 ### Querying by Label
 
 ```bash
-bd list --label="theme:ai"                   # All beads in the ai theme
-bd list --label="theme:cli" --status=open    # Open beads in cli theme
-bd list --label="wave:1" --parent=<epic-id>  # Wave 1 issues in an epic
+bd list --label="theme:ai"                        # All beads in the ai theme
+bd list --label="theme:cli" --status=open         # Open beads in cli theme
+bd list --label="plan:wave:1" --parent=<epic-id>  # Wave 1 issues in an epic
+bd list --label="plan:gap-closure"                # All gap-closure issues
 ```
 
 ## Shooter Commands Reference
@@ -187,7 +223,7 @@ Every bead should be self-contained — a human reading it in `bv` or an agent p
 |-------|------|-------------------|------|
 | **Title** | Short, imperative | Short, imperative | Short, descriptive |
 | **Description** | Shot content (what was requested) | What to do + why | Scope + objectives |
-| **Labels** | `theme:<slug>` | `theme:<slug>` | `theme:<slug>` |
+| **Labels** | `type:issue:shot,theme:<slug>` | `type:issue:<kind>,theme:<slug>` | `type:epic,theme:<slug>` |
 | **Close reason** | What was done + files touched | What was done + files touched | Summary + child issue count |
 | **Acceptance** | — | Testable criteria | Epic-level done criteria |
 | **Design** | — | — | Architecture decisions |
