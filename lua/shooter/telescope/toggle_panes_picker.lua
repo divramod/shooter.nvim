@@ -108,7 +108,7 @@ function M.show_picker()
   local all_config = config_panes.get_current()
 
   if not all_config or #all_config == 0 then
-    utils.notify('No panes configured in .shooter.nvim/tmux.yml', vim.log.levels.WARN)
+    utils.notify('No panes configured in .shooter/config/nvim/tmux.yml', vim.log.levels.WARN)
     return
   end
 

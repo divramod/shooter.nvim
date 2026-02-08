@@ -10,7 +10,7 @@ M.defaults = {
     global_context = '~/.config/shooter.nvim/shooter-context-global.md',
 
     -- Project context file (relative to git root)
-    project_context = '.shooter.nvim/shooter-context-project.md',
+    project_context = '.shooter/config/nvim/shooter-context-project.md',
 
     -- Project context template (in plugin installation)
     project_template = 'templates/shooter-context-project-template.md',

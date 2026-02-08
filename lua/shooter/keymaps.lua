@@ -91,7 +91,7 @@ function M.setup()
   map('n', 's{', ':ShooterShotNavPrevSent<cr>', 'Prev sent shot')
   map('n', 'sL', ':ShooterShotNavLatest<cr>', 'Latest sent')
   map('n', 'su', ':ShooterShotNavUndo<cr>', 'Undo sent marking')
-  map('n', 'sv', ':ShooterShotViewResponse<cr>', 'View Claude response')
+  map('n', 'sv', ':ShooterShotViewResponse<cr>', 'View shot response')
 
   -- Shot send (also at root, but available with s prefix too)
   for i = 1, 4 do
@@ -172,7 +172,7 @@ function M.setup()
   -- ============================================================
   map('n', ',p', ':ShooterShotfileOpenPrompts<cr>', 'Open prompts folder')
   map('n', ',l', ':ShooterOpenPlans<cr>', 'Open plans folder')
-  map('n', ',s', ':ShooterOpenShooterConfig<cr>', 'Open .shooter.nvim folder')
+  map('n', ',s', ':ShooterOpenShooterConfig<cr>', 'Open .shooter/config/nvim folder')
 
   -- ============================================================
   -- NAV NAMESPACE (z prefix) - Navigation commands

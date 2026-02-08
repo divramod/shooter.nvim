@@ -28,7 +28,7 @@ These variables are available in all shooter template files. Use the `{{variable
 
 Templates are loaded in this order (first found wins):
 
-1. **Project-specific**: `./.shooter.nvim/shooter-context-instructions.md`
+1. **Project-specific**: `./.shooter/config/nvim/shooter-context-instructions.md`
 2. **Global**: `~/.config/shooter.nvim/shooter-context-instructions.md`
 3. **Plugin fallback**: `templates/shooter-context-instructions.md`
 

@@ -107,7 +107,7 @@ TOOLS NAMESPACE (l prefix)
   li        Insert images         Insert image references
   lw        Watch pane            Open watch pane (= tw)
   lp        PRD list              List tasks from plans/prd.json
-  lc        Clipboard paste       Paste clipboard image to .shooter.nvim/images/
+  lc        Clipboard paste       Paste clipboard image to .shooter/config/nvim/images/
   lI        Images folder         Open clipboard images folder in Oil
 
 CFG NAMESPACE (c prefix)
@@ -129,7 +129,7 @@ HELP NAMESPACE (h prefix)
 QUICK FOLDER ACCESS (, prefix)
   ,p        Prompts folder        Open .shooter/shotfiles in Oil
   ,l        Plans folder          Open plans in Oil
-  ,s        Shooter config        Open .shooter.nvim in Oil
+  ,s        Shooter config        Open .shooter/config/nvim in Oil
 
 SEND ALL (double prefix)
   <space><space>1-4               Send ALL open shots to pane #1-4
@@ -152,7 +152,7 @@ PROJECT SUPPORT
 
 CONTEXT FILES
   Global context:   ~/.config/shooter.nvim/shooter-context-global.md
-  Project context:  <repo>/.shooter.nvim/shooter-context-project.md
+  Project context:  <repo>/.shooter/config/nvim/shooter-context-project.md
   Plugin config:    ~/.config/nvim/lua/plugins/shooter.lua (lazy.nvim)
 
 HISTORY
@@ -162,7 +162,7 @@ SMART PASTE (global keymaps, disable with keymaps.smart_paste = false)
   p         Smart paste after     Paste image if in clipboard, else normal paste
   P         Smart paste before    Paste image before if in clipboard, else normal paste
   <C-v>     Clipboard paste       Insert mode only - paste image or + register
-  Images saved to: <repo>/.shooter.nvim/images/clipboard_YYYYMMDD_HHMMSS.png
+  Images saved to: <repo>/.shooter/config/nvim/images/clipboard_YYYYMMDD_HHMMSS.png
 
 Press 'q' to close this help window.
 ]]

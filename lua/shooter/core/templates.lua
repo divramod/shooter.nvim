@@ -51,9 +51,9 @@ end
 function M.load_template(filename)
   local git_root = files.get_git_root()
 
-  -- Priority 1: Project-specific (./.shooter.nvim/)
+  -- Priority 1: Project-specific (./.shooter/config/nvim/)
   if git_root then
-    local project_path = git_root .. '/.shooter.nvim/' .. filename
+    local project_path = git_root .. '/.shooter/config/nvim/' .. filename
     local content = utils.read_file(project_path)
     if content then return trim_trailing(content) end
   end

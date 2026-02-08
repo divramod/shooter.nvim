@@ -58,7 +58,7 @@ M.sections = {
     { 'hh', 'Help' }, { 'hH', 'Health check' }, { 'hd', 'Dashboard' },
   }},
   { 'FOLDERS (,)', {
-    { ',p', 'Prompts' }, { ',l', 'Plans' }, { ',s', '.shooter.nvim' },
+    { ',p', 'Prompts' }, { ',l', 'Plans' }, { ',s', 'Shooter cfg' },
   }},
 }
 
