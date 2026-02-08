@@ -1,8 +1,15 @@
 # shotfile
 
-## shot 17
+## shot 19
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 18 (2026-02-08 16:48:21) @shot-18-20260208_164821
+test
+
+## x shot 17 (2026-02-08 16:45:23)
+ok, the folder of the shotfiles changed back to .shooter/shotfiles
+please reverse it back through the whole codebase
 
 ## x shot 16 (2026-02-08 12:37:56) @shot-16-20260208_123756
 the shotfiles are now living in the .shooter/project-shotfiles/ folder
