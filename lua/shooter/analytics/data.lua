@@ -181,8 +181,8 @@ function M.get_all_shots(project_filter)
     end
     local repo_name = user .. '/' .. repo
 
-    -- Find all .md files in .shooter/project-shotfiles and subprojects
-    local prompts_dir = repo_path .. '/.shooter/project-shotfiles'
+    -- Find all .md files in .shooter/shotfiles and subprojects
+    local prompts_dir = repo_path .. '/.shooter/shotfiles'
     local handle = io.popen('find "' .. prompts_dir .. '" -name "*.md" -type f 2>/dev/null')
     if handle then
       for filepath in handle:lines() do
@@ -203,7 +203,7 @@ function M.get_all_shots(project_filter)
     -- Also check projects/ subdirectories
     local projects_dir = repo_path .. '/projects'
     if utils.dir_exists(projects_dir) then
-      handle = io.popen('find "' .. projects_dir .. '" -path "*/.shooter/project-shotfiles/*.md" -type f 2>/dev/null')
+      handle = io.popen('find "' .. projects_dir .. '" -path "*/.shooter/shotfiles/*.md" -type f 2>/dev/null')
       if handle then
         for filepath in handle:lines() do
           local project = M.detect_project_from_path(filepath)

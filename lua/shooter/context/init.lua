@@ -17,11 +17,11 @@ function M.is_oil_buffer()
   return bufname:match('^oil://') ~= nil
 end
 
--- Check if a filepath is a shotfile (in .shooter/project-shotfiles folder)
+-- Check if a filepath is a shotfile (in .shooter/shotfiles folder)
 function M.is_shotfile(filepath)
   if not filepath or filepath == '' then return false end
-  return filepath:match('/.shooter/project%-shotfiles/') ~= nil
-    or filepath:match('/.shooter/project%-shotfiles$') ~= nil
+  return filepath:match('/.shooter/shotfiles/') ~= nil
+    or filepath:match('/.shooter/shotfiles$') ~= nil
 end
 
 -- Check if current buffer is a shotfile

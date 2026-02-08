@@ -115,7 +115,7 @@ function M.get_repo_files(repo_path)
   local result = { files = {}, total_files = 0, open_shots = 0, total_shots = 0 }
 
   -- Process root prompts directory
-  process_prompts_dir(repo_path .. '/.shooter/project-shotfiles', result, nil)
+  process_prompts_dir(repo_path .. '/.shooter/shotfiles', result, nil)
 
   -- Process project prompts directories
   local projects_dir = repo_path .. '/projects'
@@ -123,7 +123,7 @@ function M.get_repo_files(repo_path)
     local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')
     if handle then
       for project in handle:lines() do
-        local project_prompts = projects_dir .. '/' .. project .. '/.shooter/project-shotfiles'
+        local project_prompts = projects_dir .. '/' .. project .. '/.shooter/shotfiles'
         process_prompts_dir(project_prompts, result, project)
       end
       handle:close()

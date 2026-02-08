@@ -75,10 +75,10 @@ function M.is_in_prompts_folder(path)
   -- Check using git root (handles cwd != repo root)
   local git_root = M.get_git_root()
   if git_root then
-    if path:find(git_root .. '/.shooter/project-shotfiles', 1, true) then
+    if path:find(git_root .. '/.shooter/shotfiles', 1, true) then
       return true
     end
-    if path:find(git_root .. '/projects/.+/.shooter/project%-shotfiles') then
+    if path:find(git_root .. '/projects/.+/.shooter/shotfiles') then
       return true
     end
   end
@@ -91,7 +91,7 @@ function M.is_shooter_file(filepath)
   return M.is_in_prompts_folder(filepath)
 end
 
--- Get shooter files from directory (returns display paths without .shooter/project-shotfiles prefix)
+-- Get shooter files from directory (returns display paths without .shooter/shotfiles prefix)
 -- project = nil means root level, string means specific project
 function M.get_prompt_files(project)
   local prompts_dir = M.get_prompts_dir(project)
@@ -99,7 +99,7 @@ function M.get_prompt_files(project)
   local results = {}
 
   for _, file in ipairs(files) do
-    -- Store both display path (without .shooter/project-shotfiles/) and full path
+    -- Store both display path (without .shooter/shotfiles/) and full path
     local display = file:gsub('^' .. utils.escape_pattern(prompts_dir) .. '/', '')
     table.insert(results, { display = display, path = file, project = project })
   end

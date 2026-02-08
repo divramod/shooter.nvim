@@ -101,12 +101,12 @@ local function apply_syntax(bufnr)
   end
 end
 
--- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/project-shotfiles)
+-- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/shotfiles)
 local function is_prompts_file(filepath)
   -- Exclude Oil buffers
   if filepath:match('^oil://') then return false end
-  -- Must be a .md file in .shooter/project-shotfiles folder (including subdirectories like backlog/, archive/, etc.)
-  return filepath:match('.shooter/project%-shotfiles/.+%.md$') ~= nil
+  -- Must be a .md file in .shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
+  return filepath:match('.shooter/shotfiles/.+%.md$') ~= nil
 end
 
 -- Track which buffers already showed the open notification
@@ -150,7 +150,7 @@ function M.setup()
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
-      -- Only apply to markdown files in .shooter/project-shotfiles (not oil, not other filetypes)
+      -- Only apply to markdown files in .shooter/shotfiles (not oil, not other filetypes)
       if ft == 'markdown' and is_prompts_file(filepath) then
         apply_syntax(ev.buf)
         show_shotfile_info(ev.buf)

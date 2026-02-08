@@ -127,7 +127,7 @@ HELP NAMESPACE (h prefix)
   hd        Dashboard             Open project dashboard
 
 QUICK FOLDER ACCESS (, prefix)
-  ,p        Prompts folder        Open .shooter/project-shotfiles in Oil
+  ,p        Prompts folder        Open .shooter/shotfiles in Oil
   ,l        Plans folder          Open plans in Oil
   ,s        Shooter config        Open .shooter/config/nvim in Oil
 
@@ -135,19 +135,19 @@ SEND ALL (double prefix)
   <space><space>1-4               Send ALL open shots to pane #1-4
 
 FOLDER STRUCTURE
-  .shooter/project-shotfiles/           <- new files created here (in-progress)
-  .shooter/project-shotfiles/archive/   <- completed/archived
-  .shooter/project-shotfiles/backlog/   <- future tasks
-  .shooter/project-shotfiles/done/      <- finished tasks
-  .shooter/project-shotfiles/reqs/      <- requirements
-  .shooter/project-shotfiles/test/      <- testing
-  .shooter/project-shotfiles/wait/      <- waiting/blocked
+  .shooter/shotfiles/           <- new files created here (in-progress)
+  .shooter/shotfiles/archive/   <- completed/archived
+  .shooter/shotfiles/backlog/   <- future tasks
+  .shooter/shotfiles/done/      <- finished tasks
+  .shooter/shotfiles/reqs/      <- requirements
+  .shooter/shotfiles/test/      <- testing
+  .shooter/shotfiles/wait/      <- waiting/blocked
 
 PROJECT SUPPORT
   If a 'projects/' folder exists at git root, shooter becomes project-aware:
   - <space>n shows project picker when at repo root
   - If cwd is inside projects/<name>/, that project is auto-detected
-  - Files are created at projects/<name>/.shooter/project-shotfiles/
+  - Files are created at projects/<name>/.shooter/shotfiles/
   - History paths include project: ~/.config/.../history/user/repo/project/...
 
 CONTEXT FILES
