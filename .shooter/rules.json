@@ -6,13 +6,10 @@
     "./rules/core/commit-conventions.md",
     "./rules/core/quality-gates.md",
     "./rules/core/artifact-persistence.md",
-    "./codebase/_project/SUMMARY.md",
     "./rules/core/boundaries.md",
     "./rules/core/deterministic-execution.md",
     "./rules/core/release-workflow.md",
     "./context-human-learnings.md",
-    "./context-ai-learnings.md",
-    "./q-and-a.md",
-    "./decisions.md",
+    "./rules/core/security.md",
     "./codebase/SUMMARY.md"
 ]
