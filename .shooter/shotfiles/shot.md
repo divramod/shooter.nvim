@@ -1,9 +1,25 @@
 # shot
 
-## shot 51
+## shot 53
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
+
+## x shot 52 (2026-02-08 05:40:47) @shot-52-20260208_054048
+i want you to go through the whole code of the shooter plugin and check, where there is a reference to create or put or read something from <repo>/.shooter.nvim 
+i want you to change this reference to <repo>/.shooter/config/nvim
+after that, you should go through all repos in ~/a (except _arvhive) and remove the .shooter.nvim folder and move its content to .shooter/config/nvim
+only if this content has an effect on the neovim plugin, otherwise you can just delete it.
+create a commit in each repo which says "refactor: move shooter.nvim config to .shooter/config/nvim"
+
+## x shot 51 (2026-02-08 04:20:32) @shot-51-20260208_042032
+i want to move the neovim plugin i wrote to another repo ~/a/shooter/ into the folder nvim.
+the plugin is a part of a bigger project and belongs there.
+before starting this, i have some questions:
+1. is it possible, to have the neovim pluing being part of a bigger repo, but still can be installed by the neovim package managers?
+2. what other issues could arise, when i move the plugin into a bigger repo?
+
+please also research the web for best practices for this and also interview me, if you need more context to give a good answer.
 
 ## x shot 50 (2026-02-07 18:48:34) @shot-53-20260207_184834
 the shots are sorted in the way, the picker gave them back.
@@ -35,17 +51,17 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+the < >sy command should also mark the shot as done and call the renumber function
+i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 44 (2026-02-07 18:13:22)
 selecting multiple shot pickers and then hitting 1 to send them does not 
 
 ## x shot 43 (2026-02-07 18:13:22)
-the < >sy command should also mark the shot as done and call the renumber function
-i call this command usually, when i want to manually paste a shot to a agent cli
+the command < >. should also call the renumber function, after is marked a shot as done
 
 ## x shot 42 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
+color the background color of the last shot made green
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test

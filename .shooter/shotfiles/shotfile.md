@@ -1,11 +1,17 @@
 # shotfile
 
-## shot 11
+## shot 13
 when i press ctrl+g in claude, i like to have a shortcut, which cuts the complete text from the current file, closes it and goes over to the right pane in tmux (nvim is running there) and creates a new shot at the top and pastes the text there. this way i can quickly move text from claude to nvim without having to copy and paste manually.
 
-## shot 10
+## shot 12
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 11 (2026-02-08 06:06:52) @shot-11-20260208_060652
+please adapt the shotfile notification to show the notification for 3 seconds
+
+## x shot 10 (2026-02-08 06:01:59) @shot-10-20260208_060159
+when opening a shotfile, i want a short notification on the top right corner, with the name of the repo and the name of the shotfile and the amount of <open>/<total> shots in the file.
 
 ## x shot 9 (2026-02-07 03:24:11)
 he pastes something from the image copy clipbaord, as it looks like.

@@ -1,13 +1,18 @@
 [
     "./rules/core/instructions-for-agents.md",
     "./rules/core/shot-workflow.md",
+    "./themes.md",
     "./rules/core/beads-workflow.md",
     "./rules/core/commit-conventions.md",
     "./rules/core/quality-gates.md",
     "./rules/core/artifact-persistence.md",
-    "./codebase/SUMMARY.md",
+    "./codebase/_project/SUMMARY.md",
     "./rules/core/boundaries.md",
+    "./rules/core/deterministic-execution.md",
+    "./rules/core/release-workflow.md",
     "./context-human-learnings.md",
     "./context-ai-learnings.md",
-    "./q-and-a.md"
+    "./q-and-a.md",
+    "./decisions.md",
+    "./codebase/SUMMARY.md"
 ]
