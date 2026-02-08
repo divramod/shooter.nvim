@@ -661,6 +661,76 @@ function M.create_shot_from_file(filepath)
   utils.echo('Created shot ' .. next_num .. ' from Claude')
 end
 
+-- Write a self-contained lua script that creates a shot from a temp file
+-- Uses :luafile so it works without requiring the plugin module to be loaded
+local function write_shot_creator_script(shot_file, script_file)
+  local script = string.format([[
+local filepath = "%s"
+local f = io.open(filepath, "r")
+if not f then vim.notify("No temp file found", vim.log.levels.ERROR); return end
+local content = f:read("*a")
+f:close()
+content = vim.trim(content)
+if content == "" then vim.notify("Empty content", vim.log.levels.WARN); return end
+
+local bufnr = 0
+local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+-- Find title line
+local title_line = nil
+for i, line in ipairs(lines) do
+  if line:match("^#%%s+[^#]") then title_line = i; break end
+end
+
+-- Find first shot header
+local first_shot = nil
+if title_line then
+  for i = title_line + 1, #lines do
+    if lines[i]:match("^##%%s+x?%%s*shot") then first_shot = i; break end
+  end
+end
+
+-- Determine next shot number
+local max_shot = 0
+for _, line in ipairs(lines) do
+  local num = line:match("^##%%s+x?%%s*shot%%s+(%%d+)")
+  if num then local n = tonumber(num); if n > max_shot then max_shot = n end end
+end
+local next_num = max_shot + 1
+
+-- Determine insertion point
+local insert_line = (title_line or 0) + 1
+if first_shot then insert_line = first_shot end
+
+-- Build new shot lines
+local content_lines = vim.split(content, "\n")
+local new_lines = { "", "## shot " .. next_num }
+for _, line in ipairs(content_lines) do
+  table.insert(new_lines, line)
+end
+table.insert(new_lines, "")
+
+vim.api.nvim_buf_set_lines(bufnr, insert_line - 1, insert_line - 1, false, new_lines)
+vim.api.nvim_win_set_cursor(0, { insert_line + 2, 0 })
+
+local bufname = vim.api.nvim_buf_get_name(bufnr)
+if bufname ~= "" then vim.cmd("write") end
+
+os.remove(filepath)
+os.remove("%s")
+
+vim.schedule(function()
+  vim.cmd('echon "Created shot ' .. next_num .. ' from Claude"')
+end)
+]], shot_file, script_file)
+
+  local f = io.open(script_file, 'w')
+  if not f then return false end
+  f:write(script)
+  f:close()
+  return true
+end
+
 -- Cut text from Claude's ctrl+g editor buffer, close it, and create a shot in the right tmux pane
 function M.create_shot_from_claude()
   -- 1. Get all text from current buffer
@@ -673,11 +743,17 @@ function M.create_shot_from_claude()
     return
   end
 
-  -- 2. Save to temp file
+  -- 2. Save text and a self-contained creator script to temp files
   local tmp_file = '/tmp/shooter-claude-shot.md'
+  local script_file = '/tmp/shooter-claude-shot-cmd.lua'
   local ok, err = utils.write_file(tmp_file, text)
   if not ok then
     utils.echo('Failed to write temp file: ' .. (err or ''))
+    return
+  end
+  if not write_shot_creator_script(tmp_file, script_file) then
+    utils.echo('Failed to write script file')
+    os.remove(tmp_file)
     return
   end
 
@@ -688,14 +764,15 @@ function M.create_shot_from_claude()
   if right_pane == '' or right_pane:match('can.t') or right_pane:match('error') then
     utils.echo('No right pane found')
     os.remove(tmp_file)
+    os.remove(script_file)
     return
   end
 
-  -- 4. Send Escape to ensure normal mode in right pane, then create shot
+  -- 4. Send Escape to ensure normal mode, then run self-contained script via :luafile
   vim.fn.system('tmux send-keys -t ' .. right_pane .. ' Escape')
   vim.fn.system(
     'tmux send-keys -t ' .. right_pane
-    .. " \":lua require('shooter.core.shot_actions').create_shot_from_file('" .. tmp_file .. "')\" Enter"
+    .. ' ":luafile ' .. script_file .. '" Enter'
   )
 
   -- 5. Clear the buffer (so Claude gets empty input back)
