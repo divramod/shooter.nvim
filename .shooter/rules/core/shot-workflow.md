@@ -65,9 +65,9 @@ If the `# context` section includes a `- Theme context:` or `- Theme README:` li
 3. **Execute** the task directly
 4. **Close the bead** (`bd close <id> --reason="what was done"`)
 5. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
-6. **CRITICAL — Commit, push, sync in ONE call** using `shooter_commit.sh`:
+6. **CRITICAL — Commit, push, sync in ONE call** using `sho_util-commit.sh`:
    ```bash
-   bash <shooter-dir>/scripts/shell/shooter_commit.sh \
+   bash <shooter-dir>/scripts/shell/sho_util-commit.sh \
      --message "type(scope): description" \
      --beads "<bead-id>" \
      --co-author "<model> <noreply@anthropic.com>" \
@@ -92,7 +92,7 @@ When a shot requires 3 or more distinct steps (but isn't large enough to escalat
 4. **For each step:** mark in_progress → execute → mark closed with reason
 5. **Close the parent shot bead** when all children are done
 6. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
-7. **CRITICAL — Commit, push, sync in ONE call** using `shooter_commit.sh` (same as simple workflow step 6)
+7. **CRITICAL — Commit, push, sync in ONE call** using `sho_util-commit.sh` (same as simple workflow step 6)
 
 **Why:** If Claude crashes mid-work, `bd list --status=in_progress` shows exactly where to resume. TaskCreate is ephemeral (lost on crash) — beads persist across sessions. Use TaskCreate for UI spinners only, never as a substitute for beads.
 
@@ -114,8 +114,8 @@ When a shot requires 3+ steps or architectural decisions:
 
 1. **Create an epic** under the theme: `bd create --type=epic --parent=<theme-id> --title="<shot title>" --description="<shot content>" --labels="type:epic,theme:<slug>"`
    Include the shot content in the epic description so the scope and original request are preserved. Set `--labels="type:epic,theme:<slug>"` for `bv` filtering.
-2. **Enter plan mode** or run `shooter:plan-epic` to break it into child issues
-3. **Execute** via `shooter:execute-epic` or manually work through child issues
+2. **Enter plan mode** or run `sho:gtd-epic-plan` to break it into child issues
+3. **Execute** via `sho:gtd-epic-execute` or manually work through child issues
 4. The original shot is NOT tracked as a `--type=shot` — it becomes an epic directly
 
 ## Rules

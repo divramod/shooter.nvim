@@ -53,10 +53,10 @@ Every command and agent must display a banner as its first output. The banner sh
 
 **Format:**
 ```
-**`shooter:<name>`** · **vX.Y.Z** · model: **<model>**
+**`sho:<name>`** · **vX.Y.Z** · model: **<model>**
 ```
 
-- `<name>` — the command name (e.g., `setup`, `plan-epic`, `health`)
+- `<name>` — the command name (e.g., `prj-setup-infrastructure`, `gtd-epic-plan`, `cfg-make-healthy`)
 - `vX.Y.Z` — read from `.shooter/VERSION`
 - `<model>` — the model you are running on (e.g., `opus`, `sonnet`)
 
@@ -64,7 +64,7 @@ Every command and agent must display a banner as its first output. The banner sh
 ```markdown
 ## Banner
 Before doing ANY work, read `.shooter/VERSION` and output:
-**`shooter:<command-name>`** · **vX.Y.Z** · model: **<model>**
+**`sho:<command-name>`** · **vX.Y.Z** · model: **<model>**
 ```
 
 ## Command Logging
@@ -73,14 +73,14 @@ Every shooter command invocation must be logged for usage tracking and repo regi
 
 **Banner step addition:** Before reading `.shooter/VERSION`, run:
 ```bash
-bash <shooter-dir>/scripts/shell/shooter_log-command.sh "<command-name>" --model "<model>"
+bash <shooter-dir>/scripts/shell/sho_util-log-command.sh "<command-name>" --model "<model>"
 ```
 
 Where `<shooter-dir>` is `~/.claude/shooter` (Claude), `~/.gemini/shooter` (Gemini), or the equivalent for other CLIs. `<model>` is the model you are running on (e.g., `opus`, `sonnet`, `gemini-2.5-pro`). The CLI is auto-detected from the script's install path — no `--cli` flag needed. This:
 1. Appends an entry to `.shooter/command-log.jsonl` (timestamp, command, CLI, model)
 2. Registers/updates the repo in `~/.config/shooter/repos.json` (global registry)
 
-The registry enables `shooter:update` to batch-update all repos with latest rules.
+The registry enables `sho:self-update` to batch-update all repos with latest rules.
 
 ## Core Principles
 

@@ -144,7 +144,7 @@ The VERSION file remains the source of truth; Cargo.toml is kept in sync.
 Release commits follow a special format. Minor and major bumps are only done via releases:
 
 - Format: `chore(release): vX.Y.Z` (no Co-Authored-By — script-driven)
-- Created by `shooter:release` skill, never manually
+- Created by `sho:prj-release` skill, never manually
 - AI agents continue using patch bumps for regular work commits
 - Release commits include: VERSION bump, CHANGELOG entry, version file sync
 - A git tag `vX.Y.Z` is created alongside each release commit

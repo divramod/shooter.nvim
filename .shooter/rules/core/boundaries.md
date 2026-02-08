@@ -13,10 +13,10 @@ Three-tier permission system for AI agent actions.
 - Use `printf` for output, never `echo`
 - Update `.shooter/context.md` after corrections from the user
 - Stage specific files, not `git add -A` or `git add .`
-- After modifying any rule file in `ai/rules/`: copy to `.shooter/rules/` and run `bash ai/scripts/shell/shooter_ensure-rules.sh` to regenerate AGENTS.md, CLAUDE.md, GEMINI.md
-- After creating/modifying any agent, command, skill, or rule: run `shooter:dev-update-local` to ensure all 4 major CLIs (Claude, Gemini, OpenCode, Codex) have the latest artifacts
+- After modifying any rule file in `ai/rules/`: copy to `.shooter/rules/` and run `bash ai/scripts/shell/sho_ensure-rules.sh` to regenerate AGENTS.md, CLAUDE.md, GEMINI.md
+- After creating/modifying any agent, command, skill, or rule: run `sho:self-distribute-to-clis` to ensure all 4 major CLIs (Claude, Gemini, OpenCode, Codex) have the latest artifacts
 - After adding or removing a command, skill, or agent: update `ai/commands/help.md` to keep the help text current
-- Run `shooter_verify-distribution.sh` before any release to confirm cross-CLI parity
+- Run `sho_dist-verify.sh` before any release to confirm cross-CLI parity
 
 ## Ask First
 

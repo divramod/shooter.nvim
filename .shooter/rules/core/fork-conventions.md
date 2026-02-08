@@ -20,7 +20,7 @@ When forking a repo:
 1. Fork on GitHub via `gh repo fork`
 2. Clone to `{{shooter:paths.forks}}/<repo>`
 3. Add as a theme in the **current project's** `.shooter/themes.json`
-4. Do NOT run `shooter:setup` or initialize beads in the fork — keep forks clean for upstream PRs
+4. Do NOT run `sho:prj-setup-infrastructure` or initialize beads in the fork — keep forks clean for upstream PRs
 5. Do NOT register forks in `~/.config/shooter/repos.json`
 
 ## Theme Integration
@@ -46,8 +46,8 @@ Forked repos always have two remotes:
 ## Rules
 
 - Forks ALWAYS go to `{{shooter:paths.forks}}/<repo-name>/` — never nested paths like `{{shooter:paths.forks}}/<owner>/<repo>/`
-- Use `shooter:fork-repo` command when available
-- Do NOT run `shooter:setup` in forks — keep them clean for upstream contributions
+- Use `sho:dev-fork-repo` command when available
+- Do NOT run `sho:prj-setup-infrastructure` in forks — keep them clean for upstream contributions
 - Do NOT register forks in `~/.config/shooter/repos.json`
 - Do NOT initialize beads in forks — track work in the parent project's beads
 - Add as theme in the project that depends on the fork
