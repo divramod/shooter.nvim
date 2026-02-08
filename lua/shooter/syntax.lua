@@ -86,6 +86,34 @@ local function is_prompts_file(filepath)
   return filepath:match('.shooter/shotfiles/.+%.md$') ~= nil
 end
 
+-- Track which buffers already showed the open notification
+local notified_bufs = {}
+
+-- Show shotfile info notification (repo, filename, open/total shots)
+local function show_shotfile_info(bufnr)
+  if notified_bufs[bufnr] then return end
+  notified_bufs[bufnr] = true
+
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then return end
+
+    local shots = require('shooter.core.shots')
+    local all = shots.find_all_shots(bufnr)
+    local open = shots.find_open_shots(bufnr)
+
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+    local filename = vim.fn.fnamemodify(filepath, ':t:r')
+
+    -- Get repo name from git root folder
+    local git_root = vim.fn.systemlist('git rev-parse --show-toplevel 2>/dev/null')
+    local repo = (vim.v.shell_error == 0 and #git_root > 0)
+      and vim.fn.fnamemodify(git_root[1], ':t') or ''
+
+    local msg = string.format('%s/%s  %d/%d shots open', repo, filename, #open, #all)
+    vim.notify(msg, vim.log.levels.INFO)
+  end)
+end
+
 -- Setup autocommands for syntax highlighting
 function M.setup()
   define_highlights()
@@ -102,6 +130,7 @@ function M.setup()
       -- Only apply to markdown files in .shooter/shotfiles (not oil, not other filetypes)
       if ft == 'markdown' and is_prompts_file(filepath) then
         apply_syntax(ev.buf)
+        show_shotfile_info(ev.buf)
       else
         pcall(vim.fn.clearmatches)
       end
@@ -130,6 +159,14 @@ function M.setup()
       if ft == 'markdown' and is_prompts_file(filepath) then
         apply_syntax(ev.buf)
       end
+    end,
+  })
+
+  -- Clear notification tracking when buffer is deleted
+  vim.api.nvim_create_autocmd('BufDelete', {
+    group = group,
+    callback = function(ev)
+      notified_bufs[ev.buf] = nil
     end,
   })
 
