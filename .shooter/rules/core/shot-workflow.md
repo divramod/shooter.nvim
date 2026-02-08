@@ -24,8 +24,11 @@ Every shot arrives from a shotfile that belongs to a theme. The `# context` sect
 
 **Shotfile → Theme mapping:**
 
+`_project` is the default meta-theme for cross-cutting work that doesn't belong to any specific theme.
+
 | Shotfile | Theme |
 |---|---|
+| `.shooter/shotfiles/_project.md` | _project |
 | `.shooter/shotfiles/ai.md` | shooter/ai |
 | `.shooter/shotfiles/cli.md` | shooter/cli |
 | `.shooter/shotfiles/tui.md` | shooter/tui |
@@ -62,9 +65,15 @@ If the `# context` section includes a `- Theme context:` or `- Theme README:` li
 3. **Execute** the task directly
 4. **Close the bead** (`bd close <id> --reason="what was done"`)
 5. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
-6. **Bump version** (`bash ~/.claude/shooter/scripts/shell/shooter_increment-version.sh patch`)
-7. **Commit** with a clear message including the version and a `Beads:` trailer referencing the shot bead ID
-8. **Push** and `bd sync` — work is not done until pushed
+6. **CRITICAL — Commit, push, sync in ONE call** using `shooter_commit.sh`:
+   ```bash
+   bash <shooter-dir>/scripts/shell/shooter_commit.sh \
+     --message "type(scope): description" \
+     --beads "<bead-id>" \
+     --co-author "<model> <noreply@anthropic.com>" \
+     -- <files...>
+   ```
+   **NEVER run git add, git commit, bd sync, git push as separate commands.** The script handles ALL of it: version bump → bd sync → git add (files + beads + VERSION) → git commit (with trailers) → bd sync → git push → git status. Flags: `--no-push`, `--no-version-bump`.
 
 ## Task Workflow (Multi-Step Shots — 3+ steps)
 
@@ -83,7 +92,7 @@ When a shot requires 3 or more distinct steps (but isn't large enough to escalat
 4. **For each step:** mark in_progress → execute → mark closed with reason
 5. **Close the parent shot bead** when all children are done
 6. **Record decisions** — if the work involved meaningful decisions, prepend them to `.shooter/decisions.md`
-7. **Bump version**, **commit** (include `Beads:` trailer with all related bead IDs), **push**, and `bd sync`
+7. **CRITICAL — Commit, push, sync in ONE call** using `shooter_commit.sh` (same as simple workflow step 6)
 
 **Why:** If Claude crashes mid-work, `bd list --status=in_progress` shows exactly where to resume. TaskCreate is ephemeral (lost on crash) — beads persist across sessions. Use TaskCreate for UI spinners only, never as a substitute for beads.
 

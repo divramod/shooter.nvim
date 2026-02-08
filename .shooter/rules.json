@@ -1,7 +1,6 @@
 [
     "./rules/core/instructions-for-agents.md",
     "./rules/core/shot-workflow.md",
-    "./themes.md",
     "./rules/core/beads-workflow.md",
     "./rules/core/commit-conventions.md",
     "./rules/core/quality-gates.md",
@@ -9,7 +8,9 @@
     "./rules/core/boundaries.md",
     "./rules/core/deterministic-execution.md",
     "./rules/core/release-workflow.md",
-    "./context-human-learnings.md",
     "./rules/core/security.md",
-    "./codebase/SUMMARY.md"
+    "./rules/core/fork-conventions.md",
+    "./glossary.md",
+    "./themes.json",
+    "./context.md"
 ]

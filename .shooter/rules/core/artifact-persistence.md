@@ -7,20 +7,21 @@ All AI output of lasting value must be persisted to the filesystem. Conversation
 | Artifact Type     | Location                            |
 |-------------------|-------------------------------------|
 | Research reports  | `.shooter/research/<topic-slug>.md` |
-| Project plans     | `.shooter/plans-shooter/<plan-name>.md` |
-| Decision log      | `.shooter/decisions.md`             |
-| Learning records  | `.shooter/context-ai-learnings.md`  |
-| Q&A records       | `.shooter/q-and-a.md`               |
+| Project plans     | `.shooter/plans/<YYYY-MM-DD>_<HH-MM>_<short-description>.md` |
+| Decision log      | `.shooter/decisions.md`     |
+| Context (learnings + notes) | `.shooter/context.md` |
+| Q&A records       | `.shooter/q-and-a.md`       |
+| Glossary          | `.shooter/glossary.md`      |
 
 ## Rules
 
 - **Decisions must be saved** — after closing a bead that involved decisions, record them in `.shooter/decisions.md`
-- **Learnings must be saved** — if you discover something important about the project, add it to `.shooter/context-ai-learnings.md`
+- **Learnings must be saved** — if you discover something important about the project, add it to `.shooter/context.md`
 - **Research must be saved** — if you researched something, write it to `.shooter/research/`
 - **Check existing research first** — before starting any research, read `.shooter/research/` to see if a similar topic was already researched. If it exists, build on it (update or reference) instead of duplicating. If not, create a new document.
 - **Multi-document research uses subfolders** — if a research topic produces multiple documents, store them in `.shooter/research/<topic-slug>/` with an `index.md` or descriptive filenames. Single-document research stays as `.shooter/research/<topic-slug>.md`.
-- **Plans must be saved** — execution plans go under `.shooter/plans-shooter/<plan-name>.md`
-- **CLI plan mode uses `.shooter/plans-shooter/`** — write plans to `.shooter/plans-shooter/` instead of the CLI's default global directory
+- **Plans must be saved** — execution plans go under `.shooter/plans/<plan-name>.md`
+- **CLI plan mode uses `.shooter/plans/`** — write plans to `.shooter/plans/` instead of the CLI's default global directory
 - Use kebab-case for all file slugs: `topic-name.md`, not `topicName.md`
 - Keep artifacts self-contained — a reader should understand without conversation context
 - Update existing artifacts rather than creating duplicates
@@ -29,11 +30,13 @@ All AI output of lasting value must be persisted to the filesystem. Conversation
 
 | File | Owner | Priority |
 |------|-------|----------|
-| `.shooter/context-human-learnings.md` | Human only | **Higher** — takes precedence if conflicts |
-| `.shooter/context-ai-learnings.md` | AI agents | Lower |
+| `.shooter/context.md` (Human Notes section) | Human only | **Higher** — takes precedence if conflicts |
+| `.shooter/context.md` (AI Learnings section) | AI agents | Lower |
+| `.shooter/glossary.md` | Human (primary), AI may suggest additions | Compiled into agent files |
 
-- **AI must never edit** `.shooter/context-human-learnings.md` — it is read-only for AI
-- Update `.shooter/context-ai-learnings.md` when discovering: build commands, test patterns, deployment procedures, project conventions, error patterns
+- **Human Notes section of `.shooter/context.md` is read-only for AI** — AI must never edit it
+- Update AI Learnings section of `.shooter/context.md` when discovering: build commands, test patterns, deployment procedures, project conventions, error patterns
+- `.shooter/glossary.md` contains project-specific terms and abbreviations. The human owns this file. AI agents may suggest new entries but should not add them without asking.
 
 ## Decision Tracking
 

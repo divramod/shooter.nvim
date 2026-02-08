@@ -1,0 +1,10 @@
+{
+  "themes": [
+    {
+      "slug": "_project",
+      "title": "_project",
+      "path": ".",
+      "shotfile": ".shooter/shotfiles/_project.md"
+    }
+  ]
+}

@@ -26,7 +26,7 @@ AI agents must never leak sensitive information through any persistent artifact.
 - When logging debug information to beads, redact any sensitive values first
 
 ### Context Files
-- `.shooter/context-ai-learnings.md` and `.shooter/context-human-learnings.md` are committed — never include secrets
+- `.shooter/context.md` is committed — never include secrets
 - Research artifacts in `.shooter/research/` are committed — redact sensitive data
 - Decision logs in `.shooter/decisions.md` should not reference real credentials
 
