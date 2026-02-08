@@ -22,6 +22,14 @@ local function define_highlights()
     bg = done_shot.bg or '#c8e6c9',
     bold = done_shot.bold or false,
   })
+
+  -- Light brown for the first executed shot of each day (day separator)
+  local day_marker = config.get('highlight.day_marker') or {}
+  vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
+    fg = day_marker.fg or '#555555',
+    bg = day_marker.bg or '#e6d5b8',
+    bold = day_marker.bold or false,
+  })
 end
 
 -- Check if a line is a fenced code block delimiter (not inline code)
@@ -66,11 +74,26 @@ local function apply_syntax(bufnr)
     end
   end
 
-  -- Highlight: open shots (orange), latest executed shot only (light green)
+  -- Find the first executed shot of each day (day markers for navigation)
+  local day_first_lines = {}
+  local seen_days = {}
+  for i, line in ipairs(lines) do
+    if line:match(exec_pattern) and not is_in_code_block(bufnr, i) then
+      local date = line:match('%((%d%d%d%d%-%d%d%-%d%d)%s+%d%d:%d%d:%d%d%)')
+      if date and not seen_days[date] then
+        seen_days[date] = true
+        day_first_lines[i] = true
+      end
+    end
+  end
+
+  -- Highlight: open shots (orange), latest executed (green), day markers (light brown)
   for i, line in ipairs(lines) do
     if not is_in_code_block(bufnr, i) then
       if i == latest_done_line then
         vim.fn.matchaddpos('ShooterDoneShot', { { i } }, 10)
+      elseif day_first_lines[i] then
+        vim.fn.matchaddpos('ShooterDayMarker', { { i } }, 5)
       elseif line:match('^##%s+shot%s+[%d%?]+') then
         vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
       end
