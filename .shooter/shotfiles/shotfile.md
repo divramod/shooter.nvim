@@ -1,12 +1,15 @@
 # shotfile
 
-
 ## shot 15
-test
-
-## shot 14
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 14 (2026-02-08 08:20:18) @shot-14-20260208_082018
+create a ShooterFileStats command, which lists some interesting stats for the current shotfile like:
+- total shots in the file
+- open shots in the file
+- closed shots in the file
+this should be the command < >fs
 
 ## x shot 13 (2026-02-08 06:42:18) @shot-13-20260208_064218
 it jumps over to the pane in the right file but does this:
