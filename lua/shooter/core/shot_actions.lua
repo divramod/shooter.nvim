@@ -610,4 +610,102 @@ function M.extract_line()
   utils.echo('Extracted line to shot ' .. next_num)
 end
 
+-- Create a shot from text stored in a file (called via tmux send-keys from another pane)
+function M.create_shot_from_file(filepath)
+  local content, err = utils.read_file(filepath)
+  if not content or content == '' then
+    utils.echo('No content to create shot from')
+    return
+  end
+
+  content = utils.trim(content)
+  if content == '' then
+    utils.echo('Empty content, no shot created')
+    return
+  end
+
+  local bufnr = 0
+  local next_num = shots.get_next_shot_number(bufnr)
+  local insert_line, needs_blank_before, has_content_below = find_insertion_line(bufnr)
+
+  local shot_header = '## shot ' .. next_num
+  local content_lines = vim.split(content, '\n')
+  local lines_to_add = {}
+
+  if needs_blank_before then
+    table.insert(lines_to_add, '')
+  end
+  table.insert(lines_to_add, shot_header)
+  for _, line in ipairs(content_lines) do
+    table.insert(lines_to_add, line)
+  end
+  if has_content_below then
+    table.insert(lines_to_add, '')
+  end
+
+  utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
+
+  -- Position cursor on the content (after header)
+  local cursor_line = insert_line + (needs_blank_before and 2 or 1)
+  vim.api.nvim_win_set_cursor(0, { cursor_line, 0 })
+
+  -- Save the buffer
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  if bufname ~= '' then
+    vim.cmd('write')
+  end
+
+  -- Clean up temp file
+  os.remove(filepath)
+
+  utils.echo('Created shot ' .. next_num .. ' from Claude')
+end
+
+-- Cut text from Claude's ctrl+g editor buffer, close it, and create a shot in the right tmux pane
+function M.create_shot_from_claude()
+  -- 1. Get all text from current buffer
+  local lines = utils.get_buf_lines(0, 0, -1)
+  local text = table.concat(lines, '\n')
+  text = utils.trim(text)
+
+  if text == '' then
+    utils.echo('Buffer is empty, nothing to send')
+    return
+  end
+
+  -- 2. Save to temp file
+  local tmp_file = '/tmp/shooter-claude-shot.md'
+  local ok, err = utils.write_file(tmp_file, text)
+  if not ok then
+    utils.echo('Failed to write temp file: ' .. (err or ''))
+    return
+  end
+
+  -- 3. Find the right tmux pane
+  local right_pane = vim.fn.system('tmux display-message -p -t "{right}" "#{pane_id}"')
+  right_pane = vim.trim(right_pane)
+
+  if right_pane == '' or right_pane:match('can.t') or right_pane:match('error') then
+    utils.echo('No right pane found')
+    os.remove(tmp_file)
+    return
+  end
+
+  -- 4. Send Escape to ensure normal mode in right pane, then create shot
+  vim.fn.system('tmux send-keys -t ' .. right_pane .. ' Escape')
+  vim.fn.system(
+    'tmux send-keys -t ' .. right_pane
+    .. " \":lua require('shooter.core.shot_actions').create_shot_from_file('" .. tmp_file .. "')\" Enter"
+  )
+
+  -- 5. Clear the buffer (so Claude gets empty input back)
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
+
+  -- 6. Switch focus to right pane (before wq since nvim exits after wq)
+  vim.fn.system('tmux select-pane -t ' .. right_pane)
+
+  -- 7. Write and quit (returns to Claude CLI with empty input)
+  vim.cmd('wq')
+end
+
 return M

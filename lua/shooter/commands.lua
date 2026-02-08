@@ -265,6 +265,10 @@ local function setup_shot_commands()
     queue.clear_queue()
   end, { desc = 'Clear queue' }, 'ShooterQueueClear')
 
+  -- ShooterShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
+  create_cmd('ShooterShotCreateFromClaude', shot_actions.create_shot_from_claude,
+    { desc = 'Cut Claude text, create shot in right pane' })
+
   -- ShooterShotsRenumber - Renumber all shots sequentially
   create_cmd('ShooterShotsRenumber', function()
     local renumber = require('shooter.core.renumber')

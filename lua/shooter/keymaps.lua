@@ -83,6 +83,7 @@ function M.setup()
   map('n', 'sE', ':ShooterShotExtractLine<cr>', 'Extract line to new shot')
   map('n', 'sp', ':ShooterShotPicker<cr>', 'Open shots picker')
   map('n', 'sr', ':ShooterShotsRenumber<cr>', 'Renumber shots')
+  map('n', 'sC', ':ShooterShotCreateFromClaude<cr>', 'Create shot from Claude')
 
   -- Shot navigation
   map('n', 's]', ':ShooterShotNavNext<cr>', 'Next open shot')
