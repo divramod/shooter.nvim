@@ -19,13 +19,13 @@ M.defaults = {
     message_template = 'templates/shooter-context-message.md',
 
     -- Queue file location (relative to cwd)
-    queue_file = '.shooter/shotfiles/.shot-queue.json',
+    queue_file = '.shooter/project-shotfiles/.shot-queue.json',
 
     -- Prompts root directory (relative to cwd)
-    prompts_root = '.shooter/shotfiles',
+    prompts_root = '.shooter/project-shotfiles',
 
     -- Prompts directory (computed dynamically)
-    prompts_dir = vim.fn.getcwd() .. '/.shooter/shotfiles',
+    prompts_dir = vim.fn.getcwd() .. '/.shooter/project-shotfiles',
   },
 
   -- Tmux configuration

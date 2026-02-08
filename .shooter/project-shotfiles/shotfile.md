@@ -1,8 +1,17 @@
 # shotfile
 
-## shot 15
+## shot 17
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 16 (2026-02-08 12:37:56) @shot-16-20260208_123756
+the shotfiles are now living in the .shooter/project-shotfiles/ folder
+please adapt the whole codebase to take this into account
+
+## x shot 15 (2026-02-08 10:20:02) @shot-15-20260208_102002
+for the shots coloring.
+the first shot of every day in the history of the solved shot should be colored with really light brown.
+that way i can easier navigate to old shots.
 
 ## x shot 14 (2026-02-08 08:20:18) @shot-14-20260208_082018
 create a ShooterFileStats command, which lists some interesting stats for the current shotfile like:

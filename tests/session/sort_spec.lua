@@ -70,9 +70,9 @@ describe('session.sort', function()
     -- Create mock files for testing
     local function make_files()
       return {
-        { path = '/repo/.shooter/shotfiles/b-file.md', display = 'b-file.md' },
-        { path = '/repo/.shooter/shotfiles/a-file.md', display = 'a-file.md' },
-        { path = '/repo/.shooter/shotfiles/c-file.md', display = 'c-file.md' },
+        { path = '/repo/.shooter/project-shotfiles/b-file.md', display = 'b-file.md' },
+        { path = '/repo/.shooter/project-shotfiles/a-file.md', display = 'a-file.md' },
+        { path = '/repo/.shooter/project-shotfiles/c-file.md', display = 'c-file.md' },
       }
     end
 
