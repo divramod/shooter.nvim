@@ -134,9 +134,7 @@ These commands orchestrate beads operations with workflow logic:
 | `shooter:resume-work` | Context restoration from beads state |
 | `shooter:progress` | Dashboard with progress bars and routing |
 
-## Parent-Child Gotchas
-
-Creating parent-child relationships in beads has edge cases. Follow these patterns:
+## Parent-Child Relationships
 
 **Preferred: `--parent` flag on `bd create`** (generates dotted IDs, always works):
 ```bash
@@ -145,29 +143,57 @@ bd create --type=task --parent=sho-abc --title="Task 1"    # → sho-abc.1 ✓
 bd create --type=task --parent=sho-abc --title="Task 2"    # → sho-abc.2 ✓
 ```
 
-**Fallback: `bd dep add` for cross-hash IDs** (when `--parent` fails):
+**Fallback: `bd dep add` for cross-hash IDs** (when beads are already created separately):
 ```bash
 bd create --type=epic --title="Epic"   # → sho-abc
 bd create --type=task --title="Task"   # → sho-xyz
-bd dep add sho-abc sho-xyz --type parent-child
+bd dep add sho-xyz sho-abc --type parent-child
+# sho-xyz (child) depends on sho-abc (parent)
 ```
-
-Note: `bd dep add X Y --type parent-child` means "X depends on Y" internally, which makes Y the parent and X the child. The error messages from bd suggest the correct command syntax — follow them.
 
 **Avoid:**
 - `bd edit` — opens $EDITOR, blocks AI agents. Use `bd update` instead.
 - `bd create --id=X --parent=Y` — cannot combine these flags.
-- `bd update <id> --parent <new-parent>` — same validation issues as `bd dep add`.
 
 ## Creating Good Beads
 
-- **Title**: Short, imperative (e.g., "Add boundaries rule file")
-- **Reason on close**: Describe what was accomplished, not just "done" — this is the memory future agents will read
-- **Priority**: 0=critical, 1=high, 2=medium (default), 3=low, 4=backlog
-- **Design field**: Record architectural decisions on epics
-- **Notes field**: Store research findings on epics
-- **Acceptance field**: Define done criteria on epics and issues
-- **Description/body-file**: Execution prompts for issues (the plan the executor follows)
+Every bead should be self-contained — a human reading it in `bv` or an agent picking it up cold should understand what it is, why it exists, and (if closed) what was accomplished.
+
+### Required Fields by Type
+
+| Field | Shot | Task/Bug/Feature | Epic |
+|-------|------|-------------------|------|
+| **Title** | Short, imperative | Short, imperative | Short, descriptive |
+| **Description** | Shot content (what was requested) | What to do + why | Scope + objectives |
+| **Close reason** | What was done + files touched | What was done + files touched | Summary + child issue count |
+| **Acceptance** | — | Testable criteria | Epic-level done criteria |
+| **Design** | — | — | Architecture decisions |
+| **Notes** | — | — | Research findings |
+
+### Description Rules
+
+- **Every bead MUST have a description.** A title-only bead is invisible in `bv` and useless for context recovery.
+- **Shots**: Copy the shot content (the user's instruction) into the description. This preserves what was requested after the temp file is deleted.
+- **Tasks/Bugs/Features**: Include what to do and why. For planned issues (from `shooter:plan-epic`), this is the execution prompt.
+- **Epics**: Scope statement — what this body of work covers and what success looks like.
+- Keep descriptions concise (3-10 lines). Link to related beads rather than embedding their full context.
+
+### Close Reason Format
+
+Close reasons are the primary memory artifact. Use this structure:
+
+```
+<What was accomplished — 1-2 sentences>. Key files: <paths>. <Verification result or notable decisions>.
+```
+
+Examples:
+- Good: "Added JWT auth middleware at `src/middleware/auth.ts` with token validation and refresh. Tests pass (12/12). Chose RS256 over HS256 for key rotation support."
+- Bad: "Done"
+- Bad: "Implemented the feature"
+
+### Priority
+
+0=critical, 1=high, 2=medium (default), 3=low, 4=backlog. Use numbers only.
 
 ## Session Completion
 

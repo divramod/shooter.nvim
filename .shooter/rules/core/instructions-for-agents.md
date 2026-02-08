@@ -47,6 +47,33 @@
 5. **Document Results**: Add review section to `.shooter/plans-shooter/<plan>.md`
 6. **Capture Lessons**: Update `.shooter/context-ai-learnings.md` after corrections
 
+## Banner Requirements
+
+Every command, skill, and agent must display a banner as its first output. The banner shows the shooter version and the model executing the task, giving the user immediate visibility into what's running.
+
+**Format:**
+```
+**`shooter:<name>`** · **vX.Y.Z** · model: **<model>**
+```
+
+- `<name>` — the command/skill name (e.g., `setup`, `plan-epic`, `health`)
+- `vX.Y.Z` — read from `.shooter/VERSION`
+- `<model>` — the model actually executing: for skills with a `model:` frontmatter field, use that value (e.g., `sonnet`, `haiku`); for commands (which run on the orchestrator's model), output the model you are running on (e.g., `opus`, `sonnet`)
+
+**When creating new commands:** Add a `## Banner` section as the first step in `<process>`:
+```markdown
+## Banner
+Before doing ANY work, read `.shooter/VERSION` and output:
+**`shooter:<command-name>`** · **vX.Y.Z** · model: **<model>**
+```
+
+**When creating new skills:** Add a `## Banner` section as the first step in `<process>`. Skills specify their model in YAML frontmatter (`model: sonnet`), so use that value:
+```markdown
+## Banner
+Before doing ANY work, read `.shooter/VERSION` and output:
+**`shooter:<skill-name>`** · **vX.Y.Z** · model: **<model>**
+```
+
 ## Command Logging
 
 Every shooter command and skill invocation must be logged for usage tracking and repo registry.
@@ -67,3 +94,14 @@ The registry enables `shooter:update` to batch-update all repos with latest rule
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
+
+## On-Demand Context Files
+
+These files are NOT loaded at startup to keep context lean. Read them when relevant:
+
+| File | When to Read |
+|------|-------------|
+| `.shooter/context-ai-learnings.md` | At session start; build commands, CLI notes, patterns |
+| `.shooter/decisions.md` | Before making architectural decisions |
+| `.shooter/q-and-a.md` | Before answering questions; check if already answered |
+| `.shooter/codebase/_project/SUMMARY.md` | When exploring codebase or planning changes |
