@@ -129,7 +129,13 @@ function M.serialize_yaml(tbl, indent_level)
   local lines = {}
   local prefix = string.rep('  ', indent_level)
 
-  for key, value in pairs(tbl) do
+  -- Sort keys alphabetically at every level
+  local keys = {}
+  for key in pairs(tbl) do keys[#keys + 1] = key end
+  table.sort(keys)
+
+  for _, key in ipairs(keys) do
+    local value = tbl[key]
     if type(value) == 'table' then
       table.insert(lines, prefix .. key .. ':')
       table.insert(lines, M.serialize_yaml(value, indent_level + 1))
