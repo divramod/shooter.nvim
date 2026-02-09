@@ -110,81 +110,81 @@ Call `require('shooter').setup()` with your configuration:~
 5. COMMANDS                                                 *shooter-commands*
 
 File Management:~
-                                                            *:ShooterCreate*
-:ShooterCreate          Create a new shot file with timestamp
+                                                            *:ShoCreate*
+:ShoCreate          Create a new shot file with timestamp
 
-                                                            *:ShooterList*
-:ShooterList            List all shot files in Telescope picker
+                                                            *:ShoList*
+:ShoList            List all shot files in Telescope picker
 
-                                                            *:ShooterOpenShots*
-:ShooterOpenShots       Show open (unexecuted) shots in current file
+                                                            *:ShoOpenShots*
+:ShoOpenShots       Show open (unexecuted) shots in current file
 
-                                                            *:ShooterLast*
-:ShooterLast            Open the most recently modified shot file
+                                                            *:ShoLast*
+:ShoLast            Open the most recently modified shot file
 
-                                                            *:ShooterInbox*
-:ShooterInbox           Open shots inbox folder
+                                                            *:ShoInbox*
+:ShoInbox           Open shots inbox folder
 
 Movement Commands:~
-                                                            *:ShooterArchive*
-:ShooterArchive         Move current file to archive folder
+                                                            *:ShoArchive*
+:ShoArchive         Move current file to archive folder
 
-                                                            *:ShooterBacklog*
-:ShooterBacklog         Move current file to backlog folder
+                                                            *:ShoBacklog*
+:ShoBacklog         Move current file to backlog folder
 
-                                                            *:ShooterDone*
-:ShooterDone            Move current file to done folder
+                                                            *:ShoDone*
+:ShoDone            Move current file to done folder
 
-                                                            *:ShooterReqs*
-:ShooterReqs            Move current file to requirements folder
+                                                            *:ShoReqs*
+:ShoReqs            Move current file to requirements folder
 
-                                                            *:ShooterTest*
-:ShooterTest            Move current file to test folder
+                                                            *:ShoTest*
+:ShoTest            Move current file to test folder
 
-                                                            *:ShooterWait*
-:ShooterWait            Move current file to wait folder
+                                                            *:ShoWait*
+:ShoWait            Move current file to wait folder
 
-                                                            *:ShooterPrompts*
-:ShooterPrompts         Move current file to prompts folder
+                                                            *:ShoPrompts*
+:ShoPrompts         Move current file to prompts folder
 
-                                                            *:ShooterGitRoot*
-:ShooterGitRoot         Move current file to git root
+                                                            *:ShoGitRoot*
+:ShoGitRoot         Move current file to git root
 
 Send Commands:~
-                                                    *:ShooterSend1* *:ShooterSend9*
-:ShooterSend{1-9}       Send current shot to tmux pane 1-9
+                                                    *:ShoSend1* *:ShoSend9*
+:ShoSend{1-9}       Send current shot to tmux pane 1-9
 
-                                                *:ShooterSendAll1* *:ShooterSendAll9*
-:ShooterSendAll{1-9}    Send all open shots to tmux pane 1-9
+                                                *:ShoSendAll1* *:ShoSendAll9*
+:ShoSendAll{1-9}    Send all open shots to tmux pane 1-9
 
-                                            *:ShooterSendVisual1* *:ShooterSendVisual9*
-:ShooterSendVisual{1-9} Send visual selection to tmux pane 1-9
+                                            *:ShoSendVisual1* *:ShoSendVisual9*
+:ShoSendVisual{1-9} Send visual selection to tmux pane 1-9
 
 Queue Commands:~
-                                                *:ShooterQueueAdd1* *:ShooterQueueAdd4*
-:ShooterQueueAdd{1-4}   Add current shot to queue for pane 1-4
+                                                *:ShoQueueAdd1* *:ShoQueueAdd4*
+:ShoQueueAdd{1-4}   Add current shot to queue for pane 1-4
 
-                                                            *:ShooterQueueView*
-:ShooterQueueView       View queue in Telescope picker
+                                                            *:ShoQueueView*
+:ShoQueueView       View queue in Telescope picker
 
-                                                            *:ShooterQueueClear*
-:ShooterQueueClear      Clear all items from queue
+                                                            *:ShoQueueClear*
+:ShoQueueClear      Clear all items from queue
 
 Other Commands:~
-                                                            *:ShooterHelp*
-:ShooterHelp            Show help with all keybindings
+                                                            *:ShoHelp*
+:ShoHelp            Show help with all keybindings
 
-                                                            *:ShooterImages*
-:ShooterImages          Insert image reference using hal
+                                                            *:ShoImages*
+:ShoImages          Insert image reference using hal
 
-                                                            *:ShooterPrdList*
-:ShooterPrdList         Show PRD task list in Telescope
+                                                            *:ShoPrdList*
+:ShoPrdList         Show PRD task list in Telescope
 
-                                                            *:ShooterNewShot*
-:ShooterNewShot         Add a new shot to current file
+                                                            *:ShoNewShot*
+:ShoNewShot         Add a new shot to current file
 
-                                                            *:ShooterDeleteLastShot*
-:ShooterDeleteLastShot  Delete the last shot from current file
+                                                            *:ShoDeleteLastShot*
+:ShoDeleteLastShot  Delete the last shot from current file
 
 ==============================================================================
 6. KEYMAPS                                                   *shooter-keymaps*
@@ -256,10 +256,10 @@ Create project context from template:~
 
 The queue system allows you to batch shots for later sending:
 
-1. Add shots to queue with :ShooterQueueAdd{1-4}
-2. View queue with :ShooterQueueView
+1. Add shots to queue with :ShoQueueAdd{1-4}
+2. View queue with :ShoQueueView
 3. Send queued shots from the Telescope picker
-4. Clear queue with :ShooterQueueClear
+4. Clear queue with :ShoQueueClear
 
 Queue is persisted to: .shooter/shotfiles/.shot-queue.json
 

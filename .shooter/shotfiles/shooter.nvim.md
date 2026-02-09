@@ -98,7 +98,7 @@ please in all shot history files add the shotfile title from the shotfile to the
 
 ## shot 367
 i have some copied files, which trick the history function.
-i need a ShooterShotfileDelete command, which deletes a shot file and its history folder accordingly.
+i need a ShoShotfileDelete command, which deletes a shot file and its history folder accordingly.
 i know that cant be undone, so please add a prompt, where the user has to type "DELETE" to confirm the deletion.
 
 ## shot 366
@@ -288,9 +288,9 @@ yes, you can get rid of all features regarding history files.
 also, please remove the history files created until now.
 
 ## x shot 324 (2026-01-29 11:35:43)
-i ran ShooterShotsRenumber in the file .shooter/shotfiles/shooter.nvim.md
+i ran ShoShotsRenumber in the file .shooter/shotfiles/shooter.nvim.md
 but it was not working.
-can you ensure, that ShooterShotsRenumber works in all shotfiles and renumbers the shots accordingly without losing data in the history files.
+can you ensure, that ShoShotsRenumber works in all shotfiles and renumbers the shots accordingly without losing data in the history files.
 especially this file is long and complex and should be the benchmark, for the renumbering functionality.
 i backed the file up to shooter.nvim-test.md so that you can use it for testing.
 
@@ -311,7 +311,7 @@ the default for the telescope picker which is opening with < >v should be insert
 please change that for all sessions and everywhere in the repo.
 
 ## x shot 320 (2026-01-29 10:29:16)
-can you add a cmd ShooterDeleteShotUnderCursor
+can you add a cmd ShoDeleteShotUnderCursor
 which deletes a shot under the cursor in the current shotfile.
 it can be a done shot or an open shot.
 when deleting a done shot, also delete the corresponding history file in the history folder accordingly.
@@ -367,9 +367,9 @@ be awaere, that when you renumber a shot, the name of the shot history file need
 shots with the title "shot ?" should stay at their position in the queue of open shots, but should get a number too
 
 ## x shot 312 (2026-01-29 07:56:03)
-i now need new commands ShooterShotsRenumber
+i now need new commands ShoShotsRenumber
 what should they do:
-ShooterShotsRenumber:
+ShoShotsRenumber:
 - should renumber all shots in the current shotfile, so that there are no gaps in the numbering, if there is a shot 0 and a shot 1, shot 0 becomes shot 1 and shot 1 becomes shot 2 and so on.
 - if there are done shots, the done shots should be sorted by date so that the oldest done shot is shot 1 and the newest done shot is the last shot after that, the open shots should be numbered after the done shots.
 
@@ -377,7 +377,7 @@ ShooterShotsRenumber:
 can you remap  < >C to < >?
 
 ## x shot 310 (2026-01-28 23:11:09)
-i want you to create a ShooterCheatsheet command, which lists all available shooter.nvim commands and their mappings in a nice overview. it should be mapped to < >C
+i want you to create a ShoCheatsheet command, which lists all available shooter.nvim commands and their mappings in a nice overview. it should be mapped to < >C
 
 ## x shot 309 (2026-01-28 21:10:48)
 in the shotfile picker, i want to be able to move a shot to a new shotfile, because its a whole feature for example.
@@ -411,15 +411,15 @@ i think it could be part of the tools namespace, right?
 
 ## x shot 302 (2026-01-26 08:53:23)
 introduce a navigation namespace. i have a lot of navigation commands, which does not specifically belong to a certain area.
-create cmd ShooterNavOpenLastEditedFiles <number>, which should be a telescope picker, which shows the last <number> edited files in the current repo.
+create cmd ShoNavOpenLastEditedFiles <number>, which should be a telescope picker, which shows the last <number> edited files in the current repo.
 the last edited file should be on top.
-map < >z to ShooterNavOpenLastEditedFiles 10
+map < >z to ShoNavOpenLastEditedFiles 10
 
 ## x shot 301 (2026-01-26 08:48:40)
-add the shortcut < >L to ShooterRepoOpenLasteEditedFile
+add the shortcut < >L to ShoRepoOpenLasteEditedFile
 
 ## x shot 300 (2026-01-26 08:30:59)
-creae command ShooterRepoOpenLastEditedFile
+creae command ShoRepoOpenLastEditedFile
 this should open the last file i edited for the whole repo
 create a repo namespace
 
@@ -739,7 +739,7 @@ as there are filters already for the folders like archive, backlog, done, reqs, 
 i want also a filter for recently edited files triggered by l
 i want to get rid of the second step, which asks me to choose a project, when in a repo with a projects folder and instead show all recents, all archived and so on.
 addionally in that view, i want to be able to add a projects filter with P.
-when there are multiple projects existant, i want to be ablte to press P, which opens a telescope list of projects in the current repo, where i can choose one or more projects to filter the shot files for, this filter then should be persistant until i remove it with pressing C (ShooterClearFilter).
+when there are multiple projects existant, i want to be ablte to press P, which opens a telescope list of projects in the current repo, where i can choose one or more projects to filter the shot files for, this filter then should be persistant until i remove it with pressing C (ShoClearFilter).
 
 ## x shot 258 (2026-01-23 12:18:32)
 i renamed them. but there are still files in the analytis, which have the old pattern.
@@ -818,7 +818,7 @@ now i have a error again:
 /Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110633.png
 
 ## x shot 250 (2026-01-23 11:03:56)
-ShooterHistoryAudit is still blocking the gui in nvim.
+ShoHistoryAudit is still blocking the gui in nvim.
 /Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110303.png
 i press something and then some seconds later, the gui is responsive again.
 if you want, you can remove the progress bar. i suspect, that this could be the problem.
@@ -839,7 +839,7 @@ i need to be able to work, while the audit is running.
 when the audit is done, i want to be asked, if i want to open the audit report.
 
 ## x shot 247 (2026-01-23 10:43:39)
-ShooterHistoryAudit is blocking the gui in nvim.
+ShoHistoryAudit is blocking the gui in nvim.
 can you send a message to the user, that it is running and run it in the background?
 also add a progress bar or something like this, so that the user sees, that something is happening.
 when the audit is done, send a message to the user, that its done and open the audit report.
@@ -861,7 +861,7 @@ after you did that, i want you to go through all shot files in all repos configu
 that way, we get the history functionality back to 100%
 
 ## x shot 245 (2026-01-23 10:21:48)
-i need a ShooterShotfileRename command.
+i need a ShoShotfileRename command.
 manually renaming will destroy the history functionality.
 so the beware user should use this command to rename a shot file, which automatically renames the history folder for the shot file accordingly.
 the function should open a prompt, where the current name of the file can be edited.
@@ -901,7 +901,7 @@ the only thing is, that in the current file, i could not see the changed date fo
 could you do that also?
 
 ## x shot 242 (2026-01-23 09:52:34)
-i need a ShooterGreenkeep command.
+i need a ShoGreenkeep command.
 as you now, earlier you used to write the shot done header like this
 
 ```## x shot 1 (20260119_0741)```
@@ -961,7 +961,7 @@ please also make a paragraph in the readme about the configuration overall with 
 inserting a new shot, when oil is open should in general be forbidden.
 
 ## x shot 231 (2026-01-23 00:24:08)
-< >ttc write a command ShooterToolTokenCounter, which counts the tokens of the current file.
+< >ttc write a command ShoToolTokenCounter, which counts the tokens of the current file.
 you can use ttok < .shooter/shotfiles/agents.md
 please add to the healthcheck, that ttok is installed and working
 and that python is installed and working
@@ -1300,7 +1300,7 @@ you can see it at the date of the shot header
 add < >H for running the shooter healthcheck
 
 ## x shot 168 (2026-01-21 14:57:05)
-for ShooterImages, you need to ensure that it works on macos and linux.
+for ShoImages, you need to ensure that it works on macos and linux.
 for that, you could at the check for pbcopy.
 should that also be part of the health check of shooter.nvim?
 
@@ -1524,7 +1524,7 @@ also, in the ```# context``` area of the prompt, please begin every sentence wit
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122813.png
 
 ## x shot 120 (2026-01-21 12:33:00)
-when i run ShooterOpenShots manually, it does not show the preview in the telescope list.
+when i run ShoOpenShots manually, it does not show the preview in the telescope list.
 have you really moved all code to the plugin folder?
 or why are they differing?
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_123241.png

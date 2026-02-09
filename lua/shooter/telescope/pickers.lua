@@ -216,7 +216,7 @@ local function create_file_picker(opts, get_files_fn, title_prefix)
       map('n', '<C-c>', actions.close, { desc = 'close picker' })
 
       -- 'n' creates new shotfile, 'l' opens last edited
-      map('n', 'n', function() actions.close(prompt_bufnr); vim.cmd('ShooterCreate') end, { desc = 'new shotfile' })
+      map('n', 'n', function() actions.close(prompt_bufnr); vim.cmd('ShoCreate') end, { desc = 'new shotfile' })
       -- Move commands (Shotfile namespace: fm prefix)
       local movement = require('shooter.core.movement')
       local function move_to(folder)
@@ -421,7 +421,7 @@ function M.list_open_shots(opts)
       map('n', 'n', function()
         helpers.clear_selection(target_file)
         actions.close(prompt_bufnr)
-        vim.cmd('ShooterCreate')
+        vim.cmd('ShoCreate')
       end)
 
       -- Toggle between current file and all repo shots

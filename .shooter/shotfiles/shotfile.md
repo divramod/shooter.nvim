@@ -9,7 +9,7 @@ dd does nothing now in the shotfile picker.
 please acivate it and 
 
 ## x shot 19 (2026-02-09 05:06:46) @shot-19-20260209_050646
-i have a problem in the ShooterLast command.
+i have a problem in the ShoLast command.
 it is not reliably opening the last edited shotfile
 sometimes it opens another one, which i am quite sure, i have not changed as last one.
 can you fix it?
@@ -31,7 +31,7 @@ the first shot of every day in the history of the solved shot should be colored 
 that way i can easier navigate to old shots.
 
 ## x shot 14 (2026-02-08 08:20:18) @shot-14-20260208_082018
-create a ShooterFileStats command, which lists some interesting stats for the current shotfile like:
+create a ShoFileStats command, which lists some interesting stats for the current shotfile like:
 - total shots in the file
 - open shots in the file
 - closed shots in the file
@@ -43,7 +43,7 @@ it jumps over to the pane in the right file but does this:
 
 ## x shot 12 (2026-02-08 06:35:33) @shot-12-20260208_063533
 when i press ctrl+g in claude, nvim is opening with the current text of the claude cmd line.
-i like to have a command ShooterShotCreateFromClaude, which cuts the complete text from the temp file opened by claude, closes it and goes over to the right pane in tmux (nvim is running there) and creates a new shot at the top and pastes the text there. this way i can quickly move text from claude to nvim without having to copy and paste manually.
+i like to have a command ShoShotCreateFromClaude, which cuts the complete text from the temp file opened by claude, closes it and goes over to the right pane in tmux (nvim is running there) and creates a new shot at the top and pastes the text there. this way i can quickly move text from claude to nvim without having to copy and paste manually.
 
 ## x shot 11 (2026-02-08 06:06:52) @shot-11-20260208_060652
 please adapt the shotfile notification to show the notification for 3 seconds

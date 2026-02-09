@@ -111,7 +111,7 @@ function M.setup_oil_keymaps(bufnr)
     local filepath = get_oil_file()
     if filepath then
       vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
-      vim.cmd('ShooterShotfileMovePicker')
+      vim.cmd('ShoShotfileMovePicker')
     end
   end, 'Fuzzy folder picker')
 
@@ -122,12 +122,12 @@ function M.setup_oil_keymaps(bufnr)
   map('fd', delete_oil_file, 'Delete file')
 
   -- Open file (just use Enter in Oil, but provide consistency)
-  map('fn', ':ShooterShotfileNew<cr>', 'New shotfile')
+  map('fn', ':ShoShotfileNew<cr>', 'New shotfile')
 
   -- Other shotfile commands
-  map('fl', ':ShooterShotfileLast<cr>', 'Last file')
-  map('fp', ':ShooterShotfilePicker<cr>', 'Shotfile picker')
-  map('fi', ':ShooterShotfileHistory<cr>', 'History')
+  map('fl', ':ShoShotfileLast<cr>', 'Last file')
+  map('fp', ':ShoShotfilePicker<cr>', 'Shotfile picker')
+  map('fi', ':ShoShotfileHistory<cr>', 'History')
 end
 
 -- Setup autocmd to apply Oil keymaps
@@ -137,7 +137,7 @@ function M.setup()
     callback = function(ev)
       M.setup_oil_keymaps(ev.buf)
     end,
-    group = vim.api.nvim_create_augroup('ShooterOilKeymaps', { clear = true }),
+    group = vim.api.nvim_create_augroup('ShoOilKeymaps', { clear = true }),
   })
 end
 

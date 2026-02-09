@@ -1,9 +1,9 @@
 # tmux
 
 ## x shot 16 (2026-02-03 01:14:22)
-when opt+shift+A is pressed, and i am in a nvim tmux pane, the command ShooterTmuxTogglePanes should be called.
+when opt+shift+A is pressed, and i am in a nvim tmux pane, the command ShoTmuxTogglePanes should be called.
 when i one of the toggled panes, it should be hidden.
-when i am neither in a nvim pane nor in a tmux command pane, started by ShooterTmuxTogglePanes, nothing should happen.
+when i am neither in a nvim pane nor in a tmux command pane, started by ShoTmuxTogglePanes, nothing should happen.
 
 ## x shot 15 (2026-02-03 01:12:27)
 how is the name of the command to start the telescope command picker, which creates the tmux panes from the tmux.yml file?

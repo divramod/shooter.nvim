@@ -141,7 +141,7 @@
 
 **Entry Point:**
 - `lua/shooter/init.lua` - Main module exported as `require('shooter').setup()`
-- Plugin initialization via `:ShooterCreate`, `:ShooterList`, etc. commands
+- Plugin initialization via `:ShoCreate`, `:ShoList`, etc. commands
 - Syntax highlighting setup in `lua/shooter/syntax.lua`
 
 **No Compilation Needed:**

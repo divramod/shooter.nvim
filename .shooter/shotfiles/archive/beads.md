@@ -1,4 +1,4 @@
 # beads
 
 ## shot 1
-create new namespace beads in the project and add cmd ShooterBeadsInit to it.
+create new namespace beads in the project and add cmd ShoBeadsInit to it.

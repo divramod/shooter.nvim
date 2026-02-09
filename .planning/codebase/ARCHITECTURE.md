@@ -165,7 +165,7 @@
 **Opening and Sending a Shot:**
 
 1. User in shotfile buffer → presses `<space>1` (send to pane 1)
-2. Keymap triggers `ShooterShotSend1` command
+2. Keymap triggers `ShoShotSend1` command
 3. Command resolves context via `context.resolvers.resolve_shot_target()`
 4. Returns target with header_line, start_line, end_line, bufnr
 5. `tmux.send.send_current_shot(1)` retrieves shot lines from buffer
@@ -177,7 +177,7 @@
 
 **Telescope Shot Picker Flow:**
 
-1. User opens picker via `ShooterShotPicker` command
+1. User opens picker via `ShoShotPicker` command
 2. `telescope.pickers.list_all_files()` creates picker with telescope.finders.new_table
 3. `telescope.helpers.build_entries()` scans shotfiles, parses shots, builds results
 4. Picker applies session filters (folders, projects) via `session.filter.apply()`

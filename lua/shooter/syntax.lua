@@ -10,14 +10,14 @@ local function define_highlights()
   local done_shot = config.get('highlight.done_shot') or {}
 
   -- Default: black text on light orange background (avoids search highlight confusion)
-  vim.api.nvim_set_hl(0, 'ShooterOpenShot', {
+  vim.api.nvim_set_hl(0, 'ShoOpenShot', {
     fg = open_shot.fg or '#000000',
     bg = open_shot.bg or '#ffb347',
     bold = open_shot.bold ~= false, -- default true
   })
 
   -- Light green for the single latest executed shot (most recent by timestamp)
-  vim.api.nvim_set_hl(0, 'ShooterDoneShot', {
+  vim.api.nvim_set_hl(0, 'ShoDoneShot', {
     fg = done_shot.fg or '#555555',
     bg = done_shot.bg or '#c8e6c9',
     bold = done_shot.bold or false,
@@ -25,7 +25,7 @@ local function define_highlights()
 
   -- Light brown for the first executed shot of each day (day separator)
   local day_marker = config.get('highlight.day_marker') or {}
-  vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
+  vim.api.nvim_set_hl(0, 'ShoDayMarker', {
     fg = day_marker.fg or '#555555',
     bg = day_marker.bg or '#e6d5b8',
     bold = day_marker.bold or false,
@@ -113,11 +113,11 @@ apply_syntax = function(bufnr)
   for i, line in ipairs(lines) do
     if not in_code[i] then
       if i == latest_done_line then
-        table.insert(matches, { i, 'ShooterDoneShot' })
+        table.insert(matches, { i, 'ShoDoneShot' })
       elseif day_first_lines[i] then
-        table.insert(matches, { i, 'ShooterDayMarker' })
+        table.insert(matches, { i, 'ShoDayMarker' })
       elseif line:match('^##%s+shot%s+[%d%?]+') then
-        table.insert(matches, { i, 'ShooterOpenShot' })
+        table.insert(matches, { i, 'ShoOpenShot' })
       end
     end
   end
@@ -193,7 +193,7 @@ end
 function M.setup()
   define_highlights()
 
-  local group = vim.api.nvim_create_augroup('ShooterSyntax', { clear = true })
+  local group = vim.api.nvim_create_augroup('ShoSyntax', { clear = true })
 
   -- Apply highlighting when entering prompts files
   vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
@@ -320,7 +320,7 @@ function M.reapply_all()
     if type(day_bg) == 'string' or type(day_fg) == 'string' then
       local config = require('shooter.config')
       local day_marker = config.get('highlight.day_marker') or {}
-      vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
+      vim.api.nvim_set_hl(0, 'ShoDayMarker', {
         fg = day_fg or day_marker.fg or '#555555',
         bg = day_bg or day_marker.bg or '#e6d5b8',
         bold = day_marker.bold or false,
@@ -332,7 +332,7 @@ function M.reapply_all()
     if type(open_bg) == 'string' or type(open_fg) == 'string' then
       local config = require('shooter.config')
       local open_shot = config.get('highlight.open_shot') or {}
-      vim.api.nvim_set_hl(0, 'ShooterOpenShot', {
+      vim.api.nvim_set_hl(0, 'ShoOpenShot', {
         fg = open_fg or open_shot.fg or '#000000',
         bg = open_bg or open_shot.bg or '#ffb347',
         bold = open_shot.bold ~= false,
@@ -344,7 +344,7 @@ function M.reapply_all()
     if type(closed_bg) == 'string' or type(closed_fg) == 'string' then
       local config = require('shooter.config')
       local done_shot = config.get('highlight.done_shot') or {}
-      vim.api.nvim_set_hl(0, 'ShooterDoneShot', {
+      vim.api.nvim_set_hl(0, 'ShoDoneShot', {
         fg = closed_fg or done_shot.fg or '#555555',
         bg = closed_bg or done_shot.bg or '#c8e6c9',
         bold = done_shot.bold or false,

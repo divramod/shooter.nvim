@@ -73,7 +73,7 @@ local function show_shots(file_entry, back_fn)
           actions.close(pb)
           vim.cmd('edit ' .. vim.fn.fnameescape(e.value.file.path))
           vim.api.nvim_win_set_cursor(0, { e.value.shot.line, 0 })
-          vim.schedule(function() vim.cmd('ShooterSend' .. i) end)
+          vim.schedule(function() vim.cmd('ShoSend' .. i) end)
         end)
       end
       return true

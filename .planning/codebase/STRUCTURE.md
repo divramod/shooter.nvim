@@ -342,7 +342,7 @@ shooter.nvim/
 - No abbreviations (prefer full names for clarity)
 
 **Functions:**
-- Public API: `CamelCase()` for vim commands (e.g., `ShooterShotSend1`)
+- Public API: `CamelCase()` for vim commands (e.g., `ShoShotSend1`)
 - Internal: `snake_case()` (e.g., `find_current_shot()`)
 - Booleans: `is_*`, `has_*`, `should_*` (e.g., `is_in_code_block()`)
 
@@ -418,7 +418,7 @@ shooter.nvim/
 
 **`.shooter/shotfiles/`:**
 - Purpose: Development tasks (shots)
-- Generated: Yes (created via `ShooterShotfileNew` command)
+- Generated: Yes (created via `ShoShotfileNew` command)
 - Committed: Yes (part of repo)
 - Pattern: One markdown file per task/feature
 

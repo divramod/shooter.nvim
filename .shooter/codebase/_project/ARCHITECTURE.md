@@ -48,7 +48,7 @@
 - Location: `lua/shooter/tmux/`
 - Contains: Tmux detection (`detect.lua`), text sending (`send.lua`), message formatting (`messages.lua`), session creation (`create.lua`), pane operations (`panes.lua`), send operations (`operations.lua`)
 - Depends on: Core (shots, files), config
-- Used by: Commands (`ShooterSend*`), key mappings
+- Used by: Commands (`ShoSend*`), key mappings
 
 **Context Injection:**
 - Purpose: Load and inject global/project context into prompts for AI consumption
@@ -76,7 +76,7 @@
 
 **Shot Creation Flow:**
 
-1. User invokes `ShooterNewShot` → `commands.lua` dispatches to `shot_actions.create_new_shot()`
+1. User invokes `ShoNewShot` → `commands.lua` dispatches to `shot_actions.create_new_shot()`
 2. `shot_actions.lua` calls `shots.find_insertion_line()` to determine where to insert
 3. `shot_actions.lua` calls `shots.get_next_shot_number()` to determine numbering
 4. New shot header inserted into buffer with `utils.set_buf_lines()`
@@ -87,7 +87,7 @@
 
 **File Management Flow:**
 
-1. User invokes `ShooterCreate` → `commands.lua` dispatches
+1. User invokes `ShoCreate` → `commands.lua` dispatches
 2. `files.create_file()` generates filename (timestamp + title)
 3. File created at detected project or root level
 4. File opened in vim buffer
@@ -96,7 +96,7 @@
 
 **Session/Picker Flow:**
 
-1. User invokes `ShooterList` → `pickers.list_all_files()` in telescope module
+1. User invokes `ShoList` → `pickers.list_all_files()` in telescope module
 2. `session.get_current_session()` loads filter state (which folders, sort order)
 3. `files.get_prompt_files()` discovers all shots files
 4. Finder builds entries, previewer generates preview for each
@@ -153,7 +153,7 @@
 
 **Telescope Pickers:**
 - Location: `lua/shooter/telescope/pickers.lua`
-- Triggers: Commands like `ShooterList`, `ShooterOpenShots`
+- Triggers: Commands like `ShoList`, `ShoOpenShots`
 - Responsibilities: Create Telescope picker with custom keymaps, refresh on filter change
 
 ## Error Handling

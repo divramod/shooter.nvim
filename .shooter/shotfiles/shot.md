@@ -1,18 +1,20 @@
 # shot
 
 ## shot 59
-sometime in oil, i accidentially press < >n, which then creates a new shot inside the oil buffer, which is completely not what i want.
-what should happen, is that the shot mappings should be disabled automatically in oil buffers, because they can cause harm
-
-## shot 58
-i want to change the naming convention for the temporary shotfiles.
-the convention should be like this ```<repo>_<shotfile basename without extension>_<timestamp in yyyymmdd_hhmmss format>.md```
-please look through the whole codebase and change the naming convention for the temporary shotfiles to this new convention in all functionalities
-
-## shot 57
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
+
+## x shot 58 (2026-02-09 07:42:09) @shot-58-20260209_074209
+i want to change the naming convention for the temporary shotfiles.
+the convention should be like this ```~/.config/shooter/nvim/bullets/<repo>/<shotfile basename without extension>_<timestamp in yyyymmdd_hhmmss format>_shot-<shot number>.md```
+please look through the whole codebase and change the naming convention for the temporary shotfiles to this new convention in all functionalities
+please also go through the existing shotfiles at ~/.config/shooter/nvim/tmp and move them to the folders, regarding the new conventions and update their names.
+the path of the original shotfile, you can usually find at the bottom in the last line of the shotfile or in older shots with the old content somewhere else. i think you fill find a pattern to move the files.
+
+## x shot 57 (2026-02-09 07:34:01) @shot-57-20260209_073402
+sometime in oil, i accidentially press < >n, which then creates a new shot inside the oil buffer, which is completely not what i want.
+what should happen, is that the shot mappings should be disabled automatically in oil buffers, because they can cause harm
 
 ## x shot 56 (2026-02-09 05:03:41) @shot-56-20260209_050341
 there is a little problem in the coloring of the first sent shot of every day.
@@ -32,7 +34,7 @@ sometimes the text i have written, is not showing up for a second and then it ap
 could that be because of our colring for the first shot of every day and the latest done shot?
 if yes, can you optimize the coloring function, so that it does not cause this delay?
 also, can you disable the coloring for the first shot of the day by default and create a command 
-ShooterFileToggleFirstShotOfDayColoring, which toggles the coloring for the first shot of the day, so that i can enable it, when i want to have it and disable it, when i want to write without delay?
+ShoFileToggleFirstShotOfDayColoring, which toggles the coloring for the first shot of the day, so that i can enable it, when i want to have it and disable it, when i want to write without delay?
 it should map then to < >fcf
 
 ## x shot 52 (2026-02-08 05:40:47) @shot-52-20260208_054048
@@ -88,10 +90,10 @@ the < >sy command should also mark the shot as done and call the renumber functi
 i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 43 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+the command < >. should also call the renumber function, after is marked a shot as done
 
 ## x shot 42 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
+color the background color of the last shot made green
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
@@ -167,7 +169,7 @@ when i run the < >sv response command, it always tells me, that there is "No cla
 ## x shot 22 (2026-02-03 08:53:19)
 after a shot was sent, it would be nice, if we have a way to connect the shot with the respective reponse of claude.
 i heard, that there are jsonl files created for each claude session?
-is there a way, to be on a shot in the shotfile and then run < >svr for ShooterShotViewResponse and then see the respective response from claude for this shot?
+is there a way, to be on a shot in the shotfile and then run < >svr for ShoShotViewResponse and then see the respective response from claude for this shot?
 
 ## x shot 21 (2026-02-03 08:50:18)
 after the shot was sent, i want the cursor to stay in the header of the sent shot.
@@ -218,7 +220,7 @@ so i want to tackly this problem by having the renumbering done automatically, b
 test shot
 
 ## x shot 11 (2026-01-26 06:34:01)
-for ShooterShotYank, please also mark the shot as done and add the history file for it.
+for ShoShotYank, please also mark the shot as done and add the history file for it.
 for context.
 there are some situations, where i cannot shoot the shot directly and have to do it manually.
 for this cases, i want to the history files created anyway, so that i can track my shots properly.
@@ -228,8 +230,8 @@ for both extract commands, can you jump to the extracted shot after the extracti
 go to the end of the extracted shot into insert mode.
 
 ## x shot 9 (2026-01-26 06:29:36)
-create cmd ShooterShotExtractLine and map it additionally to < >E
-ShooterShotExtract should also be renamed to ShooterShotExtractBlock to be more explicit.
+create cmd ShoShotExtractLine and map it additionally to < >E
+ShoShotExtract should also be renamed to ShoShotExtractBlock to be more explicit.
 
 ## x shot 8 (2026-01-26 06:25:39)
 when shooting a shot from inside a code block, the shot shooter needs to go out of the code block first to indentify the whole shot. i had the problem, that i had a shot inside a code block and the shooter only took the example shot i was just writing in a code block, not the whole shot.
@@ -245,7 +247,7 @@ i want it like this:
 please do not color the shot header, when it is inside a code block.
 
 ## x shot 5 (2026-01-26 06:20:41)
-create ShooterShotExtract command.
+create ShoShotExtract command.
 i just realized, that i start writing big shots in my files with subtopics like this.
 ```markdown
 ## shot 2
@@ -263,7 +265,7 @@ sometimes i relaize, damn, this is to big of a shot and i want to extract subtas
 cnages my mind, please remap from < >ys to < >z
 
 ## x shot 3 (2026-01-26 05:48:07)
-please add a ShooterShotYank command and map it to namespaced commands and also to < >ys
+please add a ShoShotYank command and map it to namespaced commands and also to < >ys
 
 ## x shot 2 (2026-01-24 12:37:55)
 moving worked as expected.
@@ -278,4 +280,4 @@ in the current one i want to stay at the position i was, before i moved the shot
 
 ## x shot 1 (2026-01-24 12:31:08)
 i want to be able to move the shot under the cursor to another shotfile.
-< >ms ShooterShotfileMoveShot
+< >ms ShoShotfileMoveShot

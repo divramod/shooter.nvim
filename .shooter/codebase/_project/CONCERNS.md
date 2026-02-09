@@ -70,7 +70,7 @@
   - `lua/shooter/tmux/wrapper.lua` (bare script paths without full resolution)
   - `lua/shooter/tmux/send.lua:56-67` (async job handling with weak error semantics)
 - Impact: Plugin is not usable without tmux, but this isn't clearly enforced. Partial failures in tmux commands are silently ignored.
-- Fix approach: Create a tmux abstraction layer that fails fast with clear error messages. Add guards at entry points (`ShooterShotCreate`, etc.) to check tmux availability before attempting operations.
+- Fix approach: Create a tmux abstraction layer that fails fast with clear error messages. Add guards at entry points (`ShoShotCreate`, etc.) to check tmux availability before attempting operations.
 
 ### Complex Regex Patterns for Shot Headers
 

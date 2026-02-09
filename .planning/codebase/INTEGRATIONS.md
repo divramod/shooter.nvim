@@ -69,7 +69,7 @@
 - **Execution Status:** Shots marked with timestamp when executed (inline in markdown files)
 
 **Debug Information:**
-- Available via `:ShooterHealth` command (registered in `lua/shooter/commands.lua`)
+- Available via `:ShoHealth` command (registered in `lua/shooter/commands.lua`)
 - No verbose logging output; relies on notifications
 
 ## File System Interaction

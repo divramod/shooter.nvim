@@ -71,15 +71,15 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
     'fogine/vim-i3wm-tmux-navigator',
   },
   cmd = {
-    'ShooterCreate', 'ShooterList', 'ShooterOpenShots',
-    'ShooterSend1', 'ShooterSendAll1', 'ShooterQueueView',
+    'ShoCreate', 'ShoList', 'ShoOpenShots',
+    'ShoSend1', 'ShoSendAll1', 'ShoQueueView',
   },
   keys = {
-    { '<space>n', '<cmd>ShooterCreate<cr>', desc = 'Shooter: Create file' },
-    { '<space>o', '<cmd>ShooterOpenShots<cr>', desc = 'Shooter: Open shots' },
-    { '<space>v', '<cmd>ShooterList<cr>', desc = 'Shooter: List files' },
-    { '<space>1', '<cmd>ShooterSend1<cr>', desc = 'Shooter: Send to pane 1' },
-    { '<space>h', '<cmd>ShooterHelp<cr>', desc = 'Shooter: Help' },
+    { '<space>n', '<cmd>ShoCreate<cr>', desc = 'Shooter: Create file' },
+    { '<space>o', '<cmd>ShoOpenShots<cr>', desc = 'Shooter: Open shots' },
+    { '<space>v', '<cmd>ShoList<cr>', desc = 'Shooter: List files' },
+    { '<space>1', '<cmd>ShoSend1<cr>', desc = 'Shooter: Send to pane 1' },
+    { '<space>h', '<cmd>ShoHelp<cr>', desc = 'Shooter: Help' },
   },
   config = function()
     require('shooter').setup({
@@ -117,7 +117,7 @@ use {
 
 1. **Create a new shots file**:
    ```
-   :ShooterCreate
+   :ShoCreate
    ```
    Enter a feature name when prompted. This creates a timestamped markdown file in `.shooter/shotfiles/`.
 
@@ -134,13 +134,13 @@ use {
 
 3. **Send a shot to Claude** (in tmux):
    - Place cursor in shot 2
-   - Press `<space>1` (or `:ShooterSend1`)
+   - Press `<space>1` (or `:ShoSend1`)
    - If no Claude pane exists, one is automatically created to the left
    - Shot content + context is sent to Claude
 
 4. **View open shots**:
    ```
-   :ShooterOpenShots
+   :ShoOpenShots
    ```
    - Shows all unexecuted shots in current file
    - Press `Tab` to multi-select
@@ -150,115 +150,115 @@ use {
 
 Commands are organized into 8 namespaces. Old command names work as aliases.
 
-### Shotfile Commands (`ShooterShotfile*`)
+### Shotfile Commands (`ShoShotfile*`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `:ShooterShotfileNew` | `:ShooterCreate` | Create new shots file |
-| `:ShooterShotfileNewInRepo` | `:ShooterCreateInRepo` | Create in another repo |
-| `:ShooterShotfilePicker` | `:ShooterList` | Telescope picker for files |
-| `:ShooterShotfilePickerAll` | `:ShooterListAll` | Picker for all repos |
-| `:ShooterShotfileLast` | `:ShooterLast` | Open last edited file |
-| `:ShooterShotfileRename` | | Rename current shotfile |
-| `:ShooterShotfileDelete` | | Delete current shotfile |
-| `:ShooterShotfileOpenPrompts` | `:ShooterOpenPrompts` | Oil prompts folder |
-| `:ShooterShotfileMoveArchive` | `:ShooterArchive` | Move to archive/ |
-| `:ShooterShotfileMoveBacklog` | `:ShooterBacklog` | Move to backlog/ |
-| `:ShooterShotfileMoveDone` | `:ShooterDone` | Move to done/ |
-| `:ShooterShotfileMovePrompts` | `:ShooterPrompts` | Move to prompts/ |
-| `:ShooterShotfileMoveReqs` | `:ShooterReqs` | Move to reqs/ |
-| `:ShooterShotfileMoveTest` | `:ShooterTest` | Move to test/ |
-| `:ShooterShotfileMoveWait` | `:ShooterWait` | Move to wait/ |
-| `:ShooterShotfileMoveGitRoot` | `:ShooterGitRoot` | Move to git root |
-| `:ShooterShotfileMovePicker` | `:ShooterMovePicker` | Fuzzy folder picker |
+| `:ShoShotfileNew` | `:ShoCreate` | Create new shots file |
+| `:ShoShotfileNewInRepo` | `:ShoCreateInRepo` | Create in another repo |
+| `:ShoShotfilePicker` | `:ShoList` | Telescope picker for files |
+| `:ShoShotfilePickerAll` | `:ShoListAll` | Picker for all repos |
+| `:ShoShotfileLast` | `:ShoLast` | Open last edited file |
+| `:ShoShotfileRename` | | Rename current shotfile |
+| `:ShoShotfileDelete` | | Delete current shotfile |
+| `:ShoShotfileOpenPrompts` | `:ShoOpenPrompts` | Oil prompts folder |
+| `:ShoShotfileMoveArchive` | `:ShoArchive` | Move to archive/ |
+| `:ShoShotfileMoveBacklog` | `:ShoBacklog` | Move to backlog/ |
+| `:ShoShotfileMoveDone` | `:ShoDone` | Move to done/ |
+| `:ShoShotfileMovePrompts` | `:ShoPrompts` | Move to prompts/ |
+| `:ShoShotfileMoveReqs` | `:ShoReqs` | Move to reqs/ |
+| `:ShoShotfileMoveTest` | `:ShoTest` | Move to test/ |
+| `:ShoShotfileMoveWait` | `:ShoWait` | Move to wait/ |
+| `:ShoShotfileMoveGitRoot` | `:ShoGitRoot` | Move to git root |
+| `:ShoShotfileMovePicker` | `:ShoMovePicker` | Fuzzy folder picker |
 
-### Shot Commands (`ShooterShot*`)
+### Shot Commands (`ShoShot*`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `:ShooterShotNew` | `:ShooterNewShot` | Add new shot |
-| `:ShooterShotNewWhisper` | `:ShooterNewShotWhisper` | New shot + whisper |
-| `:ShooterShotDelete` | `:ShooterDeleteLastShot` | Delete last shot |
-| `:ShooterShotToggle` | `:ShooterToggleDone` | Toggle done status |
-| `:ShooterShotDeleteCursor` | `:ShooterDeleteShotUnderCursor` | Delete shot at cursor |
-| `:ShooterShotMove` | `:ShooterMoveShot` | Move shot to another file |
-| `:ShooterShotMunition` | `:ShooterMunition` | Import from inbox |
-| `:ShooterShotPicker` | `:ShooterOpenShots` | Open shots picker |
-| `:ShooterShotNavNext` | `:ShooterNextShot` | Next open shot |
-| `:ShooterShotNavPrev` | `:ShooterPrevShot` | Previous open shot |
-| `:ShooterShotNavNextSent` | `:ShooterNextSent` | Next sent shot |
-| `:ShooterShotNavPrevSent` | `:ShooterPrevSent` | Previous sent shot |
-| `:ShooterShotNavLatest` | `:ShooterLatestSent` | Latest sent shot |
-| `:ShooterShotNavUndo` | `:ShooterUndoLatestSent` | Undo sent marking |
-| `:ShooterShotSend{1-9}` | `:ShooterSend{1-9}` | Send shot to pane |
-| `:ShooterShotSendAll{1-9}` | `:ShooterSendAll{1-9}` | Send all shots |
-| `:ShooterShotSendVisual{1-9}` | `:ShooterSendVisual{1-9}` | Send selection |
-| `:ShooterShotResend{1-9}` | `:ShooterResend{1-9}` | Resend latest |
-| `:ShooterShotQueue{1-4}` | `:ShooterQueueAdd{1-4}` | Queue for pane |
-| `:ShooterShotQueueView` | `:ShooterQueueView` | View queue |
-| `:ShooterShotQueueClear` | `:ShooterQueueClear` | Clear queue |
+| `:ShoShotNew` | `:ShoNewShot` | Add new shot |
+| `:ShoShotNewWhisper` | `:ShoNewShotWhisper` | New shot + whisper |
+| `:ShoShotDelete` | `:ShoDeleteLastShot` | Delete last shot |
+| `:ShoShotToggle` | `:ShoToggleDone` | Toggle done status |
+| `:ShoShotDeleteCursor` | `:ShoDeleteShotUnderCursor` | Delete shot at cursor |
+| `:ShoShotMove` | `:ShoMoveShot` | Move shot to another file |
+| `:ShoShotMunition` | `:ShoMunition` | Import from inbox |
+| `:ShoShotPicker` | `:ShoOpenShots` | Open shots picker |
+| `:ShoShotNavNext` | `:ShoNextShot` | Next open shot |
+| `:ShoShotNavPrev` | `:ShoPrevShot` | Previous open shot |
+| `:ShoShotNavNextSent` | `:ShoNextSent` | Next sent shot |
+| `:ShoShotNavPrevSent` | `:ShoPrevSent` | Previous sent shot |
+| `:ShoShotNavLatest` | `:ShoLatestSent` | Latest sent shot |
+| `:ShoShotNavUndo` | `:ShoUndoLatestSent` | Undo sent marking |
+| `:ShoShotSend{1-9}` | `:ShoSend{1-9}` | Send shot to pane |
+| `:ShoShotSendAll{1-9}` | `:ShoSendAll{1-9}` | Send all shots |
+| `:ShoShotSendVisual{1-9}` | `:ShoSendVisual{1-9}` | Send selection |
+| `:ShoShotResend{1-9}` | `:ShoResend{1-9}` | Resend latest |
+| `:ShoShotQueue{1-4}` | `:ShoQueueAdd{1-4}` | Queue for pane |
+| `:ShoShotQueueView` | `:ShoQueueView` | View queue |
+| `:ShoShotQueueClear` | `:ShoQueueClear` | Clear queue |
 
-### Tmux Commands (`ShooterTmux*`)
+### Tmux Commands (`ShoTmux*`)
 
 | Command | Description |
 |---------|-------------|
-| `:ShooterTmuxZoom` | Toggle pane zoom |
-| `:ShooterTmuxEdit` | Edit pane in vim |
-| `:ShooterTmuxGit` | Git status toggle |
-| `:ShooterTmuxLight` | Light/dark toggle |
-| `:ShooterTmuxKillOthers` | Kill other panes |
-| `:ShooterTmuxReload` | Reload session |
-| `:ShooterTmuxDelete` | Delete session picker |
-| `:ShooterTmuxSmug` | Smug load |
-| `:ShooterTmuxYank` | Yank pane to vim |
-| `:ShooterTmuxChoose` | Choose session |
-| `:ShooterTmuxSwitch` | Switch to last |
-| `:ShooterTmuxWatch` | Watch pane |
-| `:ShooterTmuxPaneToggle{0-9}` | Toggle pane visibility |
-| `:ShooterTmuxTogglePanes` | Toggle configured panes (from tmux.yml) |
+| `:ShoTmuxZoom` | Toggle pane zoom |
+| `:ShoTmuxEdit` | Edit pane in vim |
+| `:ShoTmuxGit` | Git status toggle |
+| `:ShoTmuxLight` | Light/dark toggle |
+| `:ShoTmuxKillOthers` | Kill other panes |
+| `:ShoTmuxReload` | Reload session |
+| `:ShoTmuxDelete` | Delete session picker |
+| `:ShoTmuxSmug` | Smug load |
+| `:ShoTmuxYank` | Yank pane to vim |
+| `:ShoTmuxChoose` | Choose session |
+| `:ShoTmuxSwitch` | Switch to last |
+| `:ShoTmuxWatch` | Watch pane |
+| `:ShoTmuxPaneToggle{0-9}` | Toggle pane visibility |
+| `:ShoTmuxTogglePanes` | Toggle configured panes (from tmux.yml) |
 
-### Subproject Commands (`ShooterSubproject*`)
-
-| Command | Description |
-|---------|-------------|
-| `:ShooterSubprojectNew` | Create new subproject |
-| `:ShooterSubprojectList` | List subprojects |
-| `:ShooterSubprojectEnsure` | Ensure standard folders |
-
-### Tool Commands (`ShooterTool*`)
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `:ShooterToolToken` | `:ShooterToolTokenCounter` | Token counter |
-| `:ShooterToolObsidian` | `:ShooterOpenObsidian` | Open in Obsidian |
-| `:ShooterToolImages` | `:ShooterImages` | Insert images |
-| `:ShooterToolPrd` | `:ShooterPrdList` | PRD list |
-| `:ShooterToolGreenkeep` | `:ShooterGreenkeep` | Greenkeep |
-
-### Cfg Commands (`ShooterCfg*`)
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `:ShooterCfgGlobal` | `:ShooterEditGlobalContext` | Edit global context |
-| `:ShooterCfgProject` | `:ShooterEditProjectContext` | Edit project context |
-| `:ShooterCfgPlugin` | `:ShooterEditConfig` | Edit plugin config |
-| `:ShooterCfgShot` | `:ShooterShotCfg` | Shot picker config |
-| `:ShooterCfgShotfile` | `:ShooterShotfileCfg` | Shotfile picker config |
-
-### Analytics Commands (`ShooterAnalytics*`)
+### Subproject Commands (`ShoSubproject*`)
 
 | Command | Description |
 |---------|-------------|
-| `:ShooterAnalyticsProject` | Project analytics |
-| `:ShooterAnalyticsGlobal` | Global analytics |
+| `:ShoSubprojectNew` | Create new subproject |
+| `:ShoSubprojectList` | List subprojects |
+| `:ShoSubprojectEnsure` | Ensure standard folders |
+
+### Tool Commands (`ShoTool*`)
+
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `:ShoToolToken` | `:ShoToolTokenCounter` | Token counter |
+| `:ShoToolObsidian` | `:ShoOpenObsidian` | Open in Obsidian |
+| `:ShoToolImages` | `:ShoImages` | Insert images |
+| `:ShoToolPrd` | `:ShoPrdList` | PRD list |
+| `:ShoToolGreenkeep` | `:ShoGreenkeep` | Greenkeep |
+
+### Cfg Commands (`ShoCfg*`)
+
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `:ShoCfgGlobal` | `:ShoEditGlobalContext` | Edit global context |
+| `:ShoCfgProject` | `:ShoEditProjectContext` | Edit project context |
+| `:ShoCfgPlugin` | `:ShoEditConfig` | Edit plugin config |
+| `:ShoCfgShot` | `:ShoShotCfg` | Shot picker config |
+| `:ShoCfgShotfile` | `:ShoShotfileCfg` | Shotfile picker config |
+
+### Analytics Commands (`ShoAnalytics*`)
+
+| Command | Description |
+|---------|-------------|
+| `:ShoAnalyticsProject` | Project analytics |
+| `:ShoAnalyticsGlobal` | Global analytics |
 
 ### Help Commands
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `:ShooterHelp` | | Show help |
-| `:ShooterHealth` | | Health check |
-| `:ShooterHelpDashboard` | `:ShooterDashboard` | Dashboard |
+| `:ShoHelp` | | Show help |
+| `:ShoHealth` | | Health check |
+| `:ShoHelpDashboard` | `:ShoDashboard` | Dashboard |
 
 ## Default Keybindings
 
@@ -689,7 +689,7 @@ panes:
 **Hiding from inside the pane:**
 - Press `prefix + H` (e.g., `Ctrl+b` then `H`) when focused in a toggle pane to hide it
 - This tmux keybinding is automatically set up when you first use `<space>tt`
-- You can also run `:ShooterTmuxSetupHideKey` to set it up manually
+- You can also run `:ShoTmuxSetupHideKey` to set it up manually
 
 ## Template System
 
@@ -845,13 +845,13 @@ sound = {
 }
 ```
 
-**Test sound:** Run `:ShooterSoundTest` to test your configuration.
+**Test sound:** Run `:ShoSoundTest` to test your configuration.
 
 **Linux:** Uses `paplay` (PulseAudio) instead of `afplay`.
 
 ## Tips
 
-1. **Multi-select shots**: In `:ShooterOpenShots`, press `Tab` to select multiple, then `1-4` to send all
+1. **Multi-select shots**: In `:ShoOpenShots`, press `Tab` to select multiple, then `1-4` to send all
 2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-global.md` to customize AI instructions
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
@@ -866,7 +866,7 @@ If a shot was marked as sent (header changed from `## shot N` to `## x shot N (t
 
 1. **Native vim undo**: Press `u` in vim immediately after the marking happened. This will undo the header change like any other edit.
 
-2. **Undo latest sent command**: Press `<space>u` (or `:ShooterUndoLatestSent`) to automatically find and undo the marking of the most recently sent shot. This is useful if you've made other edits since the marking and can't use native undo. The command:
+2. **Undo latest sent command**: Press `<space>u` (or `:ShoUndoLatestSent`) to automatically find and undo the marking of the most recently sent shot. This is useful if you've made other edits since the marking and can't use native undo. The command:
    - Finds the shot with the most recent timestamp
    - Changes `## x shot N (YYYY-MM-DD HH:MM:SS)` back to `## shot N`
    - Saves the file

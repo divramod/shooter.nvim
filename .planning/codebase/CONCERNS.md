@@ -25,7 +25,7 @@
 ## Known Bugs
 
 **Renumber Command Does Not Validate Shot Patterns:**
-- Symptoms: `ShooterShotsRenumber` may miss or miscount shots if shot headers deviate slightly from expected format (e.g., trailing spaces, mixed case)
+- Symptoms: `ShoShotsRenumber` may miss or miscount shots if shot headers deviate slightly from expected format (e.g., trailing spaces, mixed case)
 - Files: `lua/shooter/core/renumber.lua`
 - Trigger: Create a shot header with variations like `## shot` vs `##shot` or `## SHOT` (uppercase)
 - Workaround: Ensure consistent shot header formatting before running renumber

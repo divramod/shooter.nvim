@@ -336,8 +336,8 @@ end
 -- This should be called once during plugin setup
 -- Note: Requires terminal configured to send Meta for Option key
 -- Behavior:
---   - In nvim pane: calls ShooterTmuxTogglePanes command
---   - In toggled pane (created by ShooterTmuxTogglePanes): hides the pane
+--   - In nvim pane: calls ShoTmuxTogglePanes command
+--   - In toggled pane (created by ShoTmuxTogglePanes): hides the pane
 --   - Otherwise: does nothing
 function M.setup_tmux_keybinding()
   if not detect.check_tmux_installed() or not detect.in_tmux() then
@@ -378,7 +378,7 @@ function M.setup_tmux_keybinding()
     # Check if this is nvim
     elif [ "$PANE_CMD" = "nvim" ] || [ "$PANE_CMD" = "vim" ]; then
       # Send command to nvim to open toggle panes picker
-      tmux send-keys -t "%%$PANE_ID" Escape ":ShooterTmuxTogglePanes" Enter
+      tmux send-keys -t "%%$PANE_ID" Escape ":ShoTmuxTogglePanes" Enter
     fi
     # Otherwise do nothing
   ']], session_name, session_name, session_name)

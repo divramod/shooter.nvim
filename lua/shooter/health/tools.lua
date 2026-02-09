@@ -7,7 +7,7 @@ local M = {}
 function M.check_hal_cli()
   if vim.fn.executable('hal') ~= 1 then
     vim.health.info('hal CLI not found', {
-      'Optional: Install hal CLI for image picking with <space>I (ShooterImages)',
+      'Optional: Install hal CLI for image picking with <space>I (ShoImages)',
       'https://github.com/divramod/hal',
     })
     return false

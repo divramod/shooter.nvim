@@ -19,25 +19,25 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Added TextChanged/TextChangedI autocommands to update highlighting when buffer changes
 - Now `## shot N` inside ``` blocks won't be highlighted
 
-[2026-01-26 06:20] Shot 2 (shot) - Add ShooterShotExtract command
+[2026-01-26 06:20] Shot 2 (shot) - Add ShoShotExtract command
 - Added `extract_subtask()` function to shot_actions.lua
 - Finds ### heading at or above cursor, extracts content until next ### or end of shot
 - Creates new shot with subtask title in parentheses (e.g., `## shot 5 (subtask name)`)
 - Removes extracted content from original shot
-- Added `ShooterShotExtract` command
+- Added `ShoShotExtract` command
 - Added `se` keymap in shot namespace, `e` as core shortcut
 - Updated help.lua
 
-[2026-01-26 05:50] Shot 4 (shot) - Add ShooterShotYank command
+[2026-01-26 05:50] Shot 4 (shot) - Add ShoShotYank command
 - Added `yank_shot()` function to shot_actions.lua - yanks current shot to + and " registers
-- Added `ShooterShotYank` command in commands.lua
+- Added `ShoShotYank` command in commands.lua
 - Added `sy` keymap in shot namespace
 - Added `ys` keymap as core shortcut
 - Updated help.lua with new keymaps
 
 [2026-01-24 22:40] Shot 4 (shotfile) - Add <space>l core shortcut for last shotfile
 - Added `l` to core shortcuts (root level) for quick access to last edited shotfile
-- Maps to existing `ShooterShotfileLast` command
+- Maps to existing `ShoShotfileLast` command
 - Core shortcuts now: n (new), s (shot), o (open shots), v (picker), l (last), 1-4 (send)
 - Updated help.lua to reflect new core shortcut
 
@@ -92,7 +92,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 
 [2026-01-24 12:40] Shot 1 (shot) - Move shot to another shotfile
 - Created `lua/shooter/core/shot_move.lua` (143 lines) for moving shots between files
-- Added `ShooterMoveShot` command
+- Added `ShoMoveShot` command
 - Added `<space>ms` keymap (move shot)
 - Flow: find shot under cursor → pick target file → renumber shot → insert into target → delete from source
 - Shot is inserted after the title heading in the target file
@@ -163,13 +163,13 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 [2026-01-24 11:48] Shot 324 - l and L mappings in pickers
 - Bug: pressing `<space>l` in picker caused E37 error (buffer switch with unsaved changes)
 - Fix: Added `l` and `L` mappings to all pickers that close picker first, then run command
-- `l` → ShooterLast (last edited shot file)
-- `L` → ShooterLatestSent (latest sent shot file)
+- `l` → ShoLast (last edited shot file)
+- `L` → ShoLatestSent (latest sent shot file)
 - Condensed session/picker.lua to 195 lines
 
 [2026-01-24 11:47] Shot 323 - Create new shotfile from pickers
 - Added `n` mapping to all three pickers (shotfile, project, sort) to create new shotfile
-- Calls ShooterCreate which: prompts for title, shows project picker if subprojects exist
+- Calls ShoCreate which: prompts for title, shows project picker if subprojects exist
 - Closes picker before creating to avoid conflicts
 
 [2026-01-24 11:45] Shot 340 - Rename move mappings
@@ -392,14 +392,14 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Added 'C' key to clear all filters
 - Added 'S' key to save current filter as named session
 - Added 'L' key to load saved filter session
-- ShooterList now shows all files (root + projects) by default
-- Added ShooterClearFilter command and <space>V keymap
+- ShoList now shows all files (root + projects) by default
+- Added ShoClearFilter command and <space>V keymap
 
 [2026-01-23 13:45] Shot 296 - Clean up duplicate history files
 - Created lua/shooter/history/cleanup.lua (76 lines)
 - cleanup_duplicates(do_fix) finds files with same shot number, 1 second apart
 - Keeps file with YAML frontmatter (history file), deletes sendable file
-- New command: :ShooterHistoryCleanup (dry-run) and :ShooterHistoryCleanup! (delete)
+- New command: :ShoHistoryCleanup (dry-run) and :ShoHistoryCleanup! (delete)
 - Cleaned 88 duplicate files from all history folders
 
 [2026-01-23 13:30] Shot 295 - Fix duplicate history files on send
@@ -502,13 +502,13 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 
 - Updated greenkeep.lua: Now syncs history when renaming files
 - Updated movement.lua: Now updates history source paths when moving files
-- Added commands: ShooterShotfileRename, ShooterHistoryAudit, ShooterHistoryAudit!
-- Added keymap: `<space>F` for ShooterShotfileRename
+- Added commands: ShoShotfileRename, ShoHistoryAudit, ShoHistoryAudit!
+- Added keymap: `<space>F` for ShoShotfileRename
 - Added tests: sync_spec.lua (8), rename_spec.lua (4), audit_spec.lua (11)
 - Updated README.md with new commands and keymaps
 
-[2026-01-23 10:10] Shot 279-281 - ShooterGreenkeep command (full migration)
-- Added ShooterGreenkeep command to migrate all old formats:
+[2026-01-23 10:10] Shot 279-281 - ShoGreenkeep command (full migration)
+- Added ShoGreenkeep command to migrate all old formats:
   * Shot dates: `(20260119_0741)` → `(2026-01-19 07:41:00)`
   * File headers: `# 2026-01-18 - Layout` → `# layout`
   * Filenames: `20260118_2338_layout.md` → `layout.md`
@@ -524,7 +524,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
   * rename_folder_if_needed() - rename old format history folders
   * get_old_history_folders() - find folders needing renaming
   * run() - main entry point with stats reporting
-- Added keymap: `<space>G` for ShooterGreenkeep
+- Added keymap: `<space>G` for ShoGreenkeep
 - Added tests in tests/core/greenkeep_spec.lua (22 tests)
 - Auto-reload buffer after changes, handles file rename gracefully
 
@@ -534,7 +534,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Updated lua/shooter/core/files.lua
 
 [2026-01-23 09:25] Shot 274/275 - 2026-01-18 - shooter.nvim
-- ShooterCreate now enters insert mode after file creation
+- ShoCreate now enters insert mode after file creation
 - Cursor positioned on line 4 (after "## shot 1" header)
 - User can immediately start typing shot content
 - Fix: wrapped in vim.schedule() to work with async vim.ui.input callback
@@ -556,8 +556,8 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
   * create_file() accepts project parameter
   * get_prompt_files() accepts project parameter
 - Updated lua/shooter/commands.lua:
-  * ShooterCreate - auto-detects project or shows picker
-  * ShooterList - auto-detects project or shows picker
+  * ShoCreate - auto-detects project or shows picker
+  * ShoList - auto-detects project or shows picker
 - Updated lua/shooter/telescope/pickers.lua:
   * list_all_files() accepts project parameter, passes to helpers
 - Updated lua/shooter/telescope/helpers.lua:
@@ -593,7 +593,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Updated README.md highlight documentation
 
 [2026-01-23 08:00] Shot 30 - 2026-01-18 - shooter.nvim
-- Added ShooterOpenObsidian command (<space>Oo keymap)
+- Added ShoOpenObsidian command (<space>Oo keymap)
 - Opens current file in Obsidian app using obsidian:// URL scheme
 - Only works if file is inside an Obsidian vault
 - Created lua/shooter/tools/obsidian.lua (90 lines):
@@ -620,7 +620,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
   * Highlight customization examples
 
 [2026-01-23 00:30] Shot 265 - 2026-01-18 - shooter.nvim
-- Added ShooterToolTokenCounter command (<space>ttc keymap)
+- Added ShoToolTokenCounter command (<space>ttc keymap)
 - Counts tokens in current file using ttok CLI (pip install ttok)
 - Created lua/shooter/tools/token_counter.lua (65 lines):
   * count_tokens(filepath) - runs ttok < file, returns count
@@ -632,7 +632,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Updated README.md: requirements, commands table, keybindings, health check
 
 [2026-01-22 20:45] Shot 263 - 2026-01-18 - shooter.nvim
-- Remapped <space>t to <space>v for ShooterList (Telescope file picker)
+- Remapped <space>t to <space>v for ShoList (Telescope file picker)
 - Updated keymaps.lua, help.lua, README.md
 
 [2026-01-22 18:10] Shot 260 - 2026-01-18 - shooter.nvim
@@ -645,7 +645,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
   * open_picker() - Telescope picker with folder list
 - Works in both Oil and regular editor buffers
 - <C-c> closes picker in both insert and normal mode
-- Added ShooterMovePicker command and <space>mm keymap
+- Added ShoMovePicker command and <space>mm keymap
 - Updated help.lua, README.md
 
 [2026-01-22 12:36] Shot 254 - 2026-01-18 - shooter.nvim
@@ -656,7 +656,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Note: file content still has date in the # heading (unchanged)
 
 [2026-01-22 12:35] Shot 259 - 2026-01-18 - shooter.nvim
-- Fixed vim pane width still getting messed up after ShooterWatch
+- Fixed vim pane width still getting messed up after ShoWatch
 - Bug: horizontal split (-h) was dividing the width of existing panes
 - Fix: use vertical split (-v) instead - creates top/bottom split
 - Changed: `split-window -hb` → `split-window -vb`
@@ -664,7 +664,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - When zoomed and closed, horizontal layout is preserved
 
 [2026-01-22 12:25] Shot 258 - 2026-01-18 - shooter.nvim
-- Fixed vim window being smaller after ShooterWatch exits
+- Fixed vim window being smaller after ShoWatch exits
 - Bug: select-layout ran while watch pane still existed (before shell exited)
 - Applied 2-pane layout to 3-pane window, causing size issues
 - Fix: spawn background process with `nohup` that survives pane close
@@ -672,14 +672,14 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
 - Background job waits 0.3s for pane to fully close, then restores layout
 
 [2026-01-22 12:20] Shot 257 - 2026-01-18 - shooter.nvim
-- Fixed ShooterWatch not restoring original pane layout
+- Fixed ShoWatch not restoring original pane layout
 - Bug: zoom only captures post-split state, not original layout
 - Fix: save layout BEFORE split with `display-message -p "#{window_layout}"`
 - Run wrapper: `shooter watch; tmux select-layout '<saved_layout>'`
 - When watch exits, select-layout runs to restore original sizes
 
 [2026-01-22 12:15] Shot 256 - 2026-01-18 - shooter.nvim
-- Added ShooterWatch command (<space>b keymap)
+- Added ShoWatch command (<space>b keymap)
 - Opens maximized tmux pane running "shooter watch"
 - When shooter watch exits, pane auto-closes and layout restores
 - Implementation in lua/shooter/tmux/watch.lua (75 lines):
@@ -789,7 +789,7 @@ Format: [YYYY-MM-DD HH:MM] Shot <number> - <Feature Title>
   * Tab/h/l: toggle expand/collapse
   * L/H: expand/collapse all
   * r: refresh, q/Esc: close
-- Added ShooterDashboard command + <space>D keymap
+- Added ShoDashboard command + <space>D keymap
 - Updated help.lua with dashboard documentation
 - Created tests/dashboard/data_spec.lua with 7 tests
 
@@ -837,10 +837,10 @@ IMPLEMENTATION PLAN (if pursuing):
   3. Create lua/shooter/dashboard/tree.lua (NuiTree logic)
   4. Create lua/shooter/dashboard/data.lua (gather files+shots per project)
   5. Keymaps: Enter=open, Tab=expand/collapse, q=quit
-  6. Add ShooterDashboard command + keymap
+  6. Add ShoDashboard command + keymap
 
 [2026-01-22 09:20] Shot 246 - 2026-01-18 - shooter.nvim
-- Remapped <space>g to <space>I for ShooterImages (get images)
+- Remapped <space>g to <space>I for ShoImages (get images)
 - Updated lua/shooter/keymaps.lua: changed prefix .. 'g' to prefix .. 'I'
 - Updated lua/shooter/help.lua: changed 'g' to 'I' in CORE COMMANDS section
 - Updated lua/shooter/health.lua: changed <space>g to <space>I in hal CLI hint
@@ -905,7 +905,7 @@ IMPLEMENTATION PLAN (if pursuing):
   * yank_to_vim() - Yank pane to vim buffer
   * choose_session() - Tmux session chooser
   * switch_last() - Switch to last client
-- Added 11 ShooterTmux* commands in commands.lua
+- Added 11 ShoTmux* commands in commands.lua
 - Added keymaps: <space>U{z,e,g,i,o,r,d,s,y,c,p}
 - Updated help.lua with TMUX WRAPPER section
 
@@ -918,7 +918,7 @@ IMPLEMENTATION PLAN (if pursuing):
   * Format: YYYY-MM-DD_slug.md
 
 [2026-01-21 23:05] Shot 233 - 2026-01-18 - nvim next action commands
-- Fixed ShooterCreate (<space>n) not prompting for feature name
+- Fixed ShoCreate (<space>n) not prompting for feature name
 - Problem: When called without args, defaulted to "New Shot File"
 - Fixed in lua/shooter/commands.lua:
   * Now uses vim.ui.input({ prompt = 'Feature title: ' }) when no args
@@ -934,7 +934,7 @@ IMPLEMENTATION PLAN (if pursuing):
   * get_status() - returns all hidden pane states
   * Uses tmux break-pane to hide (moves to background window)
   * Uses tmux join-pane to show (brings back to current window)
-- Added ShooterPaneToggle1-9 commands
+- Added ShoPaneToggle1-9 commands
 - Keymaps: <space>r1-4 = toggle pane visibility
 - Moved resend commands to <space>R1-4 (uppercase R)
 - Added tests in tests/tmux/panes_spec.lua
@@ -982,11 +982,11 @@ IMPLEMENTATION PLAN (if pursuing):
   * test() - tests sound configuration
 - Added config options: sound.enabled, sound.file, sound.volume
 - Platform support: macOS (afplay), Linux (paplay)
-- Added ShooterSoundTest command
+- Added ShoSoundTest command
 - Added tests in tests/core/sound_spec.lua
 
 [2026-01-21 20:25] Shot 194 - 2026-01-18 - nvim next action commands
-- Added ShooterUndoLatestSent command and <space>u keybinding
+- Added ShoUndoLatestSent command and <space>u keybinding
 - Implementation in lua/shooter/core/shot_actions.lua:
   * undo_latest_sent_shot() finds shot with latest timestamp
   * Changes "## x shot N (timestamp)" back to "## shot N"
@@ -995,5 +995,5 @@ IMPLEMENTATION PLAN (if pursuing):
 [2026-01-21 20:20] Shot 197 - 2026-01-18 - nvim next action commands
 - Added timestamp to history filenames: shot-<number>-<yyyymmdd>_<hhmmss>.md
 - Created history/migrate.lua for batch migration
-- Added ShooterMigrateHistory command
+- Added ShoMigrateHistory command
 - Added 25 tests in tests/core/history_spec.lua

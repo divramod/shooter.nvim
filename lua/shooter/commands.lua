@@ -17,8 +17,8 @@ local function setup_shotfile_commands()
   local movement = require('shooter.core.movement')
   local project_mod = require('shooter.core.project')
 
-  -- ShooterShotfileNew (alias: ShooterCreate)
-  create_cmd('ShooterShotfileNew', function(opts)
+  -- ShoShotfileNew (alias: ShoCreate)
+  create_cmd('ShoShotfileNew', function(opts)
     local function create_with_title_and_project(title, project)
       if not title or title == '' then return end
       local path = files.create_file(title, '', '', project)
@@ -51,40 +51,40 @@ local function setup_shotfile_commands()
     else
       prompt_for_title(nil)
     end
-  end, { nargs = '?', desc = 'Create new shotfile' }, 'ShooterCreate')
+  end, { nargs = '?', desc = 'Create new shotfile' }, 'ShoCreate')
 
-  -- ShooterShotfileNewInRepo (alias: ShooterCreateInRepo)
-  create_cmd('ShooterShotfileNewInRepo', function()
+  -- ShoShotfileNewInRepo (alias: ShoCreateInRepo)
+  create_cmd('ShoShotfileNewInRepo', function()
     require('shooter.core.repos').create_in_repo_picker()
-  end, { desc = 'Create shotfile in any configured repo' }, 'ShooterCreateInRepo')
+  end, { desc = 'Create shotfile in any configured repo' }, 'ShoCreateInRepo')
 
-  -- ShooterShotfilePicker (alias: ShooterList)
-  create_cmd('ShooterShotfilePicker', function()
+  -- ShoShotfilePicker (alias: ShoList)
+  create_cmd('ShoShotfilePicker', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_all_files({ include_all_projects = true })
     if picker then picker:find() end
-  end, { desc = 'Shotfile picker (current repo)' }, 'ShooterList')
+  end, { desc = 'Shotfile picker (current repo)' }, 'ShoList')
 
-  -- ShooterShotfilePickerAll (alias: ShooterListAll)
-  create_cmd('ShooterShotfilePickerAll', function()
+  -- ShoShotfilePickerAll (alias: ShoListAll)
+  create_cmd('ShoShotfilePickerAll', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_all_repos_files()
     if picker then picker:find() end
-  end, { desc = 'Shotfile picker (all repos)' }, 'ShooterListAll')
+  end, { desc = 'Shotfile picker (all repos)' }, 'ShoListAll')
 
-  -- ShooterShotfileLast (alias: ShooterLast)
-  create_cmd('ShooterShotfileLast', function()
+  -- ShoShotfileLast (alias: ShoLast)
+  create_cmd('ShoShotfileLast', function()
     local last_file = files.get_last_edited_file()
     if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
-  end, { desc = 'Open last edited shotfile' }, 'ShooterLast')
+  end, { desc = 'Open last edited shotfile' }, 'ShoLast')
 
-  -- ShooterShotfileRename
-  create_cmd('ShooterShotfileRename', function()
+  -- ShoShotfileRename
+  create_cmd('ShoShotfileRename', function()
     require('shooter.core.rename').rename_current_file()
   end, { desc = 'Rename current shotfile' })
 
-  -- ShooterShotfileDelete
-  create_cmd('ShooterShotfileDelete', function()
+  -- ShoShotfileDelete
+  create_cmd('ShoShotfileDelete', function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if bufname == '' then
       vim.notify('No file to delete', vim.log.levels.WARN)
@@ -99,8 +99,8 @@ local function setup_shotfile_commands()
     end)
   end, { desc = 'Delete current shotfile' })
 
-  -- ShooterShotfileOpenPrompts (alias: ShooterOpenPrompts)
-  create_cmd('ShooterShotfileOpenPrompts', function()
+  -- ShoShotfileOpenPrompts (alias: ShoOpenPrompts)
+  create_cmd('ShoShotfileOpenPrompts', function()
     local config = require('shooter.config')
     local prompts_dir = config.get('paths.prompts_dir')
     vim.fn.mkdir(prompts_dir, 'p')
@@ -110,10 +110,10 @@ local function setup_shotfile_commands()
       vim.notify(string.format('Created %d theme shotfiles', created), vim.log.levels.INFO)
     end
     vim.cmd('Oil ' .. prompts_dir)
-  end, { desc = 'Open Oil in prompts folder' }, 'ShooterOpenPrompts')
+  end, { desc = 'Open Oil in prompts folder' }, 'ShoOpenPrompts')
 
-  -- ShooterOpenPlans - Open plans folder in Oil
-  create_cmd('ShooterOpenPlans', function()
+  -- ShoOpenPlans - Open plans folder in Oil
+  create_cmd('ShoOpenPlans', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if git_root then
@@ -125,8 +125,8 @@ local function setup_shotfile_commands()
     end
   end, { desc = 'Open plans folder in Oil' })
 
-  -- ShooterOpenShooterConfig - Open .shooter/config/nvim folder in Oil
-  create_cmd('ShooterOpenShooterConfig', function()
+  -- ShoOpenShoConfig - Open .shooter/config/nvim folder in Oil
+  create_cmd('ShoOpenShoConfig', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if git_root then
@@ -139,21 +139,21 @@ local function setup_shotfile_commands()
   end, { desc = 'Open .shooter/config/nvim folder in Oil' })
 
   -- Move commands
-  create_cmd('ShooterShotfileMoveArchive', movement.move_to_archive, { desc = 'Move to archive' }, 'ShooterArchive')
-  create_cmd('ShooterShotfileMoveBacklog', movement.move_to_backlog, { desc = 'Move to backlog' }, 'ShooterBacklog')
-  create_cmd('ShooterShotfileMoveDone', movement.move_to_done, { desc = 'Move to done' }, 'ShooterDone')
-  create_cmd('ShooterShotfileMovePrompts', movement.move_to_prompts, { desc = 'Move to prompts' }, 'ShooterPrompts')
-  create_cmd('ShooterShotfileMoveReqs', movement.move_to_reqs, { desc = 'Move to reqs' }, 'ShooterReqs')
-  create_cmd('ShooterShotfileMoveTest', movement.move_to_test, { desc = 'Move to test' }, 'ShooterTest')
-  create_cmd('ShooterShotfileMoveWait', movement.move_to_wait, { desc = 'Move to wait' }, 'ShooterWait')
-  create_cmd('ShooterShotfileMoveGitRoot', movement.move_to_git_root, { desc = 'Move to git root' }, 'ShooterGitRoot')
+  create_cmd('ShoShotfileMoveArchive', movement.move_to_archive, { desc = 'Move to archive' }, 'ShoArchive')
+  create_cmd('ShoShotfileMoveBacklog', movement.move_to_backlog, { desc = 'Move to backlog' }, 'ShoBacklog')
+  create_cmd('ShoShotfileMoveDone', movement.move_to_done, { desc = 'Move to done' }, 'ShoDone')
+  create_cmd('ShoShotfileMovePrompts', movement.move_to_prompts, { desc = 'Move to prompts' }, 'ShoPrompts')
+  create_cmd('ShoShotfileMoveReqs', movement.move_to_reqs, { desc = 'Move to reqs' }, 'ShoReqs')
+  create_cmd('ShoShotfileMoveTest', movement.move_to_test, { desc = 'Move to test' }, 'ShoTest')
+  create_cmd('ShoShotfileMoveWait', movement.move_to_wait, { desc = 'Move to wait' }, 'ShoWait')
+  create_cmd('ShoShotfileMoveGitRoot', movement.move_to_git_root, { desc = 'Move to git root' }, 'ShoGitRoot')
 
-  -- ShooterShotfileMovePicker (alias: ShooterMovePicker)
-  create_cmd('ShooterShotfileMovePicker', function()
+  -- ShoShotfileMovePicker (alias: ShoMovePicker)
+  create_cmd('ShoShotfileMovePicker', function()
     require('shooter.core.move_picker').open_picker()
-  end, { desc = 'Move file via fuzzy picker' }, 'ShooterMovePicker')
+  end, { desc = 'Move file via fuzzy picker' }, 'ShoMovePicker')
 
-  -- ShooterShotfileCfg = ShooterCfgShotfile (bidirectional alias handled in Cfg)
+  -- ShoShotfileCfg = ShoCfgShotfile (bidirectional alias handled in Cfg)
 end
 
 -- Setup Shot namespace commands (s prefix in keymaps)
@@ -161,124 +161,124 @@ local function setup_shot_commands()
   local shot_actions = require('shooter.core.shot_actions')
   local tmux = require('shooter.tmux')
 
-  -- ShooterShotNew (alias: ShooterNewShot)
-  create_cmd('ShooterShotNew', shot_actions.create_new_shot, { desc = 'Create new shot' }, 'ShooterNewShot')
+  -- ShoShotNew (alias: ShoNewShot)
+  create_cmd('ShoShotNew', shot_actions.create_new_shot, { desc = 'Create new shot' }, 'ShoNewShot')
 
-  -- ShooterShotNewWhisper (alias: ShooterNewShotWhisper)
-  create_cmd('ShooterShotNewWhisper', shot_actions.create_new_shot_with_whisper,
-    { desc = 'New shot + whisper' }, 'ShooterNewShotWhisper')
+  -- ShoShotNewWhisper (alias: ShoNewShotWhisper)
+  create_cmd('ShoShotNewWhisper', shot_actions.create_new_shot_with_whisper,
+    { desc = 'New shot + whisper' }, 'ShoNewShotWhisper')
 
-  -- ShooterShotDelete (alias: ShooterDeleteLastShot)
-  create_cmd('ShooterShotDelete', shot_actions.delete_last_shot,
-    { desc = 'Delete last shot' }, 'ShooterDeleteLastShot')
+  -- ShoShotDelete (alias: ShoDeleteLastShot)
+  create_cmd('ShoShotDelete', shot_actions.delete_last_shot,
+    { desc = 'Delete last shot' }, 'ShoDeleteLastShot')
 
-  -- ShooterShotToggle (alias: ShooterToggleDone)
-  create_cmd('ShooterShotToggle', shot_actions.toggle_shot_done,
-    { desc = 'Toggle shot done' }, 'ShooterToggleDone')
+  -- ShoShotToggle (alias: ShoToggleDone)
+  create_cmd('ShoShotToggle', shot_actions.toggle_shot_done,
+    { desc = 'Toggle shot done' }, 'ShoToggleDone')
 
-  -- ShooterShotDeleteCursor (alias: ShooterDeleteShotUnderCursor)
-  create_cmd('ShooterShotDeleteCursor', function()
+  -- ShoShotDeleteCursor (alias: ShoDeleteShotUnderCursor)
+  create_cmd('ShoShotDeleteCursor', function()
     require('shooter.core.shot_delete').delete_shot_under_cursor()
-  end, { desc = 'Delete shot under cursor' }, 'ShooterDeleteShotUnderCursor')
+  end, { desc = 'Delete shot under cursor' }, 'ShoDeleteShotUnderCursor')
 
-  -- ShooterShotMove (alias: ShooterMoveShot)
-  create_cmd('ShooterShotMove', function()
+  -- ShoShotMove (alias: ShoMoveShot)
+  create_cmd('ShoShotMove', function()
     require('shooter.core.shot_move').move_shot()
-  end, { desc = 'Move shot to another file' }, 'ShooterMoveShot')
+  end, { desc = 'Move shot to another file' }, 'ShoMoveShot')
 
-  -- ShooterShotYank
-  create_cmd('ShooterShotYank', shot_actions.yank_shot, { desc = 'Yank shot to clipboard' })
+  -- ShoShotYank
+  create_cmd('ShoShotYank', shot_actions.yank_shot, { desc = 'Yank shot to clipboard' })
 
-  -- ShooterShotViewResponse
-  create_cmd('ShooterShotViewResponse', function()
+  -- ShoShotViewResponse
+  create_cmd('ShoShotViewResponse', function()
     require('shooter.tools.response_viewer').view_response()
   end, { desc = 'View response for shot' })
 
-  -- ShooterShotExtractBlock (alias: ShooterShotExtract for backward compat)
-  create_cmd('ShooterShotExtractBlock', shot_actions.extract_subtask,
-    { desc = 'Extract ### subtask block to new shot' }, 'ShooterShotExtract')
+  -- ShoShotExtractBlock (alias: ShoShotExtract for backward compat)
+  create_cmd('ShoShotExtractBlock', shot_actions.extract_subtask,
+    { desc = 'Extract ### subtask block to new shot' }, 'ShoShotExtract')
 
-  -- ShooterShotExtractLine
-  create_cmd('ShooterShotExtractLine', shot_actions.extract_line,
+  -- ShoShotExtractLine
+  create_cmd('ShoShotExtractLine', shot_actions.extract_line,
     { desc = 'Extract current line to new shot' })
 
-  -- ShooterShotMunition (alias: ShooterMunition)
-  create_cmd('ShooterShotMunition', function()
+  -- ShoShotMunition (alias: ShoMunition)
+  create_cmd('ShoShotMunition', function()
     require('shooter.inbox.picker').show_file_picker()
-  end, { desc = 'Import tasks from inbox' }, 'ShooterMunition')
+  end, { desc = 'Import tasks from inbox' }, 'ShoMunition')
 
-  -- ShooterShotPicker (alias: ShooterOpenShots)
-  create_cmd('ShooterShotPicker', function()
+  -- ShoShotPicker (alias: ShoOpenShots)
+  create_cmd('ShoShotPicker', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_open_shots()
     if picker then picker:find() end
-  end, { desc = 'Open shots picker' }, 'ShooterOpenShots')
+  end, { desc = 'Open shots picker' }, 'ShoOpenShots')
 
   -- Navigation commands
-  create_cmd('ShooterShotNavNext', shot_actions.goto_next_open_shot,
-    { desc = 'Next open shot' }, 'ShooterNextShot')
-  create_cmd('ShooterShotNavPrev', shot_actions.goto_prev_open_shot,
-    { desc = 'Previous open shot' }, 'ShooterPrevShot')
-  create_cmd('ShooterShotNavNextSent', shot_actions.goto_next_sent_shot,
-    { desc = 'Next sent shot' }, 'ShooterNextSent')
-  create_cmd('ShooterShotNavPrevSent', shot_actions.goto_prev_sent_shot,
-    { desc = 'Previous sent shot' }, 'ShooterPrevSent')
-  create_cmd('ShooterShotNavLatest', shot_actions.goto_latest_sent_shot,
-    { desc = 'Latest sent shot' }, 'ShooterLatestSent')
-  create_cmd('ShooterShotNavUndo', shot_actions.undo_latest_sent_shot,
-    { desc = 'Undo latest sent' }, 'ShooterUndoLatestSent')
+  create_cmd('ShoShotNavNext', shot_actions.goto_next_open_shot,
+    { desc = 'Next open shot' }, 'ShoNextShot')
+  create_cmd('ShoShotNavPrev', shot_actions.goto_prev_open_shot,
+    { desc = 'Previous open shot' }, 'ShoPrevShot')
+  create_cmd('ShoShotNavNextSent', shot_actions.goto_next_sent_shot,
+    { desc = 'Next sent shot' }, 'ShoNextSent')
+  create_cmd('ShoShotNavPrevSent', shot_actions.goto_prev_sent_shot,
+    { desc = 'Previous sent shot' }, 'ShoPrevSent')
+  create_cmd('ShoShotNavLatest', shot_actions.goto_latest_sent_shot,
+    { desc = 'Latest sent shot' }, 'ShoLatestSent')
+  create_cmd('ShoShotNavUndo', shot_actions.undo_latest_sent_shot,
+    { desc = 'Undo latest sent' }, 'ShoUndoLatestSent')
 
   -- Send commands with optional pane argument (defaults to 1)
-  create_cmd('ShooterShotSend', function(opts)
+  create_cmd('ShoShotSend', function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_current_shot(pane)
-  end, { nargs = '?', desc = 'Send shot to pane [1-9]' }, 'ShooterSend')
+  end, { nargs = '?', desc = 'Send shot to pane [1-9]' }, 'ShoSend')
 
-  create_cmd('ShooterShotSendAll', function(opts)
+  create_cmd('ShoShotSendAll', function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_all_shots(pane)
-  end, { nargs = '?', desc = 'Send all shots to pane [1-9]' }, 'ShooterSendAll')
+  end, { nargs = '?', desc = 'Send all shots to pane [1-9]' }, 'ShoSendAll')
 
-  create_cmd('ShooterShotSendVisual', function(opts)
+  create_cmd('ShoShotSendVisual', function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_visual_selection(pane, opts.line1, opts.line2)
-  end, { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' }, 'ShooterSendVisual')
+  end, { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' }, 'ShoSendVisual')
 
-  create_cmd('ShooterShotResend', function(opts)
+  create_cmd('ShoShotResend', function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.resend_latest_shot(pane)
-  end, { nargs = '?', desc = 'Resend to pane [1-9]' }, 'ShooterResend')
+  end, { nargs = '?', desc = 'Resend to pane [1-9]' }, 'ShoResend')
 
   -- Queue commands (1-4)
   local queue = require('shooter.queue')
   for i = 1, 4 do
-    create_cmd('ShooterShotQueue' .. i, function()
+    create_cmd('ShoShotQueue' .. i, function()
       queue.add_to_queue(nil, i)
-    end, { desc = 'Queue for pane ' .. i }, 'ShooterQueueAdd' .. i)
+    end, { desc = 'Queue for pane ' .. i }, 'ShoQueueAdd' .. i)
   end
 
-  create_cmd('ShooterShotQueueView', function()
+  create_cmd('ShoShotQueueView', function()
     require('shooter.queue.picker').show_queue()
-  end, { desc = 'View queue' }, 'ShooterQueueView')
+  end, { desc = 'View queue' }, 'ShoQueueView')
 
-  create_cmd('ShooterShotQueueClear', function()
+  create_cmd('ShoShotQueueClear', function()
     queue.clear_queue()
-  end, { desc = 'Clear queue' }, 'ShooterQueueClear')
+  end, { desc = 'Clear queue' }, 'ShoQueueClear')
 
-  -- ShooterFileStats - Show stats for current shotfile
-  create_cmd('ShooterFileStats', shot_actions.file_stats, { desc = 'Shotfile stats (total/open/closed)' })
+  -- ShoFileStats - Show stats for current shotfile
+  create_cmd('ShoFileStats', shot_actions.file_stats, { desc = 'Shotfile stats (total/open/closed)' })
 
-  -- ShooterFileToggleFirstShotOfDayColoring - Toggle day marker highlighting
-  create_cmd('ShooterFileToggleFirstShotOfDayColoring', function()
+  -- ShoFileToggleFirstShotOfDayColoring - Toggle day marker highlighting
+  create_cmd('ShoFileToggleFirstShotOfDayColoring', function()
     require('shooter.syntax').toggle_day_marker()
   end, { desc = 'Toggle first-shot-of-day coloring' })
 
-  -- ShooterShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
-  create_cmd('ShooterShotCreateFromClaude', shot_actions.create_shot_from_claude,
+  -- ShoShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
+  create_cmd('ShoShotCreateFromClaude', shot_actions.create_shot_from_claude,
     { desc = 'Cut Claude text, create shot in right pane' })
 
-  -- ShooterShotsRenumber - Renumber all shots sequentially
-  create_cmd('ShooterShotsRenumber', function()
+  -- ShoShotsRenumber - Renumber all shots sequentially
+  create_cmd('ShoShotsRenumber', function()
     local renumber = require('shooter.core.renumber')
     local count = renumber.renumber_shots()
     if count > 0 then
@@ -286,46 +286,46 @@ local function setup_shot_commands()
     end
   end, { desc = 'Renumber shots sequentially' })
 
-  -- ShooterShotCfg = ShooterCfgShot (bidirectional alias handled in Cfg)
+  -- ShoShotCfg = ShoCfgShot (bidirectional alias handled in Cfg)
 end
 
 -- Setup Tmux namespace commands (t prefix in keymaps)
 local function setup_tmux_commands()
   local wrapper = require('shooter.tmux.wrapper')
 
-  create_cmd('ShooterTmuxZoom', wrapper.zoom_toggle, { desc = 'Tmux: zoom toggle' })
-  create_cmd('ShooterTmuxEdit', wrapper.edit_in_vim, { desc = 'Tmux: edit in vim' })
-  create_cmd('ShooterTmuxGit', wrapper.git_status_toggle, { desc = 'Tmux: git status' })
-  create_cmd('ShooterTmuxLight', wrapper.lightswitch, { desc = 'Tmux: light/dark' })
-  create_cmd('ShooterTmuxKillOthers', wrapper.kill_other_panes, { desc = 'Tmux: kill others' })
-  create_cmd('ShooterTmuxReload', wrapper.reload_session, { desc = 'Tmux: reload' })
-  create_cmd('ShooterTmuxDelete', wrapper.delete_session, { desc = 'Tmux: delete session' })
-  create_cmd('ShooterTmuxSmug', wrapper.smug_load, { desc = 'Tmux: smug load' })
-  create_cmd('ShooterTmuxYank', wrapper.yank_to_vim, { desc = 'Tmux: yank to vim' })
-  create_cmd('ShooterTmuxChoose', wrapper.choose_session, { desc = 'Tmux: choose session' })
-  create_cmd('ShooterTmuxSwitch', wrapper.switch_last, { desc = 'Tmux: switch last' })
+  create_cmd('ShoTmuxZoom', wrapper.zoom_toggle, { desc = 'Tmux: zoom toggle' })
+  create_cmd('ShoTmuxEdit', wrapper.edit_in_vim, { desc = 'Tmux: edit in vim' })
+  create_cmd('ShoTmuxGit', wrapper.git_status_toggle, { desc = 'Tmux: git status' })
+  create_cmd('ShoTmuxLight', wrapper.lightswitch, { desc = 'Tmux: light/dark' })
+  create_cmd('ShoTmuxKillOthers', wrapper.kill_other_panes, { desc = 'Tmux: kill others' })
+  create_cmd('ShoTmuxReload', wrapper.reload_session, { desc = 'Tmux: reload' })
+  create_cmd('ShoTmuxDelete', wrapper.delete_session, { desc = 'Tmux: delete session' })
+  create_cmd('ShoTmuxSmug', wrapper.smug_load, { desc = 'Tmux: smug load' })
+  create_cmd('ShoTmuxYank', wrapper.yank_to_vim, { desc = 'Tmux: yank to vim' })
+  create_cmd('ShoTmuxChoose', wrapper.choose_session, { desc = 'Tmux: choose session' })
+  create_cmd('ShoTmuxSwitch', wrapper.switch_last, { desc = 'Tmux: switch last' })
 
-  -- ShooterTmuxWatch (alias: ShooterWatch)
-  create_cmd('ShooterTmuxWatch', function()
+  -- ShoTmuxWatch (alias: ShoWatch)
+  create_cmd('ShoTmuxWatch', function()
     require('shooter.tmux.watch').open_watch_pane()
-  end, { desc = 'Tmux: watch pane' }, 'ShooterWatch')
+  end, { desc = 'Tmux: watch pane' }, 'ShoWatch')
 
   -- Pane toggle (0-9)
   for i = 0, 9 do
-    create_cmd('ShooterTmuxPaneToggle' .. i, function()
+    create_cmd('ShoTmuxPaneToggle' .. i, function()
       require('shooter.tmux.panes').toggle(i)
-    end, { desc = 'Toggle pane ' .. i }, 'ShooterPaneToggle' .. i)
+    end, { desc = 'Toggle pane ' .. i }, 'ShoPaneToggle' .. i)
   end
 
   -- Toggle panes picker (configured panes from tmux.yml)
-  create_cmd('ShooterTmuxTogglePanes', function()
+  create_cmd('ShoTmuxTogglePanes', function()
     -- Set up tmux keybinding on first use
     require('shooter.tmux.toggle_panes').setup_tmux_keybinding()
     require('shooter.telescope.toggle_panes_picker').show_picker()
   end, { desc = 'Tmux: toggle configured panes' })
 
   -- Manually set up tmux keybinding for hiding panes (prefix + H)
-  create_cmd('ShooterTmuxSetupHideKey', function()
+  create_cmd('ShoTmuxSetupHideKey', function()
     require('shooter.tmux.toggle_panes').setup_tmux_keybinding()
     vim.notify('Tmux keybinding prefix+H set up for hiding panes', vim.log.levels.INFO)
   end, { desc = 'Tmux: set up prefix+H keybinding for hiding panes' })
@@ -336,8 +336,8 @@ local function setup_subproject_commands()
   local project_mod = require('shooter.core.project')
   local files = require('shooter.core.files')
 
-  -- ShooterSubprojectNew
-  create_cmd('ShooterSubprojectNew', function(opts)
+  -- ShoSubprojectNew
+  create_cmd('ShoSubprojectNew', function(opts)
     local git_root = files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
@@ -368,8 +368,8 @@ local function setup_subproject_commands()
     end
   end, { nargs = '?', desc = 'Create new subproject' })
 
-  -- ShooterSubprojectList
-  create_cmd('ShooterSubprojectList', function()
+  -- ShoSubprojectList
+  create_cmd('ShoSubprojectList', function()
     local projects = project_mod.list_projects()
     if #projects == 0 then
       vim.notify('No projects found', vim.log.levels.INFO)
@@ -383,8 +383,8 @@ local function setup_subproject_commands()
     end)
   end, { desc = 'List and select subproject' })
 
-  -- ShooterSubprojectEnsure
-  create_cmd('ShooterSubprojectEnsure', function()
+  -- ShoSubprojectEnsure
+  create_cmd('ShoSubprojectEnsure', function()
     local core_files = require('shooter.core.files')
     local git_root = core_files.get_git_root()
     if not git_root then
@@ -410,48 +410,48 @@ end
 
 -- Setup Tool namespace commands (l prefix in keymaps)
 local function setup_tool_commands()
-  -- ShooterToolToken (alias: ShooterToolTokenCounter)
-  create_cmd('ShooterToolToken', function()
+  -- ShoToolToken (alias: ShoToolTokenCounter)
+  create_cmd('ShoToolToken', function()
     require('shooter.tools.token_counter').show_token_count()
-  end, { desc = 'Count tokens' }, 'ShooterToolTokenCounter')
+  end, { desc = 'Count tokens' }, 'ShoToolTokenCounter')
 
-  -- ShooterToolObsidian (alias: ShooterOpenObsidian)
-  create_cmd('ShooterToolObsidian', function()
+  -- ShoToolObsidian (alias: ShoOpenObsidian)
+  create_cmd('ShoToolObsidian', function()
     require('shooter.tools.obsidian').open_in_obsidian()
-  end, { desc = 'Open in Obsidian' }, 'ShooterOpenObsidian')
+  end, { desc = 'Open in Obsidian' }, 'ShoOpenObsidian')
 
-  -- ShooterToolImages (alias: ShooterImages)
-  create_cmd('ShooterToolImages', function()
+  -- ShoToolImages (alias: ShoImages)
+  create_cmd('ShoToolImages', function()
     require('shooter.images').insert_images()
-  end, { desc = 'Insert images' }, 'ShooterImages')
+  end, { desc = 'Insert images' }, 'ShoImages')
 
-  -- ShooterToolPrd (alias: ShooterPrdList)
-  create_cmd('ShooterToolPrd', function()
+  -- ShoToolPrd (alias: ShoPrdList)
+  create_cmd('ShoToolPrd', function()
     require('shooter.prd').list()
-  end, { desc = 'PRD list' }, 'ShooterPrdList')
+  end, { desc = 'PRD list' }, 'ShoPrdList')
 
-  -- ShooterToolGreenkeep (alias: ShooterGreenkeep)
-  create_cmd('ShooterToolGreenkeep', function()
+  -- ShoToolGreenkeep (alias: ShoGreenkeep)
+  create_cmd('ShoToolGreenkeep', function()
     require('shooter.core.greenkeep').run()
-  end, { desc = 'Convert old date formats' }, 'ShooterGreenkeep')
+  end, { desc = 'Convert old date formats' }, 'ShoGreenkeep')
 
-  -- ShooterToolSoundTest (alias: ShooterSoundTest)
-  create_cmd('ShooterToolSoundTest', function()
+  -- ShoToolSoundTest (alias: ShoSoundTest)
+  create_cmd('ShoToolSoundTest', function()
     require('shooter.sound').test()
-  end, { desc = 'Test sound' }, 'ShooterSoundTest')
+  end, { desc = 'Test sound' }, 'ShoSoundTest')
 
-  -- ShooterToolClipboardPaste - Paste clipboard image
-  create_cmd('ShooterToolClipboardPaste', function()
+  -- ShoToolClipboardPaste - Paste clipboard image
+  create_cmd('ShoToolClipboardPaste', function()
     require('shooter.tools.clipboard_image').paste_image_normal()
   end, { desc = 'Paste clipboard image' })
 
-  -- ShooterToolClipboardCheck - Check if clipboard has image
-  create_cmd('ShooterToolClipboardCheck', function()
+  -- ShoToolClipboardCheck - Check if clipboard has image
+  create_cmd('ShoToolClipboardCheck', function()
     require('shooter.tools.clipboard_image').check()
   end, { desc = 'Check clipboard for image' })
 
-  -- ShooterToolClipboardImages - Open images directory
-  create_cmd('ShooterToolClipboardImages', function()
+  -- ShoToolClipboardImages - Open images directory
+  create_cmd('ShoToolClipboardImages', function()
     require('shooter.tools.clipboard_image').open_images_dir()
   end, { desc = 'Open clipboard images folder' })
 end
@@ -461,15 +461,15 @@ local function setup_cfg_commands()
   local config = require('shooter.config')
   local utils = require('shooter.utils')
 
-  -- ShooterCfgGlobal (alias: ShooterEditGlobalContext)
-  create_cmd('ShooterCfgGlobal', function()
+  -- ShoCfgGlobal (alias: ShoEditGlobalContext)
+  create_cmd('ShoCfgGlobal', function()
     local global_path = utils.expand_path(config.get('paths.global_context'))
     vim.fn.mkdir(vim.fn.fnamemodify(global_path, ':h'), 'p')
     vim.cmd('edit ' .. vim.fn.fnameescape(global_path))
-  end, { desc = 'Edit global context' }, 'ShooterEditGlobalContext')
+  end, { desc = 'Edit global context' }, 'ShoEditGlobalContext')
 
-  -- ShooterCfgProject (alias: ShooterEditProjectContext)
-  create_cmd('ShooterCfgProject', function()
+  -- ShoCfgProject (alias: ShoEditProjectContext)
+  create_cmd('ShoCfgProject', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if not git_root then
@@ -479,20 +479,20 @@ local function setup_cfg_commands()
     local project_path = git_root .. '/' .. config.get('paths.project_context')
     vim.fn.mkdir(vim.fn.fnamemodify(project_path, ':h'), 'p')
     vim.cmd('edit ' .. vim.fn.fnameescape(project_path))
-  end, { desc = 'Edit project context' }, 'ShooterEditProjectContext')
+  end, { desc = 'Edit project context' }, 'ShoEditProjectContext')
 
-  -- ShooterCfgPlugin (alias: ShooterEditConfig)
-  create_cmd('ShooterCfgPlugin', function()
+  -- ShoCfgPlugin (alias: ShoEditConfig)
+  create_cmd('ShoCfgPlugin', function()
     local config_path = utils.find_config_file()
     if not config_path then
       vim.notify('Shooter config file not found', vim.log.levels.WARN)
       return
     end
     vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
-  end, { desc = 'Edit plugin config' }, 'ShooterEditConfig')
+  end, { desc = 'Edit plugin config' }, 'ShoEditConfig')
 
-  -- ShooterCfgShot = ShooterShotCfg (shot picker config - vimMode)
-  create_cmd('ShooterCfgShot', function()
+  -- ShoCfgShot = ShoShotCfg (shot picker config - vimMode)
+  create_cmd('ShoCfgShot', function()
     local session = require('shooter.session')
     local current = session.get_current_session()
     local modes = { 'normal', 'insert' }
@@ -504,25 +504,25 @@ local function setup_cfg_commands()
     session.set_vim_mode('shotPicker', modes[next_idx])
     vim.notify('Shot picker mode: ' .. modes[next_idx], vim.log.levels.INFO)
   end, { desc = 'Toggle shot picker vim mode' })
-  vim.api.nvim_create_user_command('ShooterShotCfg', function() vim.cmd('ShooterCfgShot') end, { desc = 'Toggle shot picker vim mode' })
+  vim.api.nvim_create_user_command('ShoShotCfg', function() vim.cmd('ShoCfgShot') end, { desc = 'Toggle shot picker vim mode' })
 
-  -- ShooterCfgReload — reload ext_config YAML and reapply syntax
-  create_cmd('ShooterCfgReload', function()
+  -- ShoCfgReload — reload ext_config YAML and reapply syntax
+  create_cmd('ShoCfgReload', function()
     local ext_config = require('shooter.core.ext_config')
     ext_config.reload()
     require('shooter.syntax').reapply_all()
     vim.notify('Shooter config reloaded', vim.log.levels.INFO)
   end, { desc = 'Reload YAML config and reapply' })
 
-  -- ShooterCfgEditGlobal — open global config.yaml
-  create_cmd('ShooterCfgEditGlobal', function()
+  -- ShoCfgEditGlobal — open global config.yaml
+  create_cmd('ShoCfgEditGlobal', function()
     local ext_config = require('shooter.core.ext_config')
     ext_config.ensure_global_config()
     vim.cmd('edit ' .. vim.fn.fnameescape(ext_config.global_config_path()))
   end, { desc = 'Edit global YAML config' })
 
-  -- ShooterCfgEditLocal — open project-local config.yaml
-  create_cmd('ShooterCfgEditLocal', function()
+  -- ShoCfgEditLocal — open project-local config.yaml
+  create_cmd('ShoCfgEditLocal', function()
     local ext_config = require('shooter.core.ext_config')
     local path = ext_config.ensure_local_config()
     if path then
@@ -532,8 +532,8 @@ local function setup_cfg_commands()
     end
   end, { desc = 'Edit project-local YAML config' })
 
-  -- ShooterCfgFix — strip invalid keys, fill missing defaults (global only)
-  create_cmd('ShooterCfgFix', function()
+  -- ShoCfgFix — strip invalid keys, fill missing defaults (global only)
+  create_cmd('ShoCfgFix', function()
     local ext_config = require('shooter.core.ext_config')
     local bufpath = vim.api.nvim_buf_get_name(0)
     local is_global = bufpath:match('shooter/nvim/config%.yaml$') and not bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
@@ -547,49 +547,49 @@ local function setup_cfg_commands()
     if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
     if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
     if #parts == 0 then table.insert(parts, 'config OK') end
-    vim.notify('ShooterCfgFix: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
+    vim.notify('ShoCfgFix: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
   end, { desc = 'Fix config: strip invalid keys, fill missing defaults' })
 
-  -- ShooterCfgShotfile = ShooterShotfileCfg (shotfile picker config - sessions)
-  create_cmd('ShooterCfgShotfile', function()
+  -- ShoCfgShotfile = ShoShotfileCfg (shotfile picker config - sessions)
+  create_cmd('ShoCfgShotfile', function()
     local session = require('shooter.session')
     vim.cmd('tabedit ' .. vim.fn.fnameescape(session.get_session_file_path()))
   end, { desc = 'Edit shotfile picker session config' })
-  vim.api.nvim_create_user_command('ShooterShotfileCfg', function() vim.cmd('ShooterCfgShotfile') end, { desc = 'Edit shotfile picker session config' })
+  vim.api.nvim_create_user_command('ShoShotfileCfg', function() vim.cmd('ShoCfgShotfile') end, { desc = 'Edit shotfile picker session config' })
 end
 
 -- Setup Analytics namespace commands (a prefix in keymaps)
 local function setup_analytics_commands()
-  -- ShooterAnalyticsProject (alias: ShooterAnalyticsProject - same name)
-  create_cmd('ShooterAnalyticsProject', function()
+  -- ShoAnalyticsProject (alias: ShoAnalyticsProject - same name)
+  create_cmd('ShoAnalyticsProject', function()
     require('shooter.analytics').show_project()
   end, { desc = 'Project analytics' })
 
-  -- ShooterAnalyticsGlobal
-  create_cmd('ShooterAnalyticsGlobal', function()
+  -- ShoAnalyticsGlobal
+  create_cmd('ShoAnalyticsGlobal', function()
     require('shooter.analytics').show_global()
   end, { desc = 'Global analytics' })
 end
 
 -- Setup Help namespace commands (h prefix in keymaps)
 local function setup_help_commands()
-  -- ShooterHelp
-  create_cmd('ShooterHelp', function()
+  -- ShoHelp
+  create_cmd('ShoHelp', function()
     require('shooter.help').show()
   end, { desc = 'Show help' })
 
-  -- ShooterHealth (alias: stays same)
-  create_cmd('ShooterHealth', function()
+  -- ShoHealth (alias: stays same)
+  create_cmd('ShoHealth', function()
     vim.cmd('checkhealth shooter')
   end, { desc = 'Health check' })
 
-  -- ShooterHelpDashboard (alias: ShooterDashboard)
-  create_cmd('ShooterHelpDashboard', function()
+  -- ShoHelpDashboard (alias: ShoDashboard)
+  create_cmd('ShoHelpDashboard', function()
     require('shooter.dashboard').open()
-  end, { desc = 'Open dashboard' }, 'ShooterDashboard')
+  end, { desc = 'Open dashboard' }, 'ShoDashboard')
 
-  -- ShooterCheatsheet
-  create_cmd('ShooterCheatsheet', function()
+  -- ShoCheatsheet
+  create_cmd('ShoCheatsheet', function()
     require('shooter.cheatsheet').show()
   end, { desc = 'Show cheatsheet' })
 end
@@ -616,8 +616,8 @@ local function setup_nav_commands()
     return results
   end
 
-  -- ShooterNavLastEditedFile - opens most recently modified file in repo
-  create_cmd('ShooterNavLastEditedFile', function()
+  -- ShoNavLastEditedFile - opens most recently modified file in repo
+  create_cmd('ShoNavLastEditedFile', function()
     local git_root = files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
@@ -632,12 +632,12 @@ local function setup_nav_commands()
   end, { desc = 'Open last edited file in repo' })
 
   -- Alias for backward compatibility
-  vim.api.nvim_create_user_command('ShooterRepoOpenLastEditedFile', function()
-    vim.cmd('ShooterNavLastEditedFile')
+  vim.api.nvim_create_user_command('ShoRepoOpenLastEditedFile', function()
+    vim.cmd('ShoNavLastEditedFile')
   end, { desc = 'Open last edited file in repo' })
 
-  -- ShooterNavLastEditedFiles - telescope picker for last N edited files
-  create_cmd('ShooterNavLastEditedFiles', function(opts)
+  -- ShoNavLastEditedFiles - telescope picker for last N edited files
+  create_cmd('ShoNavLastEditedFiles', function(opts)
     local git_root = files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
@@ -681,14 +681,14 @@ end
 -- Setup utility commands (not in main namespaces)
 local function setup_utility_commands()
   -- Filter clearing
-  create_cmd('ShooterClearFilter', function()
+  create_cmd('ShoClearFilter', function()
     local filter_state = require('shooter.filter_state')
     filter_state.clear_all_filters()
     vim.notify('Filters cleared', vim.log.levels.INFO)
   end, { desc = 'Clear all filters' })
 
   -- Inbox (at git root)
-  create_cmd('ShooterInbox', function()
+  create_cmd('ShoInbox', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if not git_root then
