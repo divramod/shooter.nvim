@@ -233,6 +233,19 @@ function M.setup()
     end,
   })
 
+  -- Cancel pending debounce and clear matches when leaving a shotfile
+  vim.api.nvim_create_autocmd('BufLeave', {
+    group = group,
+    pattern = '*.md',
+    callback = function(ev)
+      local filepath = vim.api.nvim_buf_get_name(ev.buf)
+      if is_prompts_file(filepath) then
+        pending_syntax[ev.buf] = nil  -- cancel pending debounce
+        pcall(vim.fn.clearmatches)    -- clear window-local matches
+      end
+    end,
+  })
+
   -- Clear notification tracking when buffer is deleted
   vim.api.nvim_create_autocmd('BufDelete', {
     group = group,
@@ -350,7 +363,15 @@ function M.reapply_all()
     if vim.api.nvim_buf_is_loaded(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr)
       if is_prompts_file(filepath) then
-        apply_syntax(bufnr)
+        -- apply_syntax uses window-local matchaddpos, so target the correct window
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          if vim.api.nvim_win_get_buf(win) == bufnr then
+            vim.api.nvim_win_call(win, function()
+              apply_syntax(bufnr)
+            end)
+            break
+          end
+        end
       end
     end
   end
