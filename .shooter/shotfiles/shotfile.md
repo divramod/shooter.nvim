@@ -1,5 +1,10 @@
 # shotfile
 
+## shot 59
+i have a problem in the ShooterLast command.
+it is not reliably opening the last edited shotfile
+
+
 ## shot 20
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...

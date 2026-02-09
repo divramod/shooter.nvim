@@ -61,21 +61,21 @@ Universal coding standards for all languages and projects.
 
 ## Script Organization
 
-Every project must have a `scripts/` directory at the repository root. The `scripts/shell/` subdirectory is **mandatory** — it must always exist, even if initially empty. Other language subdirectories are added as needed.
+Utility scripts live in `scripts/` organized by language:
 
-| Language   | Directory          | Required |
-|------------|--------------------|----------|
-| Bash/Shell | `scripts/shell/`   | **Yes**  |
-| Go         | `scripts/go/`      | No       |
-| Javascript | `scripts/js/`      | No       |
-| Lua        | `scripts/lua/`     | No       |
-| Python     | `scripts/python/`  | No       |
-| Rust       | `scripts/rust/`    | No       |
-| Typescript | `scripts/ts/`      | No       |
+| Language   | Directory          |
+|------------|--------------------|
+| Bash/Shell | `scripts/shell/`   |
+| Go         | `scripts/go/`      |
+| Javascript | `scripts/js/`      |
+| Lua        | `scripts/lua/`     |
+| Python     | `scripts/python/`  |
+| Rust       | `scripts/rust/`    |
+| Typescript | `scripts/ts/`      |
 
 This applies only to standalone utility scripts (build helpers, sync tools, etc.), not application source code.
 
-Projects must have a `.envrc` file that adds `scripts/shell` to PATH:
+Projects should have a `.envrc` file that adds `scripts/shell` to PATH:
 
 ```bash
 PATH_add scripts/shell
@@ -83,27 +83,23 @@ PATH_add scripts/shell
 
 ## Script Naming Convention
 
-All utility scripts must follow the naming pattern: `<alias>_<verb-description>.<ext>`
+All utility scripts must follow the naming pattern: `<alias>_<scriptname>.<ext>`
 
 - `<alias>` is the project's short alias from the `.shooter/ALIAS` file
-- `<verb-description>` is a kebab-case name that **always starts with a verb** (e.g., `sync-data`, `build-assets`, `ensure-config`)
+- `<scriptname>` is the descriptive name using kebab-case
 - `<ext>` is the file extension matching the language
 
-| Language   | Pattern                              | Example                        |
-|------------|--------------------------------------|--------------------------------|
-| Bash/Shell | `<alias>_<verb-description>.sh`      | `sho_ensure-directories.sh`    |
-| Go         | `<alias>_<verb-description>.go`      | `ops_deploy-services.go`       |
-| Javascript | `<alias>_<verb-description>.js`      | `dev_build-assets.js`          |
-| Lua        | `<alias>_<verb-description>.lua`     | `game_init-state.lua`          |
-| Python     | `<alias>_<verb-description>.py`      | `hal_process-data.py`          |
-| Rust       | `<alias>_<verb-description>.rs`      | `cli_parse-args.rs`            |
-| Typescript | `<alias>_<verb-description>.ts`      | `web_generate-sitemap.ts`      |
-
-**Good verb-first names:** `ensure-beads`, `verify-setup`, `sync-themes`, `clean-cache`, `build-dist`
-**Bad names:** `beads-ensure` (noun-first), `setup` (no verb), `data` (no verb, no description)
+| Language   | Pattern                      | Example                  |
+|------------|------------------------------|--------------------------|
+| Bash/Shell | `<alias>_scriptname.sh`      | `ai_sync.sh`             |
+| Go         | `<alias>_scriptname.go`      | `ops_deploy.go`          |
+| Javascript | `<alias>_scriptname.js`      | `dev_build-assets.js`    |
+| Lua        | `<alias>_scriptname.lua`     | `game_init-state.lua`    |
+| Python     | `<alias>_scriptname.py`      | `hal_process-data.py`    |
+| Rust       | `<alias>_scriptname.rs`      | `cli_parse-args.rs`      |
+| Typescript | `<alias>_scriptname.ts`      | `scrape-data.ts`         |
 
 This convention:
 - Prevents naming collisions when scripts are added to PATH
 - Makes script origin clear when running from any directory
-- Makes the script's action immediately obvious from the filename
 - Enables automated validation via doctor-check scripts

@@ -1,7 +1,8 @@
 # shot
 
 ## shot 59
-
+i have a problem in the ShooterLast command.
+it is not reliably opening the last edited shotfile
 
 ## shot 58
 
