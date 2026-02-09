@@ -1,0 +1,12 @@
+# Shooter AI configuration
+# Location: .shooter/cfg/ai/config.yaml
+
+model_profile: balanced
+
+workflow_gates:
+  research: true
+  plan_check: true
+  verify: true
+
+version:
+  files: []
