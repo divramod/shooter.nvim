@@ -57,6 +57,7 @@ function M.setup()
   map('n', 'fd', ':ShooterShotfileDelete<cr>', 'Delete current')
   map('n', 'fo', ':ShooterShotfileOpenPrompts<cr>', 'Oil prompts folder')
   map('n', 'fs', ':ShooterFileStats<cr>', 'File stats')
+  map('n', 'fcf', ':ShooterFileToggleFirstShotOfDayColoring<cr>', 'Toggle day markers')
 
   -- Shotfile move commands (fm prefix)
   map('n', 'fma', ':ShooterShotfileMoveArchive<cr>', 'Move to archive')

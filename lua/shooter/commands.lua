@@ -268,6 +268,11 @@ local function setup_shot_commands()
   -- ShooterFileStats - Show stats for current shotfile
   create_cmd('ShooterFileStats', shot_actions.file_stats, { desc = 'Shotfile stats (total/open/closed)' })
 
+  -- ShooterFileToggleFirstShotOfDayColoring - Toggle day marker highlighting
+  create_cmd('ShooterFileToggleFirstShotOfDayColoring', function()
+    require('shooter.syntax').toggle_day_marker()
+  end, { desc = 'Toggle first-shot-of-day coloring' })
+
   -- ShooterShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
   create_cmd('ShooterShotCreateFromClaude', shot_actions.create_shot_from_claude,
     { desc = 'Cut Claude text, create shot in right pane' })

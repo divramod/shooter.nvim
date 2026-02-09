@@ -40,56 +40,68 @@ local function is_fence_delimiter(line)
   return count == 1  -- Only one ``` sequence = fence delimiter
 end
 
--- Check if a line number is inside a code block
-local function is_in_code_block(bufnr, line_num)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, line_num, false)
+-- Build code block map in a single O(n) pass
+-- Returns a table where map[line_num] = true if that line is inside a code block
+local function build_code_block_map(lines)
   local in_block = false
-  for _, line in ipairs(lines) do
+  local map = {}
+  for i, line in ipairs(lines) do
     if is_fence_delimiter(line) then
       in_block = not in_block
     end
+    if in_block then
+      map[i] = true
+    end
   end
-  return in_block
+  return map
 end
 
+-- Day marker coloring toggle (off by default for performance)
+local day_marker_enabled = false
+
+-- Forward declaration
+local apply_syntax
+
 -- Apply syntax highlighting to current buffer
-local function apply_syntax(bufnr)
+apply_syntax = function(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   pcall(vim.fn.clearmatches)
 
   local config = require('shooter.config')
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  -- Find the single latest executed shot by timestamp (regardless of @shot- ref)
+  -- Single O(n) pass: build code block map
+  local in_code = build_code_block_map(lines)
+
+  -- Find the single latest executed shot by timestamp
   local latest_done_line = nil
   local latest_timestamp = nil
   local exec_pattern = config.get('patterns.executed_shot_header')
+
+  -- Find day markers (only if enabled) — done in same loop for efficiency
+  local day_first_lines = {}
+  local seen_days = {}
+
   for i, line in ipairs(lines) do
-    if line:match(exec_pattern) then
+    if not in_code[i] and line:match(exec_pattern) then
       local ts = line:match('%((%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d)%)')
       if ts and (not latest_timestamp or ts > latest_timestamp) then
         latest_timestamp = ts
         latest_done_line = i
       end
-    end
-  end
-
-  -- Find the first executed shot of each day (day markers for navigation)
-  local day_first_lines = {}
-  local seen_days = {}
-  for i, line in ipairs(lines) do
-    if line:match(exec_pattern) and not is_in_code_block(bufnr, i) then
-      local date = line:match('%((%d%d%d%d%-%d%d%-%d%d)%s+%d%d:%d%d:%d%d%)')
-      if date and not seen_days[date] then
-        seen_days[date] = true
-        day_first_lines[i] = true
+      if day_marker_enabled then
+        local date = line:match('%((%d%d%d%d%-%d%d%-%d%d)%s+%d%d:%d%d:%d%d%)')
+        if date and not seen_days[date] then
+          seen_days[date] = true
+          day_first_lines[i] = true
+        end
       end
     end
   end
 
   -- Highlight: open shots (orange), latest executed (green), day markers (light brown)
   for i, line in ipairs(lines) do
-    if not is_in_code_block(bufnr, i) then
+    if not in_code[i] then
       if i == latest_done_line then
         vim.fn.matchaddpos('ShooterDoneShot', { { i } }, 10)
       elseif day_first_lines[i] then
@@ -107,6 +119,19 @@ local function is_prompts_file(filepath)
   if filepath:match('^oil://') then return false end
   -- Must be a .md file in .shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
   return filepath:match('.shooter/shotfiles/.+%.md$') ~= nil
+end
+
+-- Toggle day marker coloring on/off
+function M.toggle_day_marker()
+  day_marker_enabled = not day_marker_enabled
+  local status = day_marker_enabled and 'enabled' or 'disabled'
+  vim.notify('Day marker coloring: ' .. status, vim.log.levels.INFO)
+  -- Reapply syntax immediately
+  local bufnr = vim.api.nvim_get_current_buf()
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+  if is_prompts_file(filepath) then
+    apply_syntax(bufnr)
+  end
 end
 
 -- Track which buffers already showed the open notification
@@ -172,7 +197,8 @@ function M.setup()
     end,
   })
 
-  -- Reapply when text changes (to handle code block additions/removals)
+  -- Reapply when text changes (debounced to avoid lag while typing)
+  local pending_syntax = {}
   vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
     group = group,
     pattern = '*.md',
@@ -180,7 +206,14 @@ function M.setup()
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
       if ft == 'markdown' and is_prompts_file(filepath) then
-        apply_syntax(ev.buf)
+        if pending_syntax[ev.buf] then return end
+        pending_syntax[ev.buf] = true
+        vim.defer_fn(function()
+          pending_syntax[ev.buf] = nil
+          if vim.api.nvim_buf_is_valid(ev.buf) then
+            apply_syntax(ev.buf)
+          end
+        end, 300)
       end
     end,
   })
