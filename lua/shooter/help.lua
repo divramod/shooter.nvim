@@ -119,6 +119,7 @@ CFG NAMESPACE (c prefix)
   cR        Reload YAML config    Reload config.yaml and reapply syntax
   cG        Edit global YAML      Open ~/.config/shooter/nvim/config.yaml
   cL        Edit local YAML       Open <repo>/.shooter/cfg/nvim/config.yaml
+  cF        Fix YAML config       Strip invalid keys, fill missing defaults (global)
 
 ANALYTICS NAMESPACE (a prefix)
   aa        Project analytics     Show project shot analytics

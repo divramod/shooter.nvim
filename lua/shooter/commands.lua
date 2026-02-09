@@ -532,6 +532,25 @@ local function setup_cfg_commands()
     end
   end, { desc = 'Edit project-local YAML config' })
 
+  -- ShooterCfgFix — strip invalid keys, fill missing defaults (global only)
+  create_cmd('ShooterCfgFix', function()
+    local ext_config = require('shooter.core.ext_config')
+    local bufpath = vim.api.nvim_buf_get_name(0)
+    local is_global = bufpath:match('shooter/nvim/config%.yaml$') and not bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
+    local is_local = bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
+    if not is_global and not is_local then
+      vim.notify('Not a shooter config file', vim.log.levels.WARN)
+      return
+    end
+    local removed, added = ext_config.fix_config(bufpath, is_global)
+    vim.cmd('edit!')  -- reload buffer from disk
+    local parts = {}
+    if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
+    if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
+    if #parts == 0 then table.insert(parts, 'config OK') end
+    vim.notify('ShooterCfgFix: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
+  end, { desc = 'Fix config: strip invalid keys, fill missing defaults' })
+
   -- ShooterCfgShotfile = ShooterShotfileCfg (shotfile picker config - sessions)
   create_cmd('ShooterCfgShotfile', function()
     local session = require('shooter.session')

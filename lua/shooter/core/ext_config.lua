@@ -244,4 +244,90 @@ function M.reload()
   _cache = nil
 end
 
+--- Strip keys from tbl that don't exist in schema (recursive)
+---@param tbl table Parsed config
+---@param schema table DEFAULTS schema
+---@return table Cleaned config with only valid keys
+local function strip_to_schema(tbl, schema)
+  local cleaned = {}
+  for key, value in pairs(tbl) do
+    if schema[key] ~= nil then
+      if type(value) == 'table' and type(schema[key]) == 'table' then
+        cleaned[key] = strip_to_schema(value, schema[key])
+      else
+        cleaned[key] = value
+      end
+    end
+  end
+  return cleaned
+end
+
+--- Fill missing keys from schema into tbl (recursive)
+---@param tbl table Parsed config
+---@param schema table DEFAULTS schema
+---@return table Config with missing keys filled from defaults
+local function fill_from_schema(tbl, schema)
+  local result = vim.deepcopy(tbl)
+  for key, value in pairs(schema) do
+    if result[key] == nil then
+      result[key] = vim.deepcopy(value)
+    elseif type(result[key]) == 'table' and type(value) == 'table' then
+      result[key] = fill_from_schema(result[key], value)
+    end
+  end
+  return result
+end
+
+--- Count leaf (non-table) keys recursively
+local function count_leaves(tbl)
+  local n = 0
+  for _, v in pairs(tbl) do
+    if type(v) == 'table' then
+      n = n + count_leaves(v)
+    else
+      n = n + 1
+    end
+  end
+  return n
+end
+
+--- Fix a config.yaml file: strip invalid keys, optionally fill missing defaults.
+--- For global config: adds all missing keys with default values.
+--- For local config: only strips invalid keys.
+---@param path string Path to config.yaml
+---@param is_global boolean Whether this is the global config
+---@return number removed Number of leaf keys removed
+---@return number added Number of leaf keys added
+function M.fix_config(path, is_global)
+  if not path or not utils.file_exists(path) then return 0, 0 end
+  local content = utils.read_file(path)
+  if not content then return 0, 0 end
+
+  local parsed = M.parse_yaml(content)
+
+  -- Strip invalid keys
+  local cleaned = strip_to_schema(parsed, M.DEFAULTS)
+  local removed = count_leaves(parsed) - count_leaves(cleaned)
+  local added = 0
+
+  -- For global: fill missing defaults
+  if is_global then
+    local before_count = count_leaves(cleaned)
+    cleaned = fill_from_schema(cleaned, M.DEFAULTS)
+    added = count_leaves(cleaned) - before_count
+  end
+
+  -- Write back with header
+  local header = is_global
+    and '# Shooter.nvim global configuration\n'
+      .. '# Edit this file to customize behavior across all projects.\n'
+      .. '# Project-local overrides go to <repo>/.shooter/cfg/nvim/config.yaml\n\n'
+    or '# Shooter.nvim project-local configuration\n'
+      .. '# Values here override the global config at ~/.config/shooter/nvim/config.yaml\n\n'
+
+  utils.write_file(path, header .. M.serialize_yaml(cleaned) .. '\n')
+  M.reload()
+  return removed, added
+end
+
 return M

@@ -156,6 +156,10 @@ function M.setup()
   map('n', 'ce', ':ShooterCfgPlugin<cr>', 'Edit shooter.lua plugin')
   map('n', 'cs', ':ShooterCfgShot<cr>', 'Shot picker config')
   map('n', 'cf', ':ShooterCfgShotfile<cr>', 'Shotfile picker config')
+  map('n', 'cR', ':ShooterCfgReload<cr>', 'Reload YAML config')
+  map('n', 'cG', ':ShooterCfgEditGlobal<cr>', 'Edit global YAML config')
+  map('n', 'cL', ':ShooterCfgEditLocal<cr>', 'Edit local YAML config')
+  map('n', 'cF', ':ShooterCfgFix<cr>', 'Fix YAML config')
 
   -- ============================================================
   -- ANALYTICS NAMESPACE (a prefix)

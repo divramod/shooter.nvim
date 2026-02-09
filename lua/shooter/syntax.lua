@@ -258,6 +258,28 @@ function M.setup()
       end
     end,
   })
+
+  -- Auto-fix config.yaml on BufEnter: strip invalid keys, fill missing defaults (global)
+  vim.api.nvim_create_autocmd('BufEnter', {
+    group = group,
+    pattern = 'config.yaml',
+    callback = function(ev)
+      local filepath = vim.api.nvim_buf_get_name(ev.buf)
+      local is_global = filepath:match('shooter/nvim/config%.yaml$') and not filepath:match('%.shooter/cfg/nvim/config%.yaml$')
+      local is_local = filepath:match('%.shooter/cfg/nvim/config%.yaml$')
+      if not is_global and not is_local then return end
+      local eok, ext_config = pcall(require, 'shooter.core.ext_config')
+      if not eok then return end
+      local removed, added = ext_config.fix_config(filepath, is_global)
+      if removed > 0 or added > 0 then
+        vim.cmd('edit!')  -- reload buffer from disk
+        local parts = {}
+        if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
+        if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
+        vim.notify('Config auto-fixed: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
+      end
+    end,
+  })
 end
 
 -- Reapply syntax highlighting to all loaded shotfile buffers

@@ -208,4 +208,71 @@ describe('core.ext_config', function()
       assert.equals(500, ext_config.DEFAULTS.file.closed_shots.debounce_in_ms)
     end)
   end)
+
+  describe('fix_config', function()
+    local tmp_path
+
+    before_each(function()
+      tmp_path = os.tmpname()
+    end)
+
+    after_each(function()
+      os.remove(tmp_path)
+    end)
+
+    it('should strip invalid keys', function()
+      local content = 'file:\n  open_shots:\n    color_bg: "#ff0000"\n    bogus_key: 123\n  invalid_section:\n    foo: bar'
+      local f = io.open(tmp_path, 'w')
+      f:write(content)
+      f:close()
+      local removed, added = ext_config.fix_config(tmp_path, false)
+      assert.equals(2, removed) -- bogus_key + foo
+      assert.equals(0, added)
+      -- Verify the file was rewritten without invalid keys
+      local f2 = io.open(tmp_path, 'r')
+      local result = f2:read('*a')
+      f2:close()
+      assert.matches('color_bg', result)
+      assert.is_nil(result:match('bogus_key'))
+      assert.is_nil(result:match('invalid_section'))
+    end)
+
+    it('should fill missing defaults for global config', function()
+      -- Only set one value, rest should be filled
+      local content = 'file:\n  open_shots:\n    color_bg: "#custom"'
+      local f = io.open(tmp_path, 'w')
+      f:write(content)
+      f:close()
+      local removed, added = ext_config.fix_config(tmp_path, true)
+      assert.equals(0, removed)
+      assert.is_true(added > 0) -- missing keys were added
+      -- Verify file has all defaults
+      local f2 = io.open(tmp_path, 'r')
+      local result = f2:read('*a')
+      f2:close()
+      assert.matches('first_shot_of_the_day', result)
+      assert.matches('closed_shots', result)
+      assert.matches('#custom', result) -- user value preserved
+    end)
+
+    it('should not fill missing defaults for local config', function()
+      local content = 'file:\n  open_shots:\n    color_bg: "#custom"'
+      local f = io.open(tmp_path, 'w')
+      f:write(content)
+      f:close()
+      local removed, added = ext_config.fix_config(tmp_path, false)
+      assert.equals(0, removed)
+      assert.equals(0, added) -- local config: no filling
+    end)
+
+    it('should return 0,0 for valid complete config', function()
+      local content = ext_config.serialize_yaml(ext_config.DEFAULTS)
+      local f = io.open(tmp_path, 'w')
+      f:write(content)
+      f:close()
+      local removed, added = ext_config.fix_config(tmp_path, true)
+      assert.equals(0, removed)
+      assert.equals(0, added)
+    end)
+  end)
 end)
