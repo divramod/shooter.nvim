@@ -35,18 +35,38 @@ local function send_file_ref(provider, send, pane_id, filepath)
   return send.send_file_reference(pane_id, filepath)
 end
 
-local function save_temp_sendable(full_message, shot_num)
+-- Get repo slug from git root (e.g., "shooter.nvim")
+local function get_repo_slug()
+  local root = vim.fn.systemlist('git rev-parse --show-toplevel 2>/dev/null')
+  if vim.v.shell_error == 0 and #root > 0 then
+    return vim.fn.fnamemodify(root[1], ':t')
+  end
+  return 'unknown'
+end
+
+-- Get shotfile basename without extension from buffer
+local function get_shotfile_basename(bufnr)
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+  return vim.fn.fnamemodify(filepath, ':t:r') or 'unknown'
+end
+
+local function save_temp_sendable(full_message, shot_num, bufnr)
   local ext_config = require('shooter.core.ext_config')
-  local temp_dir = ext_config.tmp_dir()
-  utils.ensure_dir(temp_dir)
+  local repo = get_repo_slug()
+  local shotfile = get_shotfile_basename(bufnr)
+  local bullet_dir = ext_config.bullets_dir() .. '/' .. repo
+  utils.ensure_dir(bullet_dir)
   local ts = os.date('%Y%m%d_%H%M%S')
-  local temp_path = string.format('%s/shot-%s-%s.md', temp_dir, shot_num, ts)
+  local temp_path = string.format('%s/%s_%s_shot-%s.md', bullet_dir, shotfile, ts, shot_num)
   return utils.write_file(temp_path, full_message) and temp_path or nil
 end
 
+-- Ref pattern matches both old (shot-N-ts) and new (basename_ts_shot-N) formats
+local REF_PATTERN = '%s*@[%w%.%-_]+'
+
 local function add_temp_ref_to_header(bufnr, header_line, temp_filename)
   local line = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
-  line = line:gsub('%s*@shot%-[%d_%-]+', '') .. ' @' .. temp_filename
+  line = line:gsub(REF_PATTERN .. '$', '') .. ' @' .. temp_filename
   utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
   if vim.api.nvim_buf_get_name(bufnr) ~= '' then vim.cmd('write') end
 end
@@ -132,7 +152,7 @@ function M.send_current_shot(pane_index, detect, send, messages)
   local shot_num = build_shots_str(bufnr, { shot_info })
 
   -- Write to temp file for sending
-  local temp_path = save_temp_sendable(full_message, shot_num)
+  local temp_path = save_temp_sendable(full_message, shot_num, bufnr)
   if not temp_path then utils.echo('Failed to save temp file'); return end
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
@@ -170,7 +190,7 @@ function M.send_all_shots(pane_index, detect, send, messages)
   local executed_shots = get_renumber_helper().find_executed_shots(bufnr)
   local full_message = messages.build_multishot_message(bufnr, executed_shots)
   local shots_str = build_shots_str(bufnr, executed_shots)
-  local temp_path = save_temp_sendable(full_message, shots_str)
+  local temp_path = save_temp_sendable(full_message, shots_str, bufnr)
   if not temp_path then utils.echo('Failed to save temp file'); return end
   local pane_id, provider_name, provider = find_pane_or_error(detect, pane_index)
   if not pane_id then return end
@@ -221,7 +241,7 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
   -- Build message BEFORE marking (so headers show original shot numbers)
   local full_message = messages.build_multishot_message(bufnr, shot_infos)
   local shots_str = build_shots_str(bufnr, shot_infos)
-  local temp_path = save_temp_sendable(full_message, shots_str)
+  local temp_path = save_temp_sendable(full_message, shots_str, bufnr)
   if not temp_path then utils.echo('Failed to save temp file'); return end
 
   -- Lock buffer during pane creation (same protection as send_current_shot)

@@ -278,7 +278,7 @@ function M.toggle_shot_done()
     -- Pattern: ## x shot N (date) @shot-N-... → ## shot N
     line = line:gsub('^(##)%s+x%s+shot', '%1 shot')
     line = line:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)', '')
-    line = line:gsub('%s*@shot%-[%d_%-]+', '')
+    line = line:gsub('%s*@[%w%.%-_]+', '')
     line = line:gsub('%s+$', '') -- trim trailing whitespace
     utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
     utils.echo('Shot ' .. shot_num .. ' marked open')

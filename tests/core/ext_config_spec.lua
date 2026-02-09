@@ -104,9 +104,9 @@ describe('core.ext_config', function()
       assert.matches('shooter/nvim/sessions$', dir)
     end)
 
-    it('tmp_dir should be under base_dir', function()
-      local dir = ext_config.tmp_dir()
-      assert.matches('shooter/nvim/tmp$', dir)
+    it('bullets_dir should be under base_dir', function()
+      local dir = ext_config.bullets_dir()
+      assert.matches('shooter/nvim/bullets$', dir)
     end)
 
     it('filter_state_path should be under base_dir', function()

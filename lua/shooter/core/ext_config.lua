@@ -40,7 +40,12 @@ function M.sessions_dir()
   return M.base_dir() .. '/sessions'
 end
 
--- Tmp directory for temp sendable files
+-- Bullets directory for sent shot files
+function M.bullets_dir()
+  return M.base_dir() .. '/bullets'
+end
+
+-- Tmp directory (legacy, kept for migration)
 function M.tmp_dir()
   return M.base_dir() .. '/tmp'
 end
