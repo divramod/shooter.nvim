@@ -73,8 +73,8 @@ function M.parse_yaml(content)
 
     if not key then goto continue end
 
-    -- Strip inline comments and trailing whitespace
-    value = value:gsub('%s*#.*$', ''):gsub('%s+$', '')
+    -- Strip inline comments (space + # per YAML spec) and trailing whitespace
+    value = value:gsub('%s+#.*$', ''):gsub('%s+$', '')
 
     -- Pop stack to find correct parent
     while #stack > 1 and stack[#stack].indent >= indent do

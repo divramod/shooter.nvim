@@ -36,6 +36,16 @@ describe('core.ext_config', function()
       assert.equals('#ff0000', result.color)
     end)
 
+    it('should not treat # inside quotes as comment', function()
+      local result = ext_config.parse_yaml('bg: "#e6d5b8"')
+      assert.equals('#e6d5b8', result.bg)
+    end)
+
+    it('should strip inline comments after values', function()
+      local result = ext_config.parse_yaml('key: value # this is a comment')
+      assert.equals('value', result.key)
+    end)
+
     it('should handle deeply nested structures', function()
       local yaml = 'a:\n  b:\n    c: deep'
       local result = ext_config.parse_yaml(yaml)
