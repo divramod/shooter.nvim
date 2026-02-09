@@ -1,7 +1,13 @@
 # shot
 
-## shot 58
+## shot 59
+sometime in oil, i accidentially press < >n, which then creates a new shot inside the oil buffer, which is completely not what i want.
+what should happen, is that the shot mappings should be disabled automatically in oil buffers, because they can cause harm
 
+## shot 58
+i want to change the naming convention for the temporary shotfiles.
+the convention should be like this ```<repo>_<shotfile basename without extension>_<timestamp in yyyymmdd_hhmmss format>.md```
+please look through the whole codebase and change the naming convention for the temporary shotfiles to this new convention in all functionalities
 
 ## shot 57
 think about shot titles.
