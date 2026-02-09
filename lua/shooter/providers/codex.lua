@@ -3,38 +3,8 @@
 
 local M = {}
 
-local function resolve_workspace_file(filepath)
-  local files = require('shooter.core.files')
-  local utils = require('shooter.utils')
-
-  local git_root = files.get_git_root()
-  if not git_root then
-    return filepath, nil
-  end
-
-  local root_abs = vim.fn.fnamemodify(git_root, ':p')
-  local file_abs = vim.fn.fnamemodify(filepath, ':p')
-  local root_prefix = root_abs:sub(-1) == '/' and root_abs or (root_abs .. '/')
-
-  -- Codex can hang on @file references outside the workspace; copy those in.
-  if file_abs:find(root_prefix, 1, true) == 1 then
-    return file_abs, nil
-  end
-
-  local workspace_dir = root_prefix .. '.shooter.nvim/bullets'
-  local workspace_file = workspace_dir .. '/' .. vim.fn.fnamemodify(file_abs, ':t')
-  local content, read_err = utils.read_file(file_abs)
-  if not content then
-    return nil, read_err or 'Failed to read source file'
-  end
-
-  utils.ensure_dir(workspace_dir)
-  local ok, write_err = utils.write_file(workspace_file, content)
-  if not ok then
-    return nil, write_err or 'Failed to write workspace copy'
-  end
-
-  return workspace_file, nil
+local function shell_escape(text)
+  return text:gsub("'", "'\\''")
 end
 
 -- Provider identity
@@ -42,15 +12,32 @@ M.name = 'codex'
 M.display_name = 'Codex'
 M.process_pattern = 'codex'
 
--- Send file reference to pane (@filepath syntax)
+-- Send file path to pane (literal path, no @ prefix)
 function M.send_file_reference(pane_id, filepath)
-  local resolved, err = resolve_workspace_file(filepath)
-  if not resolved then
-    return false, 'Failed to prepare file reference: ' .. (err or 'unknown error')
+  if not pane_id or pane_id == "" then
+    return false, "No pane ID provided"
+  end
+  if not filepath or filepath == "" then
+    return false, "No filepath provided"
   end
 
-  local send = require('shooter.tmux.send')
-  return send.send_file_reference(pane_id, resolved)
+  -- Codex can stall on @filepath; send literal path and submit.
+  local escaped_path = shell_escape(filepath)
+  local cmd = string.format(
+    "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '%s' && sleep 0.1 && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter",
+    pane_id, pane_id, escaped_path, pane_id, pane_id
+  )
+
+  local job_id = vim.fn.jobstart({"sh", "-c", cmd .. " 2>/dev/null"}, {
+    stdout_buffered = true,
+    stderr_buffered = true,
+  })
+  if job_id <= 0 then return false, "Failed to start tmux job" end
+  local result = vim.fn.jobwait({job_id}, 30000)
+  if result[1] == 0 then
+    return true, nil
+  end
+  return false, "tmux command failed"
 end
 
 -- Send raw text to pane
