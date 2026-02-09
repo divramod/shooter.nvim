@@ -62,13 +62,13 @@ local day_marker_enabled = true
 -- Forward declaration
 local apply_syntax
 
--- Per-window match tracking: window_matches[win] = { ["line:group"] = match_id, ... }
--- Instead of clearing all matches and re-adding, we diff old vs new and only
--- delete removed matches + add new ones. Unchanged matches stay in place (zero flicker).
-local window_matches = {}
+-- Extmark namespace — buffer-local highlights that move with text (no flicker)
+local ns = vim.api.nvim_create_namespace('shooter_syntax')
 
--- Apply syntax highlighting to current buffer
--- Uses incremental diff: only deletes removed matches and adds new ones (zero flicker)
+-- Apply syntax highlighting to current buffer using extmarks
+-- Extmarks are buffer-local and track buffer positions — they move with text
+-- when lines are inserted/deleted, so highlights stay correct between redraws.
+-- clear_namespace + set_extmark within a single callback is atomic (one redraw).
 apply_syntax = function(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
 
@@ -108,47 +108,27 @@ apply_syntax = function(bufnr)
     day_first_lines[line_num] = true
   end
 
-  -- Build desired match set as { ["line:group"] = priority, ... }
-  local wanted = {}
+  -- Build match list: { { line, group }, ... }
+  local matches = {}
   for i, line in ipairs(lines) do
     if not in_code[i] then
       if i == latest_done_line then
-        wanted[i .. ':ShooterDoneShot'] = 10
+        table.insert(matches, { i, 'ShooterDoneShot' })
       elseif day_first_lines[i] then
-        wanted[i .. ':ShooterDayMarker'] = 5
+        table.insert(matches, { i, 'ShooterDayMarker' })
       elseif line:match('^##%s+shot%s+[%d%?]+') then
-        wanted[i .. ':ShooterOpenShot'] = -1
+        table.insert(matches, { i, 'ShooterOpenShot' })
       end
     end
   end
 
-  -- Diff against current window matches
-  local win = vim.api.nvim_get_current_win()
-  local old = window_matches[win] or {}
-
-  -- Delete matches that are no longer wanted
-  for key, match_id in pairs(old) do
-    if not wanted[key] then
-      pcall(vim.fn.matchdelete, match_id)
-    end
+  -- Clear old extmarks and set new ones (atomic: single redraw, no flicker)
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  for _, m in ipairs(matches) do
+    vim.api.nvim_buf_set_extmark(bufnr, ns, m[1] - 1, 0, {
+      line_hl_group = m[2],
+    })
   end
-
-  -- Add matches that are new (not in old set)
-  local new_tracking = {}
-  for key, priority in pairs(wanted) do
-    if old[key] then
-      -- Match still valid, keep it
-      new_tracking[key] = old[key]
-    else
-      -- New match: parse line and group from key, add it
-      local line_str, group = key:match('^(%d+):(.+)$')
-      local line_num = tonumber(line_str)
-      local match_id = vim.fn.matchaddpos(group, { { line_num } }, priority)
-      new_tracking[key] = match_id
-    end
-  end
-
-  window_matches[win] = new_tracking
 end
 
 -- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/shotfiles)
@@ -222,23 +202,6 @@ function M.setup()
     end,
   })
 
-  -- Clear matches when entering ANY non-prompts buffer (catches Oil, etc.)
-  vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
-    group = group,
-    callback = function(ev)
-      local filepath = vim.api.nvim_buf_get_name(ev.buf)
-      -- If not a prompts file, clear window matches and tracking
-      if not is_prompts_file(filepath) then
-        local win = vim.api.nvim_get_current_win()
-        local old = window_matches[win] or {}
-        for _, match_id in pairs(old) do
-          pcall(vim.fn.matchdelete, match_id)
-        end
-        window_matches[win] = nil
-      end
-    end,
-  })
-
   -- Reapply when text changes (debounced to avoid lag while typing)
   local pending_syntax = {}
   vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
@@ -256,35 +219,21 @@ function M.setup()
         vim.defer_fn(function()
           pending_syntax[ev.buf] = nil
           if not vim.api.nvim_buf_is_valid(ev.buf) then return end
-          -- Find a window displaying this buffer to apply window-local matches there
-          for _, win in ipairs(vim.api.nvim_list_wins()) do
-            if vim.api.nvim_win_get_buf(win) == ev.buf then
-              vim.api.nvim_win_call(win, function()
-                apply_syntax(ev.buf)
-              end)
-              return
-            end
-          end
+          apply_syntax(ev.buf)
         end, debounce)
       end
     end,
   })
 
-  -- Cancel pending debounce and clear matches when leaving a shotfile
+  -- Cancel pending debounce when leaving a shotfile
+  -- (extmarks are buffer-local and persist — no cleanup needed)
   vim.api.nvim_create_autocmd('BufLeave', {
     group = group,
     pattern = '*.md',
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       if is_prompts_file(filepath) then
-        pending_syntax[ev.buf] = nil  -- cancel pending debounce
-        local win = vim.api.nvim_get_current_win()
-        -- Clear tracked matches individually, then reset tracking
-        local old = window_matches[win] or {}
-        for _, match_id in pairs(old) do
-          pcall(vim.fn.matchdelete, match_id)
-        end
-        window_matches[win] = nil
+        pending_syntax[ev.buf] = nil
       end
     end,
   })
@@ -416,19 +365,12 @@ function M.reapply_all()
       })
     end
   end
+  -- Extmarks are buffer-local — no window targeting needed
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr)
       if is_prompts_file(filepath) then
-        -- apply_syntax uses window-local matchaddpos, so target the correct window
-        for _, win in ipairs(vim.api.nvim_list_wins()) do
-          if vim.api.nvim_win_get_buf(win) == bufnr then
-            vim.api.nvim_win_call(win, function()
-              apply_syntax(bufnr)
-            end)
-            break
-          end
-        end
+        apply_syntax(bufnr)
       end
     end
   end
