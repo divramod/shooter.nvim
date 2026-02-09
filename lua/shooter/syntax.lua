@@ -91,12 +91,16 @@ apply_syntax = function(bufnr)
       end
       if day_marker_enabled then
         local date = line:match('%((%d%d%d%d%-%d%d%-%d%d)%s+%d%d:%d%d:%d%d%)')
-        if date and not seen_days[date] then
-          seen_days[date] = true
-          day_first_lines[i] = true
+        if date then
+          seen_days[date] = i  -- keep overwriting; last occurrence = earliest shot of the day
         end
       end
     end
+  end
+
+  -- Convert seen_days map (date -> line) to day_first_lines set (line -> true)
+  for _, line_num in pairs(seen_days) do
+    day_first_lines[line_num] = true
   end
 
   -- Highlight: open shots (orange), latest executed (green), day markers (light brown)
