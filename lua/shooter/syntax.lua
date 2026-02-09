@@ -262,19 +262,33 @@ function M.setup()
     end,
   })
 
-  -- Auto-reload config and reapply syntax when config.yaml is saved
+  -- Auto-reload config, fix, and reapply syntax when config.yaml is saved
+  local fixing_config = false  -- guard against recursive BufWritePost
   vim.api.nvim_create_autocmd('BufWritePost', {
     group = group,
     pattern = 'config.yaml',
     callback = function(ev)
+      if fixing_config then return end
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       -- Only react to shooter config files (global or project-local)
       if filepath:match('shooter/nvim/config%.yaml$') or filepath:match('%.shooter/cfg/nvim/config%.yaml$') then
         local ext_config = require('shooter.core.ext_config')
+        -- Fix: strip invalid keys, fill missing defaults (global)
+        local is_global = filepath:match('shooter/nvim/config%.yaml$') and not filepath:match('%.shooter/cfg/nvim/config%.yaml$')
+        local removed, added = ext_config.fix_config_buffer(ev.buf, is_global)
+        -- Silently re-save if fix changed the buffer
+        if removed > 0 or added > 0 then
+          fixing_config = true
+          vim.cmd('noautocmd write')
+          fixing_config = false
+        end
         ext_config.reload()
         define_highlights()
         M.reapply_all()
-        vim.notify('Shooter config reloaded', vim.log.levels.INFO)
+        local parts = { 'reloaded' }
+        if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
+        if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
+        vim.notify('Shooter config: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
       end
     end,
   })
