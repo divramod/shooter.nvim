@@ -215,7 +215,7 @@ function M.setup()
         pending_syntax[ev.buf] = true
         local debounce = 500
         local eok, ext_config = pcall(require, 'shooter.core.ext_config')
-        if eok then debounce = ext_config.get('file.first_shot_debounce_in_ms') or debounce end
+        if eok then debounce = ext_config.get('file.first_shot_of_the_day.debounce_in_ms') or debounce end
         vim.defer_fn(function()
           pending_syntax[ev.buf] = nil
           if vim.api.nvim_buf_is_valid(ev.buf) then
@@ -261,20 +261,46 @@ function M.setup()
 end
 
 -- Reapply syntax highlighting to all loaded shotfile buffers
--- Also applies ext_config YAML overrides for day marker color
+-- Also applies ext_config YAML overrides for all highlight groups
 function M.reapply_all()
   define_highlights()
-  -- Apply ext_config color override on top of defaults
+  -- Apply ext_config color overrides on top of defaults
   local eok, ext_config = pcall(require, 'shooter.core.ext_config')
   if eok then
-    local color = ext_config.get('file.first_shot_color')
-    if type(color) == 'string' then
+    -- Day marker (first shot of the day)
+    local day_bg = ext_config.get('file.first_shot_of_the_day.color_bg')
+    local day_fg = ext_config.get('file.first_shot_of_the_day.color_fg')
+    if type(day_bg) == 'string' or type(day_fg) == 'string' then
       local config = require('shooter.config')
       local day_marker = config.get('highlight.day_marker') or {}
       vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
-        fg = day_marker.fg or '#555555',
-        bg = day_marker.bg or color,
+        fg = day_fg or day_marker.fg or '#555555',
+        bg = day_bg or day_marker.bg or '#e6d5b8',
         bold = day_marker.bold or false,
+      })
+    end
+    -- Open shots
+    local open_bg = ext_config.get('file.open_shots.color_bg')
+    local open_fg = ext_config.get('file.open_shots.color_fg')
+    if type(open_bg) == 'string' or type(open_fg) == 'string' then
+      local config = require('shooter.config')
+      local open_shot = config.get('highlight.open_shot') or {}
+      vim.api.nvim_set_hl(0, 'ShooterOpenShot', {
+        fg = open_fg or open_shot.fg or '#000000',
+        bg = open_bg or open_shot.bg or '#ffb347',
+        bold = open_shot.bold ~= false,
+      })
+    end
+    -- Closed shots (latest executed)
+    local closed_bg = ext_config.get('file.closed_shots.color_bg')
+    local closed_fg = ext_config.get('file.closed_shots.color_fg')
+    if type(closed_bg) == 'string' or type(closed_fg) == 'string' then
+      local config = require('shooter.config')
+      local done_shot = config.get('highlight.done_shot') or {}
+      vim.api.nvim_set_hl(0, 'ShooterDoneShot', {
+        fg = closed_fg or done_shot.fg or '#555555',
+        bg = closed_bg or done_shot.bg or '#c8e6c9',
+        bold = done_shot.bold or false,
       })
     end
   end

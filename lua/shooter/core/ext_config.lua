@@ -9,8 +9,21 @@ local M = {}
 -- Default configuration values (YAML schema)
 M.DEFAULTS = {
   file = {
-    first_shot_color = '#e6d5b8',
-    first_shot_debounce_in_ms = 500,
+    first_shot_of_the_day = {
+      debounce_in_ms = 500,
+      color_bg = '#e6d5b8',
+      color_fg = '#555555',
+    },
+    open_shots = {
+      debounce_in_ms = 500,
+      color_bg = '#ffb347',
+      color_fg = '#000000',
+    },
+    closed_shots = {
+      debounce_in_ms = 500,
+      color_bg = '#c8e6c9',
+      color_fg = '#555555',
+    },
   },
 }
 
@@ -214,7 +227,7 @@ function M.load()
   return _cache
 end
 
---- Get a config value by dot path (e.g., 'file.first_shot_color')
+--- Get a config value by dot path (e.g., 'file.first_shot_of_the_day.color_bg')
 ---@param dot_path string Dot-separated path
 ---@return any Value at path, or nil
 function M.get(dot_path)
