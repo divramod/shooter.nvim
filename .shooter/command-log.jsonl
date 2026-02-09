@@ -4,3 +4,4 @@
 {"ts":"2026-02-09T05:34:54Z","cmd":"shot-execute","cli":"claude","model":"opus"}
 {"ts":"2026-02-09T06:16:50Z","cmd":"shot-execute","cli":"claude","model":"opus"}
 {"ts":"2026-02-09T06:20:02Z","cmd":"shot-execute","cli":"claude","model":"opus"}
+{"ts":"2026-02-09T08:56:00Z","cmd":"help-show-version","cli":"unknown","model":"opus"}
