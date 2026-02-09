@@ -218,8 +218,15 @@ function M.setup()
         if eok then debounce = ext_config.get('file.first_shot_of_the_day.debounce_in_ms') or debounce end
         vim.defer_fn(function()
           pending_syntax[ev.buf] = nil
-          if vim.api.nvim_buf_is_valid(ev.buf) then
-            apply_syntax(ev.buf)
+          if not vim.api.nvim_buf_is_valid(ev.buf) then return end
+          -- Find a window displaying this buffer to apply window-local matches there
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(win) == ev.buf then
+              vim.api.nvim_win_call(win, function()
+                apply_syntax(ev.buf)
+              end)
+              return
+            end
           end
         end, debounce)
       end
