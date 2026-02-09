@@ -118,7 +118,7 @@ M.defaults = {
 
     -- Sound file path (uses afplay on macOS)
     -- Can be a system sound like '/System/Library/Sounds/Glass.aiff'
-    -- or a custom path like '~/.config/shooter.nvim/shot.mp3'
+    -- or a custom path like '~/.config/shooter/nvim/shot.mp3'
     file = '/System/Library/Sounds/Pop.aiff',
 
     -- Volume (0.0 to 1.0)

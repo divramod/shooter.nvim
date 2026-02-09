@@ -171,19 +171,19 @@ function M.ensure_local_config()
 end
 
 --- Migrate from old config directory (~/.config/shooter.nvim/) to new (~/.config/shooter/nvim/)
---- Idempotent: skips if new dir already has content or old dir doesn't exist.
+--- Idempotent: copies contents if new dir is empty, always removes old dir if it exists.
 function M.migrate()
   local old_dir = utils.expand_path('~/.config/shooter.nvim')
-  local new_dir = M.base_dir()
-
   if not utils.dir_exists(old_dir) then return end
-  if utils.dir_exists(new_dir) then return end
 
-  -- Create new dir and copy contents
-  utils.ensure_dir(new_dir)
-  vim.fn.system(string.format('cp -a %s/. %s/', vim.fn.shellescape(old_dir), vim.fn.shellescape(new_dir)))
+  local new_dir = M.base_dir()
+  if not utils.dir_exists(new_dir) then
+    -- New dir doesn't exist yet: copy contents from old
+    utils.ensure_dir(new_dir)
+    vim.fn.system(string.format('cp -a %s/. %s/', vim.fn.shellescape(old_dir), vim.fn.shellescape(new_dir)))
+  end
 
-  -- Remove old directory
+  -- Always remove old directory
   vim.fn.delete(old_dir, 'rf')
 end
 
