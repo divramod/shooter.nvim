@@ -1,8 +1,5 @@
 # shot
 
-## shot 59
-
-
 ## shot 58
 
 
