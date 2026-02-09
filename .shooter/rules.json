@@ -11,6 +11,7 @@
     "./rules/core/security.md",
     "./rules/core/fork-conventions.md",
     "./rules/core/naming-conventions.md",
+    "./rules/core/glossary.md",
     "./glossary.md",
     "./themes.json",
     "./codebase/_project/SUMMARY.md",
