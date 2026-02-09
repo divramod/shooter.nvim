@@ -126,7 +126,8 @@ apply_syntax = function(bufnr)
   vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   for _, m in ipairs(matches) do
     vim.api.nvim_buf_set_extmark(bufnr, ns, m[1] - 1, 0, {
-      line_hl_group = m[2],
+      end_col = #lines[m[1]],
+      hl_group = m[2],
     })
   end
 end
