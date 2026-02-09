@@ -15,7 +15,7 @@ local utils = require('shooter.utils')
 
 -- Get path to filter state file
 function M.get_state_path()
-  return utils.expand_path('~/.config/shooter.nvim/filter-state.json')
+  return require('shooter.core.ext_config').filter_state_path()
 end
 
 -- Load state from JSON file

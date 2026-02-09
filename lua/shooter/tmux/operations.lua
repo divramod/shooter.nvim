@@ -36,7 +36,8 @@ local function send_file_ref(provider, send, pane_id, filepath)
 end
 
 local function save_temp_sendable(full_message, shot_num)
-  local temp_dir = utils.expand_path('~/.config/shooter.nvim/tmp')
+  local ext_config = require('shooter.core.ext_config')
+  local temp_dir = ext_config.tmp_dir()
   utils.ensure_dir(temp_dir)
   local ts = os.date('%Y%m%d_%H%M%S')
   local temp_path = string.format('%s/shot-%s-%s.md', temp_dir, shot_num, ts)

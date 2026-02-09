@@ -1,5 +1,5 @@
 -- Session storage - YAML I/O and path resolution
--- Handles reading/writing session files to ~/.config/shooter.nvim/sessions/<repo>/
+-- Handles reading/writing session files to ~/.config/shooter/nvim/sessions/<repo>/
 
 local M = {}
 local defaults = require('shooter.session.defaults')
@@ -28,8 +28,8 @@ end
 ---@param repo_slug string Repo identifier
 ---@return string Path to sessions directory
 function M.get_sessions_dir(repo_slug)
-  local config_dir = vim.fn.expand('~/.config/shooter.nvim/sessions')
-  return config_dir .. '/' .. repo_slug:gsub('/', '_')
+  local ext_config = require('shooter.core.ext_config')
+  return ext_config.sessions_dir() .. '/' .. repo_slug:gsub('/', '_')
 end
 
 -- Ensure sessions directory exists

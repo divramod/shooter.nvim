@@ -116,6 +116,9 @@ CFG NAMESPACE (c prefix)
   ce        Plugin config         Edit shooter.lua plugin config
   cs        Shot picker config    Toggle shot picker vim mode
   cf        Shotfile config       Edit shotfile picker session config
+  cR        Reload YAML config    Reload config.yaml and reapply syntax
+  cG        Edit global YAML      Open ~/.config/shooter/nvim/config.yaml
+  cL        Edit local YAML       Open <repo>/.shooter/cfg/nvim/config.yaml
 
 ANALYTICS NAMESPACE (a prefix)
   aa        Project analytics     Show project shot analytics
@@ -151,12 +154,14 @@ PROJECT SUPPORT
   - History paths include project: ~/.config/.../history/user/repo/project/...
 
 CONTEXT FILES
-  Global context:   ~/.config/shooter.nvim/shooter-context-global.md
+  Global context:   ~/.config/shooter/nvim/shooter-context-global.md
   Project context:  <repo>/.shooter/config/nvim/shooter-context-project.md
   Plugin config:    ~/.config/nvim/lua/plugins/shooter.lua (lazy.nvim)
+  Global YAML cfg:  ~/.config/shooter/nvim/config.yaml
+  Local YAML cfg:   <repo>/.shooter/cfg/nvim/config.yaml
 
 HISTORY
-  ~/.config/shooter.nvim/history/<user>/<repo>/   <- Shot history per repo
+  ~/.config/shooter/nvim/history/<user>/<repo>/   <- Shot history per repo
 
 SMART PASTE (global keymaps, disable with keymaps.smart_paste = false)
   p         Smart paste after     Paste image if in clipboard, else normal paste

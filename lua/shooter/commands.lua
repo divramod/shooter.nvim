@@ -506,6 +506,32 @@ local function setup_cfg_commands()
   end, { desc = 'Toggle shot picker vim mode' })
   vim.api.nvim_create_user_command('ShooterShotCfg', function() vim.cmd('ShooterCfgShot') end, { desc = 'Toggle shot picker vim mode' })
 
+  -- ShooterCfgReload — reload ext_config YAML and reapply syntax
+  create_cmd('ShooterCfgReload', function()
+    local ext_config = require('shooter.core.ext_config')
+    ext_config.reload()
+    require('shooter.syntax').reapply_all()
+    vim.notify('Shooter config reloaded', vim.log.levels.INFO)
+  end, { desc = 'Reload YAML config and reapply' })
+
+  -- ShooterCfgEditGlobal — open global config.yaml
+  create_cmd('ShooterCfgEditGlobal', function()
+    local ext_config = require('shooter.core.ext_config')
+    ext_config.ensure_global_config()
+    vim.cmd('edit ' .. vim.fn.fnameescape(ext_config.global_config_path()))
+  end, { desc = 'Edit global YAML config' })
+
+  -- ShooterCfgEditLocal — open project-local config.yaml
+  create_cmd('ShooterCfgEditLocal', function()
+    local ext_config = require('shooter.core.ext_config')
+    local path = ext_config.ensure_local_config()
+    if path then
+      vim.cmd('edit ' .. vim.fn.fnameescape(path))
+    else
+      vim.notify('Not in a git repository', vim.log.levels.WARN)
+    end
+  end, { desc = 'Edit project-local YAML config' })
+
   -- ShooterCfgShotfile = ShooterShotfileCfg (shotfile picker config - sessions)
   create_cmd('ShooterCfgShotfile', function()
     local session = require('shooter.session')

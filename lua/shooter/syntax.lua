@@ -24,10 +24,13 @@ local function define_highlights()
   })
 
   -- Light brown for the first executed shot of each day (day separator)
+  -- Fallback chain: setup() config > ext_config YAML > hardcoded default
   local day_marker = config.get('highlight.day_marker') or {}
+  local ext_config = require('shooter.core.ext_config')
+  local day_bg = day_marker.bg or ext_config.get('file.first_shot_color') or '#e6d5b8'
   vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
     fg = day_marker.fg or '#555555',
-    bg = day_marker.bg or '#e6d5b8',
+    bg = day_bg,
     bold = day_marker.bold or false,
   })
 end
@@ -213,12 +216,14 @@ function M.setup()
       if ft == 'markdown' and is_prompts_file(filepath) then
         if pending_syntax[ev.buf] then return end
         pending_syntax[ev.buf] = true
+        local ext_config = require('shooter.core.ext_config')
+        local debounce = ext_config.get('file.first_shot_debounce_in_ms') or 500
         vim.defer_fn(function()
           pending_syntax[ev.buf] = nil
           if vim.api.nvim_buf_is_valid(ev.buf) then
             apply_syntax(ev.buf)
           end
-        end, 1000)
+        end, debounce)
       end
     end,
   })
@@ -238,6 +243,36 @@ function M.setup()
       define_highlights()
     end,
   })
+
+  -- Auto-reload config and reapply syntax when config.yaml is saved
+  vim.api.nvim_create_autocmd('BufWritePost', {
+    group = group,
+    pattern = 'config.yaml',
+    callback = function(ev)
+      local filepath = vim.api.nvim_buf_get_name(ev.buf)
+      -- Only react to shooter config files (global or project-local)
+      if filepath:match('shooter/nvim/config%.yaml$') or filepath:match('%.shooter/cfg/nvim/config%.yaml$') then
+        local ext_config = require('shooter.core.ext_config')
+        ext_config.reload()
+        define_highlights()
+        M.reapply_all()
+        vim.notify('Shooter config reloaded', vim.log.levels.INFO)
+      end
+    end,
+  })
+end
+
+-- Reapply syntax highlighting to all loaded shotfile buffers
+function M.reapply_all()
+  define_highlights()
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local filepath = vim.api.nvim_buf_get_name(bufnr)
+      if is_prompts_file(filepath) then
+        apply_syntax(bufnr)
+      end
+    end
+  end
 end
 
 return M

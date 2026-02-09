@@ -58,8 +58,9 @@ function M.load_template(filename)
     if content then return trim_trailing(content) end
   end
 
-  -- Priority 2: Global (~/.config/shooter.nvim/)
-  local global_path = utils.expand_path('~/.config/shooter.nvim/' .. filename)
+  -- Priority 2: Global (~/.config/shooter/nvim/)
+  local ext_config = require('shooter.core.ext_config')
+  local global_path = ext_config.base_dir() .. '/' .. filename
   local content = utils.read_file(global_path)
   if content then return trim_trailing(content) end
 

@@ -7,7 +7,7 @@ M.defaults = {
   -- Path configuration
   paths = {
     -- Global context file (shared across all projects)
-    global_context = '~/.config/shooter.nvim/shooter-context-global.md',
+    global_context = '~/.config/shooter/nvim/shooter-context-global.md',
 
     -- Project context file (relative to git root)
     project_context = '.shooter/config/nvim/shooter-context-project.md',

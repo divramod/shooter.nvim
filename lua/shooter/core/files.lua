@@ -13,10 +13,11 @@ local function _persist_last_shotfile(filepath)
   local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
   if vim.v.shell_error ~= 0 or #git_root == 0 then return end
   local storage = require('shooter.session.storage')
+  local ext_config = require('shooter.core.ext_config')
   local slug = storage.get_repo_slug(git_root[1])
-  local dir = vim.fn.expand('~/.config/shooter.nvim')
-  vim.fn.mkdir(dir, 'p')
-  local f = io.open(dir .. '/last-shotfile-' .. slug:gsub('/', '_'), 'w')
+  local path = ext_config.last_shotfile_path(slug:gsub('/', '_'))
+  utils.ensure_dir(utils.get_dirname(path))
+  local f = io.open(path, 'w')
   if f then f:write(filepath); f:close() end
 end
 
@@ -24,12 +25,13 @@ local function _load_last_shotfile()
   local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
   if vim.v.shell_error ~= 0 or #git_root == 0 then return nil end
   local storage = require('shooter.session.storage')
+  local ext_config = require('shooter.core.ext_config')
   local slug = storage.get_repo_slug(git_root[1])
-  local dir = vim.fn.expand('~/.config/shooter.nvim')
-  local f = io.open(dir .. '/last-shotfile-' .. slug:gsub('/', '_'), 'r')
+  local path = ext_config.last_shotfile_path(slug:gsub('/', '_'))
+  local f = io.open(path, 'r')
   if f then
-    local path = f:read('*l'); f:close()
-    if path and vim.fn.filereadable(path) == 1 then return path end
+    local content = f:read('*l'); f:close()
+    if content and vim.fn.filereadable(content) == 1 then return content end
   end
   return nil
 end
