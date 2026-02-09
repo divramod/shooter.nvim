@@ -1,12 +1,24 @@
 # shot
 
-## shot 56
+## shot 59
 
 
-## shot 55
+## shot 58
+
+
+## shot 57
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
+
+## x shot 56 (2026-02-09 05:03:41) @shot-56-20260209_050341
+there is a little problem in the coloring of the first sent shot of every day.
+instead of coloring the first sent shot per day brown, it colors the last send shot of the day before.
+can you fix that?
+
+## x shot 55 (2026-02-09 04:59:33) @shot-55-20260209_045933
+ok, if its not a problem anymore, then the coloring can be enabled by default.
+also, increase the debounce time to 1000ms
 
 ## x shot 54 (2026-02-09 04:33:35) @shot-54-20260209_043335
 so you fixed the O=N2 problems?
@@ -66,7 +78,7 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
+selecting multiple shot pickers and then hitting 1 to send them does not 
 
 ## x shot 44 (2026-02-07 18:13:22)
 the < >sy command should also mark the shot as done and call the renumber function
@@ -76,7 +88,7 @@ i call this command usually, when i want to manually paste a shot to a agent cli
 color the background color of the last shot made green
 
 ## x shot 42 (2026-02-07 18:13:22)
-selecting multiple shot pickers and then hitting 1 to send them does not 
+the command < >. should also call the renumber function, after is marked a shot as done
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
