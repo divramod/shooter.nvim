@@ -260,24 +260,37 @@ function M.setup()
   })
 
   -- Auto-fix config.yaml on BufEnter: strip invalid keys, fill missing defaults (global)
+  -- Runs once per buffer (tracked by fixed_cfg_bufs) to avoid repeated fixes.
+  -- Updates buffer lines directly (no disk write) to avoid W12 warnings.
+  local fixed_cfg_bufs = {}
   vim.api.nvim_create_autocmd('BufEnter', {
     group = group,
     pattern = 'config.yaml',
     callback = function(ev)
+      if fixed_cfg_bufs[ev.buf] then return end
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local is_global = filepath:match('shooter/nvim/config%.yaml$') and not filepath:match('%.shooter/cfg/nvim/config%.yaml$')
       local is_local = filepath:match('%.shooter/cfg/nvim/config%.yaml$')
       if not is_global and not is_local then return end
+      fixed_cfg_bufs[ev.buf] = true
       local eok, ext_config = pcall(require, 'shooter.core.ext_config')
       if not eok then return end
-      local removed, added = ext_config.fix_config(filepath, is_global)
+      local removed, added = ext_config.fix_config_buffer(ev.buf, is_global)
       if removed > 0 or added > 0 then
-        vim.cmd('edit!')  -- reload buffer from disk
         local parts = {}
         if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
         if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
         vim.notify('Config auto-fixed: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
       end
+    end,
+  })
+
+  -- Clear fixed_cfg_bufs tracking when buffer is deleted
+  vim.api.nvim_create_autocmd('BufDelete', {
+    group = group,
+    pattern = 'config.yaml',
+    callback = function(ev)
+      fixed_cfg_bufs[ev.buf] = nil
     end,
   })
 end

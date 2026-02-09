@@ -330,4 +330,52 @@ function M.fix_config(path, is_global)
   return removed, added
 end
 
+--- Fix config in a buffer: strip invalid keys, fill missing defaults (global).
+--- Updates buffer lines directly (no disk write, no W12 warnings).
+---@param bufnr number Buffer number
+---@param is_global boolean Whether this is the global config
+---@return number removed Number of leaf keys removed
+---@return number added Number of leaf keys added
+function M.fix_config_buffer(bufnr, is_global)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local content = table.concat(lines, '\n')
+  local parsed = M.parse_yaml(content)
+
+  -- Strip invalid keys
+  local cleaned = strip_to_schema(parsed, M.DEFAULTS)
+  local removed = count_leaves(parsed) - count_leaves(cleaned)
+  local added = 0
+
+  -- For global: fill missing defaults
+  if is_global then
+    local before_count = count_leaves(cleaned)
+    cleaned = fill_from_schema(cleaned, M.DEFAULTS)
+    added = count_leaves(cleaned) - before_count
+  end
+
+  if removed == 0 and added == 0 then return 0, 0 end
+
+  -- Build new content and set buffer lines
+  local header = is_global
+    and '# Shooter.nvim global configuration\n'
+      .. '# Edit this file to customize behavior across all projects.\n'
+      .. '# Project-local overrides go to <repo>/.shooter/cfg/nvim/config.yaml\n\n'
+    or '# Shooter.nvim project-local configuration\n'
+      .. '# Values here override the global config at ~/.config/shooter/nvim/config.yaml\n\n'
+
+  local new_content = header .. M.serialize_yaml(cleaned) .. '\n'
+  local new_lines = {}
+  for line in new_content:gmatch('[^\n]*') do
+    table.insert(new_lines, line)
+  end
+  -- Remove trailing empty line from split
+  if #new_lines > 0 and new_lines[#new_lines] == '' then
+    table.remove(new_lines)
+  end
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
+  M.reload()
+  return removed, added
+end
+
 return M

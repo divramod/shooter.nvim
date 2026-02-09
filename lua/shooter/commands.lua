@@ -542,8 +542,7 @@ local function setup_cfg_commands()
       vim.notify('Not a shooter config file', vim.log.levels.WARN)
       return
     end
-    local removed, added = ext_config.fix_config(bufpath, is_global)
-    vim.cmd('edit!')  -- reload buffer from disk
+    local removed, added = ext_config.fix_config_buffer(0, is_global)
     local parts = {}
     if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
     if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
