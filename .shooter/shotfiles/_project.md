@@ -1,7 +1,10 @@
 # project
 
-## shot 3
+## shot 4
 i want you to also add codex and gemini as possible agent clis to choose from when sending shots to a tmux pane, which is currently created
+
+## x shot 3 (2026-02-09 18:45:29) @_project_20260209_184529_shot-3
+test
 
 ## x shot 2 (2026-02-09 18:37:39)
 i also want to support codex and gemini as possible targets for sending shots.
