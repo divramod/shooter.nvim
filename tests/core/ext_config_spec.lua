@@ -190,6 +190,11 @@ describe('core.ext_config', function()
       assert.equals('#c8e6c9', ext_config.DEFAULTS.file.closed_shots.color_bg)
       assert.equals('#555555', ext_config.DEFAULTS.file.closed_shots.color_fg)
     end)
+
+    it('should have file.stats_notification.enabled', function()
+      assert.is_table(ext_config.DEFAULTS.file.stats_notification)
+      assert.is_true(ext_config.DEFAULTS.file.stats_notification.enabled)
+    end)
   end)
 
   describe('fix_config', function()

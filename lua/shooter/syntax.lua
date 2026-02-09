@@ -157,9 +157,17 @@ end
 local notified_bufs = {}
 
 -- Show shotfile info notification (repo, filename, open/total shots)
+-- Respects ext_config file.stats_notification.enabled (default true)
 local function show_shotfile_info(bufnr)
   if notified_bufs[bufnr] then return end
   notified_bufs[bufnr] = true
+
+  -- Check if stats notification is disabled via ext_config
+  local eok, ext_config = pcall(require, 'shooter.core.ext_config')
+  if eok then
+    local enabled = ext_config.get('file.stats_notification.enabled')
+    if enabled == false then return end
+  end
 
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then return end

@@ -21,6 +21,9 @@ M.DEFAULTS = {
       color_bg = '#c8e6c9',
       color_fg = '#555555',
     },
+    stats_notification = {
+      enabled = true,
+    },
   },
 }
 
