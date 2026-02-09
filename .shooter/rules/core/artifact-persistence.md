@@ -44,9 +44,11 @@ After closing a bead that involved meaningful decisions, **prepend** to `.shoote
 
 ```markdown
 ## YYYY-MM-DD HH:MM: <short decision title>
-
+**Theme:** <theme-slug>
 **Decision:** <what was decided>
 **Reason:** <why this choice over alternatives>
 ```
 
-Record architecture/pattern choices, technology selections, and non-obvious trade-offs. Skip trivial implementation details. Before making a significant decision, read `.shooter/decisions.md` to check if already decided.
+- **Theme** is required. Use the theme slug from the shotfile/bead context (e.g., `ai`, `cli`, `tui`). For project-wide decisions that don't belong to a specific theme, use `_project`.
+- Record architecture/pattern choices, technology selections, and non-obvious trade-offs. Skip trivial implementation details.
+- Before making a significant decision, read `.shooter/decisions.md` to check if already decided.
