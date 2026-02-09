@@ -62,11 +62,13 @@ local day_marker_enabled = true
 -- Forward declaration
 local apply_syntax
 
--- Match fingerprints per window to avoid flickering on unchanged content
-local match_fingerprints = {}
+-- Per-window match tracking: window_matches[win] = { ["line:group"] = match_id, ... }
+-- Instead of clearing all matches and re-adding, we diff old vs new and only
+-- delete removed matches + add new ones. Unchanged matches stay in place (zero flicker).
+local window_matches = {}
 
 -- Apply syntax highlighting to current buffer
--- Skips clear+reapply if matches haven't changed (prevents flicker)
+-- Uses incremental diff: only deletes removed matches and adds new ones (zero flicker)
 apply_syntax = function(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
 
@@ -106,37 +108,47 @@ apply_syntax = function(bufnr)
     day_first_lines[line_num] = true
   end
 
-  -- Build match list and fingerprint to detect changes
-  local matches = {}
+  -- Build desired match set as { ["line:group"] = priority, ... }
+  local wanted = {}
   for i, line in ipairs(lines) do
     if not in_code[i] then
       if i == latest_done_line then
-        table.insert(matches, { i, 'ShooterDoneShot', 10 })
+        wanted[i .. ':ShooterDoneShot'] = 10
       elseif day_first_lines[i] then
-        table.insert(matches, { i, 'ShooterDayMarker', 5 })
+        wanted[i .. ':ShooterDayMarker'] = 5
       elseif line:match('^##%s+shot%s+[%d%?]+') then
-        table.insert(matches, { i, 'ShooterOpenShot', -1 })
+        wanted[i .. ':ShooterOpenShot'] = -1
       end
     end
   end
 
-  -- Fingerprint: compact string of line:group pairs
-  local parts = {}
-  for _, m in ipairs(matches) do
-    parts[#parts + 1] = m[1] .. ':' .. m[2]
-  end
-  local fingerprint = table.concat(parts, ',')
-
-  -- Skip clear+reapply if matches haven't changed (prevents flicker)
+  -- Diff against current window matches
   local win = vim.api.nvim_get_current_win()
-  if match_fingerprints[win] == fingerprint then return end
-  match_fingerprints[win] = fingerprint
+  local old = window_matches[win] or {}
 
-  -- Apply matches
-  pcall(vim.fn.clearmatches)
-  for _, m in ipairs(matches) do
-    vim.fn.matchaddpos(m[2], { { m[1] } }, m[3])
+  -- Delete matches that are no longer wanted
+  for key, match_id in pairs(old) do
+    if not wanted[key] then
+      pcall(vim.fn.matchdelete, match_id)
+    end
   end
+
+  -- Add matches that are new (not in old set)
+  local new_tracking = {}
+  for key, priority in pairs(wanted) do
+    if old[key] then
+      -- Match still valid, keep it
+      new_tracking[key] = old[key]
+    else
+      -- New match: parse line and group from key, add it
+      local line_str, group = key:match('^(%d+):(.+)$')
+      local line_num = tonumber(line_str)
+      local match_id = vim.fn.matchaddpos(group, { { line_num } }, priority)
+      new_tracking[key] = match_id
+    end
+  end
+
+  window_matches[win] = new_tracking
 end
 
 -- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/shotfiles)
@@ -206,8 +218,6 @@ function M.setup()
         require('shooter.core.files').track_last_shotfile(filepath)
         apply_syntax(ev.buf)
         show_shotfile_info(ev.buf)
-      else
-        pcall(vim.fn.clearmatches)
       end
     end,
   })
@@ -217,9 +227,14 @@ function M.setup()
     group = group,
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
-      -- If not a prompts file, clear window matches
+      -- If not a prompts file, clear window matches and tracking
       if not is_prompts_file(filepath) then
-        pcall(vim.fn.clearmatches)
+        local win = vim.api.nvim_get_current_win()
+        local old = window_matches[win] or {}
+        for _, match_id in pairs(old) do
+          pcall(vim.fn.matchdelete, match_id)
+        end
+        window_matches[win] = nil
       end
     end,
   })
@@ -264,8 +279,12 @@ function M.setup()
       if is_prompts_file(filepath) then
         pending_syntax[ev.buf] = nil  -- cancel pending debounce
         local win = vim.api.nvim_get_current_win()
-        match_fingerprints[win] = nil -- reset so re-entering reapplies
-        pcall(vim.fn.clearmatches)    -- clear window-local matches
+        -- Clear tracked matches individually, then reset tracking
+        local old = window_matches[win] or {}
+        for _, match_id in pairs(old) do
+          pcall(vim.fn.matchdelete, match_id)
+        end
+        window_matches[win] = nil
       end
     end,
   })
