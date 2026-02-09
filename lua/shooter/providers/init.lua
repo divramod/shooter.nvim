@@ -1,5 +1,5 @@
 -- AI provider abstraction for shooter.nvim
--- Detects and manages different AI backends (Claude, opencode, etc.)
+-- Detects and manages different AI backends (Claude, OpenCode, Codex, Gemini, etc.)
 
 local utils = require('shooter.utils')
 
@@ -115,9 +115,13 @@ end
 local function load_providers()
   local claude = require('shooter.providers.claude')
   local opencode = require('shooter.providers.opencode')
+  local codex = require('shooter.providers.codex')
+  local gemini = require('shooter.providers.gemini')
 
   M.register('claude', claude)
   M.register('opencode', opencode)
+  M.register('codex', codex)
+  M.register('gemini', gemini)
 end
 
 load_providers()

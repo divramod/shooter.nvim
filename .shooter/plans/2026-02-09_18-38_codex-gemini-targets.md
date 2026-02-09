@@ -23,4 +23,13 @@ Enable Shooter to detect and target tmux panes running Codex and Gemini CLIs, in
 - No breakage in existing `claude`/`opencode` flows.
 
 ## Results
-- Pending implementation.
+- Added provider modules: `codex`, `gemini`.
+- Registered both providers in `lua/shooter/providers/init.lua`.
+- Updated tmux creation/provider prompt flow to include Codex and Gemini commands.
+- Updated AI detection messaging to be provider-generic.
+- Extended provider tests and verified:
+  - `nvim --headless -c "PlenaryBustedDirectory tests/providers/ {minimal_init = 'tests/minimal_init.lua'}" -c qa`
+  - Result: 10 passing, 0 failing in provider suite.
+- Additional tmux suite run showed unrelated pre-existing failures in:
+  - `tests/tmux/renumber_helper_spec.lua`
+  - `tests/tmux/create_spec.lua`

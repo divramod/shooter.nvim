@@ -1,5 +1,5 @@
 -- Tmux pane creation for shooter.nvim
--- Auto-create tmux panes with AI (Claude or opencode)
+-- Auto-create tmux panes with AI providers
 
 local utils = require('shooter.utils')
 local detect = require('shooter.tmux.detect')
@@ -7,11 +7,24 @@ local shell = require('shooter.tmux.shell')
 
 local M = {}
 
+local PROVIDER_DISPLAY_NAMES = {
+  claude = 'Claude',
+  opencode = 'OpenCode',
+  codex = 'Codex',
+  gemini = 'Gemini',
+}
+
 -- Provider commands (continue session + skip permissions where available)
 local PROVIDER_CMDS = {
   claude = 'claude -c --dangerously-skip-permissions',
   opencode = 'opencode -c',
+  codex = 'codex',
+  gemini = 'gemini',
 }
+
+local function provider_display_name(provider_name)
+  return PROVIDER_DISPLAY_NAMES[provider_name] or provider_name
+end
 
 -- Start AI in an existing shell pane
 -- Sends Ctrl-C first to handle vi mode and clear any pending input
@@ -111,7 +124,7 @@ M.wait_for_claude = M.wait_for_ai
 -- Start AI in a pane and wait for it to be ready
 function M.start_and_wait_for_ai(pane_id, provider_name, message)
   provider_name = provider_name or 'claude'
-  local display_name = provider_name == 'opencode' and 'OpenCode' or 'Claude'
+  local display_name = provider_display_name(provider_name)
   utils.echo(message or string.format("Starting %s...", display_name))
   M.start_ai_in_pane(pane_id, provider_name)
   utils.echo(string.format("Waiting for %s to start...", display_name))
@@ -131,15 +144,17 @@ function M.start_and_wait_for_claude(pane_id, message)
 end
 
 -- Prompt user to select which AI provider to start
--- Returns provider name ('claude' or 'opencode') or nil if cancelled
+-- Returns provider name ('claude', 'opencode', 'codex', 'gemini') or nil if cancelled
 function M.prompt_provider_selection()
   local choice = vim.fn.confirm(
     'No AI session found. Which AI do you want to start?',
-    '&Claude\n&OpenCode\n&Cancel',
+    '&Claude\n&OpenCode\n&Codex\n&Gemini\n&Cancel',
     1
   )
   if choice == 1 then return 'claude' end
   if choice == 2 then return 'opencode' end
+  if choice == 3 then return 'codex' end
+  if choice == 4 then return 'gemini' end
   return nil
 end
 
@@ -150,7 +165,7 @@ function M.start_ai_with_prompt(pane_index)
     return nil, "Cancelled"
   end
 
-  local display_name = provider == 'opencode' and 'OpenCode' or 'Claude'
+  local display_name = provider_display_name(provider)
   local shell_pane = shell.find_shell_pane()
 
   if shell_pane then

@@ -1,5 +1,5 @@
 -- Tmux pane detection for shooter.nvim
--- Find and validate tmux panes running AI (Claude, opencode, etc.)
+-- Find and validate tmux panes running AI providers
 
 local utils = require('shooter.utils')
 local config = require('shooter.config')
@@ -116,7 +116,7 @@ function M.find_ai_pane(pane_index)
   end
 
   if #ai_panes == 0 then
-    return nil, "No tmux pane with AI (Claude/opencode) found in current window"
+    return nil, "No tmux pane with supported AI provider found in current window"
   else
     return nil, string.format("No AI pane #%d found (only %d pane(s) available)", pane_index, #ai_panes)
   end

@@ -2,6 +2,8 @@
 
 This directory contains all shooter configuration, project data, and AI agent context for this repository.
 
+Last updated: 2026-02-09.
+
 ## Files
 
 | File | Purpose | Owner |

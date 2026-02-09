@@ -18,23 +18,45 @@ describe('providers', function()
       assert.equals('OpenCode', opencode.display_name)
       assert.equals('opencode', opencode.process_pattern)
     end)
+
+    it('should have codex provider registered', function()
+      local codex = providers.get_provider('codex')
+      assert.is_not_nil(codex)
+      assert.equals('codex', codex.name)
+      assert.equals('Codex', codex.display_name)
+      assert.equals('codex', codex.process_pattern)
+    end)
+
+    it('should have gemini provider registered', function()
+      local gemini = providers.get_provider('gemini')
+      assert.is_not_nil(gemini)
+      assert.equals('gemini', gemini.name)
+      assert.equals('Gemini', gemini.display_name)
+      assert.equals('gemini', gemini.process_pattern)
+    end)
   end)
 
   describe('get_all_process_patterns', function()
     it('should return patterns for all registered providers', function()
       local patterns = providers.get_all_process_patterns()
       assert.is_table(patterns)
-      assert.is_true(#patterns >= 2)  -- At least claude and opencode
+      assert.is_true(#patterns >= 4)  -- At least claude, opencode, codex, gemini
 
       local has_claude = false
       local has_opencode = false
+      local has_codex = false
+      local has_gemini = false
       for _, pattern in ipairs(patterns) do
         if pattern == 'claude' then has_claude = true end
         if pattern == 'opencode' then has_opencode = true end
+        if pattern == 'codex' then has_codex = true end
+        if pattern == 'gemini' then has_gemini = true end
       end
 
       assert.is_true(has_claude, 'Should have claude pattern')
       assert.is_true(has_opencode, 'Should have opencode pattern')
+      assert.is_true(has_codex, 'Should have codex pattern')
+      assert.is_true(has_gemini, 'Should have gemini pattern')
     end)
   end)
 
@@ -65,6 +87,26 @@ describe('providers', function()
       assert.is_function(opencode.build_multishot_message)
       assert.is_function(opencode.get_create_command)
       assert.is_function(opencode.supports_auto_create)
+    end)
+
+    it('codex provider should have required methods', function()
+      local codex = providers.get_provider('codex')
+      assert.is_function(codex.send_file_reference)
+      assert.is_function(codex.send_text)
+      assert.is_function(codex.build_shot_message)
+      assert.is_function(codex.build_multishot_message)
+      assert.is_function(codex.get_create_command)
+      assert.is_function(codex.supports_auto_create)
+    end)
+
+    it('gemini provider should have required methods', function()
+      local gemini = providers.get_provider('gemini')
+      assert.is_function(gemini.send_file_reference)
+      assert.is_function(gemini.send_text)
+      assert.is_function(gemini.build_shot_message)
+      assert.is_function(gemini.build_multishot_message)
+      assert.is_function(gemini.get_create_command)
+      assert.is_function(gemini.supports_auto_create)
     end)
   end)
 end)
