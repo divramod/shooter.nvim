@@ -11,12 +11,12 @@ describe('core.ext_config', function()
     end)
 
     it('should parse nested keys', function()
-      local yaml = 'file:\n  first_shot_of_the_day:\n    color_bg: "#e6d5b8"\n    debounce_in_ms: 500'
+      local yaml = 'file:\n  first_shot_of_the_day:\n    color_bg: "#e6d5b8"\n    color_fg: "#555555"'
       local result = ext_config.parse_yaml(yaml)
       assert.is_table(result.file)
       assert.is_table(result.file.first_shot_of_the_day)
       assert.equals('#e6d5b8', result.file.first_shot_of_the_day.color_bg)
-      assert.equals(500, result.file.first_shot_of_the_day.debounce_in_ms)
+      assert.equals('#555555', result.file.first_shot_of_the_day.color_fg)
     end)
 
     it('should handle booleans', function()
@@ -56,25 +56,19 @@ describe('core.ext_config', function()
     it('should parse the full new config schema', function()
       local yaml = 'file:\n'
         .. '  first_shot_of_the_day:\n'
-        .. '    debounce_in_ms: 300\n'
         .. '    color_bg: "#FF0000"\n'
         .. '    color_fg: "#FF0011"\n'
         .. '  open_shots:\n'
-        .. '    debounce_in_ms: 400\n'
         .. '    color_bg: "#00FF00"\n'
         .. '    color_fg: "#001100"\n'
         .. '  closed_shots:\n'
-        .. '    debounce_in_ms: 200\n'
         .. '    color_bg: "#0000FF"\n'
         .. '    color_fg: "#000011"'
       local result = ext_config.parse_yaml(yaml)
-      assert.equals(300, result.file.first_shot_of_the_day.debounce_in_ms)
       assert.equals('#FF0000', result.file.first_shot_of_the_day.color_bg)
       assert.equals('#FF0011', result.file.first_shot_of_the_day.color_fg)
-      assert.equals(400, result.file.open_shots.debounce_in_ms)
       assert.equals('#00FF00', result.file.open_shots.color_bg)
       assert.equals('#001100', result.file.open_shots.color_fg)
-      assert.equals(200, result.file.closed_shots.debounce_in_ms)
       assert.equals('#0000FF', result.file.closed_shots.color_bg)
       assert.equals('#000011', result.file.closed_shots.color_fg)
     end)
@@ -147,11 +141,6 @@ describe('core.ext_config', function()
       assert.equals('#555555', color)
     end)
 
-    it('should return default debounce', function()
-      local debounce = ext_config.get('file.first_shot_of_the_day.debounce_in_ms')
-      assert.equals(500, debounce)
-    end)
-
     it('should return default open shots bg color', function()
       local color = ext_config.get('file.open_shots.color_bg')
       assert.equals('#ffb347', color)
@@ -190,22 +179,16 @@ describe('core.ext_config', function()
       assert.equals('#555555', ext_config.DEFAULTS.file.first_shot_of_the_day.color_fg)
     end)
 
-    it('should have file.first_shot_of_the_day.debounce_in_ms', function()
-      assert.equals(500, ext_config.DEFAULTS.file.first_shot_of_the_day.debounce_in_ms)
-    end)
-
     it('should have file.open_shots', function()
       assert.is_table(ext_config.DEFAULTS.file.open_shots)
       assert.equals('#ffb347', ext_config.DEFAULTS.file.open_shots.color_bg)
       assert.equals('#000000', ext_config.DEFAULTS.file.open_shots.color_fg)
-      assert.equals(500, ext_config.DEFAULTS.file.open_shots.debounce_in_ms)
     end)
 
     it('should have file.closed_shots', function()
       assert.is_table(ext_config.DEFAULTS.file.closed_shots)
       assert.equals('#c8e6c9', ext_config.DEFAULTS.file.closed_shots.color_bg)
       assert.equals('#555555', ext_config.DEFAULTS.file.closed_shots.color_fg)
-      assert.equals(500, ext_config.DEFAULTS.file.closed_shots.debounce_in_ms)
     end)
   end)
 

@@ -203,8 +203,7 @@ function M.setup()
     end,
   })
 
-  -- Reapply when text changes (debounced to avoid lag while typing)
-  local pending_syntax = {}
+  -- Reapply when text changes (immediate — extmarks are atomic, no flicker)
   vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
     group = group,
     pattern = '*.md',
@@ -212,29 +211,7 @@ function M.setup()
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
       if ft == 'markdown' and is_prompts_file(filepath) then
-        if pending_syntax[ev.buf] then return end
-        pending_syntax[ev.buf] = true
-        local debounce = 500
-        local eok, ext_config = pcall(require, 'shooter.core.ext_config')
-        if eok then debounce = ext_config.get('file.first_shot_of_the_day.debounce_in_ms') or debounce end
-        vim.defer_fn(function()
-          pending_syntax[ev.buf] = nil
-          if not vim.api.nvim_buf_is_valid(ev.buf) then return end
-          apply_syntax(ev.buf)
-        end, debounce)
-      end
-    end,
-  })
-
-  -- Cancel pending debounce when leaving a shotfile
-  -- (extmarks are buffer-local and persist — no cleanup needed)
-  vim.api.nvim_create_autocmd('BufLeave', {
-    group = group,
-    pattern = '*.md',
-    callback = function(ev)
-      local filepath = vim.api.nvim_buf_get_name(ev.buf)
-      if is_prompts_file(filepath) then
-        pending_syntax[ev.buf] = nil
+        apply_syntax(ev.buf)
       end
     end,
   })

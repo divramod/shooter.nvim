@@ -10,17 +10,14 @@ local M = {}
 M.DEFAULTS = {
   file = {
     first_shot_of_the_day = {
-      debounce_in_ms = 500,
       color_bg = '#e6d5b8',
       color_fg = '#555555',
     },
     open_shots = {
-      debounce_in_ms = 500,
       color_bg = '#ffb347',
       color_fg = '#000000',
     },
     closed_shots = {
-      debounce_in_ms = 500,
       color_bg = '#c8e6c9',
       color_fg = '#555555',
     },
