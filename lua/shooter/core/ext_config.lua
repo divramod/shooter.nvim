@@ -183,26 +183,30 @@ end
 function M.load()
   if _cache then return _cache end
 
-  -- Run migration on first access
-  M.migrate()
-  M.ensure_global_config()
+  -- Run migration on first access (pcall: safe during early startup)
+  pcall(M.migrate)
+  pcall(M.ensure_global_config)
 
   local merged = vim.deepcopy(M.DEFAULTS)
 
   -- Layer 1: global YAML
-  local global_content = utils.read_file(M.global_config_path())
-  if global_content then
-    local global_parsed = M.parse_yaml(global_content)
-    merged = vim.tbl_deep_extend('force', merged, global_parsed)
+  local ok, global_content = pcall(utils.read_file, M.global_config_path())
+  if ok and global_content then
+    local parse_ok, global_parsed = pcall(M.parse_yaml, global_content)
+    if parse_ok and type(global_parsed) == 'table' then
+      merged = vim.tbl_deep_extend('force', merged, global_parsed)
+    end
   end
 
   -- Layer 2: project-local YAML
-  local local_path = M.local_config_path()
-  if local_path then
-    local local_content = utils.read_file(local_path)
-    if local_content then
-      local local_parsed = M.parse_yaml(local_content)
-      merged = vim.tbl_deep_extend('force', merged, local_parsed)
+  local lok, local_path = pcall(M.local_config_path)
+  if lok and local_path then
+    local rok, local_content = pcall(utils.read_file, local_path)
+    if rok and local_content then
+      local parse_ok, local_parsed = pcall(M.parse_yaml, local_content)
+      if parse_ok and type(local_parsed) == 'table' then
+        merged = vim.tbl_deep_extend('force', merged, local_parsed)
+      end
     end
   end
 

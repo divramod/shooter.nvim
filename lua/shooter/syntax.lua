@@ -26,8 +26,11 @@ local function define_highlights()
   -- Light brown for the first executed shot of each day (day separator)
   -- Fallback chain: setup() config > ext_config YAML > hardcoded default
   local day_marker = config.get('highlight.day_marker') or {}
-  local ext_config = require('shooter.core.ext_config')
-  local day_bg = day_marker.bg or ext_config.get('file.first_shot_color') or '#e6d5b8'
+  local day_bg = day_marker.bg or '#e6d5b8'
+  local ok, ext_config = pcall(require, 'shooter.core.ext_config')
+  if ok then
+    day_bg = day_marker.bg or ext_config.get('file.first_shot_color') or day_bg
+  end
   vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
     fg = day_marker.fg or '#555555',
     bg = day_bg,
