@@ -1,17 +1,18 @@
 # shotfile
 
-## shot 59
-i have a problem in the ShooterLast command.
-it is not reliably opening the last edited shotfile
-
-
-## shot 20
+## shot 21
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 19
+## shot 20
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 19 (2026-02-09 05:06:46) @shot-19-20260209_050646
+i have a problem in the ShooterLast command.
+it is not reliably opening the last edited shotfile
+sometimes it opens another one, which i am quite sure, i have not changed as last one.
+can you fix it?
 
 ## x shot 18 (2026-02-08 16:48:21) @shot-18-20260208_164821
 test
