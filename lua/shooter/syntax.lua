@@ -24,16 +24,10 @@ local function define_highlights()
   })
 
   -- Light brown for the first executed shot of each day (day separator)
-  -- Fallback chain: setup() config > ext_config YAML > hardcoded default
   local day_marker = config.get('highlight.day_marker') or {}
-  local day_bg = day_marker.bg or '#e6d5b8'
-  local ok, ext_config = pcall(require, 'shooter.core.ext_config')
-  if ok then
-    day_bg = day_marker.bg or ext_config.get('file.first_shot_color') or day_bg
-  end
   vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
     fg = day_marker.fg or '#555555',
-    bg = day_bg,
+    bg = day_marker.bg or '#e6d5b8',
     bold = day_marker.bold or false,
   })
 end
@@ -219,8 +213,9 @@ function M.setup()
       if ft == 'markdown' and is_prompts_file(filepath) then
         if pending_syntax[ev.buf] then return end
         pending_syntax[ev.buf] = true
-        local ext_config = require('shooter.core.ext_config')
-        local debounce = ext_config.get('file.first_shot_debounce_in_ms') or 500
+        local debounce = 500
+        local eok, ext_config = pcall(require, 'shooter.core.ext_config')
+        if eok then debounce = ext_config.get('file.first_shot_debounce_in_ms') or debounce end
         vim.defer_fn(function()
           pending_syntax[ev.buf] = nil
           if vim.api.nvim_buf_is_valid(ev.buf) then
@@ -266,8 +261,23 @@ function M.setup()
 end
 
 -- Reapply syntax highlighting to all loaded shotfile buffers
+-- Also applies ext_config YAML overrides for day marker color
 function M.reapply_all()
   define_highlights()
+  -- Apply ext_config color override on top of defaults
+  local eok, ext_config = pcall(require, 'shooter.core.ext_config')
+  if eok then
+    local color = ext_config.get('file.first_shot_color')
+    if type(color) == 'string' then
+      local config = require('shooter.config')
+      local day_marker = config.get('highlight.day_marker') or {}
+      vim.api.nvim_set_hl(0, 'ShooterDayMarker', {
+        fg = day_marker.fg or '#555555',
+        bg = day_marker.bg or color,
+        bold = day_marker.bold or false,
+      })
+    end
+  end
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr)
