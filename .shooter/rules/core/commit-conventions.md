@@ -9,6 +9,7 @@ type(scope): description (vX.Y.Z)
 
 Optional body explaining WHY, not WHAT.
 
+Beads: <bead-id-1>, <bead-id-2>
 Co-Authored-By: <name> <email>
 ```
 
@@ -50,7 +51,27 @@ Co-Authored-By: <name> <email>
 ## Trailers
 
 - **Co-Authored-By** (required for AI commits): `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
+- **Beads** (required when working on beads): `Beads: sho-abc.1, sho-abc.2`
 - Place trailers after the body, separated by a blank line
+
+## Bead References
+
+Every commit related to bead work MUST include a `Beads:` trailer:
+
+- Format: `Beads: sho-abc.1, sho-abc.2`
+- Comma-separated list of bead IDs that the commit addresses
+- Place after the body, alongside `Co-Authored-By`
+- If the commit is not related to any bead (e.g., standalone chore), omit the trailer
+
+Example:
+```
+feat(auth): add JWT validation (v0.2.1)
+
+Implement RS256 token validation with refresh support.
+
+Beads: sho-abc.1
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
 
 ## Version Bumping
 
@@ -102,14 +123,28 @@ git add VERSION package.json <other-files>
 The VERSION file remains the source of truth; package.json is kept in sync.
 
 **Rust projects:**
+
 For Rust projects, also update the version in `Cargo.toml`:
+
+```bash
+# 1. Bump VERSION file
+echo "0.2.1" > VERSION
+
+# 2. Update Cargo.toml version
+sed -i '' 's/^version = ".*"/version = "0.2.1"/' Cargo.toml
+
+# 3. Stage both files
+git add VERSION Cargo.toml <other-files>
+```
+
+The VERSION file remains the source of truth; Cargo.toml is kept in sync.
 
 ## Release Commits
 
 Release commits follow a special format. Minor and major bumps are only done via releases:
 
 - Format: `chore(release): vX.Y.Z` (no Co-Authored-By — script-driven)
-- Created by `shooter:release` skill, never manually
+- Created by `sho:prj-release` skill, never manually
 - AI agents continue using patch bumps for regular work commits
 - Release commits include: VERSION bump, CHANGELOG entry, version file sync
 - A git tag `vX.Y.Z` is created alongside each release commit

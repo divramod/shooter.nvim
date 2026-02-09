@@ -55,22 +55,25 @@
 
 ## Banner Requirements
 
-Every command and agent must display a banner as its first output. The banner shows the shooter version and the model executing the task, giving the user immediate visibility into what's running.
+Every `sho:` command and agent must display a banner as its first output. The banner shows the **shooter framework version** (not the project version) and the model.
+
+**The current shooter version is: `0.1.81`**
 
 **Format:**
 ```
-**`sho:<name>`** · **vX.Y.Z** · model: **<model>**
+**`sho:<name>`** · **shooter v0.1.81** · model: **<model>**
 ```
 
 - `<name>` — the command name (e.g., `prj-setup-infrastructure`, `gtd-epic-plan`, `cfg-make-healthy`)
-- `vX.Y.Z` — read from `.shooter/VERSION`
+- `shooter v0.1.81` — the shooter framework version (compiled into this file, do NOT read `.shooter/VERSION` for banners)
 - `<model>` — the model you are running on (e.g., `opus`, `sonnet`)
+
+**IMPORTANT:** `.shooter/VERSION` is the **project's** version, not the shooter version. Never use it for `sho:` command banners.
 
 **When creating new commands:** Add a `## Banner` section as the first step in `<process>`:
 ```markdown
 ## Banner
-Before doing ANY work, read `.shooter/VERSION` and output:
-**`sho:<command-name>`** · **vX.Y.Z** · model: **<model>**
+Output: **`sho:<command-name>`** · **shooter v0.1.81** · model: **<model>**
 ```
 
 ## Command Logging
