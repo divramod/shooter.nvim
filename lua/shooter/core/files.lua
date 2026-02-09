@@ -6,6 +6,40 @@ local config = require('shooter.config')
 
 local M = {}
 
+-- Last shotfile tracking (in-memory + persisted to disk)
+local _last_shotfile = nil
+
+local function _persist_last_shotfile(filepath)
+  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error ~= 0 or #git_root == 0 then return end
+  local storage = require('shooter.session.storage')
+  local slug = storage.get_repo_slug(git_root[1])
+  local dir = vim.fn.expand('~/.config/shooter.nvim')
+  vim.fn.mkdir(dir, 'p')
+  local f = io.open(dir .. '/last-shotfile-' .. slug:gsub('/', '_'), 'w')
+  if f then f:write(filepath); f:close() end
+end
+
+local function _load_last_shotfile()
+  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error ~= 0 or #git_root == 0 then return nil end
+  local storage = require('shooter.session.storage')
+  local slug = storage.get_repo_slug(git_root[1])
+  local dir = vim.fn.expand('~/.config/shooter.nvim')
+  local f = io.open(dir .. '/last-shotfile-' .. slug:gsub('/', '_'), 'r')
+  if f then
+    local path = f:read('*l'); f:close()
+    if path and vim.fn.filereadable(path) == 1 then return path end
+  end
+  return nil
+end
+
+-- Called by syntax.lua on BufEnter for shotfiles
+function M.track_last_shotfile(filepath)
+  _last_shotfile = filepath
+  _persist_last_shotfile(filepath)
+end
+
 -- Helper: Get git root directory
 function M.get_git_root()
   local result = vim.fn.systemlist('git rev-parse --show-toplevel')
@@ -181,8 +215,21 @@ function M.create_file(title, folder, initial_content, project)
 end
 
 -- Find last edited shooter file (project-aware)
--- project = nil means root level, string means specific project
+-- Uses tracked shotfile (set by BufEnter autocmd) first, falls back to ls -t
 function M.find_last_file(project)
+  -- Primary: return Neovim-tracked last shotfile
+  if _last_shotfile and vim.fn.filereadable(_last_shotfile) == 1 then
+    return _last_shotfile
+  end
+
+  -- Secondary: check persisted state (survives Neovim restarts)
+  local persisted = _load_last_shotfile()
+  if persisted then
+    _last_shotfile = persisted
+    return persisted
+  end
+
+  -- Fallback: filesystem mtime (unreliable but better than nothing on first use)
   local prompts_dir = M.get_prompts_dir(project)
 
   if not utils.dir_exists(prompts_dir) then

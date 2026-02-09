@@ -181,6 +181,7 @@ function M.setup()
       local ft = vim.bo[ev.buf].filetype
       -- Only apply to markdown files in .shooter/shotfiles (not oil, not other filetypes)
       if ft == 'markdown' and is_prompts_file(filepath) then
+        require('shooter.core.files').track_last_shotfile(filepath)
         apply_syntax(ev.buf)
         show_shotfile_info(ev.buf)
       else
