@@ -62,10 +62,13 @@ local day_marker_enabled = true
 -- Forward declaration
 local apply_syntax
 
+-- Match fingerprints per window to avoid flickering on unchanged content
+local match_fingerprints = {}
+
 -- Apply syntax highlighting to current buffer
+-- Skips clear+reapply if matches haven't changed (prevents flicker)
 apply_syntax = function(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-  pcall(vim.fn.clearmatches)
 
   local config = require('shooter.config')
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -103,17 +106,36 @@ apply_syntax = function(bufnr)
     day_first_lines[line_num] = true
   end
 
-  -- Highlight: open shots (orange), latest executed (green), day markers (light brown)
+  -- Build match list and fingerprint to detect changes
+  local matches = {}
   for i, line in ipairs(lines) do
     if not in_code[i] then
       if i == latest_done_line then
-        vim.fn.matchaddpos('ShooterDoneShot', { { i } }, 10)
+        table.insert(matches, { i, 'ShooterDoneShot', 10 })
       elseif day_first_lines[i] then
-        vim.fn.matchaddpos('ShooterDayMarker', { { i } }, 5)
+        table.insert(matches, { i, 'ShooterDayMarker', 5 })
       elseif line:match('^##%s+shot%s+[%d%?]+') then
-        vim.fn.matchaddpos('ShooterOpenShot', { { i } }, -1)
+        table.insert(matches, { i, 'ShooterOpenShot', -1 })
       end
     end
+  end
+
+  -- Fingerprint: compact string of line:group pairs
+  local parts = {}
+  for _, m in ipairs(matches) do
+    parts[#parts + 1] = m[1] .. ':' .. m[2]
+  end
+  local fingerprint = table.concat(parts, ',')
+
+  -- Skip clear+reapply if matches haven't changed (prevents flicker)
+  local win = vim.api.nvim_get_current_win()
+  if match_fingerprints[win] == fingerprint then return end
+  match_fingerprints[win] = fingerprint
+
+  -- Apply matches
+  pcall(vim.fn.clearmatches)
+  for _, m in ipairs(matches) do
+    vim.fn.matchaddpos(m[2], { { m[1] } }, m[3])
   end
 end
 
@@ -241,6 +263,8 @@ function M.setup()
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       if is_prompts_file(filepath) then
         pending_syntax[ev.buf] = nil  -- cancel pending debounce
+        local win = vim.api.nvim_get_current_win()
+        match_fingerprints[win] = nil -- reset so re-entering reapplies
         pcall(vim.fn.clearmatches)    -- clear window-local matches
       end
     end,
