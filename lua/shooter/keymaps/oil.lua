@@ -73,6 +73,27 @@ function M.setup_oil_keymaps(bufnr)
   local prefix = get_prefix()
   local opts = { buffer = bufnr, noremap = true, silent = true }
 
+  -- Disable shot-modifying global keymaps in Oil (they assume a shotfile buffer)
+  local disabled = {
+    'n', '.', 'y',                                          -- root-level shot ops
+    'ss', 'sS', 'sd', 'sD', 's.', 'sm', 'sM', 'sy',      -- shot namespace
+    'se', 'sE', 'sp', 'sr', 'sC', 'sL', 'su', 'sv',      -- shot namespace cont.
+    's]', 's[', 's}', 's{',                                 -- shot navigation
+    ']', '[', '}', '{',                                      -- root navigation
+  }
+  for _, key in ipairs(disabled) do
+    vim.keymap.set('n', prefix .. key, '<Nop>', opts)
+  end
+  -- Disable send/queue keys (1-4) and double-prefix send-all
+  for i = 1, 4 do
+    vim.keymap.set('n', prefix .. tostring(i), '<Nop>', opts)
+    vim.keymap.set('v', prefix .. tostring(i), '<Nop>', opts)
+    vim.keymap.set('n', prefix .. 's' .. tostring(i), '<Nop>', opts)
+    vim.keymap.set('n', prefix .. 'sR' .. tostring(i), '<Nop>', opts)
+    vim.keymap.set('n', prefix .. 'sq' .. tostring(i), '<Nop>', opts)
+    vim.keymap.set('n', prefix .. prefix .. tostring(i), '<Nop>', opts)
+  end
+
   local function map(lhs, rhs, desc)
     vim.keymap.set('n', prefix .. lhs, rhs, vim.tbl_extend('force', opts, { desc = desc }))
   end
