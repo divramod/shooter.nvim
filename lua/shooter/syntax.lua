@@ -56,8 +56,8 @@ local function build_code_block_map(lines)
   return map
 end
 
--- Day marker coloring toggle (off by default for performance)
-local day_marker_enabled = false
+-- Day marker coloring toggle (enabled by default, O(n) performance is fine)
+local day_marker_enabled = true
 
 -- Forward declaration
 local apply_syntax
@@ -213,7 +213,7 @@ function M.setup()
           if vim.api.nvim_buf_is_valid(ev.buf) then
             apply_syntax(ev.buf)
           end
-        end, 300)
+        end, 1000)
       end
     end,
   })
