@@ -10,7 +10,9 @@
     "./rules/core/release-workflow.md",
     "./rules/core/security.md",
     "./rules/core/fork-conventions.md",
+    "./rules/core/naming-conventions.md",
     "./glossary.md",
     "./themes.json",
+    "./codebase/_project/SUMMARY.md",
     "./context.md"
 ]

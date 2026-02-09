@@ -1,5 +1,9 @@
 # shotfile
 
+## shot 20
+when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
+when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
+
 ## shot 19
 dd does nothing now in the shotfile picker.
 please acivate it and 

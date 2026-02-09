@@ -1,12 +1,24 @@
 # shot
 
-## shot 54
+## shot 56
 
 
-## shot 53
+## shot 55
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
+
+## x shot 54 (2026-02-09 04:33:35) @shot-54-20260209_043335
+so you fixed the O=N2 problems?
+
+## x shot 53 (2026-02-09 04:21:06) @shot-53-20260209_042106
+i realized, that big shotfiles are beeing really slow, when i write.
+sometimes the text i have written, is not showing up for a second and then it appears. 
+could that be because of our colring for the first shot of every day and the latest done shot?
+if yes, can you optimize the coloring function, so that it does not cause this delay?
+also, can you disable the coloring for the first shot of the day by default and create a command 
+ShooterFileToggleFirstShotOfDayColoring, which toggles the coloring for the first shot of the day, so that i can enable it, when i want to have it and disable it, when i want to write without delay?
+it should map then to < >fcf
 
 ## x shot 52 (2026-02-08 05:40:47) @shot-52-20260208_054048
 i want you to go through the whole code of the shooter plugin and check, where there is a reference to create or put or read something from <repo>/.shooter.nvim 
@@ -54,17 +66,17 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
+the command < >. should also call the renumber function, after is marked a shot as done
+
+## x shot 44 (2026-02-07 18:13:22)
 the < >sy command should also mark the shot as done and call the renumber function
 i call this command usually, when i want to manually paste a shot to a agent cli
 
-## x shot 44 (2026-02-07 18:13:22)
-selecting multiple shot pickers and then hitting 1 to send them does not 
-
 ## x shot 43 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
+color the background color of the last shot made green
 
 ## x shot 42 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+selecting multiple shot pickers and then hitting 1 to send them does not 
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
