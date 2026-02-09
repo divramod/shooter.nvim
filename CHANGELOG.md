@@ -9,5 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - Send shot path without @ (codex)
+- Send shot path without @ (gemini)
 
 - Resolve external @refs (codex)
