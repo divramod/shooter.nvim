@@ -1,0 +1,40 @@
+# Shooter Rules Configuration Template
+#
+# This file defines which rules and context files are compiled into agent instruction files
+# (CLAUDE.md, AGENTS.md, GEMINI.md). It replaces the legacy rules.json format.
+#
+# Structure:
+# - core_rules: Absolute paths to core framework rules (from centralized shooter source)
+# - context_files: Relative paths to project-specific context (from .shooter/ directory)
+# - excluded: Rules to skip during compilation (for customization)
+
+# Core framework rules (absolute paths to centralized source)
+# These rules are shared across all shooter-enabled projects
+core_rules:
+  - ~/.config/shooter/_source/ai/rules/core/instructions-for-agents.md
+  - ~/.config/shooter/_source/ai/rules/core/shot-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/beads-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/commit-conventions.md
+  - ~/.config/shooter/_source/ai/rules/core/quality-gates.md
+  - ~/.config/shooter/_source/ai/rules/core/artifact-persistence.md
+  - ~/.config/shooter/_source/ai/rules/core/boundaries.md
+  - ~/.config/shooter/_source/ai/rules/core/deterministic-execution.md
+  - ~/.config/shooter/_source/ai/rules/core/release-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/security.md
+  - ~/.config/shooter/_source/ai/rules/core/fork-conventions.md
+  - ~/.config/shooter/_source/ai/rules/core/naming-conventions.md
+  - ~/.config/shooter/_source/ai/rules/core/compaction-resilience.md
+  - ~/.config/shooter/_source/ai/rules/core/glossary.md
+
+# Project-specific context files (relative paths from .shooter/ directory)
+# These files provide project-specific information and preferences
+context_files:
+  glossary: './glossary.md'
+  themes: './themes.json'
+  codebase: './codebase/_project/SUMMARY.md'
+  context: './context.md'
+
+# Excluded rules (rules to skip during compilation)
+# Add absolute paths of rules you want to exclude from your project
+# Example: '~/.config/shooter/_source/ai/rules/core/fork-conventions.md'
+excluded: []
