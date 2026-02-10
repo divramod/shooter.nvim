@@ -19,7 +19,7 @@ function M.send_file_reference(pane_id, filepath)
     return false, "No filepath provided"
   end
 
-  local msg = 'read file ' .. filepath .. ' for instructions'
+  local msg = 'run cat ' .. filepath .. ' and follow the instructions in that file'
 
   local cmd = string.format(
     "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '%s' && sleep 0.1 && tmux send-keys -t %s Enter",

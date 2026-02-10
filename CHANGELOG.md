@@ -16,5 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Add Gemini-specific @filepath send with Escape+timing (gemini)
 - Send filepath as plain text instruction (gemini)
 - Send 'read file ... for instructions' prompt (gemini)
+- Use 'run cat' to read shots outside workspace (gemini)
 
 - Resolve external @refs (codex)
