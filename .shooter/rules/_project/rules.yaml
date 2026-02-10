@@ -1,19 +1,22 @@
 core_rules:
   - ~/.config/shooter/_source/ai/rules/core/instructions-for-agents.md
-  - ~/.config/shooter/_source/ai/rules/core/shot-workflow.md
-  - ~/.config/shooter/_source/ai/rules/core/beads-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/shot-conventions.md
+  - ~/.config/shooter/_source/ai/rules/core/beads-conventions.md
   - ~/.config/shooter/_source/ai/rules/core/commit-conventions.md
   - ~/.config/shooter/_source/ai/rules/core/quality-gates.md
   - ~/.config/shooter/_source/ai/rules/core/artifact-persistence.md
   - ~/.config/shooter/_source/ai/rules/core/boundaries.md
   - ~/.config/shooter/_source/ai/rules/core/deterministic-execution.md
-  - ~/.config/shooter/_source/ai/rules/core/release-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/release-conventions.md
   - ~/.config/shooter/_source/ai/rules/core/security.md
   - ~/.config/shooter/_source/ai/rules/core/fork-conventions.md
   - ~/.config/shooter/_source/ai/rules/core/naming-conventions.md
   - ~/.config/shooter/_source/ai/rules/core/compaction-resilience.md
   - ~/.config/shooter/_source/ai/rules/core/error-culture.md
   - ~/.config/shooter/_source/ai/rules/core/glossary.md
+  - ~/.config/shooter/_source/ai/rules/core/shot-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/beads-workflow.md
+  - ~/.config/shooter/_source/ai/rules/core/release-workflow.md
 context_files:
   glossary: ./glossary.md
   themes: ./themes.json
