@@ -8,6 +8,8 @@ shooter:
   - error:regression
   - error:silent-failure
   - error:test-gap
+  - fork:pr-created
+  - fork:pr-merged
   - meta:concern
   - meta:history:code
   - meta:history:git
