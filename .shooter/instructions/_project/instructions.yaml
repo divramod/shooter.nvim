@@ -1,0 +1,36 @@
+# Shooter Instructions Configuration Template
+#
+# This file defines which instructions and context files are compiled into agent instruction files
+# (CLAUDE.md, AGENTS.md, GEMINI.md).
+#
+# Structure:
+# - shooter: Absolute paths to core framework instructions (from centralized shooter source)
+# - project: Relative paths to project-specific context (from this file's directory)
+# - excluded: Instructions to skip during compilation (for customization)
+
+# Excluded instructions (instructions to skip during compilation)
+# Add absolute paths of instructions you want to exclude from your project
+# Example: '~/.config/shooter/_source/ai/instructions/security.md'
+excluded: []
+
+# Project-specific context files (relative paths from .shooter/ directory)
+# These files provide project-specific information and preferences
+project:
+  - glossary.md
+  - ./themes.yaml
+  - ./context.md
+
+# Core framework instructions (absolute paths to centralized source)
+# These instructions are shared across all shooter-enabled projects
+shooter:
+  - ~/.config/shooter/_source/ai/instructions/instructions-for-agents.md
+  - ~/.config/shooter/_source/ai/instructions/shot-conventions.md
+  - ~/.config/shooter/_source/ai/instructions/beads-conventions.md
+  - ~/.config/shooter/_source/ai/instructions/commit-conventions.md
+  - ~/.config/shooter/_source/ai/instructions/quality-gates.md
+  - ~/.config/shooter/_source/ai/instructions/artifact-persistence.md
+  - ~/.config/shooter/_source/ai/instructions/boundaries.md
+  - ~/.config/shooter/_source/ai/instructions/deterministic-execution.md
+  - ~/.config/shooter/_source/ai/instructions/release-conventions.md
+  - ~/.config/shooter/_source/ai/instructions/security.md
+  - ~/.config/shooter/_source/ai/instructions/glossary.md

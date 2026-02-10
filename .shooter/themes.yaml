@@ -1,0 +1,6 @@
+project: []
+shooter:
+- alias: _project
+  name: _project
+  path: .
+  shotfile: .shooter/shotfiles/_project.md
