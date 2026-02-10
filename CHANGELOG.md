@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.19] - 2026-02-10 06:05
+
 ### Fixed
 - Send shot path without @ (codex)
 - Send shot path without @ (gemini)
@@ -21,3 +23,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Submit from insert mode, not normal mode (gemini)
 
 - Resolve external @refs (codex)
+
