@@ -1,5 +1,8 @@
 # shot
 
+## shot 63
+create new shot should only work in files, in the shotfiles folder
+
 ## shot 62
 have different colors for shot headers for the shot number and the shot title
 
