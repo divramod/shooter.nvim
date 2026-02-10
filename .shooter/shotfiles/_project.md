@@ -1,5 +1,13 @@
 # project
 
+## shot 19
+add functionality to add a file or directory path, relative to the repo root into a shot)
+i often explain with pathes, this could save me a lot of time
+
+## shot 18
+i have the command ShoOpen last shotfile.
+i want the cursor at the place of the last change, when reopens
+
 ## x shot 17 (2026-02-10 05:42:01) @_project_20260210_054201_shot-17
 this is a test shot, do nothing with it
 

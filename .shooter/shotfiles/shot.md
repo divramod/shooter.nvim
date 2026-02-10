@@ -1,5 +1,8 @@
 # shot
 
+## shot 61
+after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
+
 ## shot 60
 hello
 
