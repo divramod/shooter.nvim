@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-02-10 04:43: Send Gemini shot files as content, not path refs
+- Live reproduction showed Gemini accepts `@/path` but may stall while attempting restricted `ReadFile` on global bullet paths outside workspace.
+- Sending absolute bare paths is treated as an unknown slash command by Gemini.
+- Chosen approach: for Gemini provider, read the shot temp file locally and send its content to the pane directly.
+
 ## 2026-02-10 04:41: Revert Gemini to @filepath send syntax
 - Live pane validation showed Gemini treats a bare absolute path as a slash command (`Unknown command`).
 - `@/absolute/path` is accepted by Gemini as a file reference in the same session.

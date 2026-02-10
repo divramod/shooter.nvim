@@ -8,10 +8,31 @@ M.name = 'gemini'
 M.display_name = 'Gemini'
 M.process_pattern = 'gemini'
 
--- Send file reference to pane (@filepath syntax)
+-- Send shot file content directly to pane
 function M.send_file_reference(pane_id, filepath)
+  if not pane_id or pane_id == "" then
+    return false, "No pane ID provided"
+  end
+  if not filepath or filepath == "" then
+    return false, "No filepath provided"
+  end
+
+  local utils = require('shooter.utils')
+  local content, err = utils.read_file(filepath)
+  if not content then
+    return false, "Failed to read file: " .. (err or "unknown error")
+  end
+
+  -- Keep Gemini running; clear input line but avoid Ctrl-C.
+  local clear_job = vim.fn.jobstart({"tmux", "send-keys", "-t", pane_id, "C-u"}, {
+    stdout_buffered = true,
+    stderr_buffered = true,
+  })
+  if clear_job > 0 then vim.fn.jobwait({clear_job}, 5000) end
+  vim.wait(100, function() return false end, 20)
+
   local send = require('shooter.tmux.send')
-  return send.send_file_reference(pane_id, filepath)
+  return send.send_to_pane(pane_id, content, nil, false)
 end
 
 -- Send raw text to pane
