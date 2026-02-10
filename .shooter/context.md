@@ -13,6 +13,6 @@
 - Global config is at `~/.config/shooter/nvim/config.yaml` (migrated from `~/.config/shooter.nvim/`). All config values must be listed in `ext_config.DEFAULTS`. Project-local overrides go to `<repo>/.shooter/cfg/nvim/config.yaml`.
 - All path accessors for global config are centralized in `lua/shooter/core/ext_config.lua`. Never hardcode `~/.config/shooter.nvim/` or `~/.config/shooter/nvim/` elsewhere.
 - Config auto-reloads on `BufWritePost` of `config.yaml` files matching shooter paths.
-- For Codex/Gemini shot dispatch, root cause can be `@filepath` parsing (not path location). Keep global bullets under `~/.config/shooter/nvim/bullets`; provider-specific send logic should use literal file paths when `@` hangs.
+- For shot dispatch, keep global bullets under `~/.config/shooter/nvim/bullets`; root cause is provider-specific parsing of `@filepath`. Codex should send literal paths (no `@`), while Gemini should keep `@filepath` attachment syntax.
 
 <!-- This file is for AI-generated project context and learnings. AI agents can update this file. -->

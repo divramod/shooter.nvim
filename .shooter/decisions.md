@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-02-10 04:41: Revert Gemini to @filepath send syntax
+- Live pane validation showed Gemini treats a bare absolute path as a slash command (`Unknown command`).
+- `@/absolute/path` is accepted by Gemini as a file reference in the same session.
+- Keep Codex-specific no-`@` behavior, but restore Gemini to shared `@filepath` sending.
+
 ## 2026-02-09 20:46: Use literal path sends for Gemini shot files
 - User confirmed Gemini/Codex failure mode is triggered by `@filepath`, not by external location.
 - Preserve global bullets directory design (`~/.config/shooter/nvim/bullets`) instead of copying into repo paths.

@@ -3,41 +3,15 @@
 
 local M = {}
 
-local function shell_escape(text)
-  return text:gsub("'", "'\\''")
-end
-
 -- Provider identity
 M.name = 'gemini'
 M.display_name = 'Gemini'
 M.process_pattern = 'gemini'
 
--- Send file path to pane (literal path, no @ prefix)
+-- Send file reference to pane (@filepath syntax)
 function M.send_file_reference(pane_id, filepath)
-  if not pane_id or pane_id == "" then
-    return false, "No pane ID provided"
-  end
-  if not filepath or filepath == "" then
-    return false, "No filepath provided"
-  end
-
-  -- Gemini can stall on @filepath references; send literal path and submit.
-  local escaped_path = shell_escape(filepath)
-  local cmd = string.format(
-    "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '%s' && sleep 0.1 && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter",
-    pane_id, pane_id, escaped_path, pane_id, pane_id
-  )
-
-  local job_id = vim.fn.jobstart({"sh", "-c", cmd .. " 2>/dev/null"}, {
-    stdout_buffered = true,
-    stderr_buffered = true,
-  })
-  if job_id <= 0 then return false, "Failed to start tmux job" end
-  local result = vim.fn.jobwait({job_id}, 30000)
-  if result[1] == 0 then
-    return true, nil
-  end
-  return false, "tmux command failed"
+  local send = require('shooter.tmux.send')
+  return send.send_file_reference(pane_id, filepath)
 end
 
 -- Send raw text to pane
