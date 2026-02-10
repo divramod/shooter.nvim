@@ -10,3 +10,5 @@
 {"ts":"2026-02-10T05:05:18Z","cmd":"help-show-version","cli":"unknown","model":"opus"}
 {"ts":"2026-02-10T05:32:56Z","cmd":"prj-show-version","cli":"unknown","model":"opus"}
 {"ts":"2026-02-10T06:04:26Z","cmd":"prj-release","cli":"unknown","model":"opus"}
+{"ts":"2026-02-10T06:13:14Z","cmd":"prj-release","cli":"unknown","model":"opus"}
+{"ts":"2026-02-10T06:17:21Z","cmd":"prj-release","cli":"unknown","model":"opus"}
