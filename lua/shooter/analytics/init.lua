@@ -43,10 +43,12 @@ function M.show_project()
   local files = require('shooter.core.files')
   local git_root = files.get_git_root()
   if not git_root then vim.notify('Not in a git repository', vim.log.levels.WARN); return end
-  local handle = io.popen('cd "' .. git_root .. '" && git remote get-url origin 2>/dev/null')
-  local remote = handle and handle:read('*l') or ''
-  if handle then handle:close() end
-  M.show(remote:match('github.com[:/]([^/]+/[^/.]+)') or vim.fn.fnamemodify(git_root, ':t'))
+  local user, repo = data.get_git_remote_info(git_root)
+  if user and repo then
+    M.show(user .. '/' .. repo)
+  else
+    M.show(vim.fn.fnamemodify(git_root, ':t'))
+  end
 end
 
 return M
