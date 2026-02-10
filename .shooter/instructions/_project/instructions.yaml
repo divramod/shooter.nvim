@@ -1,7 +1,6 @@
 shooter:
   - ~/.config/shooter/_source/ai/instructions/instructions-for-agents.md
   - ~/.config/shooter/_source/ai/instructions/shot-conventions.md
-  - ~/.config/shooter/_source/ai/instructions/beads-conventions.md
   - ~/.config/shooter/_source/ai/instructions/commit-conventions.md
   - ~/.config/shooter/_source/ai/instructions/quality-gates.md
   - ~/.config/shooter/_source/ai/instructions/artifact-persistence.md
@@ -10,6 +9,7 @@ shooter:
   - ~/.config/shooter/_source/ai/instructions/release-conventions.md
   - ~/.config/shooter/_source/ai/instructions/security.md
   - ~/.config/shooter/_source/ai/instructions/glossary.md
+  - ~/.config/shooter/_source/ai/instructions/beads-conventions.md
 project:
   - .shooter/glossary.md
   - .shooter/beads-themes.yaml
