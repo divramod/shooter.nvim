@@ -17,5 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Send filepath as plain text instruction (gemini)
 - Send 'read file ... for instructions' prompt (gemini)
 - Use 'run cat' to read shots outside workspace (gemini)
+- Handle vim normal mode by sending Escape+i before text (gemini)
 
 - Resolve external @refs (codex)
