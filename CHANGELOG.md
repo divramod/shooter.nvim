@@ -14,5 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Send shot file content (gemini)
 - Use @filepath syntax instead of raw text paste (gemini)
 - Add Gemini-specific @filepath send with Escape+timing (gemini)
+- Send filepath as plain text instruction (gemini)
 
 - Resolve external @refs (codex)

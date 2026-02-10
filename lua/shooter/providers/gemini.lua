@@ -8,9 +8,9 @@ M.name = 'gemini'
 M.display_name = 'Gemini'
 M.process_pattern = 'gemini'
 
--- Send file reference to pane (@filepath syntax)
--- Gemini CLI supports @filepath — pre-expands file content before the API call.
--- Uses Gemini-specific timing: type @filepath, Escape to dismiss any file picker, then Enter.
+-- Send file reference to pane by instructing Gemini to read the file.
+-- Gemini's @filepath and raw paste both have TUI issues.
+-- Instead, send a plain text instruction — Gemini has read_file tool access.
 function M.send_file_reference(pane_id, filepath)
   if not pane_id or pane_id == "" then
     return false, "No pane ID provided"
@@ -19,9 +19,11 @@ function M.send_file_reference(pane_id, filepath)
     return false, "No filepath provided"
   end
 
+  local msg = filepath
+
   local cmd = string.format(
-    "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '@%s' && sleep 0.5 && tmux send-keys -t %s Escape && sleep 0.2 && tmux send-keys -t %s Enter",
-    pane_id, pane_id, filepath, pane_id, pane_id
+    "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '%s' && sleep 0.1 && tmux send-keys -t %s Enter",
+    pane_id, pane_id, msg, pane_id
   )
 
   local job_id = vim.fn.jobstart({"sh", "-c", cmd .. " 2>/dev/null"}, {
