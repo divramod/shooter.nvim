@@ -21,10 +21,11 @@ function M.send_file_reference(pane_id, filepath)
 
   local msg = 'run cat ' .. filepath .. ' and follow the instructions in that file'
 
-  -- Gemini CLI has vim-like modes. Escape normalizes state, i enters insert mode.
+  -- Gemini CLI has vim-like modes. Escape normalizes to normal mode, i enters insert.
+  -- Submit with Enter while still in insert mode (Enter in normal mode does not submit).
   local cmd = string.format(
-    "tmux send-keys -t %s Escape && sleep 0.1 && tmux send-keys -t %s i && sleep 0.1 && tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '%s' && sleep 0.1 && tmux send-keys -t %s Escape && sleep 0.1 && tmux send-keys -t %s Enter",
-    pane_id, pane_id, pane_id, pane_id, msg, pane_id, pane_id
+    "tmux send-keys -t %s Escape && sleep 0.1 && tmux send-keys -t %s i && sleep 0.1 && tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '%s' && sleep 0.1 && tmux send-keys -t %s Enter",
+    pane_id, pane_id, pane_id, pane_id, msg, pane_id
   )
 
   local job_id = vim.fn.jobstart({"sh", "-c", cmd .. " 2>/dev/null"}, {
