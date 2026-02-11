@@ -1,21 +1,18 @@
 # shot
 
-## shot 64
-create new shot should only work in files, in the shotfiles folder
-
-## shot 63
-have different colors for shot headers for the shot number and the shot title
-
-## shot 62
+## shot 63 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
 
-## shot 61
-hello
+## x shot 62 shot header titles 2 (2026-02-11 01:36:59) @shot_20260211_013659_shot-62
+do the same for first shot of the day and closed shots 
 
-## shot 60
-think about shot titles.
-think about shot priorities.
-think about shot metadata in general. hide/show them
+## x shot 61 (2026-02-11 01:27:37) @shot_20260211_012738_shot-61
+have different colors for shot headers for the shot number and the shot title.
+i want to be able to configure the colors for both separately, so that i can have a better overview of the shots in the shotfile.
+please also add this as always to the configuration of the plugin, so that i can easily change it in the future, when i want to have different colors.
+
+## x shot 60 (2026-02-11 01:16:49) @shot_20260211_011649_shot-60
+create new shot cmd and in general all ShooterShot commands should only work in files, in the .shooter/ai/shotfiles folder
 
 ## x shot 59 (2026-02-11 00:09:09) @shot_20260211_000909_shot-59
 i had a big refactoring.
@@ -100,7 +97,8 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+the < >sy command should also mark the shot as done and call the renumber function
+i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 44 (2026-02-07 18:13:22)
 the command < >. should also call the renumber function, after is marked a shot as done
@@ -109,8 +107,7 @@ the command < >. should also call the renumber function, after is marked a shot 
 selecting multiple shot pickers and then hitting 1 to send them does not 
 
 ## x shot 42 (2026-02-07 18:13:22)
-the < >sy command should also mark the shot as done and call the renumber function
-i call this command usually, when i want to manually paste a shot to a agent cli
+color the background color of the last shot made green
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
