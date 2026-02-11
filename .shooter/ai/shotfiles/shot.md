@@ -1,7 +1,13 @@
 # shot
 
-## shot 63 shot sent notification
+## shot 64 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
+
+## x shot 63 (2026-02-11 01:53:11) @shot_20260211_015311_shot-63
+for the latest sent shot, can you only color the title of the shot and not the rest?
+i just see, for the closed shots for first of the day and last closed, we need three colors each with background and foreground color possible to set.
+prefix, title, postfix
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260211_015306.png
 
 ## x shot 62 shot header titles 2 (2026-02-11 01:36:59) @shot_20260211_013659_shot-62
 do the same for first shot of the day and closed shots 
@@ -97,17 +103,17 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-the < >sy command should also mark the shot as done and call the renumber function
-i call this command usually, when i want to manually paste a shot to a agent cli
-
-## x shot 44 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
-
-## x shot 43 (2026-02-07 18:13:22)
 selecting multiple shot pickers and then hitting 1 to send them does not 
 
-## x shot 42 (2026-02-07 18:13:22)
+## x shot 44 (2026-02-07 18:13:22)
 color the background color of the last shot made green
+
+## x shot 43 (2026-02-07 18:13:22)
+the command < >. should also call the renumber function, after is marked a shot as done
+
+## x shot 42 (2026-02-07 18:13:22)
+the < >sy command should also mark the shot as done and call the renumber function
+i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
