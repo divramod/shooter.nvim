@@ -1,21 +1,26 @@
 # shot
 
-## shot 63
+## shot 64
 create new shot should only work in files, in the shotfiles folder
 
-## shot 62
+## shot 63
 have different colors for shot headers for the shot number and the shot title
 
-## shot 61
+## shot 62
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
 
-## shot 60
+## shot 61
 hello
 
-## shot 59
+## shot 60
 think about shot titles.
 think about shot priorities.
 think about shot metadata in general. hide/show them
+
+## x shot 59 (2026-02-11 00:09:09) @shot_20260211_000909_shot-59
+i had a big refactoring.
+the shotfiles are now located at .shooter/ai/shotfiles
+please adapt that everywher in the codebase
 
 ## x shot 58 (2026-02-09 07:42:09) @shot-58-20260209_074209
 i want to change the naming convention for the temporary shotfiles.
@@ -95,17 +100,17 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-selecting multiple shot pickers and then hitting 1 to send them does not 
+color the background color of the last shot made green
 
 ## x shot 44 (2026-02-07 18:13:22)
-the < >sy command should also mark the shot as done and call the renumber function
-i call this command usually, when i want to manually paste a shot to a agent cli
-
-## x shot 43 (2026-02-07 18:13:22)
 the command < >. should also call the renumber function, after is marked a shot as done
 
+## x shot 43 (2026-02-07 18:13:22)
+selecting multiple shot pickers and then hitting 1 to send them does not 
+
 ## x shot 42 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+the < >sy command should also mark the shot as done and call the renumber function
+i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test

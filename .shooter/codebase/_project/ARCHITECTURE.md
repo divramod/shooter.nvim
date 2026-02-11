@@ -121,7 +121,7 @@
 
 **Shotfile:**
 - Purpose: Markdown file containing multiple shots and metadata
-- Examples: `.shooter/shotfiles/archive/`, `.shooter/shotfiles/backlog/`, etc.
+- Examples: `.shooter/ai/shotfiles/archive/`, `.shooter/ai/shotfiles/backlog/`, etc.
 - Pattern: Title (# heading) → shots (## headings) → content
 
 **Session:**

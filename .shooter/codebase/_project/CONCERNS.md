@@ -160,7 +160,7 @@
 - Issue: `lua/shooter/core/files.lua:40-57` integrates with Oil plugin. If Oil allows selecting files outside shooter directories, those paths are passed to file operations.
 - Files: `lua/shooter/core/files.lua:40-57`, `lua/shooter/core/movement.lua:72-100`
 - Impact: Users could accidentally move/delete arbitrary files if Oil is not properly scoped. Requires coordinated Oil misconfiguration.
-- Fix approach: Validate that file operations only touch `.shooter/shotfiles` subdirectories. Add warning if user attempts to operate on files outside expected paths.
+- Fix approach: Validate that file operations only touch `.shooter/ai/shotfiles` subdirectories. Add warning if user attempts to operate on files outside expected paths.
 
 ### Obsidian URL Formation Not Fully Escaped
 
