@@ -1,5 +1,27 @@
 # shot
 
+## shot 65
+i changed my pattern for the shots a little bit.
+last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
+but this information is not included in the shotfile.
+can we in general change the hard coded shotfile template into a file template approach?
+i like to have the shotfile template in ~/.config/shooter/nvim/file/template.md
+please create it, from the hardcoded template, which is used right now and put it in this folder.
+then change the code, so that it reads the template and replaces the following placeholders:
+- {{shot_number}} with the shot number
+- {{shot_title}} with the shot title, which is the first line of the shot,
+- some shots look like this now
+```markdown
+## shot 64 shot sent notification
+do something
+```
+and some like this
+```markdown
+## shot 64
+do something
+```
+i want both cases to work
+
 ## shot 64 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
 

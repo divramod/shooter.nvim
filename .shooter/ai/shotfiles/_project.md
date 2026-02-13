@@ -1,5 +1,8 @@
 # project
 
+## shot 20
+
+
 ## shot 19
 add functionality to add a file or directory path, relative to the repo root into a shot)
 i often explain with pathes, this could save me a lot of time

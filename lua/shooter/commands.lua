@@ -3,6 +3,19 @@
 
 local M = {}
 
+-- Guard: wraps a function so it only runs in shotfiles (.shooter/ai/shotfiles)
+-- Returns the original function wrapped with an is_shooter_file() check
+local function require_shotfile(fn)
+  return function(opts)
+    local files = require('shooter.core.files')
+    if not files.is_shooter_file() then
+      vim.notify('This command only works in shotfiles (.shooter/ai/shotfiles)', vim.log.levels.WARN)
+      return
+    end
+    fn(opts)
+  end
+end
+
 -- Create command with optional alias for backward compatibility
 local function create_cmd(name, fn, opts, alias)
   vim.api.nvim_create_user_command(name, fn, opts)
@@ -162,129 +175,129 @@ local function setup_shot_commands()
   local tmux = require('shooter.tmux')
 
   -- ShoShotNew (alias: ShoNewShot)
-  create_cmd('ShoShotNew', shot_actions.create_new_shot, { desc = 'Create new shot' }, 'ShoNewShot')
+  create_cmd('ShoShotNew', require_shotfile(shot_actions.create_new_shot), { desc = 'Create new shot' }, 'ShoNewShot')
 
   -- ShoShotNewWhisper (alias: ShoNewShotWhisper)
-  create_cmd('ShoShotNewWhisper', shot_actions.create_new_shot_with_whisper,
+  create_cmd('ShoShotNewWhisper', require_shotfile(shot_actions.create_new_shot_with_whisper),
     { desc = 'New shot + whisper' }, 'ShoNewShotWhisper')
 
   -- ShoShotDelete (alias: ShoDeleteLastShot)
-  create_cmd('ShoShotDelete', shot_actions.delete_last_shot,
+  create_cmd('ShoShotDelete', require_shotfile(shot_actions.delete_last_shot),
     { desc = 'Delete last shot' }, 'ShoDeleteLastShot')
 
   -- ShoShotToggle (alias: ShoToggleDone)
-  create_cmd('ShoShotToggle', shot_actions.toggle_shot_done,
+  create_cmd('ShoShotToggle', require_shotfile(shot_actions.toggle_shot_done),
     { desc = 'Toggle shot done' }, 'ShoToggleDone')
 
   -- ShoShotDeleteCursor (alias: ShoDeleteShotUnderCursor)
-  create_cmd('ShoShotDeleteCursor', function()
+  create_cmd('ShoShotDeleteCursor', require_shotfile(function()
     require('shooter.core.shot_delete').delete_shot_under_cursor()
-  end, { desc = 'Delete shot under cursor' }, 'ShoDeleteShotUnderCursor')
+  end), { desc = 'Delete shot under cursor' }, 'ShoDeleteShotUnderCursor')
 
   -- ShoShotMove (alias: ShoMoveShot)
-  create_cmd('ShoShotMove', function()
+  create_cmd('ShoShotMove', require_shotfile(function()
     require('shooter.core.shot_move').move_shot()
-  end, { desc = 'Move shot to another file' }, 'ShoMoveShot')
+  end), { desc = 'Move shot to another file' }, 'ShoMoveShot')
 
   -- ShoShotYank
-  create_cmd('ShoShotYank', shot_actions.yank_shot, { desc = 'Yank shot to clipboard' })
+  create_cmd('ShoShotYank', require_shotfile(shot_actions.yank_shot), { desc = 'Yank shot to clipboard' })
 
   -- ShoShotViewResponse
-  create_cmd('ShoShotViewResponse', function()
+  create_cmd('ShoShotViewResponse', require_shotfile(function()
     require('shooter.tools.response_viewer').view_response()
-  end, { desc = 'View response for shot' })
+  end), { desc = 'View response for shot' })
 
   -- ShoShotExtractBlock (alias: ShoShotExtract for backward compat)
-  create_cmd('ShoShotExtractBlock', shot_actions.extract_subtask,
+  create_cmd('ShoShotExtractBlock', require_shotfile(shot_actions.extract_subtask),
     { desc = 'Extract ### subtask block to new shot' }, 'ShoShotExtract')
 
   -- ShoShotExtractLine
-  create_cmd('ShoShotExtractLine', shot_actions.extract_line,
+  create_cmd('ShoShotExtractLine', require_shotfile(shot_actions.extract_line),
     { desc = 'Extract current line to new shot' })
 
   -- ShoShotMunition (alias: ShoMunition)
-  create_cmd('ShoShotMunition', function()
+  create_cmd('ShoShotMunition', require_shotfile(function()
     require('shooter.inbox.picker').show_file_picker()
-  end, { desc = 'Import tasks from inbox' }, 'ShoMunition')
+  end), { desc = 'Import tasks from inbox' }, 'ShoMunition')
 
   -- ShoShotPicker (alias: ShoOpenShots)
-  create_cmd('ShoShotPicker', function()
+  create_cmd('ShoShotPicker', require_shotfile(function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_open_shots()
     if picker then picker:find() end
-  end, { desc = 'Open shots picker' }, 'ShoOpenShots')
+  end), { desc = 'Open shots picker' }, 'ShoOpenShots')
 
   -- Navigation commands
-  create_cmd('ShoShotNavNext', shot_actions.goto_next_open_shot,
+  create_cmd('ShoShotNavNext', require_shotfile(shot_actions.goto_next_open_shot),
     { desc = 'Next open shot' }, 'ShoNextShot')
-  create_cmd('ShoShotNavPrev', shot_actions.goto_prev_open_shot,
+  create_cmd('ShoShotNavPrev', require_shotfile(shot_actions.goto_prev_open_shot),
     { desc = 'Previous open shot' }, 'ShoPrevShot')
-  create_cmd('ShoShotNavNextSent', shot_actions.goto_next_sent_shot,
+  create_cmd('ShoShotNavNextSent', require_shotfile(shot_actions.goto_next_sent_shot),
     { desc = 'Next sent shot' }, 'ShoNextSent')
-  create_cmd('ShoShotNavPrevSent', shot_actions.goto_prev_sent_shot,
+  create_cmd('ShoShotNavPrevSent', require_shotfile(shot_actions.goto_prev_sent_shot),
     { desc = 'Previous sent shot' }, 'ShoPrevSent')
-  create_cmd('ShoShotNavLatest', shot_actions.goto_latest_sent_shot,
+  create_cmd('ShoShotNavLatest', require_shotfile(shot_actions.goto_latest_sent_shot),
     { desc = 'Latest sent shot' }, 'ShoLatestSent')
-  create_cmd('ShoShotNavUndo', shot_actions.undo_latest_sent_shot,
+  create_cmd('ShoShotNavUndo', require_shotfile(shot_actions.undo_latest_sent_shot),
     { desc = 'Undo latest sent' }, 'ShoUndoLatestSent')
 
   -- Send commands with optional pane argument (defaults to 1)
-  create_cmd('ShoShotSend', function(opts)
+  create_cmd('ShoShotSend', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_current_shot(pane)
-  end, { nargs = '?', desc = 'Send shot to pane [1-9]' }, 'ShoSend')
+  end), { nargs = '?', desc = 'Send shot to pane [1-9]' }, 'ShoSend')
 
-  create_cmd('ShoShotSendAll', function(opts)
+  create_cmd('ShoShotSendAll', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_all_shots(pane)
-  end, { nargs = '?', desc = 'Send all shots to pane [1-9]' }, 'ShoSendAll')
+  end), { nargs = '?', desc = 'Send all shots to pane [1-9]' }, 'ShoSendAll')
 
-  create_cmd('ShoShotSendVisual', function(opts)
+  create_cmd('ShoShotSendVisual', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_visual_selection(pane, opts.line1, opts.line2)
-  end, { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' }, 'ShoSendVisual')
+  end), { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' }, 'ShoSendVisual')
 
-  create_cmd('ShoShotResend', function(opts)
+  create_cmd('ShoShotResend', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.resend_latest_shot(pane)
-  end, { nargs = '?', desc = 'Resend to pane [1-9]' }, 'ShoResend')
+  end), { nargs = '?', desc = 'Resend to pane [1-9]' }, 'ShoResend')
 
   -- Queue commands (1-4)
   local queue = require('shooter.queue')
   for i = 1, 4 do
-    create_cmd('ShoShotQueue' .. i, function()
+    create_cmd('ShoShotQueue' .. i, require_shotfile(function()
       queue.add_to_queue(nil, i)
-    end, { desc = 'Queue for pane ' .. i }, 'ShoQueueAdd' .. i)
+    end), { desc = 'Queue for pane ' .. i }, 'ShoQueueAdd' .. i)
   end
 
-  create_cmd('ShoShotQueueView', function()
+  create_cmd('ShoShotQueueView', require_shotfile(function()
     require('shooter.queue.picker').show_queue()
-  end, { desc = 'View queue' }, 'ShoQueueView')
+  end), { desc = 'View queue' }, 'ShoQueueView')
 
-  create_cmd('ShoShotQueueClear', function()
+  create_cmd('ShoShotQueueClear', require_shotfile(function()
     queue.clear_queue()
-  end, { desc = 'Clear queue' }, 'ShoQueueClear')
+  end), { desc = 'Clear queue' }, 'ShoQueueClear')
 
   -- ShoFileStats - Show stats for current shotfile
-  create_cmd('ShoFileStats', shot_actions.file_stats, { desc = 'Shotfile stats (total/open/closed)' })
+  create_cmd('ShoFileStats', require_shotfile(shot_actions.file_stats), { desc = 'Shotfile stats (total/open/closed)' })
 
   -- ShoFileToggleFirstShotOfDayColoring - Toggle day marker highlighting
-  create_cmd('ShoFileToggleFirstShotOfDayColoring', function()
+  create_cmd('ShoFileToggleFirstShotOfDayColoring', require_shotfile(function()
     require('shooter.syntax').toggle_day_marker()
-  end, { desc = 'Toggle first-shot-of-day coloring' })
+  end), { desc = 'Toggle first-shot-of-day coloring' })
 
   -- ShoShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
   create_cmd('ShoShotCreateFromClaude', shot_actions.create_shot_from_claude,
     { desc = 'Cut Claude text, create shot in right pane' })
 
   -- ShoShotsRenumber - Renumber all shots sequentially
-  create_cmd('ShoShotsRenumber', function()
+  create_cmd('ShoShotsRenumber', require_shotfile(function()
     local renumber = require('shooter.core.renumber')
     local count = renumber.renumber_shots()
     if count > 0 then
       vim.notify(string.format('Renumbered %d shots', count), vim.log.levels.INFO)
     end
-  end, { desc = 'Renumber shots sequentially' })
+  end), { desc = 'Renumber shots sequentially' })
 
   -- ShoShotCfg = ShoCfgShot (bidirectional alias handled in Cfg)
 end
@@ -352,8 +365,8 @@ local function setup_subproject_commands()
         return
       end
       -- Create standard folder structure
-      local folders = { '.shooter/shotfiles', '.shooter/shotfiles/archive', '.shooter/shotfiles/backlog',
-        '.shooter/shotfiles/done', '.shooter/shotfiles/reqs', '.shooter/shotfiles/test', '.shooter/shotfiles/wait' }
+      local folders = { '.shooter/ai/shotfiles', '.shooter/ai/shotfiles/archive', '.shooter/ai/shotfiles/backlog',
+        '.shooter/ai/shotfiles/done', '.shooter/ai/shotfiles/reqs', '.shooter/ai/shotfiles/test', '.shooter/ai/shotfiles/wait' }
       for _, folder in ipairs(folders) do
         vim.fn.mkdir(project_path .. '/' .. folder, 'p')
       end
@@ -393,8 +406,8 @@ local function setup_subproject_commands()
     end
     local project = project_mod.detect_from_cwd()
     local base = project and (git_root .. '/projects/' .. project) or git_root
-    local folders = { '.shooter/shotfiles', '.shooter/shotfiles/archive', '.shooter/shotfiles/backlog',
-      '.shooter/shotfiles/done', '.shooter/shotfiles/reqs', '.shooter/shotfiles/test', '.shooter/shotfiles/wait' }
+    local folders = { '.shooter/ai/shotfiles', '.shooter/ai/shotfiles/archive', '.shooter/ai/shotfiles/backlog',
+      '.shooter/ai/shotfiles/done', '.shooter/ai/shotfiles/reqs', '.shooter/ai/shotfiles/test', '.shooter/ai/shotfiles/wait' }
     for _, folder in ipairs(folders) do
       vim.fn.mkdir(base .. '/' .. folder, 'p')
     end

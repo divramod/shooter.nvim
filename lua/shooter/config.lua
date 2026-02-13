@@ -19,13 +19,13 @@ M.defaults = {
     message_template = 'templates/shooter-context-message.md',
 
     -- Queue file location (relative to cwd)
-    queue_file = '.shooter/shotfiles/.shot-queue.json',
+    queue_file = '.shooter/ai/shotfiles/.shot-queue.json',
 
     -- Prompts root directory (relative to cwd)
-    prompts_root = '.shooter/shotfiles',
+    prompts_root = '.shooter/ai/shotfiles',
 
     -- Prompts directory (computed dynamically)
-    prompts_dir = vim.fn.getcwd() .. '/.shooter/shotfiles',
+    prompts_dir = vim.fn.getcwd() .. '/.shooter/ai/shotfiles',
   },
 
   -- Tmux configuration
@@ -127,18 +127,60 @@ M.defaults = {
 
   -- Highlighting configuration
   highlight = {
-    -- Open shot header highlighting
+    -- Open shot number highlighting (## shot N portion)
     -- Default: black text on light orange background (avoids confusion with search highlights)
     open_shot = {
       fg = '#000000', -- Black foreground
       bg = '#ffb347', -- Light orange background
       bold = true,
     },
-    -- Latest executed shot highlighting (single most recent by timestamp)
-    -- Default: light green background
-    done_shot = {
+    -- Open shot title highlighting (text after ## shot N)
+    -- Default: dark gray text on light yellow background
+    open_shot_title = {
+      fg = '#333333', -- Dark gray foreground
+      bg = '#ffe0a3', -- Light yellow background
+      bold = false,
+    },
+    -- Latest executed shot prefix highlighting (## x shot N portion)
+    -- Default: subtle gray text, no background (title should stand out)
+    done_shot_prefix = {
+      fg = '#888888',
+      bg = nil,
+      bold = false,
+    },
+    -- Latest executed shot title highlighting (text after number, before timestamp)
+    -- Default: prominent green background so it stands out
+    done_shot_title = {
       fg = '#555555',
-      bg = '#c8e6c9', -- Light green background
+      bg = '#dcedc8', -- Green background
+      bold = false,
+    },
+    -- Latest executed shot postfix highlighting (timestamp + ref portion)
+    -- Default: subtle gray text, no background (title should stand out)
+    done_shot_postfix = {
+      fg = '#888888',
+      bg = nil,
+      bold = false,
+    },
+    -- Day marker prefix highlighting (## x shot N portion)
+    -- Default: subtle gray text, no background
+    day_marker_prefix = {
+      fg = '#888888',
+      bg = nil,
+      bold = false,
+    },
+    -- Day marker title highlighting (text after number, before timestamp)
+    -- Default: prominent brown background so it stands out
+    day_marker_title = {
+      fg = '#555555',
+      bg = '#f0e4d0', -- Brown background
+      bold = false,
+    },
+    -- Day marker postfix highlighting (timestamp + ref portion)
+    -- Default: subtle gray text, no background
+    day_marker_postfix = {
+      fg = '#888888',
+      bg = nil,
       bold = false,
     },
   },

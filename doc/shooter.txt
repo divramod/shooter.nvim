@@ -84,8 +84,8 @@ Call `require('shooter').setup()` with your configuration:~
       paths = {
         global_context = '~/.config/shooter/nvim/shooter-context-global.md',
         project_context = '.shooter.nvim/shooter-context-project.md',
-        prompts_root = '.shooter/shotfiles',
-        queue_file = '.shooter/shotfiles/.shot-queue.json',
+        prompts_root = '.shooter/ai/shotfiles',
+        queue_file = '.shooter/ai/shotfiles/.shot-queue.json',
       },
       tmux = {
         delay = 0.2,          -- delay between send operations
@@ -261,7 +261,7 @@ The queue system allows you to batch shots for later sending:
 3. Send queued shots from the Telescope picker
 4. Clear queue with :ShoQueueClear
 
-Queue is persisted to: .shooter/shotfiles/.shot-queue.json
+Queue is persisted to: .shooter/ai/shotfiles/.shot-queue.json
 
 ==============================================================================
 10. HEALTH CHECK                                              *shooter-health*

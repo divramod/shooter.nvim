@@ -7,7 +7,13 @@ local M = {}
 local function define_highlights()
   local config = require('shooter.config')
   local open_shot = config.get('highlight.open_shot') or {}
-  local done_shot = config.get('highlight.done_shot') or {}
+  local open_shot_title = config.get('highlight.open_shot_title') or {}
+  local done_shot_prefix = config.get('highlight.done_shot_prefix') or {}
+  local done_shot_title = config.get('highlight.done_shot_title') or {}
+  local done_shot_postfix = config.get('highlight.done_shot_postfix') or {}
+  local day_marker_prefix = config.get('highlight.day_marker_prefix') or {}
+  local day_marker_title = config.get('highlight.day_marker_title') or {}
+  local day_marker_postfix = config.get('highlight.day_marker_postfix') or {}
 
   -- Default: black text on light orange background (avoids search highlight confusion)
   vim.api.nvim_set_hl(0, 'ShoOpenShot', {
@@ -16,19 +22,53 @@ local function define_highlights()
     bold = open_shot.bold ~= false, -- default true
   })
 
-  -- Light green for the single latest executed shot (most recent by timestamp)
-  vim.api.nvim_set_hl(0, 'ShoDoneShot', {
-    fg = done_shot.fg or '#555555',
-    bg = done_shot.bg or '#c8e6c9',
-    bold = done_shot.bold or false,
+  -- Open shot title: dark gray text on light yellow background
+  vim.api.nvim_set_hl(0, 'ShoOpenShotTitle', {
+    fg = open_shot_title.fg or '#333333',
+    bg = open_shot_title.bg or '#ffe0a3',
+    bold = open_shot_title.bold or false,
   })
 
-  -- Light brown for the first executed shot of each day (day separator)
-  local day_marker = config.get('highlight.day_marker') or {}
-  vim.api.nvim_set_hl(0, 'ShoDayMarker', {
-    fg = day_marker.fg or '#555555',
-    bg = day_marker.bg or '#e6d5b8',
-    bold = day_marker.bold or false,
+  -- Done shot prefix (## x shot N): subtle, no background by default
+  vim.api.nvim_set_hl(0, 'ShoDoneShotPrefix', {
+    fg = done_shot_prefix.fg or '#888888',
+    bg = done_shot_prefix.bg or nil,
+    bold = done_shot_prefix.bold or false,
+  })
+
+  -- Done shot title: prominent green background so it stands out
+  vim.api.nvim_set_hl(0, 'ShoDoneShotTitle', {
+    fg = done_shot_title.fg or '#555555',
+    bg = done_shot_title.bg or '#dcedc8',
+    bold = done_shot_title.bold or false,
+  })
+
+  -- Done shot postfix (timestamp + ref): subtle, no background by default
+  vim.api.nvim_set_hl(0, 'ShoDoneShotPostfix', {
+    fg = done_shot_postfix.fg or '#888888',
+    bg = done_shot_postfix.bg or nil,
+    bold = done_shot_postfix.bold or false,
+  })
+
+  -- Day marker prefix (## x shot N): subtle, no background by default
+  vim.api.nvim_set_hl(0, 'ShoDayMarkerPrefix', {
+    fg = day_marker_prefix.fg or '#888888',
+    bg = day_marker_prefix.bg or nil,
+    bold = day_marker_prefix.bold or false,
+  })
+
+  -- Day marker title: prominent brown background so it stands out
+  vim.api.nvim_set_hl(0, 'ShoDayMarkerTitle', {
+    fg = day_marker_title.fg or '#555555',
+    bg = day_marker_title.bg or '#f0e4d0',
+    bold = day_marker_title.bold or false,
+  })
+
+  -- Day marker postfix (timestamp + ref): subtle, no background by default
+  vim.api.nvim_set_hl(0, 'ShoDayMarkerPostfix', {
+    fg = day_marker_postfix.fg or '#888888',
+    bg = day_marker_postfix.bg or nil,
+    bold = day_marker_postfix.bold or false,
   })
 end
 
@@ -64,6 +104,32 @@ local apply_syntax
 
 -- Extmark namespace — buffer-local highlights that move with text (no flicker)
 local ns = vim.api.nvim_create_namespace('shooter_syntax')
+
+-- Split an executed shot header into number/title/metadata column ranges.
+-- Format: "## x shot N <title> (timestamp) @ref"
+-- Returns number_end (col after "## x shot N"), title_start, title_end (before metadata)
+-- title_start/title_end are nil when there is no title.
+local function split_executed_header(line)
+  local _, number_end_pos = line:find('^##%s+x%s+shot%s+[%d%?]+')
+  if not number_end_pos then return nil end
+  -- Find the timestamp marker "(YYYY-..."
+  local meta_start = line:find('%s+%(%d%d%d%d%-')
+  if not meta_start then
+    -- No timestamp found — treat rest as title
+    local title_start = line:find('%S', number_end_pos + 1)
+    if title_start then
+      return number_end_pos, title_start, #line
+    end
+    return number_end_pos, nil, nil
+  end
+  -- Check for title between number and metadata
+  local title_start = line:find('%S', number_end_pos + 1)
+  if title_start and title_start < meta_start then
+    -- Title ends just before the metadata space
+    return number_end_pos, title_start, meta_start
+  end
+  return number_end_pos, nil, nil
+end
 
 -- Apply syntax highlighting to current buffer using extmarks
 -- Extmarks are buffer-local and track buffer positions — they move with text
@@ -108,16 +174,43 @@ apply_syntax = function(bufnr)
     day_first_lines[line_num] = true
   end
 
-  -- Build match list: { { line, group }, ... }
+  -- Build match list: { { line, group, col_start, col_end }, ... }
+  -- col_start/col_end are optional; when nil, the full line is highlighted.
   local matches = {}
   for i, line in ipairs(lines) do
     if not in_code[i] then
-      if i == latest_done_line then
-        table.insert(matches, { i, 'ShoDoneShot' })
-      elseif day_first_lines[i] then
-        table.insert(matches, { i, 'ShoDayMarker' })
+      if i == latest_done_line or day_first_lines[i] then
+        -- Executed shot: split into prefix, title, and postfix (3 independent zones)
+        local prefix_group = i == latest_done_line and 'ShoDoneShotPrefix' or 'ShoDayMarkerPrefix'
+        local title_group = i == latest_done_line and 'ShoDoneShotTitle' or 'ShoDayMarkerTitle'
+        local postfix_group = i == latest_done_line and 'ShoDoneShotPostfix' or 'ShoDayMarkerPostfix'
+        local number_end, title_start, title_end = split_executed_header(line)
+        if number_end and title_start then
+          -- Prefix portion: "## x shot N "
+          table.insert(matches, { i, prefix_group, 0, title_start - 1 })
+          -- Title portion: title text only
+          table.insert(matches, { i, title_group, title_start - 1, title_end })
+          -- Postfix portion: "(timestamp) @ref"
+          table.insert(matches, { i, postfix_group, title_end, #line })
+        else
+          -- No title, highlight entire line with prefix color
+          table.insert(matches, { i, prefix_group })
+        end
       elseif line:match('^##%s+shot%s+[%d%?]+') then
-        table.insert(matches, { i, 'ShoOpenShot' })
+        -- Split open shot header into number and title parts
+        -- Number part: "## shot N" (or "## shot ?")
+        local _, number_end_pos = line:find('^##%s+shot%s+[%d%?]+')
+        -- Check if there's a title after the number (separated by space)
+        local title_start = line:find('%S', number_end_pos + 1)
+        if title_start then
+          -- Number portion: from start to just before title (includes trailing space)
+          table.insert(matches, { i, 'ShoOpenShot', 0, title_start - 1 })
+          -- Title portion: from title start to end of line
+          table.insert(matches, { i, 'ShoOpenShotTitle', title_start - 1, #line })
+        else
+          -- No title, highlight entire line as number
+          table.insert(matches, { i, 'ShoOpenShot' })
+        end
       end
     end
   end
@@ -125,19 +218,28 @@ apply_syntax = function(bufnr)
   -- Clear old extmarks and set new ones (atomic: single redraw, no flicker)
   vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   for _, m in ipairs(matches) do
-    vim.api.nvim_buf_set_extmark(bufnr, ns, m[1] - 1, 0, {
-      end_col = #lines[m[1]],
-      hl_group = m[2],
-    })
+    if m[3] then
+      -- Partial line highlight (col_start, col_end specified)
+      vim.api.nvim_buf_set_extmark(bufnr, ns, m[1] - 1, m[3], {
+        end_col = m[4],
+        hl_group = m[2],
+      })
+    else
+      -- Full line highlight
+      vim.api.nvim_buf_set_extmark(bufnr, ns, m[1] - 1, 0, {
+        end_col = #lines[m[1]],
+        hl_group = m[2],
+      })
+    end
   end
 end
 
--- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/shotfiles)
+-- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/ai/shotfiles)
 local function is_prompts_file(filepath)
   -- Exclude Oil buffers
   if filepath:match('^oil://') then return false end
-  -- Must be a .md file in .shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
-  return filepath:match('.shooter/shotfiles/.+%.md$') ~= nil
+  -- Must be a .md file in .shooter/ai/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
+  return filepath:match('.shooter/ai/shotfiles/.+%.md$') ~= nil
 end
 
 -- Toggle day marker coloring on/off
@@ -202,7 +304,7 @@ function M.setup()
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
-      -- Only apply to markdown files in .shooter/shotfiles (not oil, not other filetypes)
+      -- Only apply to markdown files in .shooter/ai/shotfiles (not oil, not other filetypes)
       if ft == 'markdown' and is_prompts_file(filepath) then
         require('shooter.core.files').track_last_shotfile(filepath)
         apply_syntax(ev.buf)
@@ -314,42 +416,43 @@ function M.reapply_all()
   -- Apply ext_config color overrides on top of defaults
   local eok, ext_config = pcall(require, 'shooter.core.ext_config')
   if eok then
-    -- Day marker (first shot of the day)
-    local day_bg = ext_config.get('file.first_shot_of_the_day.color_bg')
-    local day_fg = ext_config.get('file.first_shot_of_the_day.color_fg')
-    if type(day_bg) == 'string' or type(day_fg) == 'string' then
-      local config = require('shooter.config')
-      local day_marker = config.get('highlight.day_marker') or {}
-      vim.api.nvim_set_hl(0, 'ShoDayMarker', {
-        fg = day_fg or day_marker.fg or '#555555',
-        bg = day_bg or day_marker.bg or '#e6d5b8',
-        bold = day_marker.bold or false,
-      })
+    local config = require('shooter.config')
+    -- Helper: apply ext_config override for a single highlight group
+    -- ext_key: ext_config path (e.g. 'file.open_shots')
+    -- hl_name: vim highlight group name (e.g. 'ShoOpenShot')
+    -- cfg_key: config.lua key (e.g. 'highlight.open_shot')
+    -- bg_nil_ok: if true, empty string bg means nil (no background)
+    local function apply_override(ext_key, hl_name, cfg_key, bg_nil_ok)
+      local ext_bg = ext_config.get(ext_key .. '.color_bg')
+      local ext_fg = ext_config.get(ext_key .. '.color_fg')
+      if type(ext_bg) == 'string' or type(ext_fg) == 'string' then
+        local defaults = config.get(cfg_key) or {}
+        local bg = ext_bg or defaults.bg
+        -- Treat empty string as nil (no background)
+        if bg_nil_ok and bg == '' then bg = nil end
+        vim.api.nvim_set_hl(0, hl_name, {
+          fg = ext_fg or defaults.fg or '#888888',
+          bg = bg,
+          bold = defaults.bold or false,
+        })
+      end
     end
     -- Open shots
-    local open_bg = ext_config.get('file.open_shots.color_bg')
-    local open_fg = ext_config.get('file.open_shots.color_fg')
-    if type(open_bg) == 'string' or type(open_fg) == 'string' then
-      local config = require('shooter.config')
-      local open_shot = config.get('highlight.open_shot') or {}
-      vim.api.nvim_set_hl(0, 'ShoOpenShot', {
-        fg = open_fg or open_shot.fg or '#000000',
-        bg = open_bg or open_shot.bg or '#ffb347',
-        bold = open_shot.bold ~= false,
-      })
-    end
-    -- Closed shots (latest executed)
-    local closed_bg = ext_config.get('file.closed_shots.color_bg')
-    local closed_fg = ext_config.get('file.closed_shots.color_fg')
-    if type(closed_bg) == 'string' or type(closed_fg) == 'string' then
-      local config = require('shooter.config')
-      local done_shot = config.get('highlight.done_shot') or {}
-      vim.api.nvim_set_hl(0, 'ShoDoneShot', {
-        fg = closed_fg or done_shot.fg or '#555555',
-        bg = closed_bg or done_shot.bg or '#c8e6c9',
-        bold = done_shot.bold or false,
-      })
-    end
+    apply_override('file.open_shots', 'ShoOpenShot', 'highlight.open_shot')
+    -- Open shots title
+    apply_override('file.open_shots_title', 'ShoOpenShotTitle', 'highlight.open_shot_title')
+    -- Closed shots prefix (latest executed)
+    apply_override('file.closed_shots_prefix', 'ShoDoneShotPrefix', 'highlight.done_shot_prefix', true)
+    -- Closed shots title
+    apply_override('file.closed_shots_title', 'ShoDoneShotTitle', 'highlight.done_shot_title')
+    -- Closed shots postfix
+    apply_override('file.closed_shots_postfix', 'ShoDoneShotPostfix', 'highlight.done_shot_postfix', true)
+    -- Day marker prefix (first shot of the day)
+    apply_override('file.first_shot_of_the_day_prefix', 'ShoDayMarkerPrefix', 'highlight.day_marker_prefix', true)
+    -- Day marker title
+    apply_override('file.first_shot_of_the_day_title', 'ShoDayMarkerTitle', 'highlight.day_marker_title')
+    -- Day marker postfix
+    apply_override('file.first_shot_of_the_day_postfix', 'ShoDayMarkerPostfix', 'highlight.day_marker_postfix', true)
   end
   -- Extmarks are buffer-local — no window targeting needed
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do

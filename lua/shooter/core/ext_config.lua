@@ -9,17 +9,37 @@ local M = {}
 -- Default configuration values (YAML schema)
 M.DEFAULTS = {
   file = {
-    first_shot_of_the_day = {
-      color_bg = '#e6d5b8',
+    closed_shots_postfix = {
+      color_bg = '',
+      color_fg = '#888888',
+    },
+    closed_shots_prefix = {
+      color_bg = '',
+      color_fg = '#888888',
+    },
+    closed_shots_title = {
+      color_bg = '#dcedc8',
+      color_fg = '#555555',
+    },
+    first_shot_of_the_day_postfix = {
+      color_bg = '',
+      color_fg = '#888888',
+    },
+    first_shot_of_the_day_prefix = {
+      color_bg = '',
+      color_fg = '#888888',
+    },
+    first_shot_of_the_day_title = {
+      color_bg = '#f0e4d0',
       color_fg = '#555555',
     },
     open_shots = {
       color_bg = '#ffb347',
       color_fg = '#000000',
     },
-    closed_shots = {
-      color_bg = '#c8e6c9',
-      color_fg = '#555555',
+    open_shots_title = {
+      color_bg = '#ffe0a3',
+      color_fg = '#333333',
     },
     stats_notification = {
       enabled = true,
@@ -115,7 +135,14 @@ function M.parse_yaml(content)
         parent[key] = tonumber(value)
       else
         -- String: strip surrounding quotes if present
-        parent[key] = value:match('^["\'](.+)["\']$') or value
+        local unquoted = value:match('^["\'](.+)["\']$')
+        if unquoted then
+          parent[key] = unquoted
+        elseif value == '""' or value == "''" then
+          parent[key] = ''
+        else
+          parent[key] = value
+        end
       end
     end
 
