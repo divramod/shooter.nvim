@@ -4,3 +4,7 @@ instructions:
   - ~/.config/shooter/_source/ai/instructions/01-boundaries.md
   - ~/.config/shooter/_source/ai/instructions/02-workflow.md
   - ~/.config/shooter/_source/ai/instructions/03-git.md
+themes:
+  - name: project
+    path: .
+    bead: shov-9sr
