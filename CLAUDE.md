@@ -1,5 +1,5 @@
 # CLAUDE.md
-version: 0.2.21 2026-02-13 20:44:53
+version: 0.2.21 2026-02-13 20:47:56
 
 # Boundaries
 
