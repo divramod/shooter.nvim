@@ -1,0 +1,6 @@
+name: shooter.nvim
+instructions:
+  - ~/.config/shooter/_source/ai/templates/AGENTS.md
+  - ~/.config/shooter/_source/ai/instructions/01-boundaries.md
+  - ~/.config/shooter/_source/ai/instructions/02-workflow.md
+  - ~/.config/shooter/_source/ai/instructions/03-git.md
