@@ -65,7 +65,7 @@ function M.create_new_shot()
   local next_num = shots.get_next_shot_number(bufnr)
   local insert_line, needs_blank_before, has_content_below = find_insertion_line(bufnr)
 
-  local shot_header = '## shot ' .. next_num
+  local shot_header = '## shot ' .. next_num .. ' '
   local lines_to_add
   local cursor_offset
 
@@ -92,7 +92,7 @@ function M.create_new_shot_with_whisper()
   local next_num = shots.get_next_shot_number(bufnr)
   local insert_line, needs_blank_before, has_content_below = find_insertion_line(bufnr)
 
-  local shot_header = '## shot ' .. next_num
+  local shot_header = '## shot ' .. next_num .. ' '
   local lines_to_add
   local cursor_offset
 
