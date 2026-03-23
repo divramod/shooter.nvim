@@ -27,6 +27,8 @@ function M.build_shot_message(bufnr, shot_info)
   local header_line = shot_info.header_line
   local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
   local shot_num = shots.parse_shot_header(header_text)
+  local header_desc = shots.parse_shot_header_text(header_text)
+  local shot_title = header_desc and (shot_num .. ' ' .. header_desc) or shot_num
 
   shot_content = M.format_shot_content(shot_content)
 
@@ -47,7 +49,7 @@ function M.build_shot_message(bufnr, shot_info)
 %s
 
 %s]],
-    shot_num,
+    shot_title,
     vars.file_title,
     shot_content,
     instructions
@@ -67,10 +69,12 @@ function M.build_multishot_message(bufnr, shot_list)
   for _, shot_info in ipairs(shot_list) do
     local header_text = utils.get_buf_lines(bufnr, shot_info.header_line - 1, shot_info.header_line)[1]
     local shot_num = shots.parse_shot_header(header_text)
+    local header_desc = shots.parse_shot_header_text(header_text)
+    local shot_title = header_desc and (shot_num .. ' ' .. header_desc) or shot_num
     local content = shots.get_shot_content(bufnr, shot_info.start_line, shot_info.end_line)
 
     table.insert(shot_nums, shot_num)
-    table.insert(shot_parts, string.format("## shot %s\n%s", shot_num, content))
+    table.insert(shot_parts, string.format("## shot %s\n%s", shot_title, content))
   end
 
   local all_shots_content = table.concat(shot_parts, "\n\n")

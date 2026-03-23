@@ -79,8 +79,10 @@ function M.create_new_shot()
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
-  vim.cmd('startinsert')
+  -- Position cursor at end of header line (for typing header description)
+  local header_offset = needs_blank_before and 1 or 0
+  vim.api.nvim_win_set_cursor(0, { insert_line + header_offset, 0 })
+  vim.cmd('startinsert!')
   utils.echo('Created shot ' .. next_num)
 end
 
@@ -103,8 +105,10 @@ function M.create_new_shot_with_whisper()
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
 
-  vim.api.nvim_win_set_cursor(0, { insert_line + cursor_offset, 0 })
-  vim.cmd('startinsert')
+  -- Position cursor at end of header line (for typing header description)
+  local header_offset = needs_blank_before and 1 or 0
+  vim.api.nvim_win_set_cursor(0, { insert_line + header_offset, 0 })
+  vim.cmd('startinsert!')
 
   vim.defer_fn(function()
     if vim.fn.exists(':GpWhisper') == 2 then

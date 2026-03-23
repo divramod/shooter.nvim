@@ -194,6 +194,21 @@ function M.parse_shot_header(line)
   return num or '?'
 end
 
+-- Parse shot header to extract optional description text after the number
+-- e.g., "## shot 350 some header" → "some header"
+-- e.g., "## x shot 350 some header (2026-01-21 14:30:00) @ref" → "some header"
+-- e.g., "## shot 350" → nil
+function M.parse_shot_header_text(line)
+  local text = line:match('^##%s+x?%s*shot%s+%d+%s+(.+)')
+  if not text then return nil end
+  -- Strip timestamp and @ref from executed shots
+  text = text:gsub('%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%).*$', '')
+  text = text:gsub('%s*@[%w%.%-_]+$', '')
+  text = text:gsub('%s+$', '')
+  if text == '' then return nil end
+  return text
+end
+
 -- Get shot content (excluding the header line itself)
 function M.get_shot_content(bufnr, start_line, end_line)
   bufnr = bufnr or 0

@@ -144,6 +144,30 @@ describe('shots module', function()
     end)
   end)
 
+  describe('parse_shot_header_text', function()
+    it('extracts description text from open shot header', function()
+      assert.are.equal('some header', shots.parse_shot_header_text('## shot 350 some header'))
+      assert.are.equal('fix auth bug', shots.parse_shot_header_text('## shot 1 fix auth bug'))
+    end)
+
+    it('returns nil when no description text', function()
+      assert.is_nil(shots.parse_shot_header_text('## shot 350'))
+      assert.is_nil(shots.parse_shot_header_text('## shot 1'))
+    end)
+
+    it('strips timestamp and ref from executed shots', function()
+      assert.are.equal('some header',
+        shots.parse_shot_header_text('## x shot 350 some header (2026-01-21 14:30:00)'))
+      assert.are.equal('some header',
+        shots.parse_shot_header_text('## x shot 350 some header (2026-01-21 14:30:00) @ref-123'))
+    end)
+
+    it('returns nil for executed shots without description', function()
+      assert.is_nil(shots.parse_shot_header_text('## x shot 350 (2026-01-21 14:30:00)'))
+      assert.is_nil(shots.parse_shot_header_text('## x shot 350 (2026-01-21 14:30:00) @ref-123'))
+    end)
+  end)
+
   describe('get_shot_content', function()
     it('returns content without header', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
