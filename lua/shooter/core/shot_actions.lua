@@ -69,12 +69,12 @@ function M.create_new_shot()
   local lines_to_add
   local cursor_offset
 
-  -- Structure: [blank before], header, blank (cursor), [blank separator if content below]
+  -- Structure: [blank before], header, [blank separator if content below]
   if needs_blank_before then
-    lines_to_add = has_content_below and { '', shot_header, '', '' } or { '', shot_header, '' }
+    lines_to_add = has_content_below and { '', shot_header, '' } or { '', shot_header }
     cursor_offset = 2
   else
-    lines_to_add = has_content_below and { shot_header, '', '' } or { shot_header, '' }
+    lines_to_add = has_content_below and { shot_header, '' } or { shot_header }
     cursor_offset = 1
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
@@ -97,10 +97,10 @@ function M.create_new_shot_with_whisper()
   local cursor_offset
 
   if needs_blank_before then
-    lines_to_add = has_content_below and { '', shot_header, '', '' } or { '', shot_header, '' }
+    lines_to_add = has_content_below and { '', shot_header, '' } or { '', shot_header }
     cursor_offset = 2
   else
-    lines_to_add = has_content_below and { shot_header, '', '' } or { shot_header, '' }
+    lines_to_add = has_content_below and { shot_header, '' } or { shot_header }
     cursor_offset = 1
   end
   utils.set_buf_lines(bufnr, insert_line - 1, insert_line - 1, lines_to_add)
