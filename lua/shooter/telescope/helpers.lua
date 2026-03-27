@@ -86,16 +86,25 @@ end
 -- Create shot entry for telescope picker
 -- show_file: if true, include filename in display (for multi-file mode)
 function M.make_shot_entry(shot, lines, target_file, is_current, show_file)
+  local shots_mod = require('shooter.core.shots')
   local header = lines[shot.header_line]
   local shot_num = header:match('shot%s+(%d+)') or '?'
-  local preview_lines = {}
-  for idx = shot.start_line + 1, math.min(shot.start_line + 5, shot.end_line) do
-    if lines[idx] and lines[idx] ~= '' then
-      table.insert(preview_lines, lines[idx])
-      if #preview_lines >= 3 then break end
+
+  -- Use header description if present, otherwise first content line(s)
+  local header_desc = shots_mod.parse_shot_header_text(header)
+  local preview
+  if header_desc then
+    preview = header_desc
+  else
+    local preview_lines = {}
+    for idx = shot.start_line + 1, math.min(shot.start_line + 5, shot.end_line) do
+      if lines[idx] and lines[idx] ~= '' then
+        table.insert(preview_lines, lines[idx])
+        if #preview_lines >= 3 then break end
+      end
     end
+    preview = table.concat(preview_lines, ' | ')
   end
-  local preview = table.concat(preview_lines, ' | ')
   if #preview > 60 then preview = preview:sub(1, 60) .. '...' end
 
   local display
