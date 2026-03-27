@@ -228,6 +228,24 @@ function M.migrate()
   vim.fn.delete(old_dir, 'rf')
 end
 
+--- Fix empty tables that should be leaf values (YAML parser ambiguity)
+--- When YAML has `key: ` (empty value), the parser creates {} but the default might be '' or other type.
+---@param merged table Merged config
+---@param defaults table DEFAULTS schema
+local function fix_empty_table_leaves(merged, defaults)
+  for key, default_val in pairs(defaults) do
+    local merged_val = merged[key]
+    if merged_val == nil then
+      -- skip
+    elseif type(default_val) == 'table' and type(merged_val) == 'table' then
+      fix_empty_table_leaves(merged_val, default_val)
+    elseif type(default_val) ~= 'table' and type(merged_val) == 'table' and next(merged_val) == nil then
+      -- Empty table {} where default is a non-table (e.g., string ''): restore default
+      merged[key] = default_val
+    end
+  end
+end
+
 --- Load and merge config: defaults < global YAML < local YAML
 --- Result is cached until reload() is called.
 ---@return table Merged configuration
@@ -260,6 +278,9 @@ function M.load()
       end
     end
   end
+
+  -- Fix YAML parser ambiguity: empty value `key: ` parses as {} but may be ''
+  fix_empty_table_leaves(merged, M.DEFAULTS)
 
   _cache = merged
   return _cache

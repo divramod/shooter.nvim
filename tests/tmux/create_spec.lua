@@ -23,26 +23,33 @@ describe('create module', function()
     end)
   end)
 
-  describe('CLAUDE_CMD constant', function()
-    it('uses correct claude command with flags', function()
-      -- The CLAUDE_CMD should include -c and --dangerously-skip-permissions
-      -- We verify this by checking the function behavior indirectly
-      -- since the constant is local
-
-      -- Create a mock to capture the command
-      local captured_cmd = nil
-      local original_execute = os.execute
-      os.execute = function(cmd)
-        captured_cmd = cmd
-        return 0
+  describe('PROVIDER_CMDS constant', function()
+    it('uses correct claude command with flags via jobstart', function()
+      -- start_claude_in_pane uses vim.fn.jobstart to send keys
+      -- Verify it calls jobstart with the expected tmux send-keys args
+      local captured_args = {}
+      local original_jobstart = vim.fn.jobstart
+      local original_jobwait = vim.fn.jobwait
+      local original_wait = vim.wait
+      vim.fn.jobstart = function(cmd, _)
+        table.insert(captured_args, cmd)
+        return 1
       end
+      vim.fn.jobwait = function() return {0} end
+      vim.wait = function() return true end
 
       create.start_claude_in_pane('%123')
 
-      os.execute = original_execute
+      vim.fn.jobstart = original_jobstart
+      vim.fn.jobwait = original_jobwait
+      vim.wait = original_wait
 
-      assert.is_truthy(captured_cmd)
-      assert.is_truthy(captured_cmd:match('claude %-c %-%-dangerously%-skip%-permissions'),
+      -- Second jobstart call sends the actual command
+      assert.is_true(#captured_args >= 2, 'Should have at least 2 jobstart calls')
+      local cmd_call = captured_args[2]
+      -- The command args should include the claude command string
+      local cmd_str = table.concat(cmd_call, ' ')
+      assert.is_truthy(cmd_str:match('claude %-c %-%-dangerously%-skip%-permissions'),
         "Command should include -c --dangerously-skip-permissions flags")
     end)
   end)

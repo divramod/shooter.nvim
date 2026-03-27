@@ -47,7 +47,7 @@ describe('renumber_helper module', function()
       }
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-      local hash = 'Unique content ABC\n'
+      local hash = 'Unique content ABC'
       local start_line, end_line, header_line = renumber_helper.find_shot_by_content(bufnr, hash)
 
       assert.are.equal(3, start_line)

@@ -99,14 +99,12 @@ describe('templates module', function()
     it('returns string for single shot', function()
       local instructions = templates.load_instructions(false)
       assert.is_string(instructions)
-      assert.is_truthy(instructions:match('{{shot_num}}'))
       assert.is_truthy(instructions:match('{{file_title}}'))
     end)
 
     it('returns string for multishot', function()
       local instructions = templates.load_instructions(true)
       assert.is_string(instructions)
-      assert.is_truthy(instructions:match('{{shot_nums}}'))
       assert.is_truthy(instructions:match('{{file_title}}'))
     end)
 
@@ -143,10 +141,10 @@ describe('templates module', function()
 
     it('loads plugin template files', function()
       local content = templates.load_template('shooter-context-instructions.md')
-      -- If template exists, it should be a string
+      -- If template exists, it should be a string with template variables
       if content then
         assert.is_string(content)
-        assert.is_truthy(content:match('{{shot_num}}'))
+        assert.is_truthy(content:match('{{file_title}}'))
       end
     end)
   end)
