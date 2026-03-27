@@ -238,12 +238,6 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
 
   if #shot_infos == 0 then utils.echo('No shots to send'); return end
 
-  -- Build message BEFORE marking (so headers show original shot numbers)
-  local full_message = messages.build_multishot_message(bufnr, shot_infos)
-  local shots_str = build_shots_str(bufnr, shot_infos)
-  local temp_path = save_temp_sendable(full_message, shots_str, bufnr)
-  if not temp_path then utils.echo('Failed to save temp file'); return end
-
   -- Lock buffer during pane creation (same protection as send_current_shot)
   local was_modifiable = vim.bo[bufnr].modifiable
   vim.bo[bufnr].modifiable = false
@@ -259,33 +253,29 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
 
   if not pane_id then return end
 
-  -- Capture sent shot numbers before marking (headers change after mark+renumber)
-  local sent_nums = {}
-  for _, shot_info in ipairs(shot_infos) do
-    local header = utils.get_buf_lines(bufnr, shot_info.header_line - 1, shot_info.header_line)[1]
-    local num = get_shots().parse_shot_header(header)
-    if num then sent_nums[num] = true end
-  end
-
-  -- Mark all shots as executed, then renumber
+  -- Mark all shots as executed, then renumber (same pattern as send_all_shots)
   for _, shot_info in ipairs(shot_infos) do mark_shot(bufnr, shot_info) end
   require('shooter.core.renumber').renumber_shots(bufnr)
 
+  -- Find the executed shots after renumbering — these have the correct new numbers
+  local executed_shots = get_renumber_helper().find_executed_shots(bufnr)
+
+  -- Build message AFTER renumbering so it uses the new shot numbers
+  local full_message = messages.build_multishot_message(bufnr, executed_shots)
+  local shots_str = build_shots_str(bufnr, executed_shots)
+  local temp_path = save_temp_sendable(full_message, shots_str, bufnr)
+  if not temp_path then utils.echo('Failed to save temp file'); return end
+
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    -- Add temp file reference to each sent shot's header (like single send does)
+    -- Add temp file reference to each sent shot's header
     local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
-    local executed = get_renumber_helper().find_executed_shots(bufnr)
-    for _, ex in ipairs(executed) do
-      local h = utils.get_buf_lines(bufnr, ex.header_line - 1, ex.header_line)[1]
-      local num = get_shots().parse_shot_header(h)
-      if num and sent_nums[num] then
-        add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
-      end
+    for _, ex in ipairs(executed_shots) do
+      add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
     end
 
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
-    utils.echo(string.format('Sent %d shots to %s%s (%s)', #shot_infos, provider_name, pane_msg, files.get_file_title(bufnr)))
+    utils.echo(string.format('Sent %d shots to %s%s (%s)', #executed_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     vim.cmd('stopinsert')
     sound.play()
     vim.schedule(function()
