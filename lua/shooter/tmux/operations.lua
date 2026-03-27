@@ -253,16 +253,30 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
 
   if not pane_id then return end
 
-  -- Mark all shots as executed, then renumber (same pattern as send_all_shots)
+  -- Capture content hashes of selected shots BEFORE marking (to find them after renumber)
+  local selected_hashes = {}
+  for _, shot_info in ipairs(shot_infos) do
+    local hash = get_renumber_helper().get_shot_content_hash(bufnr, shot_info.start_line, shot_info.end_line)
+    selected_hashes[hash] = true
+  end
+
+  -- Mark selected shots as executed, then renumber
   for _, shot_info in ipairs(shot_infos) do mark_shot(bufnr, shot_info) end
   require('shooter.core.renumber').renumber_shots(bufnr)
 
-  -- Find the executed shots after renumbering — these have the correct new numbers
-  local executed_shots = get_renumber_helper().find_executed_shots(bufnr)
+  -- Find only the just-marked shots by matching content hashes
+  local all_executed = get_renumber_helper().find_executed_shots(bufnr)
+  local sent_shots = {}
+  for _, ex in ipairs(all_executed) do
+    local hash = get_renumber_helper().get_shot_content_hash(bufnr, ex.start_line, ex.end_line)
+    if selected_hashes[hash] then
+      table.insert(sent_shots, ex)
+    end
+  end
 
   -- Build message AFTER renumbering so it uses the new shot numbers
-  local full_message = messages.build_multishot_message(bufnr, executed_shots)
-  local shots_str = build_shots_str(bufnr, executed_shots)
+  local full_message = messages.build_multishot_message(bufnr, sent_shots)
+  local shots_str = build_shots_str(bufnr, sent_shots)
   local temp_path = save_temp_sendable(full_message, shots_str, bufnr)
   if not temp_path then utils.echo('Failed to save temp file'); return end
 
@@ -270,12 +284,12 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
   if success then
     -- Add temp file reference to each sent shot's header
     local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
-    for _, ex in ipairs(executed_shots) do
+    for _, ex in ipairs(sent_shots) do
       add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
     end
 
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
-    utils.echo(string.format('Sent %d shots to %s%s (%s)', #executed_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
+    utils.echo(string.format('Sent %d shots to %s%s (%s)', #sent_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     vim.cmd('stopinsert')
     sound.play()
     vim.schedule(function()
