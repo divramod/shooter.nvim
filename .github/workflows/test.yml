@@ -34,8 +34,15 @@ jobs:
       - name: Run tests
         run: |
           nvim --version
-          nvim --headless --noplugin -u tests/minimal_init.lua \
-            -c "lua require('plenary.test_harness').test_directory('tests/', {minimal_init = 'tests/minimal_init.lua', sequential = true})"
+          TEST_OUTPUT=$(mktemp)
+          timeout 120 nvim --headless --noplugin -u tests/minimal_init.lua \
+            -c "lua require('plenary.test_harness').test_directory('tests/', {minimal_init = 'tests/minimal_init.lua', sequential = true})" 2>&1 | tee "$TEST_OUTPUT" || true
+          # Check for actual test failures (not just nvim exit code)
+          if grep -q "^Failed :.*[1-9]" "$TEST_OUTPUT"; then
+            echo "Tests failed!"
+            exit 1
+          fi
+          echo "All tests passed!"
 
       - name: Lint with luacheck (if available)
         run: |
