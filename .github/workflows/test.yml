@@ -34,7 +34,8 @@ jobs:
       - name: Run tests
         run: |
           nvim --version
-          nvim --headless -c "PlenaryBustedDirectory tests/ {minimal_init = 'tests/minimal_init.lua'}"
+          nvim --headless --noplugin -u tests/minimal_init.lua \
+            -c "lua require('plenary.test_harness').test_directory('tests/', {minimal_init = 'tests/minimal_init.lua', sequential = true})"
 
       - name: Lint with luacheck (if available)
         run: |
