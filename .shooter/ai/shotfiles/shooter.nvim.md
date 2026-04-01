@@ -1,14 +1,20 @@
 # shooter.nvim
 
-## shot 377
+## shot 390 
+
+## shot 389 .shooter/tmp gitignore
+i have a new project, where i used shooter.nvim
+sometimes it creates a .shooter/tmp folder
+
+## shot 388
 add move to project command and move to repo command
 
-## shot 376
+## shot 387
 the next step would be, to be able to also configure the folders for the sub projects seperately in the session settings. so the projects filter should look like this:
 ```yaml
 ```
 
-## shot 375
+## shot 386
 i want to introduce sub projects in shooter.nvim
 so we have my me repo:
  me/
@@ -17,13 +23,13 @@ so we have my me repo:
        projects/
          connect-powerstation/
 
-## shot 374
+## shot 385
 workflow analysis: what costs me the most time?
 
-## shot 373
+## shot 384
 i need a good workflow also to get pics form pc to figma
 
-## shot 372
+## shot 383
 in these sections in the analytics pane, i also always want to know the repo and where the shot file is located.
 
 for the global command ~/... i want to see the repo and the shot file path for occurence of a file path.
@@ -78,44 +84,44 @@ for local ./plans/... is enough
 5. tmux.md (28)
 ```
 
-## shot 371
+## shot 382
 when i press yes to open the audit report, it throws an error
 /Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110923.png
 
-## shot 370
+## shot 381
 please add pleanary also to the checkhealth cmd of shooter.nvim
 also add the versions, which are installed for all deps in the checkhealth cmd
 please add the versions to all plugins and also ttok 
 please add also a area for the the ai cli tools in the checkhealth, which checks if claude, codex, gemini, copilot cli, qwen cli are installed and if so, which version is installed
 
-## shot 369
+## shot 380
 the shooter.nvim plugin has the following goals: 
 1. beeing faster in shooting to ai cli agents (claude, gemini, codex, copilot, qwen)
 2. analyzing the habits of the shooter, so that he can see, what he does and has good data to optimize his workflow. the plugin should give the user hints, how to improve his shooting workflow based on the data it collects.
 
-## shot 368
+## shot 379
 please in all shot history files add the shotfile title from the shotfile to the metadata, if its not already there.
 
-## shot 367
+## shot 378
 i have some copied files, which trick the history function.
 i need a ShoShotfileDelete command, which deletes a shot file and its history folder accordingly.
 i know that cant be undone, so please add a prompt, where the user has to type "DELETE" to confirm the deletion.
 
-## shot 366
+## shot 377
 introduce a project migration, where i can move the shot files from a projects repo into a programming repo with no projects folder structure.
 
-## shot 365
+## shot 376
 make it possible to configure a me / gtd repo with a project folder structure
 then everything should be setup automatically
 research files always should belong to a project
 
-## shot 364
+## shot 375
 have a look at the ci, if still everything is passing
 
-## shot 363
+## shot 374
 create claude.md instructions for shots, maybe a shooter agent, which gots the task and creates a bead?
 
-## shot 362
+## shot 373
 restructure folders shooter creates:
 
 <repo>/
@@ -146,105 +152,163 @@ agents i often use:
 - /prd-update
 - /readme-update
 
-## shot 361
+## shot 372
 have a prioritization command, which loops through the shotfiles and prioritizes the shots files.
 on a second level, it prioritizes the shots in the shot files.
 
-## shot 360
+## shot 371
 create different shot variants.
 seperate between a normal answer and a real new shot.
 normal answer would be a threat for a already existing shot.
 
-## shot 359
+## shot 370
 if i accidentially run the send all shots command in a file, it should ask me, if i really want to run all
 
-## shot 358
+## shot 369
 i need commands to open all the inbox files i have.
 so that i can write new items directly there.
 
-## shot 357
+## shot 368
 move screenshot images folder
 
-## shot 356
+## shot 367
 mappings for gsd folders/files 
 i want to use get shit done (a agent framework) in many of my projects.
 so i need some shortcuts to work with it:
 1. < >
 
-## shot 355
+## shot 366
 tmux: have an indicator, that a shot was send
 
-## shot 354
+## shot 365
 gemini hooks
 
-## shot 353
+## shot 364
 codex hooks
 
-## shot 352
+## shot 363
 create < >c which opens a list of commands, which can be run in claude and sends it there then
 what to do with commands, which take arguments?
 what with comands, which ask the user
 
-## shot 351
+## shot 362
 Can i name tmux panes.
 Does tmux panes have ids?
 Does tmux panes have numbers?
 Which things are persistant?
 
-## shot 350
+## shot 361
 Copy telescope into shooter
 
-## shot 349
+## shot 360
 remap < >g to < >I to get images in ~/cod/shooter.nvim
 
-## shot 348
+## shot 359
 configure image directory.
 
-## shot 347
+## shot 358
 `gn` gsd next step
 
-## shot 346
+## shot 357
 `gd` discuss
 
-## shot 345
+## shot 356
 `gv` verify
 
-## shot 344
+## shot 355
 Threads possible?
 
-## shot 343
+## shot 354
 Make the opening of panes and starting the clis more robust. This should work always
 
-## shot 342
+## shot 353
 add to the shot header, to which cli and which pane id the shot was send to
 
-## shot 341
+## shot 352
 create shooter rust cli
 
-## shot 340
+## shot 351
 create shooter icon chooser
 
-## shot 339
+## shot 350
 tmux command to make all tmux panes the same width in the current window
 
-## shot 338
+## shot 349
 is there maybe a is ready hook in claude, which could be used to write to a file or something like this?
 
-## shot 337
+## shot 348
 i really liked the gp.nvim plugin for a while before i moved on to another kind of programming style with claude.
 especially i liked the whisper integration i use now here.
 but i also would like to be independent from other plugins.
 can you go to the gp nvim repo strip out the gp whisper functionality and put it into shooter, so that we have one less dependency?
 does they have the right license?
 
-## shot 336
+## shot 347
 abstract shooter, so that it works for copilot cli
 abstract shooter, so that it works for qwen
 abstract shooter, so that it works for gemini
 
-## shot 335
+## shot 346
 visualize shot history with a replay of the shots i made in which project when
 give me an idea on how we could do that
+
+## x shot 345 worktrees adaption (2026-04-01 14:14:00) @shooter.nvim_20260401_141400_shot-345
+i have adapted my workflow a little bit and use git worktrees now.
+to make the agents aware of that, i want you to add to the end of the shotfile this text as a reminder for the agents, when they start a new shot:
+
+**Before starting any shot:** If your current working directory is a subdirectory of the `.worktrees` folder, run `hal git worktree merge-from-main` to merge the latest changes from the main branch into your worktree branch. If this command throws errors, fix the merge conflicts and commit the changes to the worktree branch and try to merge main again, before starting to work on the new shot.
+
+## x shot 344 not all shots on multishots (2026-03-27 18:06:44) @shooter.nvim_20260327_180644_shot-344
+i tried the multishotpicker.
+it now seems to send all shots from a file into the shotfile?
+even though, i only sent shot  
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260327_180508.png
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260327_180627.png
+something seems off here
+
+## x shot 343 shotpicker header format (2026-03-27 18:04:05) @shooter.nvim_20260327_180405_shot-343
+in the shotpicker. if a shot has a header, like shot 4, this header text should be taken in the list
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260327_180324.png
+if there is no header, then the first line of the shot should be taken as the header for the shotpicker list.
+
+## x shot 342 multishotpicker not doing the numbering correctly (2026-03-27 08:29:05) @shooter.nvim_20260327_082905_shot-342
+the multishotpicker sends the original shot numbers to claude.
+it should sent the renumbered shots numbers instead.
+do you understand what i mean?
+
+## x shot 341 test 2 (2026-03-27 08:08:22)
+t2
+
+## x shot 340 test 1 (2026-03-27 08:08:22)
+t1
+
+## x shot 339 fix send many shots from open shots picker (2026-03-27 07:25:56) @shooter.nvim_20260327_072556_shot-339
+i ran < >o and then selected multiple shots
+i then pressed one to send them
+but it did not sent the shot.
+please fix it
+
+## x shot 338  (2026-03-25 08:45:24) @shooter.nvim_20260325_084524_shot-338
+looks already good, but i want one less empty line after the shot header, when creating a new shot
+
+## x shot 337 test (2026-03-23 14:49:46)
+
+
+## x shot 336 new shot 336 (2026-03-23 14:30:15) @shooter.nvim_20260323_143016_shot-336
+looks already good, but i want a space after the number of the new shot
+
+## x shot 335 (2026-03-23 14:28:24)
+i changed the way i send my shots.
+i started putting a little header to my shots like this sometimes:
+```markdown
+## shot 350 some header
+the content of the shot
+```
+
+that means, that i want you to adapt the shotfile, which is created, so that it also adds the header into the shotfile and also, that when i create a new shot, that the cursor jumps to the following position:
+```markdown
+## shot 351 <cursor>
+```
 
 ## x shot 334 (2026-02-07 02:28:43) @shot-334-20260207_022843
 when i press < >2 and there is no pane, i want to be asked, which cli should be started (claude (c), opencode (o)), then i press o, then a tmux pane is split horizontally, then opencode will be started, then, ater opencode is ready, the shot is sent
@@ -751,24 +815,6 @@ after the cleanup, why is a file with a date in the begining still at the first 
 /Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_120451.png
 
 ## x shot 256 (2026-01-23 11:40:03)
-ok, now we need to clean all the history folders from the double created files.
-
-## x shot 255 (2026-01-23 11:40:03)
-i want you to write some new nvim commands.
-1. first, i want you to rename ,,pe to ,,nc (next action create).
-2. create a new command ,,ne (next action edit) that opens telescope, which lists all files in the projects prompts folder and its subfolders and when i press enter on a selected file, it opens that file for editing.
-3. create a new command ,,nr (next action remove/delete) that opens telescope, which lists all files in the projects prompts folder and its subfolders and when i press ctrl-d on a selected file, it deletes that file
-4. create a new command ,,na which moves the currently open file to prompts/archive folder
-5. create a new command ,,nb which moves the currently open file to prompts/backlog folder
-6. create a new command ,,nd which moves the currently open file to prompts/done folder
-7. create a new command ,,nr which moves the currently open file to prompts/reqs folder
-8. create a new command ,,nt which moves the currently open file to prompts/test folder
-9. create a new command ,,nw which moves the currently open file to prompts/wait folder
-
-all these commands should also work, when i am in oil in the normal mode.
-for example if i am in oil and the file under the cursor is in the prompts folder or a subfolder of the prompts folder and i type ,,na it should move that file to prompts/archive folder.
-
-## x shot 254 (2026-01-23 11:40:03)
 ,,ns i want you to add a new command to my next action commands list.
 my next action files currently look like this:
 
@@ -802,6 +848,24 @@ also, there is a problem with the current ,,sc command.
 when the text is longer than a certain amount, claude justs shows a message like [pasted text with length xxx].
 in that case, the enter command does not work and i have to manually press enter again to send the prompt.
 please fix that problem too.
+
+## x shot 255 (2026-01-23 11:40:03)
+ok, now we need to clean all the history folders from the double created files.
+
+## x shot 254 (2026-01-23 11:40:03)
+i want you to write some new nvim commands.
+1. first, i want you to rename ,,pe to ,,nc (next action create).
+2. create a new command ,,ne (next action edit) that opens telescope, which lists all files in the projects prompts folder and its subfolders and when i press enter on a selected file, it opens that file for editing.
+3. create a new command ,,nr (next action remove/delete) that opens telescope, which lists all files in the projects prompts folder and its subfolders and when i press ctrl-d on a selected file, it deletes that file
+4. create a new command ,,na which moves the currently open file to prompts/archive folder
+5. create a new command ,,nb which moves the currently open file to prompts/backlog folder
+6. create a new command ,,nd which moves the currently open file to prompts/done folder
+7. create a new command ,,nr which moves the currently open file to prompts/reqs folder
+8. create a new command ,,nt which moves the currently open file to prompts/test folder
+9. create a new command ,,nw which moves the currently open file to prompts/wait folder
+
+all these commands should also work, when i am in oil in the normal mode.
+for example if i am in oil and the file under the cursor is in the prompts folder or a subfolder of the prompts folder and i type ,,na it should move that file to prompts/archive folder.
 
 ## x shot 253 (2026-01-23 11:36:01)
 i found a problem in the creation of the history files.
@@ -1289,12 +1353,12 @@ please seperate between system dependencies and nvim dependencies
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_145757.png
 
 ## x shot 171 (2026-01-21 15:01:19)
-go to latest send shot with < >L
-you can see it at the date of the shot header
-
-## x shot 170 (2026-01-21 15:01:19)
 < >l is not working
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_145857.png
+
+## x shot 170 (2026-01-21 15:01:19)
+go to latest send shot with < >L
+you can see it at the date of the shot header
 
 ## x shot 169 (2026-01-21 15:01:18)
 add < >H for running the shooter healthcheck
@@ -1319,11 +1383,11 @@ can you color them differently?
 so for example the undone shots have a light yellow background?
 
 ## x shot 164 (2026-01-21 14:49:48)
-when sending multiple shots with the telescope shot chooser, the templates are not added to the bottom of the file, like we do it in single shot mode.
-/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_144701.png
+when in telescope < >o, the space should also select files to shoot like tab and not offer to run the mappings. so all space maps should be disabled, when telescope shot chooser is open
 
 ## x shot 163 (2026-01-21 14:49:48)
-when in telescope < >o, the space should also select files to shoot like tab and not offer to run the mappings. so all space maps should be disabled, when telescope shot chooser is open
+when sending multiple shots with the telescope shot chooser, the templates are not added to the bottom of the file, like we do it in single shot mode.
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_144701.png
 
 ## x shot 162 (2026-01-21 14:46:20)
 telescope < >o should react to ctrl-c also in normal mode and close the telescope
@@ -1493,17 +1557,6 @@ now it adds the shot at the bottom and still shows a error message
 please open it in normal mode, because most of the time i want to select shots and then send them to claude.
 
 ## x shot 125 (2026-01-21 12:47:00)
-i still have the old time format in the shots header.
-
-## x shot 124 (2026-01-21 12:47:00)
-you where compacting the session in the middle of the work.
-after you compacted it, you lost the state, at which task you where working on.
-so you just took the three next shots.
-that should not happen, because the user is maybe not ready with the next shots yet.
-
-/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_124608.png
-
-## x shot 123 (2026-01-21 12:47:00)
 i still see the old mappings to dmnextactions functions in the mappings file.
 now, that shooter is working, they should be removed, right?
 because the mappings should be added by default from the plugin, right?
@@ -1515,40 +1568,51 @@ i want to make it clean now.
 and i want to use the default mappings from shooter.nvim.
 you need to systematically check on both sides, if everything is been implemented in shooter.nvim already
 
+## x shot 124 (2026-01-21 12:47:00)
+you where compacting the session in the middle of the work.
+after you compacted it, you lost the state, at which task you where working on.
+so you just took the three next shots.
+that should not happen, because the user is maybe not ready with the next shots yet.
+
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_124608.png
+
+## x shot 123 (2026-01-21 12:47:00)
+i still have the old time format in the shots header.
+
 ## x shot 122 (2026-01-21 12:33:00)
 create a tmux pane to the left of the vim pane and start claude automatically, when there is no tmux pane with claude in the current window and send the shot(s) there, after claude is ready
 
 ## x shot 121 (2026-01-21 12:33:00)
-there needs to be a empty line between the first and the second line in the multishots prompt.
-also, in the ```# context``` area of the prompt, please begin every sentence with a big letter.
-/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122813.png
-
-## x shot 120 (2026-01-21 12:33:00)
 when i run ShoOpenShots manually, it does not show the preview in the telescope list.
 have you really moved all code to the plugin folder?
 or why are they differing?
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_123241.png
 
+## x shot 120 (2026-01-21 12:33:00)
+there needs to be a empty line between the first and the second line in the multishots prompt.
+also, in the ```# context``` area of the prompt, please begin every sentence with a big letter.
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122813.png
+
 ## x shot 119 (2026-01-21 12:27:00)
-please add to the shooter.nvim claude.md that you always update the readme, when you add a feature or change one.
+please add a table of contents at the top of the shooters readme
 
 ## x shot 118 (2026-01-21 12:27:00)
+please add to the shooter.nvim claude.md that you always update the readme, when you add a feature or change one.
+
+## x shot 117 (2026-01-21 12:27:00)
 in the readme, the shot order is wrong at different places.
 the latest shot is always at the top 
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122450.png
 
-## x shot 117 (2026-01-21 12:27:00)
-please add a table of contents at the top of the shooters readme
-
 ## x shot 116 (2026-01-21 12:22:00)
-can you replace the home directory in the prompt with ~
-its better readable
+can you please start the sentences with big letters in the ```# context``` 1. 2. 3. 4.
 
 ## x shot 115 (2026-01-21 12:22:00)
 can you document all the last shots in the shooters readme.md. the pathes of the template files, etc 
 
 ## x shot 114 (2026-01-21 12:22:00)
-can you please start the sentences with big letters in the ```# context``` 1. 2. 3. 4.
+can you replace the home directory in the prompt with ~
+its better readable
 
 ## x shot 113 (2026-01-21 12:18:00)
 can you abstract the template loading and make in all the template files the shot number available as constant, also the next action file title, also the next action file path and the next action file name. also the repo name.
@@ -1577,16 +1641,16 @@ the shooter ci has a lot of not finished jobs and is failing.
 please, with every new job, kill the old one and ensure, that the ci is passing.
 
 ## x shot 110 (2026-01-21 12:03:00)
-when i go up in the claude history, i still have this cryptic messages, with which i cant do anything.
-/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120405.png
-when i go up in the history, i want to be able to read the full text.
-or is that not possible from claudes side?
-
-## x shot 109 (2026-01-21 12:03:00)
 in the prompt text, still the old files are shown in the prompt.
 i thought you fixed it?
 do i have to sync lazy?
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120214.png
+
+## x shot 109 (2026-01-21 12:03:00)
+when i go up in the claude history, i still have this cryptic messages, with which i cant do anything.
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_120405.png
+when i go up in the history, i want to be able to read the full text.
+or is that not possible from claudes side?
 
 ## x shot 108 (2026-01-21 12:01:00)
 i want to have human readable format for the date and time in the shot header
@@ -1738,22 +1802,22 @@ the notifications are still shown in the top right.
 i want them to be shown in the bottom right of the nvim window.
 
 ## x shot 89 (2026-01-21 08:43:00)
+in the < >o, i also want to see the text of the shot as preview in the telescope preview window, which should be at the bottom
+
+## x shot 88 (2026-01-21 08:43:00)
 i want you to catch some more cases for the send to claude functionality.
 if there is text in the claude prompt, i want you to remove it
 if i pressed ctrl+g in the claude prompt to open vim to write the prompt, vim should be closed and the content of the vim buffer should be deleted
 
-## x shot 88 (2026-01-21 08:43:00)
-instead of you reading both files every time, i want you to add the content of the two files already to the prompt, before it is send to you.
-that way we safe you a little time to read the files and i can always see the full prompt which is sent to you
-
 ## x shot 87 (2026-01-21 08:43:00)
-in the < >o, i also want to see the text of the shot as preview in the telescope preview window, which should be at the bottom
-
-## x shot 86 (2026-01-21 08:43:00)
 integrate chatgpt whisper?
 
-## x shot 85 (2026-01-21 08:43:00)
+## x shot 86 (2026-01-21 08:43:00)
 i'm thinking about having a queue of next action commands which i want to send to you with a different space and the number shortcuts the reason for that is that my shots are really small this is something i learned in the last weeks working with you that the smaller the shots are the better the chance of you solving it my workflow currently is that i send a shot to you then you work on it and in the meantime i create new shots and i would really like to shoot but i don't want them to be instantly sent to you i want to wait until you finish the last shot because sometimes i need to adapt some things in that last shot and i only want to send it when i'm really done so come up with an idea on a shot queue
+
+## x shot 85 (2026-01-21 08:43:00)
+instead of you reading both files every time, i want you to add the content of the two files already to the prompt, before it is send to you.
+that way we safe you a little time to read the files and i can always see the full prompt which is sent to you
 
 ## x shot 84 (2026-01-21 08:41:00)
 ctrl+c in command mode should not close vim completely, but just exit the current mode and go back to normal mode.
@@ -1858,10 +1922,10 @@ please update the things you created in shot 63.
 in the best case, it reuses most of the stuff done for < >< >< >1 ...
 
 ## x shot 64 (2026-01-20 11:02:00)
-on the top right i most of the time need to see everything.
-please change that in general for all the notifications i send from my lua functions in the nivm dotfiles
 
 ## x shot 63 (2026-01-20 11:02:00)
+on the top right i most of the time need to see everything.
+please change that in general for all the notifications i send from my lua functions in the nivm dotfiles
 
 ## x shot 62 (2026-01-20 11:01:00)
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260120_110036.png
@@ -2224,3 +2288,4 @@ after executing the snippet and pressing tab, the file should look like this:
 ## x shot 1 (2026-01-18 06:18:00)
 ```
 
+**Before starting any shot:** If your current working directory is a subdirectory of the `.worktrees` folder, run `hal git worktree merge-from-main` to merge the latest changes from the main branch into your worktree branch. If this command throws errors, fix the merge conflicts and commit the changes to the worktree branch and try to merge main again, before starting to work on the new shot.
