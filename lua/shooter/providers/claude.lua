@@ -6,7 +6,7 @@ local M = {}
 -- Provider identity
 M.name = 'claude'
 M.display_name = 'Claude'
-M.process_pattern = 'claude|hal'
+M.process_pattern = 'claude'
 
 -- Send file reference to pane (@filepath syntax)
 function M.send_file_reference(pane_id, filepath)
