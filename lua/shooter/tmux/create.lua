@@ -12,6 +12,7 @@ local PROVIDER_DISPLAY_NAMES = {
   opencode = 'OpenCode',
   codex = 'Codex',
   gemini = 'Gemini',
+  copilot = 'Copilot',
 }
 
 -- Provider commands (continue session + skip permissions where available)
@@ -20,6 +21,7 @@ local PROVIDER_CMDS = {
   opencode = 'opencode -c',
   codex = 'codex',
   gemini = 'gemini',
+  copilot = 'copilot --allow-all',
 }
 
 local function provider_display_name(provider_name)
@@ -144,17 +146,18 @@ function M.start_and_wait_for_claude(pane_id, message)
 end
 
 -- Prompt user to select which AI provider to start
--- Returns provider name ('claude', 'opencode', 'codex', 'gemini') or nil if cancelled
+-- Returns provider name or nil if cancelled
 function M.prompt_provider_selection()
   local choice = vim.fn.confirm(
     'No AI session found. Which AI do you want to start?',
-    '&Claude\n&OpenCode\n&Codex\n&Gemini\n&Cancel',
+    '&Claude\n&OpenCode\n&Codex\n&Gemini\nCo&pilot\n&Cancel',
     1
   )
   if choice == 1 then return 'claude' end
   if choice == 2 then return 'opencode' end
   if choice == 3 then return 'codex' end
   if choice == 4 then return 'gemini' end
+  if choice == 5 then return 'copilot' end
   return nil
 end
 

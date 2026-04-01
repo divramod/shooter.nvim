@@ -161,11 +161,13 @@ local function load_providers()
   local opencode = require('shooter.providers.opencode')
   local codex = require('shooter.providers.codex')
   local gemini = require('shooter.providers.gemini')
+  local copilot = require('shooter.providers.copilot')
 
   M.register('claude', claude)
   M.register('opencode', opencode)
   M.register('codex', codex)
   M.register('gemini', gemini)
+  M.register('copilot', copilot)
 end
 
 load_providers()
