@@ -13,6 +13,9 @@
 # Queue files (user-specific)
 .shot-queue.json
 
+# Environment files
+.env
+
 # OS files
 .DS_Store
 Thumbs.db
