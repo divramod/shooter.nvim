@@ -99,7 +99,7 @@ function M.paste_image_insert()
     local after = string.sub(line, col)
     vim.api.nvim_set_current_line(before .. path .. after)
     vim.fn.cursor(vim.fn.line('.'), col + #path)
-    utils.notify('Pasted image: ' .. path, vim.log.levels.INFO)
+    utils.echo('Pasted image')
     return true
   end
   utils.notify('Failed to save clipboard image', vim.log.levels.ERROR)
@@ -118,7 +118,7 @@ function M.paste_image_normal()
     local row = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_set_lines(0, row, row, false, { path })
     vim.api.nvim_win_set_cursor(0, { row + 1, 0 })
-    utils.notify('Pasted image: ' .. path, vim.log.levels.INFO)
+    utils.echo('Pasted image')
     return true
   end
   utils.notify('Failed to save clipboard image', vim.log.levels.ERROR)
@@ -142,7 +142,7 @@ function M.smart_paste_before()
     if path then
       local row = vim.api.nvim_win_get_cursor(0)[1]
       vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { path })
-      utils.notify('Pasted image: ' .. path, vim.log.levels.INFO)
+      utils.echo('Pasted image')
     else
       utils.notify('Failed to save clipboard image', vim.log.levels.ERROR)
     end
