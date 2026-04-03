@@ -1,20 +1,20 @@
 # shooter.nvim
 
-## shot 390 
+## shot 392 
 
-## shot 389 .shooter/tmp gitignore
+## shot 391 .shooter/tmp gitignore
 i have a new project, where i used shooter.nvim
 sometimes it creates a .shooter/tmp folder
 
-## shot 388
+## shot 390
 add move to project command and move to repo command
 
-## shot 387
+## shot 389
 the next step would be, to be able to also configure the folders for the sub projects seperately in the session settings. so the projects filter should look like this:
 ```yaml
 ```
 
-## shot 386
+## shot 388
 i want to introduce sub projects in shooter.nvim
 so we have my me repo:
  me/
@@ -23,13 +23,13 @@ so we have my me repo:
        projects/
          connect-powerstation/
 
-## shot 385
+## shot 387
 workflow analysis: what costs me the most time?
 
-## shot 384
+## shot 386
 i need a good workflow also to get pics form pc to figma
 
-## shot 383
+## shot 385
 in these sections in the analytics pane, i also always want to know the repo and where the shot file is located.
 
 for the global command ~/... i want to see the repo and the shot file path for occurence of a file path.
@@ -84,44 +84,44 @@ for local ./plans/... is enough
 5. tmux.md (28)
 ```
 
-## shot 382
+## shot 384
 when i press yes to open the audit report, it throws an error
 /Users/mod/cod/shooter.nvim/.shooter/shotfiles/images/clipboard_20260123_110923.png
 
-## shot 381
+## shot 383
 please add pleanary also to the checkhealth cmd of shooter.nvim
 also add the versions, which are installed for all deps in the checkhealth cmd
 please add the versions to all plugins and also ttok 
 please add also a area for the the ai cli tools in the checkhealth, which checks if claude, codex, gemini, copilot cli, qwen cli are installed and if so, which version is installed
 
-## shot 380
+## shot 382
 the shooter.nvim plugin has the following goals: 
 1. beeing faster in shooting to ai cli agents (claude, gemini, codex, copilot, qwen)
 2. analyzing the habits of the shooter, so that he can see, what he does and has good data to optimize his workflow. the plugin should give the user hints, how to improve his shooting workflow based on the data it collects.
 
-## shot 379
+## shot 381
 please in all shot history files add the shotfile title from the shotfile to the metadata, if its not already there.
 
-## shot 378
+## shot 380
 i have some copied files, which trick the history function.
 i need a ShoShotfileDelete command, which deletes a shot file and its history folder accordingly.
 i know that cant be undone, so please add a prompt, where the user has to type "DELETE" to confirm the deletion.
 
-## shot 377
+## shot 379
 introduce a project migration, where i can move the shot files from a projects repo into a programming repo with no projects folder structure.
 
-## shot 376
+## shot 378
 make it possible to configure a me / gtd repo with a project folder structure
 then everything should be setup automatically
 research files always should belong to a project
 
-## shot 375
+## shot 377
 have a look at the ci, if still everything is passing
 
-## shot 374
+## shot 376
 create claude.md instructions for shots, maybe a shooter agent, which gots the task and creates a bead?
 
-## shot 373
+## shot 375
 restructure folders shooter creates:
 
 <repo>/
@@ -152,105 +152,122 @@ agents i often use:
 - /prd-update
 - /readme-update
 
-## shot 372
+## shot 374
 have a prioritization command, which loops through the shotfiles and prioritizes the shots files.
 on a second level, it prioritizes the shots in the shot files.
 
-## shot 371
+## shot 373
 create different shot variants.
 seperate between a normal answer and a real new shot.
 normal answer would be a threat for a already existing shot.
 
-## shot 370
+## shot 372
 if i accidentially run the send all shots command in a file, it should ask me, if i really want to run all
 
-## shot 369
+## shot 371
 i need commands to open all the inbox files i have.
 so that i can write new items directly there.
 
-## shot 368
+## shot 370
 move screenshot images folder
 
-## shot 367
+## shot 369
 mappings for gsd folders/files 
 i want to use get shit done (a agent framework) in many of my projects.
 so i need some shortcuts to work with it:
 1. < >
 
-## shot 366
+## shot 368
 tmux: have an indicator, that a shot was send
 
-## shot 365
+## shot 367
 gemini hooks
 
-## shot 364
+## shot 366
 codex hooks
 
-## shot 363
+## shot 365
 create < >c which opens a list of commands, which can be run in claude and sends it there then
 what to do with commands, which take arguments?
 what with comands, which ask the user
 
-## shot 362
+## shot 364
 Can i name tmux panes.
 Does tmux panes have ids?
 Does tmux panes have numbers?
 Which things are persistant?
 
-## shot 361
+## shot 363
 Copy telescope into shooter
 
-## shot 360
+## shot 362
 remap < >g to < >I to get images in ~/cod/shooter.nvim
 
-## shot 359
+## shot 361
 configure image directory.
 
-## shot 358
+## shot 360
 `gn` gsd next step
 
-## shot 357
+## shot 359
 `gd` discuss
 
-## shot 356
+## shot 358
 `gv` verify
 
-## shot 355
+## shot 357
 Threads possible?
 
-## shot 354
+## shot 356
 Make the opening of panes and starting the clis more robust. This should work always
 
-## shot 353
+## shot 355
 add to the shot header, to which cli and which pane id the shot was send to
 
-## shot 352
+## shot 354
 create shooter rust cli
 
-## shot 351
+## shot 353
 create shooter icon chooser
 
-## shot 350
+## shot 352
 tmux command to make all tmux panes the same width in the current window
 
-## shot 349
+## shot 351
 is there maybe a is ready hook in claude, which could be used to write to a file or something like this?
 
-## shot 348
+## shot 350
 i really liked the gp.nvim plugin for a while before i moved on to another kind of programming style with claude.
 especially i liked the whisper integration i use now here.
 but i also would like to be independent from other plugins.
 can you go to the gp nvim repo strip out the gp whisper functionality and put it into shooter, so that we have one less dependency?
 does they have the right license?
 
-## shot 347
+## shot 349
 abstract shooter, so that it works for copilot cli
 abstract shooter, so that it works for qwen
 abstract shooter, so that it works for gemini
 
-## shot 346
+## shot 348
 visualize shot history with a replay of the shots i made in which project when
 give me an idea on how we could do that
+
+## x shot 347 copilot sending not working (2026-04-01 18:38:23) @shooter.nvim_20260401_183824_shot-347
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260401_183758.png
+for copilot the sending mechanism is not working.
+it pastes the file path but does not seem to enter it.
+
+## x shot 346 send to pane indicator (2026-04-01 17:55:51) @shooter.nvim_20260401_175551_shot-346
+i usually started claude in a tmux pane by simply writing claude.
+now i wrote myself a wrapper command, which does some helping things.
+the problem is, that the identifier before, if a claude instance is running in a pane was the claude version number (unclean from the beginning). this is now gone and its hal like you see in the picture
+now:
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260401_175407.png
+
+before:
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260401_175426.png
+
+i want you to change the send command in a way, that it checks, if hal is running inside instead of 2.1.89 or node
 
 ## x shot 345 worktrees adaption (2026-04-01 14:14:00) @shooter.nvim_20260401_141400_shot-345
 i have adapted my workflow a little bit and use git worktrees now.
@@ -276,11 +293,11 @@ the multishotpicker sends the original shot numbers to claude.
 it should sent the renumbered shots numbers instead.
 do you understand what i mean?
 
-## x shot 341 test 2 (2026-03-27 08:08:22)
-t2
-
-## x shot 340 test 1 (2026-03-27 08:08:22)
+## x shot 341 test 1 (2026-03-27 08:08:22)
 t1
+
+## x shot 340 test 2 (2026-03-27 08:08:22)
+t2
 
 ## x shot 339 fix send many shots from open shots picker (2026-03-27 07:25:56) @shooter.nvim_20260327_072556_shot-339
 i ran < >o and then selected multiple shots
@@ -1580,18 +1597,18 @@ that should not happen, because the user is maybe not ready with the next shots 
 i still have the old time format in the shots header.
 
 ## x shot 122 (2026-01-21 12:33:00)
-create a tmux pane to the left of the vim pane and start claude automatically, when there is no tmux pane with claude in the current window and send the shot(s) there, after claude is ready
+there needs to be a empty line between the first and the second line in the multishots prompt.
+also, in the ```# context``` area of the prompt, please begin every sentence with a big letter.
+/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122813.png
 
 ## x shot 121 (2026-01-21 12:33:00)
+create a tmux pane to the left of the vim pane and start claude automatically, when there is no tmux pane with claude in the current window and send the shot(s) there, after claude is ready
+
+## x shot 120 (2026-01-21 12:33:00)
 when i run ShoOpenShots manually, it does not show the preview in the telescope list.
 have you really moved all code to the plugin folder?
 or why are they differing?
 /Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_123241.png
-
-## x shot 120 (2026-01-21 12:33:00)
-there needs to be a empty line between the first and the second line in the multishots prompt.
-also, in the ```# context``` area of the prompt, please begin every sentence with a big letter.
-/Users/mod/dev/.shooter/shotfiles/images/clipboard_20260121_122813.png
 
 ## x shot 119 (2026-01-21 12:27:00)
 please add a table of contents at the top of the shooters readme
