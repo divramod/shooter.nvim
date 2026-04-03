@@ -1,0 +1,70 @@
+# hal git worktree configuration
+# Place at: <repo>/.hal/git/worktree.yml
+# Auto-generated reference — edit worktree.yml, not this file.
+
+# Directory for worktrees (default: global ~/.hal/git/worktree/<repo>/)
+# worktree_dir: .worktrees
+
+# Branch prefix (default: "worktree")
+# branch_prefix: worktree
+
+# Files to copy from repo into worktrees (runs on every hal git worktree run)
+# Built-in: .env.template.worktree -> .env is always copied automatically.
+#
+# Path rules for source: relative to repo root, ./ for .hal/git/, ~/ for home, / absolute
+# Path rules for target: relative to worktree root, ./ for .hal/git/, ~/ for home, / absolute
+#
+# copyFiles:
+#   - source: .env.template.worktree
+#     target: .env
+#   - source: ~/secrets/api-key.json
+#     target: .credentials/api-key.json
+#   - source: ./local-overrides.yml
+#     target: config/overrides.yml
+
+# Template variables available in copied files:
+#   ${REPO_NAME}               - repo directory name
+#   ${REPO_URL}                - git remote origin URL
+#   ${VERSION}                 - from .hal/VERSION (or config/VERSION)
+#   ${ALIAS}                   - from .hal/ALIAS (or config/ALIAS)
+#   ${PORT_PREFIX}             - from .hal/PORT_PREFIX (or config/PORT_PREFIX)
+#   ${WORKTREE_BRANCH_NAME}   - e.g. worktree-1
+#   ${WORKTREE_PORT_PREFIX}   - persistent number per worktree
+#
+# Transforms: ${VAR | kebabCase}, snakeCase, screamingSnakeCase,
+#   pascalCase, camelCase, lowerCase, upperCase
+#
+# Shell commands: ${sh | <command>}
+#   Executes the command and inserts stdout. Examples:
+#   SSH_KEY_PUB=${sh | cat ~/.ssh/id_rsa.pub}
+#   HOSTNAME=${sh | hostname}
+#   GIT_SHA=${sh | git rev-parse --short HEAD}
+#
+# Port construction example (string concat):
+#   WEB_PORT=${PORT_PREFIX}${WORKTREE_PORT_PREFIX}2
+#   With PORT_PREFIX=40, WORKTREE_PORT_PREFIX=1 -> WEB_PORT=4012
+
+# Version files to bump on merge-to-main
+# version_files:
+#   - file: Cargo.toml
+#     bump: patch
+#   - file: package.json
+#     bump: patch
+#   - file: config/VERSION
+#     bump: patch
+
+# Changelog file (updated on merge-to-main)
+# changelog_file: CHANGELOG.md
+
+# Shell commands after creating a worktree
+# post_create:
+#   - cargo fetch
+#   - npm install
+
+# Shell commands after merging main into worktree
+# post_merge_from_main:
+#   - cargo test
+
+# Shell commands after merging worktree into main
+# post_merge_to_main:
+#   - cargo build --release
