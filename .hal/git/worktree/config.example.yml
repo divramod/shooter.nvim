@@ -1,6 +1,6 @@
 # hal git worktree configuration
-# Place at: <repo>/.hal/git/worktree.yml
-# Auto-generated reference — edit worktree.yml, not this file.
+# Place at: <repo>/.hal/git/worktree/config.yml
+# Auto-generated reference — edit config.yml, not this file.
 
 # Directory for worktrees (default: global ~/.hal/git/worktree/<repo>/)
 # worktree_dir: .worktrees
@@ -56,15 +56,18 @@
 # Changelog file (updated on merge-to-main)
 # changelog_file: CHANGELOG.md
 
-# Shell commands after creating a worktree
-# post_create:
-#   - cargo fetch
-#   - npm install
-
-# Shell commands after merging main into worktree
-# post_merge_from_main:
-#   - cargo test
-
-# Shell commands after merging worktree into main
-# post_merge_to_main:
-#   - cargo build --release
+# Command hooks (per-command lifecycle hooks)
+# cmd_hooks:
+#   create:
+#     post_finish:
+#       - cargo fetch
+#       - npm install
+#   merge_from_main:
+#     post_finish:
+#       - cargo test
+#   merge_to_main:
+#     pre_commit:
+#       - cargo check --quiet    # update lockfiles before commit
+#     post_finish:
+#       - cargo build --release
+#       - cargo install --path . --offline

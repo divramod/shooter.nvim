@@ -1,6 +1,5 @@
 # shooter.nvim
 
-## shot 393 
 
 ## shot 392 .shooter/tmp gitignore
 i have a new project, where i used shooter.nvim

@@ -32,3 +32,8 @@ plugin/packer_compiled.lua
 # bv (beads viewer) local config and caches
 .bv/
 .hal/codebase/
+
+# Beads local state
+.beads/.local_version
+.beads/beads.db
+.beads/last-touched

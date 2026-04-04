@@ -1,12 +1,15 @@
 # shotfile
 
-## shot 21
+## shot 22
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 20
+## shot 21
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 20 new shotfile (2026-04-04 07:57:46) @shotfile_20260404_075746_shot-20
+when i run < >N to create a new shotfile, i want the cursor to be placed in the title line like how it works, when i create a new shot with < >n
 
 ## x shot 19 (2026-02-09 05:06:46) @shot-19-20260209_050646
 i have a problem in the ShoLast command.
