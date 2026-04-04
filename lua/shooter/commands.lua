@@ -38,8 +38,8 @@ local function setup_shotfile_commands()
       if path then
         vim.cmd('edit! ' .. vim.fn.fnameescape(path))
         vim.schedule(function()
-          vim.api.nvim_win_set_cursor(0, {4, 0})
-          vim.cmd('startinsert')
+          vim.api.nvim_win_set_cursor(0, {3, 0})
+          vim.cmd('startinsert!')
         end)
       end
     end
