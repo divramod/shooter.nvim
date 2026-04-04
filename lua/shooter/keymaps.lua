@@ -193,6 +193,15 @@ function M.setup()
   map('n', 'rl', ':ShoRepoOpenLastEditedFile<cr>', 'Last edited file in repo')
 
   -- ============================================================
+  -- GIT WORKTREE NAMESPACE (gw prefix)
+  -- ============================================================
+  for i = 0, 9 do
+    map('n', 'gw' .. i, ':ShooterGitWorktreeSwitchTo ' .. i .. '<cr>', 'Switch to worktree ' .. i)
+  end
+  map('n', 'gwm', ':ShooterGitWorktreeToMain<cr>', 'Switch to main worktree')
+  map('n', 'gww', ':ShooterGitWorktreeSwitchTo<cr>', 'Pick worktree (telescope)')
+
+  -- ============================================================
   -- SEND ALL (double prefix)
   -- ============================================================
   for i = 1, 4 do

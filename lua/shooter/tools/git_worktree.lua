@@ -1,0 +1,221 @@
+-- Git worktree switching for shooter.nvim
+-- Switch between git worktrees under ~/.hal/git/worktree/
+
+local M = {}
+
+local WORKTREE_BASE = vim.fn.expand('~/.hal/git/worktree')
+
+-- Get the repo name from the current git root
+local function get_repo_name()
+  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error ~= 0 or #git_root == 0 then
+    return nil, nil
+  end
+  local root = git_root[1]
+  local name = vim.fn.fnamemodify(root, ':t')
+  return name, root
+end
+
+-- Get list of worktrees for current repo from git worktree list
+local function get_worktrees()
+  local lines = vim.fn.systemlist('git worktree list --porcelain')
+  if vim.v.shell_error ~= 0 then
+    return {}
+  end
+  local worktrees = {}
+  local current = {}
+  for _, line in ipairs(lines) do
+    if line:match('^worktree ') then
+      current = { path = line:match('^worktree (.+)') }
+    elseif line:match('^branch ') then
+      current.branch = line:match('^branch refs/heads/(.+)')
+    elseif line == '' then
+      if current.path then
+        table.insert(worktrees, current)
+      end
+      current = {}
+    elseif line:match('^bare') then
+      current.bare = true
+    end
+  end
+  if current.path then
+    table.insert(worktrees, current)
+  end
+  return worktrees
+end
+
+-- Find the main worktree (first one listed, which is always the main)
+local function get_main_worktree()
+  local worktrees = get_worktrees()
+  if #worktrees > 0 then
+    return worktrees[1].path
+  end
+  return nil
+end
+
+-- Get numbered worktrees under ~/.hal/git/worktree/<repo>/
+local function get_numbered_worktrees()
+  local repo_name = get_repo_name()
+  if not repo_name then return {} end
+
+  local repo_wt_dir = WORKTREE_BASE .. '/' .. repo_name
+  if vim.fn.isdirectory(repo_wt_dir) ~= 1 then
+    return {}
+  end
+
+  local entries = vim.fn.readdir(repo_wt_dir)
+  local numbered = {}
+  for _, entry in ipairs(entries) do
+    local full_path = repo_wt_dir .. '/' .. entry
+    if vim.fn.isdirectory(full_path) == 1 then
+      table.insert(numbered, {
+        name = entry,
+        path = full_path,
+      })
+    end
+  end
+  table.sort(numbered, function(a, b) return a.name < b.name end)
+  return numbered
+end
+
+-- Get relative file path from git root
+local function get_relative_file()
+  local file = vim.fn.expand('%:p')
+  if file == '' then return nil end
+  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error ~= 0 or #git_root == 0 then
+    return nil
+  end
+  local root = git_root[1]
+  if file:sub(1, #root) == root then
+    return file:sub(#root + 2)
+  end
+  return nil
+end
+
+-- Close all buffers except current, then switch to target file
+local function switch_to_worktree(target_root)
+  local rel_file = get_relative_file()
+
+  -- Close all buffers
+  local bufs = vim.api.nvim_list_bufs()
+  for _, buf in ipairs(bufs) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buflisted then
+      pcall(vim.api.nvim_buf_delete, buf, { force = true })
+    end
+  end
+
+  -- Change working directory
+  vim.cmd('cd ' .. vim.fn.fnameescape(target_root))
+
+  -- Try to open the same file in the new worktree
+  local target_file
+  if rel_file then
+    local candidate = target_root .. '/' .. rel_file
+    if vim.fn.filereadable(candidate) == 1 then
+      target_file = candidate
+    end
+  end
+
+  -- Fallback to README.md
+  if not target_file then
+    target_file = target_root .. '/README.md'
+    if vim.fn.filereadable(target_file) ~= 1 then
+      target_file = target_root
+    end
+  end
+
+  vim.cmd('edit ' .. vim.fn.fnameescape(target_file))
+  vim.notify('Switched to worktree: ' .. target_root, vim.log.levels.INFO)
+end
+
+-- Switch to worktree by number
+function M.switch_to(number)
+  local worktrees = get_numbered_worktrees()
+
+  if number then
+    -- Find worktree matching the number
+    local num_str = tostring(number)
+    for _, wt in ipairs(worktrees) do
+      if wt.name == num_str then
+        switch_to_worktree(wt.path)
+        return
+      end
+    end
+    vim.notify('Worktree ' .. num_str .. ' not found', vim.log.levels.WARN)
+    return
+  end
+
+  -- No number given: open telescope picker
+  M.pick_worktree(worktrees)
+end
+
+-- Telescope picker for worktrees
+function M.pick_worktree(worktrees)
+  worktrees = worktrees or get_numbered_worktrees()
+
+  if #worktrees == 0 then
+    vim.notify('No worktrees found', vim.log.levels.WARN)
+    return
+  end
+
+  local ok, _ = pcall(require, 'telescope')
+  if not ok then
+    vim.notify('Telescope is required for worktree picker', vim.log.levels.ERROR)
+    return
+  end
+
+  local pickers = require('telescope.pickers')
+  local finders = require('telescope.finders')
+  local conf = require('telescope.config').values
+  local actions = require('telescope.actions')
+  local action_state = require('telescope.actions.state')
+
+  -- Also include main worktree
+  local entries = {}
+  local main_path = get_main_worktree()
+  if main_path then
+    table.insert(entries, { name = 'main', path = main_path })
+  end
+  for _, wt in ipairs(worktrees) do
+    table.insert(entries, wt)
+  end
+
+  pickers.new({}, {
+    prompt_title = 'Git Worktrees',
+    finder = finders.new_table({
+      results = entries,
+      entry_maker = function(entry)
+        local display = entry.name .. '  ' .. entry.path
+        return {
+          value = entry,
+          display = display,
+          ordinal = entry.name,
+        }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        if selection then
+          switch_to_worktree(selection.value.path)
+        end
+      end)
+      return true
+    end,
+  }):find()
+end
+
+-- Switch back to main worktree
+function M.to_main()
+  local main_path = get_main_worktree()
+  if not main_path then
+    vim.notify('Could not find main worktree', vim.log.levels.ERROR)
+    return
+  end
+  switch_to_worktree(main_path)
+end
+
+return M
