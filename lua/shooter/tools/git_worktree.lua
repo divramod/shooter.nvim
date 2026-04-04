@@ -5,28 +5,38 @@ local M = {}
 
 local WORKTREE_BASE = vim.fn.expand('~/.hal/git/worktree')
 
--- Get the repo name from git, trying multiple methods
+-- Get the repo name, handling both main repo and worktree contexts
 local function get_repo_name()
-  -- Method 1: git rev-parse from cwd
-  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
-  if vim.v.shell_error == 0 and #git_root > 0 then
-    local root = git_root[1]
-    local name = vim.fn.fnamemodify(root, ':t')
-    return name, root
+  -- Get the git toplevel (works from cwd or buffer dir)
+  local git_root
+  local result = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error == 0 and #result > 0 then
+    git_root = result[1]
+  else
+    local buf_dir = vim.fn.expand('%:p:h')
+    if buf_dir ~= '' then
+      result = vim.fn.systemlist('git -C ' .. vim.fn.shellescape(buf_dir) .. ' rev-parse --show-toplevel')
+      if vim.v.shell_error == 0 and #result > 0 then
+        git_root = result[1]
+      end
+    end
   end
+  if not git_root then return nil, nil end
 
-  -- Method 2: try from current buffer's directory
-  local buf_dir = vim.fn.expand('%:p:h')
-  if buf_dir ~= '' then
-    local result = vim.fn.systemlist('git -C ' .. vim.fn.shellescape(buf_dir) .. ' rev-parse --show-toplevel')
-    if vim.v.shell_error == 0 and #result > 0 then
-      local root = result[1]
-      local name = vim.fn.fnamemodify(root, ':t')
-      return name, root
+  -- Check if we're inside a worktree under WORKTREE_BASE
+  -- Path pattern: ~/.hal/git/worktree/<repo-name>/<worktree-name>
+  local wt_prefix = WORKTREE_BASE .. '/'
+  if git_root:sub(1, #wt_prefix) == wt_prefix then
+    local rest = git_root:sub(#wt_prefix + 1)
+    local repo_name = rest:match('^([^/]+)/')
+    if repo_name then
+      return repo_name, git_root
     end
   end
 
-  return nil, nil
+  -- Not in a worktree dir — use the directory name as repo name
+  local name = vim.fn.fnamemodify(git_root, ':t')
+  return name, git_root
 end
 
 -- Run a git command, trying cwd first, then buffer's directory
@@ -207,12 +217,19 @@ function M.pick_worktree(worktrees)
     table.insert(entries, wt)
   end
 
+  -- Determine current worktree to mark it
+  local _, current_root = get_repo_name()
+
   pickers.new({}, {
     prompt_title = 'Git Worktrees',
     finder = finders.new_table({
       results = entries,
       entry_maker = function(entry)
-        local display = entry.name .. '  ' .. entry.path
+        local marker = ''
+        if current_root and entry.path == current_root then
+          marker = ' (CURRENT)'
+        end
+        local display = entry.name .. '  ' .. entry.path .. marker
         return {
           value = entry,
           display = display,
