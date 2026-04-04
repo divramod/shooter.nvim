@@ -691,6 +691,20 @@ local function setup_nav_commands()
   end, { nargs = '?', desc = 'Telescope picker for last N edited files' })
 end
 
+-- Setup git worktree commands (g prefix in keymaps)
+local function setup_git_worktree_commands()
+  local git_wt = require('shooter.tools.git_worktree')
+
+  create_cmd('ShooterGitWorktreeSwitchTo', function(opts)
+    local num = opts.args ~= '' and tonumber(opts.args) or nil
+    git_wt.switch_to(num)
+  end, { nargs = '?', desc = 'Switch to git worktree by number or pick' })
+
+  create_cmd('ShooterGitWorktreeToMain', function()
+    git_wt.to_main()
+  end, { desc = 'Switch back to main git worktree' })
+end
+
 -- Setup utility commands (not in main namespaces)
 local function setup_utility_commands()
   -- Filter clearing
@@ -729,6 +743,7 @@ function M.setup()
   setup_analytics_commands()
   setup_help_commands()
   setup_nav_commands()
+  setup_git_worktree_commands()
   setup_utility_commands()
 end
 
