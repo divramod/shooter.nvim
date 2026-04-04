@@ -5,21 +5,50 @@ local M = {}
 
 local WORKTREE_BASE = vim.fn.expand('~/.hal/git/worktree')
 
--- Get the repo name from the current git root
+-- Get the repo name from git, trying multiple methods
 local function get_repo_name()
+  -- Method 1: git rev-parse from cwd
   local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
-  if vim.v.shell_error ~= 0 or #git_root == 0 then
-    return nil, nil
+  if vim.v.shell_error == 0 and #git_root > 0 then
+    local root = git_root[1]
+    local name = vim.fn.fnamemodify(root, ':t')
+    return name, root
   end
-  local root = git_root[1]
-  local name = vim.fn.fnamemodify(root, ':t')
-  return name, root
+
+  -- Method 2: try from current buffer's directory
+  local buf_dir = vim.fn.expand('%:p:h')
+  if buf_dir ~= '' then
+    local result = vim.fn.systemlist('git -C ' .. vim.fn.shellescape(buf_dir) .. ' rev-parse --show-toplevel')
+    if vim.v.shell_error == 0 and #result > 0 then
+      local root = result[1]
+      local name = vim.fn.fnamemodify(root, ':t')
+      return name, root
+    end
+  end
+
+  return nil, nil
+end
+
+-- Run a git command, trying cwd first, then buffer's directory
+local function git_cmd(cmd)
+  local lines = vim.fn.systemlist(cmd)
+  if vim.v.shell_error == 0 then
+    return lines
+  end
+  local buf_dir = vim.fn.expand('%:p:h')
+  if buf_dir ~= '' then
+    lines = vim.fn.systemlist('git -C ' .. vim.fn.shellescape(buf_dir) .. ' ' .. cmd:gsub('^git ', ''))
+    if vim.v.shell_error == 0 then
+      return lines
+    end
+  end
+  return nil
 end
 
 -- Get list of worktrees for current repo from git worktree list
 local function get_worktrees()
-  local lines = vim.fn.systemlist('git worktree list --porcelain')
-  if vim.v.shell_error ~= 0 then
+  local lines = git_cmd('git worktree list --porcelain')
+  if not lines then
     return {}
   end
   local worktrees = {}
@@ -82,11 +111,8 @@ end
 local function get_relative_file()
   local file = vim.fn.expand('%:p')
   if file == '' then return nil end
-  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
-  if vim.v.shell_error ~= 0 or #git_root == 0 then
-    return nil
-  end
-  local root = git_root[1]
+  local _, root = get_repo_name()
+  if not root then return nil end
   if file:sub(1, #root) == root then
     return file:sub(#root + 2)
   end
