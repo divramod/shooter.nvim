@@ -198,6 +198,7 @@ function M.setup()
   for i = 0, 9 do
     map('n', 'gw' .. i, ':ShooterGitWorktreeSwitchTo ' .. i .. '<cr>', 'Switch to worktree ' .. i)
   end
+  map('n', 'gwl', ':ShooterGitWorktreeLast<cr>', 'Switch to last worktree')
   map('n', 'gwm', ':ShooterGitWorktreeToMain<cr>', 'Switch to main worktree')
   map('n', 'gww', ':ShooterGitWorktreeSwitchTo<cr>', 'Pick worktree (telescope)')
 

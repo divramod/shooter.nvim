@@ -703,6 +703,10 @@ local function setup_git_worktree_commands()
   create_cmd('ShooterGitWorktreeToMain', function()
     git_wt.to_main()
   end, { desc = 'Switch back to main git worktree' })
+
+  create_cmd('ShooterGitWorktreeLast', function()
+    git_wt.to_last()
+  end, { desc = 'Switch to last git worktree' })
 end
 
 -- Setup utility commands (not in main namespaces)

@@ -129,8 +129,99 @@ local function get_relative_file()
   return nil
 end
 
+-- Get the .hal/git/worktree/ directory in the main repo
+local function get_repo_wt_state_dir()
+  local main_path = get_main_worktree()
+  if not main_path then return nil end
+  return main_path .. '/.hal/git/worktree'
+end
+
+-- Ensure .hal/git/worktree/.gitignore contains LAST
+local function ensure_gitignore()
+  local state_dir = get_repo_wt_state_dir()
+  if not state_dir then return end
+
+  vim.fn.mkdir(state_dir, 'p')
+  local gitignore_path = state_dir .. '/.gitignore'
+  local needs_commit = false
+
+  if vim.fn.filereadable(gitignore_path) == 1 then
+    local content = vim.fn.readfile(gitignore_path)
+    local has_last = false
+    for _, line in ipairs(content) do
+      if line == 'LAST' then
+        has_last = true
+        break
+      end
+    end
+    if not has_last then
+      table.insert(content, 'LAST')
+      vim.fn.writefile(content, gitignore_path)
+      needs_commit = true
+    end
+  else
+    vim.fn.writefile({ 'LAST' }, gitignore_path)
+    needs_commit = true
+  end
+
+  if needs_commit then
+    local main_path = get_main_worktree()
+    if main_path then
+      vim.fn.system('git -C ' .. vim.fn.shellescape(main_path)
+        .. ' add ' .. vim.fn.shellescape(gitignore_path))
+      vim.fn.system('git -C ' .. vim.fn.shellescape(main_path)
+        .. ' commit -m "chore(hal): add .hal/git/worktree/.gitignore"')
+    end
+  end
+end
+
+-- Save current worktree identifier to LAST file
+local function save_last_worktree()
+  local _, current_root = get_repo_name()
+  if not current_root then return end
+
+  local state_dir = get_repo_wt_state_dir()
+  if not state_dir then return end
+
+  ensure_gitignore()
+
+  -- Determine the worktree identifier (folder name or "main")
+  local wt_prefix = WORKTREE_BASE .. '/'
+  local identifier
+  if current_root:sub(1, #wt_prefix) == wt_prefix then
+    local rest = current_root:sub(#wt_prefix + 1)
+    -- rest = "<repo>/<worktree-name>"
+    identifier = rest:match('^[^/]+/(.+)$')
+  else
+    identifier = 'main'
+  end
+
+  if identifier then
+    vim.fn.mkdir(state_dir, 'p')
+    vim.fn.writefile({ identifier }, state_dir .. '/LAST')
+  end
+end
+
+-- Read last worktree identifier from LAST file
+local function read_last_worktree()
+  local state_dir = get_repo_wt_state_dir()
+  if not state_dir then return nil end
+
+  local last_file = state_dir .. '/LAST'
+  if vim.fn.filereadable(last_file) ~= 1 then return nil end
+
+  local lines = vim.fn.readfile(last_file)
+  if #lines > 0 and lines[1] ~= '' then
+    return lines[1]
+  end
+  return nil
+end
+
 -- Close all buffers except current, then switch to target file
 local function switch_to_worktree(target_root)
+  -- Save current worktree as "last" before switching
+  save_last_worktree()
+
   local rel_file = get_relative_file()
 
   -- Close all buffers
@@ -249,6 +340,33 @@ function M.pick_worktree(worktrees)
       return true
     end,
   }):find()
+end
+
+-- Switch to last worktree
+function M.to_last()
+  local last_id = read_last_worktree()
+  if not last_id then
+    vim.notify('No last worktree saved', vim.log.levels.WARN)
+    return
+  end
+
+  if last_id == 'main' then
+    M.to_main()
+    return
+  end
+
+  -- It's a numbered worktree
+  local repo_name = get_repo_name()
+  if not repo_name then
+    vim.notify('Could not determine repo name', vim.log.levels.ERROR)
+    return
+  end
+  local target = WORKTREE_BASE .. '/' .. repo_name .. '/' .. last_id
+  if vim.fn.isdirectory(target) ~= 1 then
+    vim.notify('Last worktree ' .. last_id .. ' no longer exists', vim.log.levels.WARN)
+    return
+  end
+  switch_to_worktree(target)
 end
 
 -- Switch back to main worktree
