@@ -42,9 +42,8 @@ local function setup_shotfile_commands()
         vim.schedule(function()
           if not vim.api.nvim_buf_is_valid(bufnr) then return end
           if not vim.api.nvim_win_is_valid(winnr) then return end
-          vim.api.nvim_win_set_cursor(winnr, {1, 0})
           vim.api.nvim_set_current_win(winnr)
-          vim.cmd('startinsert!')
+          vim.api.nvim_feedkeys('ggA', 'n', false)
         end)
       end
     end
