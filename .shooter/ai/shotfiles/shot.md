@@ -1,5 +1,7 @@
 # shot
 
+## shot 70
+
 ## shot 69
 
 ## shot 68
