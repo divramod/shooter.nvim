@@ -16,12 +16,9 @@ local function require_shotfile(fn)
   end
 end
 
--- Create command with optional alias for backward compatibility
-local function create_cmd(name, fn, opts, alias)
+-- Create a vim user command
+local function create_cmd(name, fn, opts)
   vim.api.nvim_create_user_command(name, fn, opts)
-  if alias then
-    vim.api.nvim_create_user_command(alias, fn, opts)
-  end
 end
 
 -- Setup Shotfile namespace commands (f prefix in keymaps)
@@ -30,74 +27,70 @@ local function setup_shotfile_commands()
   local movement = require('shooter.core.movement')
   local project_mod = require('shooter.core.project')
 
-  -- ShoShotfileNew (alias: ShoCreate)
-  create_cmd('ShoShotfileNew', function(opts)
-    local function create_with_title_and_project(title, project)
+  -- HalShooterShotfileNew — create shotfile via hal CLI
+  create_cmd('HalShooterShotfileNew', function(opts)
+    local hal = require('shooter.hal')
+
+    local function create_with_title(title)
       if not title or title == '' then return end
-      local path = files.create_file(title, '', '', project)
-      if path then
+      local result = hal.run({'shotfile', 'new', title})
+      if result.ok and result.data then
+        local path = vim.fn.expand(result.data.path)
         vim.cmd('edit! ' .. vim.fn.fnameescape(path))
         vim.schedule(function()
-          vim.api.nvim_win_set_cursor(0, {3, 0})
+          vim.api.nvim_win_set_cursor(0, {2, 0})
           vim.cmd('startinsert!')
         end)
       end
     end
 
-    local function prompt_for_title(project)
-      if opts.args ~= '' then
-        create_with_title_and_project(opts.args, project)
-      else
-        vim.ui.input({ prompt = 'Feature title: ' }, function(title)
-          create_with_title_and_project(title, project)
-        end)
-      end
-    end
-
-    local detected_project = project_mod.detect_from_cwd()
-    if detected_project then
-      prompt_for_title(detected_project)
-    elseif project_mod.has_projects() then
-      project_mod.pick_project(function(selected_project)
-        prompt_for_title(selected_project)
-      end, { include_root = true, title = 'Create in Project' })
+    if opts.args ~= '' then
+      create_with_title(opts.args)
     else
-      prompt_for_title(nil)
+      vim.ui.input({ prompt = 'Feature title: ' }, create_with_title)
     end
-  end, { nargs = '?', desc = 'Create new shotfile' }, 'ShoCreate')
+  end, { nargs = '?', desc = 'Create new shotfile' })
 
   -- ShoShotfileNewInRepo (alias: ShoCreateInRepo)
-  create_cmd('ShoShotfileNewInRepo', function()
+  create_cmd('HalShooterShotfileNewInRepo', function()
     require('shooter.core.repos').create_in_repo_picker()
-  end, { desc = 'Create shotfile in any configured repo' }, 'ShoCreateInRepo')
+  end, { desc = 'Create shotfile in any configured repo' })
 
   -- ShoShotfilePicker (alias: ShoList)
-  create_cmd('ShoShotfilePicker', function()
+  create_cmd('HalShooterShotfilePicker', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_all_files({ include_all_projects = true })
     if picker then picker:find() end
-  end, { desc = 'Shotfile picker (current repo)' }, 'ShoList')
+  end, { desc = 'Shotfile picker (current repo)' })
 
   -- ShoShotfilePickerAll (alias: ShoListAll)
-  create_cmd('ShoShotfilePickerAll', function()
+  create_cmd('HalShooterShotfilePickerAll', function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_all_repos_files()
     if picker then picker:find() end
-  end, { desc = 'Shotfile picker (all repos)' }, 'ShoListAll')
+  end, { desc = 'Shotfile picker (all repos)' })
 
-  -- ShoShotfileLast (alias: ShoLast)
-  create_cmd('ShoShotfileLast', function()
-    local last_file = files.get_last_edited_file()
-    if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
-  end, { desc = 'Open last edited shotfile' }, 'ShoLast')
+  -- HalShooterShotfileLast — via hal CLI
+  create_cmd('HalShooterShotfileLast', function()
+    local hal = require('shooter.hal')
+    local result = hal.run({'shotfile', 'last'})
+    if result.ok and result.data then
+      local path = vim.fn.expand(result.data.path)
+      vim.cmd('edit ' .. vim.fn.fnameescape(path))
+    else
+      -- Fallback to Lua method if hal tracking not available
+      local last_file = files.get_last_edited_file()
+      if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
+    end
+  end, { desc = 'Open last edited shotfile' })
 
   -- ShoShotfileRename
-  create_cmd('ShoShotfileRename', function()
+  create_cmd('HalShooterShotfileRename', function()
     require('shooter.core.rename').rename_current_file()
   end, { desc = 'Rename current shotfile' })
 
   -- ShoShotfileDelete
-  create_cmd('ShoShotfileDelete', function()
+  create_cmd('HalShooterShotfileDelete', function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if bufname == '' then
       vim.notify('No file to delete', vim.log.levels.WARN)
@@ -113,7 +106,7 @@ local function setup_shotfile_commands()
   end, { desc = 'Delete current shotfile' })
 
   -- ShoShotfileOpenPrompts (alias: ShoOpenPrompts)
-  create_cmd('ShoShotfileOpenPrompts', function()
+  create_cmd('HalShooterShotfileOpenPrompts', function()
     local config = require('shooter.config')
     local prompts_dir = config.get('paths.prompts_dir')
     vim.fn.mkdir(prompts_dir, 'p')
@@ -123,10 +116,10 @@ local function setup_shotfile_commands()
       vim.notify(string.format('Created %d theme shotfiles', created), vim.log.levels.INFO)
     end
     vim.cmd('Oil ' .. prompts_dir)
-  end, { desc = 'Open Oil in prompts folder' }, 'ShoOpenPrompts')
+  end, { desc = 'Open Oil in prompts folder' })
 
   -- ShoOpenPlans - Open plans folder in Oil
-  create_cmd('ShoOpenPlans', function()
+  create_cmd('HalShooterOpenPlans', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if git_root then
@@ -139,7 +132,7 @@ local function setup_shotfile_commands()
   end, { desc = 'Open plans folder in Oil' })
 
   -- ShoOpenShoConfig - Open .shooter/config/nvim folder in Oil
-  create_cmd('ShoOpenShoConfig', function()
+  create_cmd('HalShooterOpenShoConfig', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if git_root then
@@ -152,19 +145,19 @@ local function setup_shotfile_commands()
   end, { desc = 'Open .shooter/config/nvim folder in Oil' })
 
   -- Move commands
-  create_cmd('ShoShotfileMoveArchive', movement.move_to_archive, { desc = 'Move to archive' }, 'ShoArchive')
-  create_cmd('ShoShotfileMoveBacklog', movement.move_to_backlog, { desc = 'Move to backlog' }, 'ShoBacklog')
-  create_cmd('ShoShotfileMoveDone', movement.move_to_done, { desc = 'Move to done' }, 'ShoDone')
-  create_cmd('ShoShotfileMovePrompts', movement.move_to_prompts, { desc = 'Move to prompts' }, 'ShoPrompts')
-  create_cmd('ShoShotfileMoveReqs', movement.move_to_reqs, { desc = 'Move to reqs' }, 'ShoReqs')
-  create_cmd('ShoShotfileMoveTest', movement.move_to_test, { desc = 'Move to test' }, 'ShoTest')
-  create_cmd('ShoShotfileMoveWait', movement.move_to_wait, { desc = 'Move to wait' }, 'ShoWait')
-  create_cmd('ShoShotfileMoveGitRoot', movement.move_to_git_root, { desc = 'Move to git root' }, 'ShoGitRoot')
+  create_cmd('HalShooterShotfileMoveArchive', movement.move_to_archive, { desc = 'Move to archive' })
+  create_cmd('HalShooterShotfileMoveBacklog', movement.move_to_backlog, { desc = 'Move to backlog' })
+  create_cmd('HalShooterShotfileMoveDone', movement.move_to_done, { desc = 'Move to done' })
+  create_cmd('HalShooterShotfileMovePrompts', movement.move_to_prompts, { desc = 'Move to prompts' })
+  create_cmd('HalShooterShotfileMoveReqs', movement.move_to_reqs, { desc = 'Move to reqs' })
+  create_cmd('HalShooterShotfileMoveTest', movement.move_to_test, { desc = 'Move to test' })
+  create_cmd('HalShooterShotfileMoveWait', movement.move_to_wait, { desc = 'Move to wait' })
+  create_cmd('HalShooterShotfileMoveGitRoot', movement.move_to_git_root, { desc = 'Move to git root' })
 
   -- ShoShotfileMovePicker (alias: ShoMovePicker)
-  create_cmd('ShoShotfileMovePicker', function()
+  create_cmd('HalShooterShotfileMovePicker', function()
     require('shooter.core.move_picker').open_picker()
-  end, { desc = 'Move file via fuzzy picker' }, 'ShoMovePicker')
+  end, { desc = 'Move file via fuzzy picker' })
 
   -- ShoShotfileCfg = ShoCfgShotfile (bidirectional alias handled in Cfg)
 end
@@ -173,129 +166,196 @@ end
 local function setup_shot_commands()
   local shot_actions = require('shooter.core.shot_actions')
   local tmux = require('shooter.tmux')
+  local hal = require('shooter.hal')
 
-  -- ShoShotNew (alias: ShoNewShot)
-  create_cmd('ShoShotNew', require_shotfile(shot_actions.create_new_shot), { desc = 'Create new shot' }, 'ShoNewShot')
+  -- HalShooterShotNew — create new shot via hal CLI
+  create_cmd('HalShooterShotNew', require_shotfile(function()
+    hal.save_if_modified()
+    local result = hal.run({'shot', 'new', '--file', hal.current_file()})
+    if result.ok and result.data then
+      hal.reload()
+      vim.api.nvim_win_set_cursor(0, {result.data.line + 1, 0})
+      vim.cmd('startinsert!')
+    elseif not result.ok then
+      vim.notify('hal: ' .. (result.error or 'failed to create shot'), vim.log.levels.ERROR)
+    end
+  end), { desc = 'Create new shot' })
 
   -- ShoShotNewWhisper (alias: ShoNewShotWhisper)
-  create_cmd('ShoShotNewWhisper', require_shotfile(shot_actions.create_new_shot_with_whisper),
-    { desc = 'New shot + whisper' }, 'ShoNewShotWhisper')
+  create_cmd('HalShooterShotNewWhisper', require_shotfile(shot_actions.create_new_shot_with_whisper),
+    { desc = 'New shot + whisper' })
 
-  -- ShoShotDelete (alias: ShoDeleteLastShot)
-  create_cmd('ShoShotDelete', require_shotfile(shot_actions.delete_last_shot),
-    { desc = 'Delete last shot' }, 'ShoDeleteLastShot')
+  -- HalShooterShotDelete — delete last unexecuted shot via hal CLI
+  create_cmd('HalShooterShotDelete', require_shotfile(function()
+    local result = hal.modify({'shot', 'delete', '--file', hal.current_file(), '--last'})
+    if result.ok and result.data then
+      vim.notify('deleted shot ' .. result.data.deleted, vim.log.levels.INFO)
+    end
+  end), { desc = 'Delete last shot' })
 
-  -- ShoShotToggle (alias: ShoToggleDone)
-  create_cmd('ShoShotToggle', require_shotfile(shot_actions.toggle_shot_done),
-    { desc = 'Toggle shot done' }, 'ShoToggleDone')
+  -- HalShooterShotToggle — toggle shot executed status via hal CLI
+  create_cmd('HalShooterShotToggle', require_shotfile(function()
+    local shots_mod = require('shooter.core.shots')
+    local shot_info = shots_mod.find_current_shot()
+    if not shot_info then
+      vim.notify('No shot at cursor', vim.log.levels.WARN)
+      return
+    end
+    local num = shots_mod.parse_shot_header(shot_info.header_line)
+    if not num then return end
+    hal.save_if_modified()
+    local result = hal.run({'shot', 'toggle', '--file', hal.current_file(), '--num', tostring(num)})
+    if result.ok then
+      -- Also renumber after toggle
+      hal.run({'shot', 'renumber', '--file', hal.current_file()})
+      hal.reload()
+    end
+  end), { desc = 'Toggle shot done' })
 
-  -- ShoShotDeleteCursor (alias: ShoDeleteShotUnderCursor)
-  create_cmd('ShoShotDeleteCursor', require_shotfile(function()
-    require('shooter.core.shot_delete').delete_shot_under_cursor()
-  end), { desc = 'Delete shot under cursor' }, 'ShoDeleteShotUnderCursor')
+  -- HalShooterShotDeleteCursor — delete shot at cursor via hal CLI
+  create_cmd('HalShooterShotDeleteCursor', require_shotfile(function()
+    local shots_mod = require('shooter.core.shots')
+    local shot_info = shots_mod.find_current_shot()
+    if not shot_info then
+      vim.notify('No shot at cursor', vim.log.levels.WARN)
+      return
+    end
+    local num = shots_mod.parse_shot_header(shot_info.header_line)
+    if not num then return end
+    local result = hal.modify({'shot', 'delete', '--file', hal.current_file(), '--num', tostring(num)})
+    if result.ok then
+      vim.notify('deleted shot ' .. num, vim.log.levels.INFO)
+    end
+  end), { desc = 'Delete shot under cursor' })
 
   -- ShoShotMove (alias: ShoMoveShot)
-  create_cmd('ShoShotMove', require_shotfile(function()
+  create_cmd('HalShooterShotMove', require_shotfile(function()
     require('shooter.core.shot_move').move_shot()
-  end), { desc = 'Move shot to another file' }, 'ShoMoveShot')
+  end), { desc = 'Move shot to another file' })
 
-  -- ShoShotYank
-  create_cmd('ShoShotYank', require_shotfile(shot_actions.yank_shot), { desc = 'Yank shot to clipboard' })
+  -- HalShooterShotYank — yank shot content via hal CLI
+  create_cmd('HalShooterShotYank', require_shotfile(function()
+    local shots_mod = require('shooter.core.shots')
+    local shot_info = shots_mod.find_current_shot()
+    if not shot_info then
+      vim.notify('No shot at cursor', vim.log.levels.WARN)
+      return
+    end
+    local num = shots_mod.parse_shot_header(shot_info.header_line)
+    if not num then return end
+    local result = hal.run({'shot', 'yank', '--file', hal.current_file(), '--num', tostring(num)})
+    if result.ok and result.data then
+      vim.fn.setreg('+', result.data.content)
+      vim.notify('yanked shot ' .. num .. ' to clipboard', vim.log.levels.INFO)
+    end
+  end), { desc = 'Yank shot to clipboard' })
 
   -- ShoShotViewResponse
-  create_cmd('ShoShotViewResponse', require_shotfile(function()
+  create_cmd('HalShooterShotViewResponse', require_shotfile(function()
     require('shooter.tools.response_viewer').view_response()
   end), { desc = 'View response for shot' })
 
   -- ShoShotExtractBlock (alias: ShoShotExtract for backward compat)
-  create_cmd('ShoShotExtractBlock', require_shotfile(shot_actions.extract_subtask),
-    { desc = 'Extract ### subtask block to new shot' }, 'ShoShotExtract')
+  create_cmd('HalShooterShotExtractBlock', require_shotfile(shot_actions.extract_subtask),
+    { desc = 'Extract ### subtask block to new shot' })
 
   -- ShoShotExtractLine
-  create_cmd('ShoShotExtractLine', require_shotfile(shot_actions.extract_line),
+  create_cmd('HalShooterShotExtractLine', require_shotfile(shot_actions.extract_line),
     { desc = 'Extract current line to new shot' })
 
   -- ShoShotMunition (alias: ShoMunition)
-  create_cmd('ShoShotMunition', require_shotfile(function()
+  create_cmd('HalShooterShotMunition', require_shotfile(function()
     require('shooter.inbox.picker').show_file_picker()
-  end), { desc = 'Import tasks from inbox' }, 'ShoMunition')
+  end), { desc = 'Import tasks from inbox' })
 
   -- ShoShotPicker (alias: ShoOpenShots)
-  create_cmd('ShoShotPicker', require_shotfile(function()
+  create_cmd('HalShooterShotPicker', require_shotfile(function()
     local pickers = require('shooter.telescope.pickers')
     local picker = pickers.list_open_shots()
     if picker then picker:find() end
-  end), { desc = 'Open shots picker' }, 'ShoOpenShots')
+  end), { desc = 'Open shots picker' })
 
   -- Navigation commands
-  create_cmd('ShoShotNavNext', require_shotfile(shot_actions.goto_next_open_shot),
-    { desc = 'Next open shot' }, 'ShoNextShot')
-  create_cmd('ShoShotNavPrev', require_shotfile(shot_actions.goto_prev_open_shot),
-    { desc = 'Previous open shot' }, 'ShoPrevShot')
-  create_cmd('ShoShotNavNextSent', require_shotfile(shot_actions.goto_next_sent_shot),
-    { desc = 'Next sent shot' }, 'ShoNextSent')
-  create_cmd('ShoShotNavPrevSent', require_shotfile(shot_actions.goto_prev_sent_shot),
-    { desc = 'Previous sent shot' }, 'ShoPrevSent')
-  create_cmd('ShoShotNavLatest', require_shotfile(shot_actions.goto_latest_sent_shot),
-    { desc = 'Latest sent shot' }, 'ShoLatestSent')
-  create_cmd('ShoShotNavUndo', require_shotfile(shot_actions.undo_latest_sent_shot),
-    { desc = 'Undo latest sent' }, 'ShoUndoLatestSent')
+  create_cmd('HalShooterShotNavNext', require_shotfile(shot_actions.goto_next_open_shot),
+    { desc = 'Next open shot' })
+  create_cmd('HalShooterShotNavPrev', require_shotfile(shot_actions.goto_prev_open_shot),
+    { desc = 'Previous open shot' })
+  create_cmd('HalShooterShotNavNextSent', require_shotfile(shot_actions.goto_next_sent_shot),
+    { desc = 'Next sent shot' })
+  create_cmd('HalShooterShotNavPrevSent', require_shotfile(shot_actions.goto_prev_sent_shot),
+    { desc = 'Previous sent shot' })
+  create_cmd('HalShooterShotNavLatest', require_shotfile(shot_actions.goto_latest_sent_shot),
+    { desc = 'Latest sent shot' })
+  create_cmd('HalShooterShotNavUndo', require_shotfile(shot_actions.undo_latest_sent_shot),
+    { desc = 'Undo latest sent' })
 
   -- Send commands with optional pane argument (defaults to 1)
-  create_cmd('ShoShotSend', require_shotfile(function(opts)
+  create_cmd('HalShooterShotSend', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_current_shot(pane)
-  end), { nargs = '?', desc = 'Send shot to pane [1-9]' }, 'ShoSend')
+  end), { nargs = '?', desc = 'Send shot to pane [1-9]' })
 
-  create_cmd('ShoShotSendAll', require_shotfile(function(opts)
+  create_cmd('HalShooterShotSendAll', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_all_shots(pane)
-  end), { nargs = '?', desc = 'Send all shots to pane [1-9]' }, 'ShoSendAll')
+  end), { nargs = '?', desc = 'Send all shots to pane [1-9]' })
 
-  create_cmd('ShoShotSendVisual', require_shotfile(function(opts)
+  create_cmd('HalShooterShotSendVisual', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.send_visual_selection(pane, opts.line1, opts.line2)
-  end), { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' }, 'ShoSendVisual')
+  end), { range = true, nargs = '?', desc = 'Send selection to pane [1-9]' })
 
-  create_cmd('ShoShotResend', require_shotfile(function(opts)
+  create_cmd('HalShooterShotResend', require_shotfile(function(opts)
     local pane = tonumber(opts.args) or 1
     tmux.resend_latest_shot(pane)
-  end), { nargs = '?', desc = 'Resend to pane [1-9]' }, 'ShoResend')
+  end), { nargs = '?', desc = 'Resend to pane [1-9]' })
 
-  -- Queue commands (1-4)
-  local queue = require('shooter.queue')
+  -- Queue commands (1-4) via hal CLI
   for i = 1, 4 do
-    create_cmd('ShoShotQueue' .. i, require_shotfile(function()
-      queue.add_to_queue(nil, i)
-    end), { desc = 'Queue for pane ' .. i }, 'ShoQueueAdd' .. i)
+    create_cmd('HalShooterShotQueue' .. i, require_shotfile(function()
+      local shots_mod = require('shooter.core.shots')
+      local shot_info = shots_mod.find_current_shot()
+      if not shot_info then
+        vim.notify('No shot at cursor', vim.log.levels.WARN)
+        return
+      end
+      local num = shots_mod.parse_shot_header(shot_info.header_line)
+      if not num then return end
+      hal.run({'queue', 'add', '--file', hal.current_file(), '--num', tostring(num), '--pane', tostring(i)})
+    end), { desc = 'Queue for pane ' .. i })
   end
 
-  create_cmd('ShoShotQueueView', require_shotfile(function()
+  create_cmd('HalShooterShotQueueView', require_shotfile(function()
     require('shooter.queue.picker').show_queue()
-  end), { desc = 'View queue' }, 'ShoQueueView')
+  end), { desc = 'View queue' })
 
-  create_cmd('ShoShotQueueClear', require_shotfile(function()
-    queue.clear_queue()
-  end), { desc = 'Clear queue' }, 'ShoQueueClear')
+  create_cmd('HalShooterShotQueueClear', require_shotfile(function()
+    hal.run({'queue', 'clear'})
+    vim.notify('queue cleared', vim.log.levels.INFO)
+  end), { desc = 'Clear queue' })
 
-  -- ShoFileStats - Show stats for current shotfile
-  create_cmd('ShoFileStats', require_shotfile(shot_actions.file_stats), { desc = 'Shotfile stats (total/open/closed)' })
+  -- HalShooterFileStats — stats via hal CLI
+  create_cmd('HalShooterFileStats', require_shotfile(function()
+    local result = hal.run({'shot', 'stats', '--file', hal.current_file()})
+    if result.ok and result.data then
+      vim.notify(string.format('%d total, %d open, %d closed', result.data.total, result.data.open, result.data.closed), vim.log.levels.INFO)
+    end
+  end), { desc = 'Shotfile stats (total/open/closed)' })
 
   -- ShoFileToggleFirstShotOfDayColoring - Toggle day marker highlighting
-  create_cmd('ShoFileToggleFirstShotOfDayColoring', require_shotfile(function()
+  create_cmd('HalShooterFileToggleFirstShotOfDayColoring', require_shotfile(function()
     require('shooter.syntax').toggle_day_marker()
   end), { desc = 'Toggle first-shot-of-day coloring' })
 
   -- ShoShotCreateFromClaude - Cut text from Claude editor and create shot in right pane
-  create_cmd('ShoShotCreateFromClaude', shot_actions.create_shot_from_claude,
+  create_cmd('HalShooterShotCreateFromClaude', shot_actions.create_shot_from_claude,
     { desc = 'Cut Claude text, create shot in right pane' })
 
-  -- ShoShotsRenumber - Renumber all shots sequentially
-  create_cmd('ShoShotsRenumber', require_shotfile(function()
-    local renumber = require('shooter.core.renumber')
-    local count = renumber.renumber_shots()
-    if count > 0 then
-      vim.notify(string.format('Renumbered %d shots', count), vim.log.levels.INFO)
+  -- HalShooterShotsRenumber — renumber via hal CLI
+  create_cmd('HalShooterShotsRenumber', require_shotfile(function()
+    local result = hal.modify({'shot', 'renumber', '--file', hal.current_file()})
+    if result.ok and result.data then
+      vim.notify(string.format('Renumbered %d shots (%d changed)', result.data.total, result.data.renumbered), vim.log.levels.INFO)
     end
   end), { desc = 'Renumber shots sequentially' })
 
@@ -306,39 +366,39 @@ end
 local function setup_tmux_commands()
   local wrapper = require('shooter.tmux.wrapper')
 
-  create_cmd('ShoTmuxZoom', wrapper.zoom_toggle, { desc = 'Tmux: zoom toggle' })
-  create_cmd('ShoTmuxEdit', wrapper.edit_in_vim, { desc = 'Tmux: edit in vim' })
-  create_cmd('ShoTmuxGit', wrapper.git_status_toggle, { desc = 'Tmux: git status' })
-  create_cmd('ShoTmuxLight', wrapper.lightswitch, { desc = 'Tmux: light/dark' })
-  create_cmd('ShoTmuxKillOthers', wrapper.kill_other_panes, { desc = 'Tmux: kill others' })
-  create_cmd('ShoTmuxReload', wrapper.reload_session, { desc = 'Tmux: reload' })
-  create_cmd('ShoTmuxDelete', wrapper.delete_session, { desc = 'Tmux: delete session' })
-  create_cmd('ShoTmuxSmug', wrapper.smug_load, { desc = 'Tmux: smug load' })
-  create_cmd('ShoTmuxYank', wrapper.yank_to_vim, { desc = 'Tmux: yank to vim' })
-  create_cmd('ShoTmuxChoose', wrapper.choose_session, { desc = 'Tmux: choose session' })
-  create_cmd('ShoTmuxSwitch', wrapper.switch_last, { desc = 'Tmux: switch last' })
+  create_cmd('HalShooterTmuxZoom', wrapper.zoom_toggle, { desc = 'Tmux: zoom toggle' })
+  create_cmd('HalShooterTmuxEdit', wrapper.edit_in_vim, { desc = 'Tmux: edit in vim' })
+  create_cmd('HalShooterTmuxGit', wrapper.git_status_toggle, { desc = 'Tmux: git status' })
+  create_cmd('HalShooterTmuxLight', wrapper.lightswitch, { desc = 'Tmux: light/dark' })
+  create_cmd('HalShooterTmuxKillOthers', wrapper.kill_other_panes, { desc = 'Tmux: kill others' })
+  create_cmd('HalShooterTmuxReload', wrapper.reload_session, { desc = 'Tmux: reload' })
+  create_cmd('HalShooterTmuxDelete', wrapper.delete_session, { desc = 'Tmux: delete session' })
+  create_cmd('HalShooterTmuxSmug', wrapper.smug_load, { desc = 'Tmux: smug load' })
+  create_cmd('HalShooterTmuxYank', wrapper.yank_to_vim, { desc = 'Tmux: yank to vim' })
+  create_cmd('HalShooterTmuxChoose', wrapper.choose_session, { desc = 'Tmux: choose session' })
+  create_cmd('HalShooterTmuxSwitch', wrapper.switch_last, { desc = 'Tmux: switch last' })
 
   -- ShoTmuxWatch (alias: ShoWatch)
-  create_cmd('ShoTmuxWatch', function()
+  create_cmd('HalShooterTmuxWatch', function()
     require('shooter.tmux.watch').open_watch_pane()
-  end, { desc = 'Tmux: watch pane' }, 'ShoWatch')
+  end, { desc = 'Tmux: watch pane' })
 
   -- Pane toggle (0-9)
   for i = 0, 9 do
-    create_cmd('ShoTmuxPaneToggle' .. i, function()
+    create_cmd('HalShooterTmuxPaneToggle' .. i, function()
       require('shooter.tmux.panes').toggle(i)
-    end, { desc = 'Toggle pane ' .. i }, 'ShoPaneToggle' .. i)
+    end, { desc = 'Toggle pane ' .. i })
   end
 
   -- Toggle panes picker (configured panes from tmux.yml)
-  create_cmd('ShoTmuxTogglePanes', function()
+  create_cmd('HalShooterTmuxTogglePanes', function()
     -- Set up tmux keybinding on first use
     require('shooter.tmux.toggle_panes').setup_tmux_keybinding()
     require('shooter.telescope.toggle_panes_picker').show_picker()
   end, { desc = 'Tmux: toggle configured panes' })
 
   -- Manually set up tmux keybinding for hiding panes (prefix + H)
-  create_cmd('ShoTmuxSetupHideKey', function()
+  create_cmd('HalShooterTmuxSetupHideKey', function()
     require('shooter.tmux.toggle_panes').setup_tmux_keybinding()
     vim.notify('Tmux keybinding prefix+H set up for hiding panes', vim.log.levels.INFO)
   end, { desc = 'Tmux: set up prefix+H keybinding for hiding panes' })
@@ -350,7 +410,7 @@ local function setup_subproject_commands()
   local files = require('shooter.core.files')
 
   -- ShoSubprojectNew
-  create_cmd('ShoSubprojectNew', function(opts)
+  create_cmd('HalShooterSubprojectNew', function(opts)
     local git_root = files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
@@ -382,7 +442,7 @@ local function setup_subproject_commands()
   end, { nargs = '?', desc = 'Create new subproject' })
 
   -- ShoSubprojectList
-  create_cmd('ShoSubprojectList', function()
+  create_cmd('HalShooterSubprojectList', function()
     local projects = project_mod.list_projects()
     if #projects == 0 then
       vim.notify('No projects found', vim.log.levels.INFO)
@@ -397,7 +457,7 @@ local function setup_subproject_commands()
   end, { desc = 'List and select subproject' })
 
   -- ShoSubprojectEnsure
-  create_cmd('ShoSubprojectEnsure', function()
+  create_cmd('HalShooterSubprojectEnsure', function()
     local core_files = require('shooter.core.files')
     local git_root = core_files.get_git_root()
     if not git_root then
@@ -424,47 +484,47 @@ end
 -- Setup Tool namespace commands (l prefix in keymaps)
 local function setup_tool_commands()
   -- ShoToolToken (alias: ShoToolTokenCounter)
-  create_cmd('ShoToolToken', function()
+  create_cmd('HalShooterToolToken', function()
     require('shooter.tools.token_counter').show_token_count()
-  end, { desc = 'Count tokens' }, 'ShoToolTokenCounter')
+  end, { desc = 'Count tokens' })
 
   -- ShoToolObsidian (alias: ShoOpenObsidian)
-  create_cmd('ShoToolObsidian', function()
+  create_cmd('HalShooterToolObsidian', function()
     require('shooter.tools.obsidian').open_in_obsidian()
-  end, { desc = 'Open in Obsidian' }, 'ShoOpenObsidian')
+  end, { desc = 'Open in Obsidian' })
 
   -- ShoToolImages (alias: ShoImages)
-  create_cmd('ShoToolImages', function()
+  create_cmd('HalShooterToolImages', function()
     require('shooter.images').insert_images()
-  end, { desc = 'Insert images' }, 'ShoImages')
+  end, { desc = 'Insert images' })
 
   -- ShoToolPrd (alias: ShoPrdList)
-  create_cmd('ShoToolPrd', function()
+  create_cmd('HalShooterToolPrd', function()
     require('shooter.prd').list()
-  end, { desc = 'PRD list' }, 'ShoPrdList')
+  end, { desc = 'PRD list' })
 
   -- ShoToolGreenkeep (alias: ShoGreenkeep)
-  create_cmd('ShoToolGreenkeep', function()
+  create_cmd('HalShooterToolGreenkeep', function()
     require('shooter.core.greenkeep').run()
-  end, { desc = 'Convert old date formats' }, 'ShoGreenkeep')
+  end, { desc = 'Convert old date formats' })
 
   -- ShoToolSoundTest (alias: ShoSoundTest)
-  create_cmd('ShoToolSoundTest', function()
+  create_cmd('HalShooterToolSoundTest', function()
     require('shooter.sound').test()
-  end, { desc = 'Test sound' }, 'ShoSoundTest')
+  end, { desc = 'Test sound' })
 
   -- ShoToolClipboardPaste - Paste clipboard image
-  create_cmd('ShoToolClipboardPaste', function()
+  create_cmd('HalShooterToolClipboardPaste', function()
     require('shooter.tools.clipboard_image').paste_image_normal()
   end, { desc = 'Paste clipboard image' })
 
   -- ShoToolClipboardCheck - Check if clipboard has image
-  create_cmd('ShoToolClipboardCheck', function()
+  create_cmd('HalShooterToolClipboardCheck', function()
     require('shooter.tools.clipboard_image').check()
   end, { desc = 'Check clipboard for image' })
 
   -- ShoToolClipboardImages - Open images directory
-  create_cmd('ShoToolClipboardImages', function()
+  create_cmd('HalShooterToolClipboardImages', function()
     require('shooter.tools.clipboard_image').open_images_dir()
   end, { desc = 'Open clipboard images folder' })
 end
@@ -475,14 +535,14 @@ local function setup_cfg_commands()
   local utils = require('shooter.utils')
 
   -- ShoCfgGlobal (alias: ShoEditGlobalContext)
-  create_cmd('ShoCfgGlobal', function()
+  create_cmd('HalShooterCfgGlobal', function()
     local global_path = utils.expand_path(config.get('paths.global_context'))
     vim.fn.mkdir(vim.fn.fnamemodify(global_path, ':h'), 'p')
     vim.cmd('edit ' .. vim.fn.fnameescape(global_path))
-  end, { desc = 'Edit global context' }, 'ShoEditGlobalContext')
+  end, { desc = 'Edit global context' })
 
   -- ShoCfgProject (alias: ShoEditProjectContext)
-  create_cmd('ShoCfgProject', function()
+  create_cmd('HalShooterCfgProject', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if not git_root then
@@ -492,20 +552,20 @@ local function setup_cfg_commands()
     local project_path = git_root .. '/' .. config.get('paths.project_context')
     vim.fn.mkdir(vim.fn.fnamemodify(project_path, ':h'), 'p')
     vim.cmd('edit ' .. vim.fn.fnameescape(project_path))
-  end, { desc = 'Edit project context' }, 'ShoEditProjectContext')
+  end, { desc = 'Edit project context' })
 
   -- ShoCfgPlugin (alias: ShoEditConfig)
-  create_cmd('ShoCfgPlugin', function()
+  create_cmd('HalShooterCfgPlugin', function()
     local config_path = utils.find_config_file()
     if not config_path then
       vim.notify('Shooter config file not found', vim.log.levels.WARN)
       return
     end
     vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
-  end, { desc = 'Edit plugin config' }, 'ShoEditConfig')
+  end, { desc = 'Edit plugin config' })
 
   -- ShoCfgShot = ShoShotCfg (shot picker config - vimMode)
-  create_cmd('ShoCfgShot', function()
+  create_cmd('HalShooterCfgShot', function()
     local session = require('shooter.session')
     local current = session.get_current_session()
     local modes = { 'normal', 'insert' }
@@ -517,10 +577,9 @@ local function setup_cfg_commands()
     session.set_vim_mode('shotPicker', modes[next_idx])
     vim.notify('Shot picker mode: ' .. modes[next_idx], vim.log.levels.INFO)
   end, { desc = 'Toggle shot picker vim mode' })
-  vim.api.nvim_create_user_command('ShoShotCfg', function() vim.cmd('ShoCfgShot') end, { desc = 'Toggle shot picker vim mode' })
 
   -- ShoCfgReload — reload ext_config YAML and reapply syntax
-  create_cmd('ShoCfgReload', function()
+  create_cmd('HalShooterCfgReload', function()
     local ext_config = require('shooter.core.ext_config')
     ext_config.reload()
     require('shooter.syntax').reapply_all()
@@ -528,14 +587,14 @@ local function setup_cfg_commands()
   end, { desc = 'Reload YAML config and reapply' })
 
   -- ShoCfgEditGlobal — open global config.yaml
-  create_cmd('ShoCfgEditGlobal', function()
+  create_cmd('HalShooterCfgEditGlobal', function()
     local ext_config = require('shooter.core.ext_config')
     ext_config.ensure_global_config()
     vim.cmd('edit ' .. vim.fn.fnameescape(ext_config.global_config_path()))
   end, { desc = 'Edit global YAML config' })
 
   -- ShoCfgEditLocal — open project-local config.yaml
-  create_cmd('ShoCfgEditLocal', function()
+  create_cmd('HalShooterCfgEditLocal', function()
     local ext_config = require('shooter.core.ext_config')
     local path = ext_config.ensure_local_config()
     if path then
@@ -546,7 +605,7 @@ local function setup_cfg_commands()
   end, { desc = 'Edit project-local YAML config' })
 
   -- ShoCfgFix — strip invalid keys, fill missing defaults (global only)
-  create_cmd('ShoCfgFix', function()
+  create_cmd('HalShooterCfgFix', function()
     local ext_config = require('shooter.core.ext_config')
     local bufpath = vim.api.nvim_buf_get_name(0)
     local is_global = bufpath:match('shooter/nvim/config%.yaml$') and not bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
@@ -560,49 +619,62 @@ local function setup_cfg_commands()
     if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
     if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
     if #parts == 0 then table.insert(parts, 'config OK') end
-    vim.notify('ShoCfgFix: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
+    vim.notify('HalShooterCfgFix: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
   end, { desc = 'Fix config: strip invalid keys, fill missing defaults' })
 
   -- ShoCfgShotfile = ShoShotfileCfg (shotfile picker config - sessions)
-  create_cmd('ShoCfgShotfile', function()
+  create_cmd('HalShooterCfgShotfile', function()
     local session = require('shooter.session')
     vim.cmd('tabedit ' .. vim.fn.fnameescape(session.get_session_file_path()))
   end, { desc = 'Edit shotfile picker session config' })
-  vim.api.nvim_create_user_command('ShoShotfileCfg', function() vim.cmd('ShoCfgShotfile') end, { desc = 'Edit shotfile picker session config' })
 end
 
 -- Setup Analytics namespace commands (a prefix in keymaps)
 local function setup_analytics_commands()
-  -- ShoAnalyticsProject (alias: ShoAnalyticsProject - same name)
-  create_cmd('ShoAnalyticsProject', function()
-    require('shooter.analytics').show_project()
+  local hal = require('shooter.hal')
+
+  -- HalShooterAnalyticsProject — via hal CLI
+  create_cmd('HalShooterAnalyticsProject', function()
+    local result = hal.run({'analytics', 'project'})
+    if result.ok and result.data then
+      local d = result.data
+      vim.notify(string.format('%s: %d shotfiles, %d shots (%d open, %d closed), %d bullets',
+        d.repo, d.shotfiles, d.shots_total, d.shots_open, d.shots_closed, d.bullets), vim.log.levels.INFO)
+    end
   end, { desc = 'Project analytics' })
 
-  -- ShoAnalyticsGlobal
-  create_cmd('ShoAnalyticsGlobal', function()
-    require('shooter.analytics').show_global()
+  -- HalShooterAnalyticsGlobal — via hal CLI
+  create_cmd('HalShooterAnalyticsGlobal', function()
+    local result = hal.run({'analytics', 'global'})
+    if result.ok and result.data then
+      local lines = {}
+      for _, r in ipairs(result.data) do
+        table.insert(lines, string.format('%s: %d files, %d shots (%d open)', r.repo, r.shotfiles, r.shots_total, r.shots_open))
+      end
+      vim.notify(table.concat(lines, '\n'), vim.log.levels.INFO)
+    end
   end, { desc = 'Global analytics' })
 end
 
 -- Setup Help namespace commands (h prefix in keymaps)
 local function setup_help_commands()
   -- ShoHelp
-  create_cmd('ShoHelp', function()
+  create_cmd('HalShooterHelp', function()
     require('shooter.help').show()
   end, { desc = 'Show help' })
 
   -- ShoHealth (alias: stays same)
-  create_cmd('ShoHealth', function()
+  create_cmd('HalShooterHealth', function()
     vim.cmd('checkhealth shooter')
   end, { desc = 'Health check' })
 
   -- ShoHelpDashboard (alias: ShoDashboard)
-  create_cmd('ShoHelpDashboard', function()
+  create_cmd('HalShooterHelpDashboard', function()
     require('shooter.dashboard').open()
-  end, { desc = 'Open dashboard' }, 'ShoDashboard')
+  end, { desc = 'Open dashboard' })
 
   -- ShoCheatsheet
-  create_cmd('ShoCheatsheet', function()
+  create_cmd('HalShooterCheatsheet', function()
     require('shooter.cheatsheet').show()
   end, { desc = 'Show cheatsheet' })
 end
@@ -630,7 +702,7 @@ local function setup_nav_commands()
   end
 
   -- ShoNavLastEditedFile - opens most recently modified file in repo
-  create_cmd('ShoNavLastEditedFile', function()
+  create_cmd('HalShooterNavLastEditedFile', function()
     local git_root = files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
@@ -645,12 +717,9 @@ local function setup_nav_commands()
   end, { desc = 'Open last edited file in repo' })
 
   -- Alias for backward compatibility
-  vim.api.nvim_create_user_command('ShoRepoOpenLastEditedFile', function()
-    vim.cmd('ShoNavLastEditedFile')
-  end, { desc = 'Open last edited file in repo' })
 
   -- ShoNavLastEditedFiles - telescope picker for last N edited files
-  create_cmd('ShoNavLastEditedFiles', function(opts)
+  create_cmd('HalShooterNavLastEditedFiles', function(opts)
     local git_root = files.get_git_root()
     if not git_root then
       vim.notify('Not in a git repository', vim.log.levels.WARN)
@@ -695,16 +764,16 @@ end
 local function setup_git_worktree_commands()
   local git_wt = require('shooter.tools.git_worktree')
 
-  create_cmd('ShooterGitWorktreeSwitchTo', function(opts)
+  create_cmd('HalShooteroterGitWorktreeSwitchTo', function(opts)
     local num = opts.args ~= '' and tonumber(opts.args) or nil
     git_wt.switch_to(num)
   end, { nargs = '?', desc = 'Switch to git worktree by number or pick' })
 
-  create_cmd('ShooterGitWorktreeToMain', function()
+  create_cmd('HalShooteroterGitWorktreeToMain', function()
     git_wt.to_main()
   end, { desc = 'Switch back to main git worktree' })
 
-  create_cmd('ShooterGitWorktreeLast', function()
+  create_cmd('HalShooteroterGitWorktreeLast', function()
     git_wt.to_last()
   end, { desc = 'Switch to last git worktree' })
 end
@@ -712,14 +781,14 @@ end
 -- Setup utility commands (not in main namespaces)
 local function setup_utility_commands()
   -- Filter clearing
-  create_cmd('ShoClearFilter', function()
+  create_cmd('HalShooterClearFilter', function()
     local filter_state = require('shooter.filter_state')
     filter_state.clear_all_filters()
     vim.notify('Filters cleared', vim.log.levels.INFO)
   end, { desc = 'Clear all filters' })
 
   -- Inbox (at git root)
-  create_cmd('ShoInbox', function()
+  create_cmd('HalShooterInbox', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if not git_root then

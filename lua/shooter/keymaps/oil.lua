@@ -111,7 +111,7 @@ function M.setup_oil_keymaps(bufnr)
     local filepath = get_oil_file()
     if filepath then
       vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
-      vim.cmd('ShoShotfileMovePicker')
+      vim.cmd('HalShooterShotfileMovePicker')
     end
   end, 'Fuzzy folder picker')
 
@@ -137,7 +137,7 @@ function M.setup()
     callback = function(ev)
       M.setup_oil_keymaps(ev.buf)
     end,
-    group = vim.api.nvim_create_augroup('ShoOilKeymaps', { clear = true }),
+    group = vim.api.nvim_create_augroup('HalShooterOilKeymaps', { clear = true }),
   })
 end
 

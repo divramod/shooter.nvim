@@ -104,8 +104,8 @@ function M.show_project_picker(callback)
       map('n', '<C-c>', go_back, { desc = 'go back' }); map('n', 'q', go_back, { desc = 'go back' })
       map('i', '<C-c>', function() vim.cmd('stopinsert') end, { desc = 'normal mode' })
       local function run(cmd) actions.close(prompt_bufnr); vim.cmd(cmd) end
-      map('n', 'n', function() run('ShoCreate') end, { desc = 'new' }); map('n', 'l', function() run('ShoLast') end, { desc = 'last' })
-      map('n', 'L', function() run('ShoLatestSent') end, { desc = 'latest sent' })
+      map('n', 'n', function() run('HalShooterShotfileNew') end, { desc = 'new' }); map('n', 'l', function() run('HalShooterShotfileLast') end, { desc = 'last' })
+      map('n', 'L', function() run('HalShooterShotNavLatest') end, { desc = 'latest sent' })
       actions.select_default:replace(function() actions.close(prompt_bufnr); local subs = {}
         for name, en in pairs(selected_subs) do if en then subs[#subs+1] = name end end
         session.set_projects(include_root, subs); if callback then callback({ rootProject = include_root, subProjects = subs }) end
@@ -187,8 +187,8 @@ function M.show_sort_picker(callback)
       map('n', '<C-c>', go_back, { desc = 'go back' }); map('n', 'q', go_back, { desc = 'go back' })
       map('i', '<C-c>', function() vim.cmd('stopinsert') end, { desc = 'normal mode' })
       local function run(cmd) actions.close(prompt_bufnr); vim.cmd(cmd) end
-      map('n', 'n', function() run('ShoCreate') end, { desc = 'new' }); map('n', 'l', function() run('ShoLast') end, { desc = 'last' })
-      map('n', 'L', function() run('ShoLatestSent') end, { desc = 'latest sent' })
+      map('n', 'n', function() run('HalShooterShotfileNew') end, { desc = 'new' }); map('n', 'l', function() run('HalShooterShotfileLast') end, { desc = 'last' })
+      map('n', 'L', function() run('HalShooterShotNavLatest') end, { desc = 'latest sent' })
       actions.select_default:replace(function() actions.close(prompt_bufnr); session.save_current(); if callback then callback() end end)
       return true
     end,

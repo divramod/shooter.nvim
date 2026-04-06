@@ -183,7 +183,7 @@ function M.show()
   vim.bo[buf].swapfile = false
 
   -- Try to set buffer name
-  pcall(vim.api.nvim_buf_set_name, buf, '[ShoHelp]')
+  pcall(vim.api.nvim_buf_set_name, buf, '[HalShooterHelp]')
 
   -- Split help text into lines
   local lines = {}
