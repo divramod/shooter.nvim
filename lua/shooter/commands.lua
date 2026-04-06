@@ -37,12 +37,17 @@ local function setup_shotfile_commands()
       if result.ok and result.data then
         local path = vim.fn.expand(result.data.path)
         vim.cmd('edit! ' .. vim.fn.fnameescape(path))
+        local bufnr = vim.api.nvim_get_current_buf()
+        local winnr = vim.api.nvim_get_current_win()
         vim.schedule(function()
-          local line_count = vim.api.nvim_buf_line_count(0)
+          if not vim.api.nvim_buf_is_valid(bufnr) then return end
+          if not vim.api.nvim_win_is_valid(winnr) then return end
+          local line_count = vim.api.nvim_buf_line_count(bufnr)
           if line_count < 2 then
-            vim.api.nvim_buf_set_lines(0, line_count, line_count, false, {''})
+            vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, {''})
           end
-          vim.api.nvim_win_set_cursor(0, {2, 0})
+          vim.api.nvim_win_set_cursor(winnr, {2, 0})
+          vim.api.nvim_set_current_win(winnr)
           vim.cmd('startinsert!')
         end)
       end
