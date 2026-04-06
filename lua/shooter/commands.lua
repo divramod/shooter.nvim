@@ -43,7 +43,7 @@ local function setup_shotfile_commands()
           if not vim.api.nvim_buf_is_valid(bufnr) then return end
           if not vim.api.nvim_win_is_valid(winnr) then return end
           vim.api.nvim_set_current_win(winnr)
-          vim.api.nvim_feedkeys('ggA', 'n', false)
+          vim.api.nvim_feedkeys('ggA ', 'n', false)
         end)
       end
     end
@@ -180,7 +180,7 @@ local function setup_shot_commands()
       hal.reload()
       -- result.data.line is 0-indexed line after header; header is one line above
       vim.api.nvim_win_set_cursor(0, {result.data.line, 0})
-      vim.api.nvim_feedkeys('A', 'n', false)
+      vim.api.nvim_feedkeys('A ', 'n', false)
     elseif not result.ok then
       vim.notify('hal: ' .. (result.error or 'failed to create shot'), vim.log.levels.ERROR)
     end
