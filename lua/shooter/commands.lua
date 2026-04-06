@@ -197,25 +197,9 @@ local function setup_shot_commands()
     end
   end), { desc = 'Delete last shot' })
 
-  -- HalShooterShotToggle — toggle shot executed status via hal CLI
+  -- HalShooterShotToggle — toggle shot executed status and re-sort
   create_cmd('HalShooterShotToggle', require_shotfile(function()
-    local shots_mod = require('shooter.core.shots')
-    local utils = require('shooter.utils')
-    local _, _, header_line = shots_mod.find_current_shot()
-    if not header_line then
-      vim.notify('No shot at cursor', vim.log.levels.WARN)
-      return
-    end
-    local header_text = utils.get_buf_lines(0, header_line - 1, header_line)[1]
-    local num = shots_mod.parse_shot_header(header_text)
-    if not num then return end
-    hal.save_if_modified()
-    local result = hal.run({'shot', 'toggle', '--file', hal.current_file(), '--num', tostring(num)})
-    if result.ok then
-      -- Also renumber after toggle
-      hal.run({'shot', 'renumber', '--file', hal.current_file()})
-      hal.reload()
-    end
+    require('shooter.core.shot_actions').toggle_shot_done()
   end), { desc = 'Toggle shot done' })
 
   -- HalShooterShotDeleteCursor — delete shot at cursor via hal CLI
