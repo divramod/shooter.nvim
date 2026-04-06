@@ -1,12 +1,15 @@
 # shotfile
 
-## shot 23
+## shot 24
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 22
+## shot 23
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 22 HalShooterShotfileLast always opens test-2 shotfile in ~/a/hal (2026-04-06 19:22:02) @shotfile_20260406_192202_shot-22
+but its not the last shotfile i edited.
 
 ## x shot 21 fix create shotfile (2026-04-06 11:29:04) @shotfile_20260406_112904_shot-21
 < >N is failing, please fix it.
