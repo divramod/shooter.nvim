@@ -1,5 +1,5 @@
 -- Command registration for shooter.nvim
--- Organized by namespace: Shotfile, Shot, Tmux, Subproject, Tool, Cfg, Analytics, Help
+-- Organized by namespace: Shotfile, Shot, Tmux, Subproject, Tool, Cfg, HalConfig, Analytics, Help
 
 local M = {}
 
@@ -629,6 +629,58 @@ local function setup_cfg_commands()
   end, { desc = 'Edit shotfile picker session config' })
 end
 
+-- Setup Hal domain config commands (ConfigShow opens readonly, ConfigEdit opens for editing)
+local function setup_hal_config_commands()
+  -- All hal domains with config show/edit support and their config directory names
+  local domains = {
+    { name = 'Agent',    dir = 'agent' },
+    { name = 'Api',      dir = 'api' },
+    { name = 'Compose',  dir = 'docker-compose' },
+    { name = 'Daemon',   dir = 'daemon' },
+    { name = 'Env',      dir = 'env' },
+    { name = 'Mcp',      dir = 'mcp' },
+    { name = 'Port',     dir = 'port' },
+    { name = 'Repo',     dir = 'repo' },
+    { name = 'Server',   dir = 'server' },
+    { name = 'Shooter',  dir = 'shooter' },
+    { name = 'Smug',     dir = 'smug' },
+    { name = 'Sync',     dir = 'sync' },
+    { name = 'Template', dir = 'template' },
+    { name = 'Youtube',  dir = 'youtube' },
+  }
+
+  local home = vim.fn.expand('~')
+
+  for _, domain in ipairs(domains) do
+    local config_path = home .. '/.config/hal/' .. domain.dir .. '/config.yml'
+
+    -- Hal<Domain>ConfigShow — open config in a readonly split
+    create_cmd('Hal' .. domain.name .. 'ConfigShow', function()
+      if vim.fn.filereadable(config_path) ~= 1 then
+        vim.notify('No config file at ' .. config_path, vim.log.levels.WARN)
+        return
+      end
+      vim.cmd('split ' .. vim.fn.fnameescape(config_path))
+      vim.bo.readonly = true
+      vim.bo.modifiable = false
+    end, { desc = 'Show hal ' .. domain.dir .. ' config' })
+
+    -- Hal<Domain>ConfigEdit — open config for editing (create if missing)
+    create_cmd('Hal' .. domain.name .. 'ConfigEdit', function()
+      local dir = vim.fn.fnamemodify(config_path, ':h')
+      vim.fn.mkdir(dir, 'p')
+      if vim.fn.filereadable(config_path) ~= 1 then
+        local file = io.open(config_path, 'w')
+        if file then
+          file:write('# hal config — see https://github.com/divramod/hal\n')
+          file:close()
+        end
+      end
+      vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
+    end, { desc = 'Edit hal ' .. domain.dir .. ' config' })
+  end
+end
+
 -- Setup Analytics namespace commands (a prefix in keymaps)
 local function setup_analytics_commands()
   local hal = require('shooter.hal')
@@ -813,6 +865,7 @@ function M.setup()
   setup_subproject_commands()
   setup_tool_commands()
   setup_cfg_commands()
+  setup_hal_config_commands()
   setup_analytics_commands()
   setup_help_commands()
   setup_nav_commands()
