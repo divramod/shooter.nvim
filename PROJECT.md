@@ -1,6 +1,10 @@
 # CLAUDE.md
 version: 0.2.21 2026-02-13 20:47:56
 
+# Architecture
+
+shooter.nvim is a thin Neovim wrapper around the `hal shooter` CLI. All core logic (shotfile CRUD, shot operations, tmux pane management, sound playback) is implemented in `hal shooter` subcommands and exposed as JSON APIs. The Lua plugin handles UI concerns (buffers, cursors, pickers, keymaps) and delegates to `hal shooter` via `lua/shooter/hal.lua`. This architecture makes shooter functionality available outside Neovim — in terminal scripts, other editors, and automation pipelines.
+
 # Boundaries
 
 Three-tier permission system for AI agent actions.
