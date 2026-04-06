@@ -167,8 +167,13 @@ function M.send_file_reference(pane_id, filepath)
     return false, "No filepath provided"
   end
 
-  local result = hal.run_raw({'tmux', 'send', '--pane', pane_id, '--file-ref', filepath, '--no-escape'})
-  return result.ok, result.error
+  local result = hal.run_raw({'tmux', 'send', '--pane', pane_id, '--file-ref', filepath})
+  if not result.ok then
+    return false, result.error
+  end
+  -- Send a second Enter after a short delay — Claude Code needs two Enters to submit
+  vim.fn.system(string.format("sleep 0.2 && tmux send-keys -t %s Enter", pane_id))
+  return true, nil
 end
 
 return M

@@ -1,12 +1,18 @@
 # shotfile
 
-## shot 22
+## shot 23
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 21
+## shot 22
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 21 fix create shotfile (2026-04-06 11:29:04) @shotfile_20260406_112904_shot-21
+< >N is failing, please fix it.
+i refactored everything in the codebase to use the hal shooter command
+after that, the command is failing.
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260406_112859.png
 
 ## x shot 20 new shotfile (2026-04-04 07:57:46) @shotfile_20260404_075746_shot-20
 when i run < >N to create a new shotfile, i want the cursor to be placed in the title line like how it works, when i create a new shot with < >n

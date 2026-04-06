@@ -1,6 +1,6 @@
 # shot
 
-## shot 65
+## shot 66
 i changed my pattern for the shots a little bit.
 last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
 but this information is not included in the shotfile.
@@ -22,8 +22,16 @@ do something
 ```
 i want both cases to work
 
-## shot 64 shot sent notification
+## shot 65 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
+
+## x shot 64 fix refactoring issues (2026-04-06 11:32:56) @shot_20260406_113256_shot-64
+i refactored shooter.nvim to be a thin wrapper around the `hal shooter` command.
+the idea is, to make all the hal shooter commands also easily available in the terminal and also to be able to use the hal shooter commands in other contexts, for example in scripts or other editors.
+please mention this in the project.md
+now, after the refatoring, some things are not working properly anymore. i want you to fix them
+for the shot sending for example, the shtofile is created and send into the tmux pane with the agent instance, but for claude, the enter is not triggered anymore.
+please fix
 
 ## x shot 63 (2026-02-11 01:53:11) @shot_20260211_015311_shot-63
 for the latest sent shot, can you only color the title of the shot and not the rest?
@@ -125,10 +133,10 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-selecting multiple shot pickers and then hitting 1 to send them does not 
+color the background color of the last shot made green
 
 ## x shot 44 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+selecting multiple shot pickers and then hitting 1 to send them does not 
 
 ## x shot 43 (2026-02-07 18:13:22)
 the command < >. should also call the renumber function, after is marked a shot as done
