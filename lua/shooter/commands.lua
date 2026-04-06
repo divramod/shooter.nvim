@@ -310,8 +310,8 @@ local function setup_shot_commands()
     tmux.resend_latest_shot(pane)
   end), { nargs = '?', desc = 'Resend to pane [1-9]' })
 
-  -- Queue commands (1-4) via hal CLI
-  for i = 1, 4 do
+  -- Queue commands (1-9) via hal CLI
+  for i = 1, 9 do
     create_cmd('HalShooterShotQueue' .. i, require_shotfile(function()
       local shots_mod = require('shooter.core.shots')
       local shot_info = shots_mod.find_current_shot()

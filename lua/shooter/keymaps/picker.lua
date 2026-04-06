@@ -27,8 +27,8 @@ function M.setup_shot_picker_keymaps(prompt_bufnr, map, opts)
 
   local target_file = opts.target_file
 
-  -- Send commands (1-4) - operate on selection
-  for i = 1, 4 do
+  -- Send commands (1-9) - operate on selection
+  for i = 1, 9 do
     map('n', tostring(i), function()
       if target_file then helpers.clear_selection(target_file) end
       telescope_actions.send_multiple_shots(prompt_bufnr, i)

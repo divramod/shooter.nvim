@@ -375,8 +375,8 @@ function M.list_open_shots(opts)
       -- Get prefix for namespaced keymaps
       local prefix = shooter_config.get('keymaps.prefix') or ' '
 
-      -- Send commands (1-4) - both root level and s prefix
-      for i = 1, 4 do
+      -- Send commands (1-9) - both root level and s prefix
+      for i = 1, 9 do
         local send_fn = function()
           helpers.clear_selection(target_file)
           telescope_actions.send_multiple_shots(prompt_bufnr, i)

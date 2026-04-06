@@ -66,7 +66,7 @@ local function show_shots(file_entry, back_fn)
           vim.cmd('normal! zz')
         end
       end)
-      for i = 1, 4 do
+      for i = 1, 9 do
         map('n', tostring(i), function()
           local e = action_state.get_selected_entry()
           if not e or not e.value then return end

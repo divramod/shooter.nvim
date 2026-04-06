@@ -39,8 +39,8 @@ function M.setup()
   map('n', '}', ':HalShooterShotNavNextSent<cr>', 'Next sent shot')
   map('n', '{', ':HalShooterShotNavPrevSent<cr>', 'Prev sent shot')
 
-  -- Send to pane (1-4) - root level for speed
-  for i = 1, 4 do
+  -- Send to pane (1-9) - root level for speed
+  for i = 1, 9 do
     map('n', tostring(i), ':HalShooterShotSend ' .. i .. '<cr>', 'Send to pane ' .. i)
     map('v', tostring(i), ':HalShooterShotSendVisual ' .. i .. '<cr>', 'Send selection to pane ' .. i)
   end
@@ -97,13 +97,13 @@ function M.setup()
   map('n', 'sv', ':HalShooterShotViewResponse<cr>', 'View shot response')
 
   -- Shot send (also at root, but available with s prefix too)
-  for i = 1, 4 do
+  for i = 1, 9 do
     map('n', 's' .. i, ':HalShooterShotSend ' .. i .. '<cr>', 'Send to pane ' .. i)
     map('n', 'sR' .. i, ':HalShooterShotResend ' .. i .. '<cr>', 'Resend to pane ' .. i)
   end
 
   -- Shot queue
-  for i = 1, 4 do
+  for i = 1, 9 do
     map('n', 'sq' .. i, ':HalShooterShotQueue' .. i .. '<cr>', 'Queue for pane ' .. i)
   end
   map('n', 'sqQ', ':HalShooterShotQueueView<cr>', 'View queue')
@@ -205,7 +205,7 @@ function M.setup()
   -- ============================================================
   -- SEND ALL (double prefix)
   -- ============================================================
-  for i = 1, 4 do
+  for i = 1, 9 do
     vim.keymap.set('n', prefix .. prefix .. tostring(i), ':HalShooterShotSendAll ' .. i .. '<cr>',
       vim.tbl_extend('force', opts, { desc = 'Send ALL to pane ' .. i }))
   end
