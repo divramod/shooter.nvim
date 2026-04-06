@@ -42,11 +42,7 @@ local function setup_shotfile_commands()
         vim.schedule(function()
           if not vim.api.nvim_buf_is_valid(bufnr) then return end
           if not vim.api.nvim_win_is_valid(winnr) then return end
-          local line_count = vim.api.nvim_buf_line_count(bufnr)
-          if line_count < 2 then
-            vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, {''})
-          end
-          vim.api.nvim_win_set_cursor(winnr, {2, 0})
+          vim.api.nvim_win_set_cursor(winnr, {1, 0})
           vim.api.nvim_set_current_win(winnr)
           vim.cmd('startinsert!')
         end)

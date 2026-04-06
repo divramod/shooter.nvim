@@ -1,5 +1,7 @@
 # shot
 
+## shot 69
+
 ## shot 68
 i changed my pattern for the shots a little bit.
 last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
