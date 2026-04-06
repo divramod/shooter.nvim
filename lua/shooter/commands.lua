@@ -74,17 +74,20 @@ local function setup_shotfile_commands()
     if picker then picker:find() end
   end, { desc = 'Shotfile picker (all repos)' })
 
-  -- HalShooterShotfileLast — via hal CLI
+  -- HalShooterShotfileLast — Neovim tracking first, hal CLI fallback
   create_cmd('HalShooterShotfileLast', function()
+    -- Primary: Neovim-tracked last shotfile (updated on every BufEnter)
+    local last_file = files.get_last_edited_file()
+    if last_file then
+      vim.cmd('edit ' .. vim.fn.fnameescape(last_file))
+      return
+    end
+    -- Fallback: hal CLI tracking (covers edits outside Neovim)
     local hal = require('shooter.hal')
     local result = hal.run({'shotfile', 'last'})
     if result.ok and result.data then
       local path = vim.fn.expand(result.data.path)
       vim.cmd('edit ' .. vim.fn.fnameescape(path))
-    else
-      -- Fallback to Lua method if hal tracking not available
-      local last_file = files.get_last_edited_file()
-      if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
     end
   end, { desc = 'Open last edited shotfile' })
 
