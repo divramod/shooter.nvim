@@ -91,7 +91,9 @@ function M.find_all_claude_panes()
   return M.find_all_ai_panes()
 end
 
--- Find the Nth AI pane (1-indexed, defaults to 1)
+-- Find the AI pane for worktree slot N (1-indexed, defaults to 1)
+-- Uses `hal shooter pane resolve N` to map worktree number → tmux pane ID.
+-- Falls back to positional indexing if hal resolution fails.
 -- Returns pane_id or nil if not found
 function M.find_ai_pane(pane_index)
   pane_index = pane_index or 1
@@ -109,6 +111,14 @@ function M.find_ai_pane(pane_index)
     return nil, "Not running in tmux"
   end
 
+  -- Try hal shooter pane resolve first (maps worktree number → pane ID)
+  local hal = require('shooter.hal')
+  local result = hal.run({'pane', 'resolve', tostring(pane_index)})
+  if result.ok and result.data and result.data.pane_id then
+    return result.data.pane_id, nil
+  end
+
+  -- Fallback: positional indexing into detected AI panes
   local ai_panes = M.find_all_ai_panes()
 
   if pane_index <= #ai_panes then
