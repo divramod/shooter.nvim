@@ -178,8 +178,9 @@ local function setup_shot_commands()
     local result = hal.run({'shot', 'new', '--file', hal.current_file()})
     if result.ok and result.data then
       hal.reload()
+      -- result.data.line is 0-indexed content line after header; +1 for 1-indexed
       vim.api.nvim_win_set_cursor(0, {result.data.line + 1, 0})
-      vim.cmd('startinsert!')
+      vim.cmd('startinsert')
     elseif not result.ok then
       vim.notify('hal: ' .. (result.error or 'failed to create shot'), vim.log.levels.ERROR)
     end
