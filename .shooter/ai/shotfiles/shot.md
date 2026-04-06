@@ -1,6 +1,6 @@
 # shot
 
-## shot 66
+## shot 68
 i changed my pattern for the shots a little bit.
 last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
 but this information is not included in the shotfile.
@@ -22,8 +22,15 @@ do something
 ```
 i want both cases to work
 
-## shot 65 shot sent notification
+## shot 67 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
+
+## x shot 66 < >n cursor not right (2026-04-06 18:36:11) @shot_20260406_183612_shot-66
+the cursor position for the new shot command is not anymore after the a space after the shot number after the refactoring.
+
+## x shot 65 fix < >. (2026-04-06 12:59:51) @shot_20260406_125952_shot-65
+the command is not correctly sorting the shots after marking a shot as done.
+please fix it
 
 ## x shot 64 fix refactoring issues (2026-04-06 11:32:56) @shot_20260406_113256_shot-64
 i refactored shooter.nvim to be a thin wrapper around the `hal shooter` command.
@@ -139,11 +146,11 @@ color the background color of the last shot made green
 selecting multiple shot pickers and then hitting 1 to send them does not 
 
 ## x shot 43 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
-
-## x shot 42 (2026-02-07 18:13:22)
 the < >sy command should also mark the shot as done and call the renumber function
 i call this command usually, when i want to manually paste a shot to a agent cli
+
+## x shot 42 (2026-02-07 18:13:22)
+the command < >. should also call the renumber function, after is marked a shot as done
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
