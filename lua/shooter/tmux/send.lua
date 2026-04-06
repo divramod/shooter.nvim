@@ -1,8 +1,9 @@
 -- Send text to tmux panes for shooter.nvim
--- Handle text transmission and escape sequences
+-- Delegates to `hal shooter tmux send` for actual tmux operations
 
 local config = require('shooter.config')
 local keys = require('shooter.tmux.keys')
+local hal = require('shooter.hal')
 
 local M = {}
 
@@ -100,7 +101,7 @@ function M.build_send_command(pane_id, tmpfile, delay, include_escape_prep)
   return table.concat(cmd_parts, " && ")
 end
 
--- Send text to a specific pane
+-- Send text to a specific pane via hal shooter tmux send
 function M.send_to_pane(pane_id, text, delay, include_escape_prep)
   if not pane_id or pane_id == "" then
     return false, "No pane ID provided", 0
@@ -118,26 +119,23 @@ function M.send_to_pane(pane_id, text, delay, include_escape_prep)
     return success, err, text_length
   end
 
-  -- Default: paste mode (fast but shows "[pasted]" in history)
-  delay = delay or M.calculate_delay(text)
+  -- Default: use hal shooter tmux send (bracketed paste mode)
   include_escape_prep = include_escape_prep == nil and true or include_escape_prep
+  delay = delay or M.calculate_delay(text)
 
-  local tmpfile, err = M.write_to_tempfile(text)
-  if not tmpfile then
-    return false, err, 0
+  local args = {'tmux', 'send', '--pane', pane_id, '--text', text, '--delay', tostring(delay)}
+  if include_escape_prep == false then
+    table.insert(args, '--no-escape')
   end
+  local result = hal.run_raw(args)
 
-  local cmd = M.build_send_command(pane_id, tmpfile, delay, include_escape_prep)
-  local success, cmd_err = M.execute_tmux_command(cmd)
-
-  if not success then
-    os.remove(tmpfile)
-    return false, cmd_err, 0
+  if not result.ok then
+    return false, result.error or "hal tmux send failed", 0
   end
   return true, nil, text_length
 end
 
--- Send multishot text
+-- Send multishot text via hal shooter tmux send
 function M.send_multishot_to_pane(pane_id, text)
   if not text or text == "" or text:match('^%s*$') then
     return false, "No text to send", 0
@@ -152,27 +150,15 @@ function M.send_multishot_to_pane(pane_id, text)
   end
 
   local delay = M.calculate_multishot_delay(text)
-  local tmpfile, err = M.write_to_tempfile(text)
-  if not tmpfile then
-    return false, err, 0
-  end
+  local result = hal.run_raw({'tmux', 'send', '--pane', pane_id, '--text', text, '--delay', tostring(delay)})
 
-  local actual_delay = math.max(delay, 1.5)
-  local cmd = string.format(
-    "tmux send-keys -t %s C-c && sleep 0.1 && tmux send-keys -t %s C-u && sleep 0.2 && tmux load-buffer %s && tmux paste-buffer -p -t %s && sleep %.1f && tmux send-keys -t %s Enter && sleep 0.2 && tmux send-keys -t %s Enter && rm %s",
-    pane_id, pane_id, tmpfile, pane_id, actual_delay, pane_id, pane_id, tmpfile
-  )
-
-  local success, cmd_err = M.execute_tmux_command(cmd)
-  if not success then
-    os.remove(tmpfile)
-    return false, cmd_err, 0
+  if not result.ok then
+    return false, result.error or "hal tmux send failed", 0
   end
   return true, nil, text_length
 end
 
--- Send file reference to Claude using @filepath syntax
--- This avoids all paste issues by letting Claude read the file directly
+-- Send file reference to Claude using @filepath syntax via hal
 function M.send_file_reference(pane_id, filepath)
   if not pane_id or pane_id == "" then
     return false, "No pane ID provided"
@@ -181,14 +167,8 @@ function M.send_file_reference(pane_id, filepath)
     return false, "No filepath provided"
   end
 
-  -- Build command: C-u to clear line (NOT C-c which would exit Claude!), then @filepath
-  local cmd = string.format(
-    "tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s -l '@%s' && sleep 0.1 && tmux send-keys -t %s Enter && sleep 0.1 && tmux send-keys -t %s Enter",
-    pane_id, pane_id, filepath, pane_id, pane_id
-  )
-
-  local success, err = M.execute_tmux_command(cmd)
-  return success, err
+  local result = hal.run_raw({'tmux', 'send', '--pane', pane_id, '--file-ref', filepath, '--no-escape'})
+  return result.ok, result.error
 end
 
 return M
