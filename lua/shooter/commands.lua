@@ -38,6 +38,10 @@ local function setup_shotfile_commands()
         local path = vim.fn.expand(result.data.path)
         vim.cmd('edit! ' .. vim.fn.fnameescape(path))
         vim.schedule(function()
+          local line_count = vim.api.nvim_buf_line_count(0)
+          if line_count < 2 then
+            vim.api.nvim_buf_set_lines(0, line_count, line_count, false, {''})
+          end
           vim.api.nvim_win_set_cursor(0, {2, 0})
           vim.cmd('startinsert!')
         end)
