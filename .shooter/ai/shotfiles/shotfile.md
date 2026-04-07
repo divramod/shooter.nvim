@@ -1,12 +1,21 @@
 # shotfile
 
-## shot 24
+
+## shot 25
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 23
+## shot 24
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 23 refactoring next steps (2026-04-07 01:21:20) @shotfile_20260407_012120_shot-23
+as i wrote earlier, i am in the process of refactoring the codebase.
+now i want you to adapt the shotfile location.
+currently the shotfiles are living in .shooter/ai/shotfiles
+i want you to move them to .hal/shooter/shotfiles
+also, the temporary image pastes should go to .hal/shooter/tmp/image-pastes
+please research the whole codebase and adapt all paths to the shotfiles and the image pastes to the new location.
 
 ## x shot 22 HalShooterShotfileLast always opens test-2 shotfile in ~/a/hal (2026-04-06 19:22:02) @shotfile_20260406_192202_shot-22
 but its not the last shotfile i edited.
