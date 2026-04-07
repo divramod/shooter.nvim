@@ -48,7 +48,7 @@ please fix
 for the latest sent shot, can you only color the title of the shot and not the rest?
 i just see, for the closed shots for first of the day and last closed, we need three colors each with background and foreground color possible to set.
 prefix, title, postfix
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260211_015306.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260211_015306.png
 
 ## x shot 62 shot header titles 2 (2026-02-11 01:36:59) @shot_20260211_013659_shot-62
 do the same for first shot of the day and closed shots 

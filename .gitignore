@@ -37,3 +37,4 @@ plugin/packer_compiled.lua
 .beads/.local_version
 .beads/beads.db
 .beads/last-touched
+.hal/shooter/tmp/image-pastes/

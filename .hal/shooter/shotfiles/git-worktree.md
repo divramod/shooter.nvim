@@ -10,10 +10,10 @@ the command should be callable with < >gwl
 
 ## x shot 2 no worktrees found in picker (2026-04-04 05:17:41) @git-worktree_20260404_051742_shot-2
 the picker shows no worktrees found
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260404_051705.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260404_051705.png
 
 but there are 5
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260404_051733.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260404_051733.png
 
 plese fix it
 

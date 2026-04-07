@@ -254,10 +254,10 @@ give me an idea on how we could do that
 ## x shot 348 copy/paste image link without affirmation  (2026-04-03 10:24:42) @shooter.nvim_20260403_102442_shot-348
 when i paste a link into nvim, which is a link to a image in the clipboard, i will always be asked to confirm with enter.
 i dont want to press enter
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260403_102436.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260403_102436.png
 
 ## x shot 347 copilot sending not working (2026-04-01 18:38:23) @shooter.nvim_20260401_183824_shot-347
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260401_183758.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260401_183758.png
 for copilot the sending mechanism is not working.
 it pastes the file path but does not seem to enter it.
 
@@ -266,10 +266,10 @@ i usually started claude in a tmux pane by simply writing claude.
 now i wrote myself a wrapper command, which does some helping things.
 the problem is, that the identifier before, if a claude instance is running in a pane was the claude version number (unclean from the beginning). this is now gone and its hal like you see in the picture
 now:
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260401_175407.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260401_175407.png
 
 before:
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260401_175426.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260401_175426.png
 
 i want you to change the send command in a way, that it checks, if hal is running inside instead of 2.1.89 or node
 
@@ -283,13 +283,13 @@ to make the agents aware of that, i want you to add to the end of the shotfile t
 i tried the multishotpicker.
 it now seems to send all shots from a file into the shotfile?
 even though, i only sent shot  
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260327_180508.png
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260327_180627.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260327_180508.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260327_180627.png
 something seems off here
 
 ## x shot 343 shotpicker header format (2026-03-27 18:04:05) @shooter.nvim_20260327_180405_shot-343
 in the shotpicker. if a shot has a header, like shot 4, this header text should be taken in the list
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260327_180324.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260327_180324.png
 if there is no header, then the first line of the shot should be taken as the header for the shotpicker list.
 
 ## x shot 342 multishotpicker not doing the numbering correctly (2026-03-27 08:29:05) @shooter.nvim_20260327_082905_shot-342

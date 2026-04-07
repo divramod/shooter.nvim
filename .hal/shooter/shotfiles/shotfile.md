@@ -24,7 +24,7 @@ but its not the last shotfile i edited.
 < >N is failing, please fix it.
 i refactored everything in the codebase to use the hal shooter command
 after that, the command is failing.
-/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260406_112859.png
+/Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260406_112859.png
 
 ## x shot 20 new shotfile (2026-04-04 07:57:46) @shotfile_20260404_075746_shot-20
 when i run < >N to create a new shotfile, i want the cursor to be placed in the title line like how it works, when i create a new shot with < >n
