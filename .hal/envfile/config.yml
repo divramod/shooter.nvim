@@ -1,0 +1,19 @@
+template_mappings:
+  - environment: remote-production
+    templates:
+      - env-templates/.env.template.base
+      - env-templates/.env.template.remote-production
+    targets:
+      - .env.remote-production
+  - environment: local-development
+    templates:
+      - env-templates/.env.template.base
+      - env-templates/.env.template.local-development
+    targets:
+      - .env.local-development
+  - environment: worktree
+    templates:
+      - env-templates/.env.template.base
+      - env-templates/.env.template.worktree
+    targets:
+      - .env.local-development
