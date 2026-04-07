@@ -234,12 +234,12 @@ apply_syntax = function(bufnr)
   end
 end
 
--- Check if file is a prompts file (not Oil buffer, must be actual .md file in .shooter/ai/shotfiles)
+-- Check if file is a prompts file (not Oil buffer, must be actual .md file in .hal/shooter/shotfiles)
 local function is_prompts_file(filepath)
   -- Exclude Oil buffers
   if filepath:match('^oil://') then return false end
-  -- Must be a .md file in .shooter/ai/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
-  return filepath:match('.shooter/ai/shotfiles/.+%.md$') ~= nil
+  -- Must be a .md file in .hal/shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
+  return filepath:match('.hal/shooter/shotfiles/.+%.md$') ~= nil
 end
 
 -- Toggle day marker coloring on/off
@@ -304,7 +304,7 @@ function M.setup()
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
-      -- Only apply to markdown files in .shooter/ai/shotfiles (not oil, not other filetypes)
+      -- Only apply to markdown files in .hal/shooter/shotfiles (not oil, not other filetypes)
       if ft == 'markdown' and is_prompts_file(filepath) then
         require('shooter.core.files').track_last_shotfile(filepath)
         apply_syntax(ev.buf)

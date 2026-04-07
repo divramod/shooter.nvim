@@ -107,7 +107,7 @@ TOOLS NAMESPACE (l prefix)
   li        Insert images         Insert image references
   lw        Watch pane            Open watch pane (= tw)
   lp        PRD list              List tasks from plans/prd.json
-  lc        Clipboard paste       Paste clipboard image to .shooter/config/nvim/images/
+  lc        Clipboard paste       Paste clipboard image to .hal/shooter/tmp/image-pastes/
   lI        Images folder         Open clipboard images folder in Oil
 
 CFG NAMESPACE (c prefix)
@@ -131,7 +131,7 @@ HELP NAMESPACE (h prefix)
   hd        Dashboard             Open project dashboard
 
 QUICK FOLDER ACCESS (, prefix)
-  ,p        Prompts folder        Open .shooter/ai/shotfiles in Oil
+  ,p        Prompts folder        Open .hal/shooter/shotfiles in Oil
   ,l        Plans folder          Open plans in Oil
   ,s        Shooter config        Open .shooter/config/nvim in Oil
 
@@ -139,19 +139,19 @@ SEND ALL (double prefix)
   <space><space>1-4               Send ALL open shots to pane #1-4
 
 FOLDER STRUCTURE
-  .shooter/ai/shotfiles/           <- new files created here (in-progress)
-  .shooter/ai/shotfiles/archive/   <- completed/archived
-  .shooter/ai/shotfiles/backlog/   <- future tasks
-  .shooter/ai/shotfiles/done/      <- finished tasks
-  .shooter/ai/shotfiles/reqs/      <- requirements
-  .shooter/ai/shotfiles/test/      <- testing
-  .shooter/ai/shotfiles/wait/      <- waiting/blocked
+  .hal/shooter/shotfiles/           <- new files created here (in-progress)
+  .hal/shooter/shotfiles/archive/   <- completed/archived
+  .hal/shooter/shotfiles/backlog/   <- future tasks
+  .hal/shooter/shotfiles/done/      <- finished tasks
+  .hal/shooter/shotfiles/reqs/      <- requirements
+  .hal/shooter/shotfiles/test/      <- testing
+  .hal/shooter/shotfiles/wait/      <- waiting/blocked
 
 PROJECT SUPPORT
   If a 'projects/' folder exists at git root, shooter becomes project-aware:
   - <space>n shows project picker when at repo root
   - If cwd is inside projects/<name>/, that project is auto-detected
-  - Files are created at projects/<name>/.shooter/ai/shotfiles/
+  - Files are created at projects/<name>/.hal/shooter/shotfiles/
   - History paths include project: ~/.config/.../history/user/repo/project/...
 
 CONTEXT FILES
@@ -168,7 +168,7 @@ SMART PASTE (global keymaps, disable with keymaps.smart_paste = false)
   p         Smart paste after     Paste image if in clipboard, else normal paste
   P         Smart paste before    Paste image before if in clipboard, else normal paste
   <C-v>     Clipboard paste       Insert mode only - paste image or + register
-  Images saved to: <repo>/.shooter/config/nvim/images/clipboard_YYYYMMDD_HHMMSS.png
+  Images saved to: <repo>/.hal/shooter/tmp/image-pastes/clipboard_YYYYMMDD_HHMMSS.png
 
 Press 'q' to close this help window.
 ]]

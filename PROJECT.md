@@ -108,7 +108,7 @@ Default prefix: `<space>`. Examples:
 ### Shotfile Structure
 
 ```
-.shooter/ai/shotfiles/<name>.md
+.hal/shooter/shotfiles/<name>.md
 ```
 
 Each file has a `# title` header followed by shots in reverse-number order (highest = newest at top).

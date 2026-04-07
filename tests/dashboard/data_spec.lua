@@ -8,7 +8,7 @@ describe('dashboard.data module', function()
   before_each(function()
     -- Create temp directory structure
     test_dir = vim.fn.tempname()
-    vim.fn.mkdir(test_dir .. '/.shooter/ai/shotfiles', 'p')
+    vim.fn.mkdir(test_dir .. '/.hal/shooter/shotfiles', 'p')
   end)
 
   after_each(function()
@@ -20,7 +20,7 @@ describe('dashboard.data module', function()
 
   describe('get_open_shots', function()
     it('finds open shots in a file', function()
-      test_file = test_dir .. '/.shooter/ai/shotfiles/test.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/test.md'
       local f = io.open(test_file, 'w')
       f:write([[# Test File
 
@@ -43,7 +43,7 @@ First shot content
     end)
 
     it('returns empty array for file with no open shots', function()
-      test_file = test_dir .. '/.shooter/ai/shotfiles/test.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/test.md'
       local f = io.open(test_file, 'w')
       f:write([[# Test File
 
@@ -58,7 +58,7 @@ Done shot
     end)
 
     it('extracts preview from next non-empty line', function()
-      test_file = test_dir .. '/.shooter/ai/shotfiles/test.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/test.md'
       local f = io.open(test_file, 'w')
       f:write([[# Test File
 
@@ -77,7 +77,7 @@ More content here
 
   describe('get_file_title', function()
     it('extracts title from first heading', function()
-      test_file = test_dir .. '/.shooter/ai/shotfiles/test.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/test.md'
       local f = io.open(test_file, 'w')
       f:write([[# 2026-01-21 - My Feature
 
@@ -92,7 +92,7 @@ Content
     end)
 
     it('returns nil for file without heading', function()
-      test_file = test_dir .. '/.shooter/ai/shotfiles/test.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/test.md'
       local f = io.open(test_file, 'w')
       f:write('No heading here\nJust text\n')
       f:close()
@@ -114,7 +114,7 @@ Content
   describe('get_repo_files', function()
     it('finds files with open shots', function()
       -- Create a file with open shots
-      test_file = test_dir .. '/.shooter/ai/shotfiles/test.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/test.md'
       local f = io.open(test_file, 'w')
       f:write([[# Test Feature
 
@@ -132,7 +132,7 @@ Content here
 
     it('excludes files with no open shots', function()
       -- Create a file with only done shots
-      test_file = test_dir .. '/.shooter/ai/shotfiles/done.md'
+      test_file = test_dir .. '/.hal/shooter/shotfiles/done.md'
       local f = io.open(test_file, 'w')
       f:write([[# Done Feature
 

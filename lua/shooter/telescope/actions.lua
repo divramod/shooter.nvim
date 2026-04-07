@@ -10,7 +10,7 @@ local utils = require('shooter.utils')
 -- Helper: Get files for telescope picker
 local function get_prompt_files()
   local cwd = vim.fn.getcwd()
-  local prompts_dir = cwd .. '/.shooter/ai/shotfiles'
+  local prompts_dir = cwd .. '/.hal/shooter/shotfiles'
   local file_list = vim.fn.globpath(prompts_dir, '**/*.md', false, true)
   local results = {}
   for _, file in ipairs(file_list) do
@@ -196,12 +196,12 @@ function M.move_file(pb, tfolder)
   if not s then return end
   local cwd, src = vim.fn.getcwd(), s.path
   local fname = vim.fn.fnamemodify(src, ':t')
-  local tdir = tfolder == '' and cwd .. '/.shooter/ai/shotfiles' or cwd .. '/.shooter/ai/shotfiles/' .. tfolder
+  local tdir = tfolder == '' and cwd .. '/.hal/shooter/shotfiles' or cwd .. '/.hal/shooter/shotfiles/' .. tfolder
   local tpath = tdir .. '/' .. fname
   local dname = tfolder == '' and 'prompts' or tfolder
 
   vim.fn.mkdir(tdir, 'p')
-  if tfolder == '' and vim.fn.fnamemodify(src, ':h') == cwd .. '/.shooter/ai/shotfiles' then
+  if tfolder == '' and vim.fn.fnamemodify(src, ':h') == cwd .. '/.hal/shooter/shotfiles' then
     utils.echo('Already in prompts')
     return
   elseif src:find('/' .. tfolder .. '/', 1, true) then

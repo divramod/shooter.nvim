@@ -83,7 +83,7 @@ function M.detect_from_cwd()
 end
 
 -- Get prompts directory for a specific project (or root)
--- project = nil means root level (.shooter/ai/shotfiles)
+-- project = nil means root level (.hal/shooter/shotfiles)
 -- Returns: absolute path to prompts dir
 function M.get_prompts_dir(project)
   local files = require('shooter.core.files')
@@ -91,19 +91,19 @@ function M.get_prompts_dir(project)
   local base = git_root or vim.fn.getcwd()
 
   if project and project ~= '' then
-    return base .. '/projects/' .. project .. '/.shooter/ai/shotfiles'
+    return base .. '/projects/' .. project .. '/.hal/shooter/shotfiles'
   else
-    return base .. '/.shooter/ai/shotfiles'
+    return base .. '/.hal/shooter/shotfiles'
   end
 end
 
 -- Get prompts root relative path for a project
--- Returns: "projects/<project>/.shooter/ai/shotfiles" or ".shooter/ai/shotfiles"
+-- Returns: "projects/<project>/.hal/shooter/shotfiles" or ".hal/shooter/shotfiles"
 function M.get_prompts_root(project)
   if project and project ~= '' then
-    return 'projects/' .. project .. '/.shooter/ai/shotfiles'
+    return 'projects/' .. project .. '/.hal/shooter/shotfiles'
   else
-    return '.shooter/ai/shotfiles'
+    return '.hal/shooter/shotfiles'
   end
 end
 

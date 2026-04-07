@@ -1,5 +1,5 @@
 -- Clipboard image handling for shooter.nvim
--- Save clipboard images to .shooter/config/nvim/images/ and insert path
+-- Save clipboard images to .hal/shooter/tmp/image-pastes/ and insert path
 
 local M = {}
 
@@ -48,7 +48,7 @@ function M.get_git_root()
   return nil
 end
 
--- Ensure .shooter/config/nvim/images folder has .gitkeep and .gitignore
+-- Ensure .hal/shooter/tmp/image-pastes folder has .gitkeep and .gitignore
 function M.ensure_gitfiles(images_dir)
   local gitkeep = images_dir .. '/.gitkeep'
   local gitignore = images_dir .. '/.gitignore'
@@ -73,11 +73,11 @@ function M.ensure_gitfiles(images_dir)
 end
 
 -- Get save directory based on current buffer context
--- Saves to <reporoot>/.shooter/config/nvim/images/ if in a git repo
+-- Saves to <reporoot>/.hal/shooter/tmp/image-pastes/ if in a git repo
 function M.get_save_dir()
   local git_root = M.get_git_root()
   if git_root then
-    local images_dir = git_root .. '/.shooter/config/nvim/images'
+    local images_dir = git_root .. '/.hal/shooter/tmp/image-pastes'
     vim.fn.mkdir(images_dir, 'p')
     M.ensure_gitfiles(images_dir)
     return images_dir

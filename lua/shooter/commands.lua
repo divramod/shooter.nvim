@@ -3,13 +3,13 @@
 
 local M = {}
 
--- Guard: wraps a function so it only runs in shotfiles (.shooter/ai/shotfiles)
+-- Guard: wraps a function so it only runs in shotfiles (.hal/shooter/shotfiles)
 -- Returns the original function wrapped with an is_shooter_file() check
 local function require_shotfile(fn)
   return function(opts)
     local files = require('shooter.core.files')
     if not files.is_shooter_file() then
-      vim.notify('This command only works in shotfiles (.shooter/ai/shotfiles)', vim.log.levels.WARN)
+      vim.notify('This command only works in shotfiles (.hal/shooter/shotfiles)', vim.log.levels.WARN)
       return
     end
     fn(opts)
@@ -425,8 +425,8 @@ local function setup_subproject_commands()
         return
       end
       -- Create standard folder structure
-      local folders = { '.shooter/ai/shotfiles', '.shooter/ai/shotfiles/archive', '.shooter/ai/shotfiles/backlog',
-        '.shooter/ai/shotfiles/done', '.shooter/ai/shotfiles/reqs', '.shooter/ai/shotfiles/test', '.shooter/ai/shotfiles/wait' }
+      local folders = { '.hal/shooter/shotfiles', '.hal/shooter/shotfiles/archive', '.hal/shooter/shotfiles/backlog',
+        '.hal/shooter/shotfiles/done', '.hal/shooter/shotfiles/reqs', '.hal/shooter/shotfiles/test', '.hal/shooter/shotfiles/wait' }
       for _, folder in ipairs(folders) do
         vim.fn.mkdir(project_path .. '/' .. folder, 'p')
       end
@@ -466,8 +466,8 @@ local function setup_subproject_commands()
     end
     local project = project_mod.detect_from_cwd()
     local base = project and (git_root .. '/projects/' .. project) or git_root
-    local folders = { '.shooter/ai/shotfiles', '.shooter/ai/shotfiles/archive', '.shooter/ai/shotfiles/backlog',
-      '.shooter/ai/shotfiles/done', '.shooter/ai/shotfiles/reqs', '.shooter/ai/shotfiles/test', '.shooter/ai/shotfiles/wait' }
+    local folders = { '.hal/shooter/shotfiles', '.hal/shooter/shotfiles/archive', '.hal/shooter/shotfiles/backlog',
+      '.hal/shooter/shotfiles/done', '.hal/shooter/shotfiles/reqs', '.hal/shooter/shotfiles/test', '.hal/shooter/shotfiles/wait' }
     for _, folder in ipairs(folders) do
       vim.fn.mkdir(base .. '/' .. folder, 'p')
     end
