@@ -1,0 +1,3 @@
+enabled_domains:
+- env_template
+disabled_domains: []
