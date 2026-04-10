@@ -12,58 +12,27 @@ local conf = require('telescope.config').values
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
 
--- Get all folders from git root, respecting .gitignore
-local function get_project_folders()
-  local git_root = files.get_git_root()
-  if not git_root then
-    git_root = utils.cwd()
-  end
+-- Get shotfile folders (system folders + domains)
+local function get_shotfile_folders()
+  local git_worktree = require('shooter.tools.git_worktree')
+  local git_root = git_worktree.get_main_worktree() or files.get_git_root() or utils.cwd()
+  local shotfiles_dir = git_root .. '/.hal/shooter/shotfiles'
 
-  -- Use git ls-files to get all tracked files, then extract unique directories
-  -- This respects .gitignore automatically
-  local cmd = string.format(
-    'cd "%s" && git ls-files --full-name 2>/dev/null | xargs -I{} dirname {} | sort -u',
-    git_root
-  )
-  local result = vim.fn.systemlist(cmd)
-
-  -- Also add directories that exist but might not have tracked files yet
-  local cmd2 = string.format(
-    'cd "%s" && find . -type d -not -path "*/\\.git/*" 2>/dev/null | sed "s|^\\./||" | sort -u',
-    git_root
-  )
-  local find_result = vim.fn.systemlist(cmd2)
-
-  -- Merge and dedupe
-  local seen = {}
   local folders = {}
+  -- Root (prompts)
+  table.insert(folders, { display = '(root)', path = shotfiles_dir })
 
-  -- Add root
-  table.insert(folders, { display = '.', path = git_root })
-  seen['.'] = true
+  if not utils.dir_exists(shotfiles_dir) then return folders, git_root end
 
-  for _, dir in ipairs(result) do
-    if dir ~= '' and dir ~= '.' and not seen[dir] then
-      seen[dir] = true
-      table.insert(folders, { display = dir, path = git_root .. '/' .. dir })
+  local entries = vim.fn.readdir(shotfiles_dir)
+  for _, entry in ipairs(entries) do
+    local full_path = shotfiles_dir .. '/' .. entry
+    if vim.fn.isdirectory(full_path) == 1 then
+      table.insert(folders, { display = entry, path = full_path })
     end
   end
 
-  for _, dir in ipairs(find_result) do
-    if dir ~= '' and dir ~= '.' and not seen[dir] then
-      -- Check if this folder should be ignored (simple .gitignore check)
-      local check_cmd = string.format('cd "%s" && git check-ignore -q "%s" 2>/dev/null', git_root, dir)
-      vim.fn.system(check_cmd)
-      if vim.v.shell_error ~= 0 then -- Not ignored
-        seen[dir] = true
-        table.insert(folders, { display = dir, path = git_root .. '/' .. dir })
-      end
-    end
-  end
-
-  -- Sort by path
   table.sort(folders, function(a, b) return a.display < b.display end)
-
   return folders, git_root
 end
 
@@ -123,7 +92,7 @@ function M.open_picker()
     return
   end
 
-  local folders, git_root = get_project_folders()
+  local folders = get_shotfile_folders()
 
   if #folders == 0 then
     vim.notify('No folders found', vim.log.levels.WARN)

@@ -1,7 +1,10 @@
 # bugs
 
-## shot 6 
+## shot 7 
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_144134.png
+
+## x shot 6 < >fmm brings vim to crash (2026-04-10 14:53:28) @bugs_20260410_145328_shot-6
+fix it
 
 ## x shot 5 fix diagnostic issues (2026-04-10 14:38:44)
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_141418.png
