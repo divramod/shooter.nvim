@@ -1,13 +1,19 @@
 # shotfile
 
 
-## shot 25
+## shot 26
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 24
+## shot 25
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 24 autocreate non existant shotfile (2026-04-10 12:42:59) @shotfile_20260410_124300_shot-24
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_124140.png
+in the shotfile picker, when i press enter on a non existant shotfile, i want shooter to offer me to create and open this shotfile (with a empty first shot like with < >N)
+
+this should also work, when i insert non-existing-domain/<shotfile-name>
 
 ## x shot 23 refactoring next steps (2026-04-07 01:21:20) @shotfile_20260407_012120_shot-23
 as i wrote earlier, i am in the process of refactoring the codebase.
