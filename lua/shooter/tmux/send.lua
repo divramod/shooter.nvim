@@ -51,19 +51,10 @@ function M.calculate_multishot_delay(text)
   return 1.5
 end
 
--- Execute tmux command with error handling (silently, no vim prompt)
--- Uses jobstart/jobwait instead of vim.fn.system to prevent terminal bleed
+-- Execute tmux command with error handling (silently)
 function M.execute_tmux_command(cmd)
-  local job_id = vim.fn.jobstart({"sh", "-c", cmd .. " 2>/dev/null"}, {
-    stdout_buffered = true,
-    stderr_buffered = true,
-  })
-  if job_id <= 0 then return false, "Failed to start tmux job" end
-  local result = vim.fn.jobwait({job_id}, 30000)
-  if result[1] == 0 then
-    return true, nil
-  end
-  return false, "tmux command failed"
+  vim.fn.system(cmd .. " 2>/dev/null")
+  return vim.v.shell_error == 0, vim.v.shell_error ~= 0 and "tmux command failed" or nil
 end
 
 -- Write text to temporary file
