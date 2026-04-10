@@ -1,5 +1,8 @@
 # refactoring 
 
+## x shot 3 its still showing the shotfile from the worktree (2026-04-10 09:49:14) @refactoring_20260410_094914_shot-3
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_094911.png
+
 ## x shot 2 worktree available commands (2026-04-10 09:42:55) @refactoring_20260410_094255_shot-2
 when i run < >v, i want to see the list of shotfiles only from the main.
 i only write shotfiles into main.
