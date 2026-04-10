@@ -1,5 +1,5 @@
 <!-- THIS IS A HAL PROJECT. run hal project --help to understand what it means -->
-<!-- hal-version: 0.2.411 -->
+<!-- hal-version: 0.2.412 -->
 
 ## Verify Your Work
 
@@ -8,6 +8,8 @@ Before finishing any task:
 2. Can you run existing tests? → Run them.
 3. No tests cover your change? → Write one.
 4. No way to test? → State what you couldn't verify.
+
+After you finished a task, git add -> commit -> push, then run /mtm
 
 # shooter.nvim
 
