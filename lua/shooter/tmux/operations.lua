@@ -61,15 +61,6 @@ local function save_temp_sendable(full_message, shot_num, bufnr)
   return utils.write_file(temp_path, full_message) and temp_path or nil
 end
 
--- Ref pattern matches both old (shot-N-ts) and new (basename_ts_shot-N) formats
-local REF_PATTERN = '%s*@[%w%.%-_]+'
-
-local function add_temp_ref_to_header(bufnr, header_line, temp_filename)
-  local line = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
-  line = line:gsub(REF_PATTERN .. '$', '') .. ' @' .. temp_filename
-  utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
-  if vim.api.nvim_buf_get_name(bufnr) ~= '' then vim.cmd('silent! write') end
-end
 
 local function is_shot_executed(bufnr, header_line)
   local h = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
@@ -157,10 +148,6 @@ function M.send_current_shot(pane_index, detect, send, messages)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    -- Add temp file reference to header for response lookup
-    local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
-    add_temp_ref_to_header(bufnr, header_line, temp_filename)
-
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent shot %s to %s%s (%s)', shot_num, provider_name, pane_msg, files.get_file_title(bufnr)))
     vim.cmd('stopinsert')
@@ -197,12 +184,6 @@ function M.send_all_shots(pane_index, detect, send, messages)
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    -- Add temp file reference to each sent shot's header
-    local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
-    for _, ex in ipairs(executed_shots) do
-      add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
-    end
-
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #executed_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     sound.play()
@@ -282,12 +263,6 @@ function M.send_specific_shots(pane_index, shot_infos, bufnr, detect, send, mess
 
   local success, err = send_file_ref(provider, send, pane_id, temp_path)
   if success then
-    -- Add temp file reference to each sent shot's header
-    local temp_filename = temp_path:match('[^/]+$'):gsub('%.md$', '')
-    for _, ex in ipairs(sent_shots) do
-      add_temp_ref_to_header(bufnr, ex.header_line, temp_filename)
-    end
-
     local pane_msg = pane_index == 1 and '' or string.format(' to #%d', pane_index)
     utils.echo(string.format('Sent %d shots to %s%s (%s)', #sent_shots, provider_name, pane_msg, files.get_file_title(bufnr)))
     vim.cmd('stopinsert')
