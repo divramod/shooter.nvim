@@ -27,35 +27,41 @@ local function setup_shotfile_commands()
   local movement = require('shooter.core.movement')
   local project_mod = require('shooter.core.project')
 
-  -- HalShooterShotfileNew — create shotfile via hal CLI
+  -- HalShooterShotfileNew — create shotfile via Lua
   create_cmd('HalShooterShotfileNew', function(opts)
-    local hal = require('shooter.hal')
-
-    local function create_with_title(title)
+    local function create_with_title_and_project(title, project)
       if not title or title == '' then return end
-      local result = hal.run({'shotfile', 'new', title})
-      if result.ok and result.data then
-        local path = vim.fn.expand(result.data.path)
+      local path = files.create_file(title, '', '', project)
+      if path then
         vim.cmd('edit! ' .. vim.fn.fnameescape(path))
-        local bufnr = vim.api.nvim_get_current_buf()
-        local winnr = vim.api.nvim_get_current_win()
-        -- Add shot 1 header (hal CLI only creates the title)
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {'', '## shot 1 '})
         vim.schedule(function()
-          if not vim.api.nvim_buf_is_valid(bufnr) then return end
-          if not vim.api.nvim_win_is_valid(winnr) then return end
-          vim.api.nvim_set_current_win(winnr)
-          local line_count = vim.api.nvim_buf_line_count(bufnr)
-          vim.api.nvim_win_set_cursor(winnr, {line_count, 9})
+          -- Cursor on ## shot 1 line, insert mode at end
+          local line_count = vim.api.nvim_buf_line_count(0)
+          vim.api.nvim_win_set_cursor(0, {math.min(3, line_count), 0})
           vim.cmd('startinsert!')
         end)
       end
     end
 
-    if opts.args ~= '' then
-      create_with_title(opts.args)
+    local function prompt_for_title(project)
+      if opts.args ~= '' then
+        create_with_title_and_project(opts.args, project)
+      else
+        vim.ui.input({ prompt = 'Feature title: ' }, function(title)
+          create_with_title_and_project(title, project)
+        end)
+      end
+    end
+
+    local detected_project = project_mod.detect_from_cwd()
+    if detected_project then
+      prompt_for_title(detected_project)
+    elseif project_mod.has_projects() then
+      project_mod.pick_project(function(selected_project)
+        prompt_for_title(selected_project)
+      end, { include_root = true, title = 'Create in Project' })
     else
-      vim.ui.input({ prompt = 'Feature title: ' }, create_with_title)
+      prompt_for_title(nil)
     end
   end, { nargs = '?', desc = 'Create new shotfile' })
 
@@ -80,19 +86,8 @@ local function setup_shotfile_commands()
 
   -- HalShooterShotfileLast — Neovim tracking first, hal CLI fallback
   create_cmd('HalShooterShotfileLast', function()
-    -- Primary: Neovim-tracked last shotfile (updated on every BufEnter)
     local last_file = files.get_last_edited_file()
-    if last_file then
-      vim.cmd('edit ' .. vim.fn.fnameescape(last_file))
-      return
-    end
-    -- Fallback: hal CLI tracking (covers edits outside Neovim)
-    local hal = require('shooter.hal')
-    local result = hal.run({'shotfile', 'last'})
-    if result.ok and result.data then
-      local path = vim.fn.expand(result.data.path)
-      vim.cmd('edit ' .. vim.fn.fnameescape(path))
-    end
+    if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
   end, { desc = 'Open last edited shotfile' })
 
   -- ShoShotfileRename
@@ -177,56 +172,27 @@ end
 local function setup_shot_commands()
   local shot_actions = require('shooter.core.shot_actions')
   local tmux = require('shooter.tmux')
-  local hal = require('shooter.hal')
 
-  -- HalShooterShotNew — create new shot via hal CLI
-  create_cmd('HalShooterShotNew', require_shotfile(function()
-    -- Renumber first to close gaps before assigning the next number
-    require('shooter.core.renumber').renumber_shots()
-    local result = hal.run({'shot', 'new', '--file', hal.current_file()})
-    if result.ok and result.data then
-      hal.reload()
-      -- result.data.line is 0-indexed line after header; header is one line above
-      vim.api.nvim_win_set_cursor(0, {result.data.line, 0})
-      vim.api.nvim_feedkeys('A ', 'n', false)
-    elseif not result.ok then
-      vim.notify('hal: ' .. (result.error or 'failed to create shot'), vim.log.levels.ERROR)
-    end
-  end), { desc = 'Create new shot' })
+  -- HalShooterShotNew — create new shot via Lua
+  create_cmd('HalShooterShotNew', require_shotfile(shot_actions.create_new_shot),
+    { desc = 'Create new shot' })
 
   -- ShoShotNewWhisper (alias: ShoNewShotWhisper)
   create_cmd('HalShooterShotNewWhisper', require_shotfile(shot_actions.create_new_shot_with_whisper),
     { desc = 'New shot + whisper' })
 
-  -- HalShooterShotDelete — delete last unexecuted shot via hal CLI
-  create_cmd('HalShooterShotDelete', require_shotfile(function()
-    local result = hal.modify({'shot', 'delete', '--file', hal.current_file(), '--last'})
-    if result.ok and result.data then
-      vim.notify('deleted shot ' .. result.data.deleted, vim.log.levels.INFO)
-    end
-  end), { desc = 'Delete last shot' })
+  -- HalShooterShotDelete — delete last unexecuted shot
+  create_cmd('HalShooterShotDelete', require_shotfile(shot_actions.delete_last_shot),
+    { desc = 'Delete last shot' })
 
   -- HalShooterShotToggle — toggle shot executed status and re-sort
   create_cmd('HalShooterShotToggle', require_shotfile(function()
     require('shooter.core.shot_actions').toggle_shot_done()
   end), { desc = 'Toggle shot done' })
 
-  -- HalShooterShotDeleteCursor — delete shot at cursor via hal CLI
+  -- HalShooterShotDeleteCursor — delete shot at cursor
   create_cmd('HalShooterShotDeleteCursor', require_shotfile(function()
-    local shots_mod = require('shooter.core.shots')
-    local utils = require('shooter.utils')
-    local _, _, header_line = shots_mod.find_current_shot()
-    if not header_line then
-      vim.notify('No shot at cursor', vim.log.levels.WARN)
-      return
-    end
-    local header_text = utils.get_buf_lines(0, header_line - 1, header_line)[1]
-    local num = shots_mod.parse_shot_header(header_text)
-    if not num then return end
-    local result = hal.modify({'shot', 'delete', '--file', hal.current_file(), '--num', tostring(num)})
-    if result.ok then
-      vim.notify('deleted shot ' .. num, vim.log.levels.INFO)
-    end
+    require('shooter.core.shot_delete').delete_shot_under_cursor()
   end), { desc = 'Delete shot under cursor' })
 
   -- ShoShotMove (alias: ShoMoveShot)
@@ -234,24 +200,9 @@ local function setup_shot_commands()
     require('shooter.core.shot_move').move_shot()
   end), { desc = 'Move shot to another file' })
 
-  -- HalShooterShotYank — yank shot content via hal CLI
-  create_cmd('HalShooterShotYank', require_shotfile(function()
-    local shots_mod = require('shooter.core.shots')
-    local utils = require('shooter.utils')
-    local _, _, header_line = shots_mod.find_current_shot()
-    if not header_line then
-      vim.notify('No shot at cursor', vim.log.levels.WARN)
-      return
-    end
-    local header_text = utils.get_buf_lines(0, header_line - 1, header_line)[1]
-    local num = shots_mod.parse_shot_header(header_text)
-    if not num then return end
-    local result = hal.run({'shot', 'yank', '--file', hal.current_file(), '--num', tostring(num)})
-    if result.ok and result.data then
-      vim.fn.setreg('+', result.data.content)
-      vim.notify('yanked shot ' .. num .. ' to clipboard', vim.log.levels.INFO)
-    end
-  end), { desc = 'Yank shot to clipboard' })
+  -- HalShooterShotYank — yank shot content
+  create_cmd('HalShooterShotYank', require_shotfile(shot_actions.yank_shot),
+    { desc = 'Yank shot to clipboard' })
 
   -- ShoShotViewResponse
   create_cmd('HalShooterShotViewResponse', require_shotfile(function()
@@ -313,20 +264,11 @@ local function setup_shot_commands()
     tmux.resend_latest_shot(pane)
   end), { nargs = '?', desc = 'Resend to pane [1-9]' })
 
-  -- Queue commands (1-9) via hal CLI
+  -- Queue commands (1-9)
+  local queue = require('shooter.queue')
   for i = 1, 9 do
     create_cmd('HalShooterShotQueue' .. i, require_shotfile(function()
-      local shots_mod = require('shooter.core.shots')
-      local utils = require('shooter.utils')
-      local _, _, header_line = shots_mod.find_current_shot()
-      if not header_line then
-        vim.notify('No shot at cursor', vim.log.levels.WARN)
-        return
-      end
-      local header_text = utils.get_buf_lines(0, header_line - 1, header_line)[1]
-      local num = shots_mod.parse_shot_header(header_text)
-      if not num then return end
-      hal.run({'queue', 'add', '--file', hal.current_file(), '--num', tostring(num), '--pane', tostring(i)})
+      queue.add_to_queue(nil, i)
     end), { desc = 'Queue for pane ' .. i })
   end
 
@@ -335,17 +277,12 @@ local function setup_shot_commands()
   end), { desc = 'View queue' })
 
   create_cmd('HalShooterShotQueueClear', require_shotfile(function()
-    hal.run({'queue', 'clear'})
-    vim.notify('queue cleared', vim.log.levels.INFO)
+    queue.clear_queue()
   end), { desc = 'Clear queue' })
 
-  -- HalShooterFileStats — stats via hal CLI
-  create_cmd('HalShooterFileStats', require_shotfile(function()
-    local result = hal.run({'shot', 'stats', '--file', hal.current_file()})
-    if result.ok and result.data then
-      vim.notify(string.format('%d total, %d open, %d closed', result.data.total, result.data.open, result.data.closed), vim.log.levels.INFO)
-    end
-  end), { desc = 'Shotfile stats (total/open/closed)' })
+  -- HalShooterFileStats — stats via Lua
+  create_cmd('HalShooterFileStats', require_shotfile(shot_actions.file_stats),
+    { desc = 'Shotfile stats (total/open/closed)' })
 
   -- ShoFileToggleFirstShotOfDayColoring - Toggle day marker highlighting
   create_cmd('HalShooterFileToggleFirstShotOfDayColoring', require_shotfile(function()
@@ -689,28 +626,12 @@ end
 
 -- Setup Analytics namespace commands (a prefix in keymaps)
 local function setup_analytics_commands()
-  local hal = require('shooter.hal')
-
-  -- HalShooterAnalyticsProject — via hal CLI
   create_cmd('HalShooterAnalyticsProject', function()
-    local result = hal.run({'analytics', 'project'})
-    if result.ok and result.data then
-      local d = result.data
-      vim.notify(string.format('%s: %d shotfiles, %d shots (%d open, %d closed), %d bullets',
-        d.repo, d.shotfiles, d.shots_total, d.shots_open, d.shots_closed, d.bullets), vim.log.levels.INFO)
-    end
+    require('shooter.analytics').show_project()
   end, { desc = 'Project analytics' })
 
-  -- HalShooterAnalyticsGlobal — via hal CLI
   create_cmd('HalShooterAnalyticsGlobal', function()
-    local result = hal.run({'analytics', 'global'})
-    if result.ok and result.data then
-      local lines = {}
-      for _, r in ipairs(result.data) do
-        table.insert(lines, string.format('%s: %d files, %d shots (%d open)', r.repo, r.shotfiles, r.shots_total, r.shots_open))
-      end
-      vim.notify(table.concat(lines, '\n'), vim.log.levels.INFO)
-    end
+    require('shooter.analytics').show_global()
   end, { desc = 'Global analytics' })
 end
 

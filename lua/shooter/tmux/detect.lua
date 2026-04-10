@@ -111,14 +111,6 @@ function M.find_ai_pane(pane_index)
     return nil, "Not running in tmux"
   end
 
-  -- Try hal shooter pane resolve first (maps worktree number → pane ID)
-  local hal = require('shooter.hal')
-  local result = hal.run({'pane', 'resolve', tostring(pane_index)})
-  if result.ok and result.data and result.data.pane_id then
-    return result.data.pane_id, nil
-  end
-
-  -- Fallback: positional indexing into detected AI panes
   local ai_panes = M.find_all_ai_panes()
 
   if pane_index <= #ai_panes then

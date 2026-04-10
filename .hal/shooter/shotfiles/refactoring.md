@@ -2,7 +2,8 @@
 
 ## shot 8 
 
-## shot 7 
+## x shot 7 list hal cli usage (2026-04-10 12:24:19)
+please go through the whole codebase and tell me, where the hal cli is used and for what.
 
 ## x shot 6 fix renumbering (2026-04-10 10:15:42) @refactoring_20260410_101542_shot-6
 when i run < >sr, it runs the sorting in the wrong direction.
