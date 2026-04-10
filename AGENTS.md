@@ -9,7 +9,9 @@ Before finishing any task:
 3. No tests cover your change? → Write one.
 4. No way to test? → State what you couldn't verify.
 
-After you finished a task, git add -> commit -> push, then run /mtm
+## After you finished a task
+1. git add -> commit -> push
+2. run the command /mtm
 
 # shooter.nvim
 
