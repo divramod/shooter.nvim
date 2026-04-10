@@ -68,7 +68,7 @@ local function add_temp_ref_to_header(bufnr, header_line, temp_filename)
   local line = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
   line = line:gsub(REF_PATTERN .. '$', '') .. ' @' .. temp_filename
   utils.set_buf_lines(bufnr, header_line - 1, header_line, { line })
-  if vim.api.nvim_buf_get_name(bufnr) ~= '' then vim.cmd('write') end
+  if vim.api.nvim_buf_get_name(bufnr) ~= '' then vim.cmd('silent! write') end
 end
 
 local function is_shot_executed(bufnr, header_line)

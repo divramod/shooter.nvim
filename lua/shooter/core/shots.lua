@@ -184,7 +184,7 @@ function M.mark_shot_executed(bufnr, header_line)
   -- Only write if buffer has a filename
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname ~= '' then
-    vim.cmd('write')
+    vim.cmd('silent! write')
   end
 end
 

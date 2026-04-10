@@ -213,7 +213,7 @@ function M.import_actions(actions_to_import, source_filepath)
   inbox.remove_actions_from_file(source_filepath, actions_to_import)
 
   -- Save current buffer
-  vim.cmd('write')
+  vim.cmd('silent! write')
 
   utils.notify(string.format('Imported %d action(s) as new shots', added), vim.log.levels.INFO)
 end

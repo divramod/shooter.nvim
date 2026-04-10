@@ -446,7 +446,7 @@ function M.undo_latest_sent_shot()
   -- Save the file
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname ~= '' then
-    vim.cmd('write')
+    vim.cmd('silent! write')
   end
 
   utils.echo('Undone marking: Shot ' .. shot_num .. ' is now open')
@@ -556,7 +556,7 @@ function M.extract_subtask()
   end
   utils.set_buf_lines(bufnr, del_start - 1, del_end, {})
 
-  vim.cmd('write')
+  vim.cmd('silent! write')
 
   -- Jump to end of extracted shot (line before trailing blank) and enter insert mode
   local shot_end_line = insert_line + #new_lines - 2  -- -1 for trailing blank, -1 for 0-index adjustment
@@ -604,7 +604,7 @@ function M.extract_line()
   local del_line = cursor_line + #new_lines
   utils.set_buf_lines(bufnr, del_line - 1, del_line, {})
 
-  vim.cmd('write')
+  vim.cmd('silent! write')
 
   -- Jump to end of extracted shot (the TITLE line) and enter insert mode
   local shot_end_line = insert_line + #new_lines - 2  -- -1 for trailing blank, -1 for 0-index
@@ -676,7 +676,7 @@ function M.create_shot_from_file(filepath)
   -- Save the buffer
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname ~= '' then
-    vim.cmd('write')
+    vim.cmd('silent! write')
   end
 
   -- Clean up temp file

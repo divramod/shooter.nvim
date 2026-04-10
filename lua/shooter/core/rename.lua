@@ -123,7 +123,7 @@ function M.rename_current_file()
       -- Save any unsaved changes first
       if vim.bo[bufnr].modified then
         vim.api.nvim_buf_call(bufnr, function()
-          vim.cmd('write')
+          vim.cmd('silent! write')
         end)
       end
       -- Wipe the buffer so we can safely rename the underlying file

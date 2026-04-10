@@ -28,7 +28,7 @@ function M.insert_images()
   local saved_cursor = vim.api.nvim_win_get_cursor(0)
 
   -- Save buffer before opening picker
-  vim.cmd('write')
+  vim.cmd('silent! write')
 
   local tmpfile = '/tmp/nvim-hal-image-pick.txt'
 
@@ -140,7 +140,7 @@ function M.insert_images()
 
   -- Restore cursor and save
   vim.api.nvim_win_set_cursor(0, saved_cursor)
-  vim.cmd('write')
+  vim.cmd('silent! write')
 
   local msg = #images == 1 and '1 image reference added' or (#images .. ' image references added')
   utils.echo(msg)

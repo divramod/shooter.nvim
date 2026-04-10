@@ -152,7 +152,7 @@ function M.move_shot()
 
         -- Delete from source and normalize (pass cursor to restore position)
         delete_shot_from_buffer(bufnr, start_line, end_line, cursor_line)
-        vim.cmd('write')
+        vim.cmd('silent! write')
 
         utils.notify(string.format('Moved to %s as shot %d', entry.value.display, new_num), vim.log.levels.INFO)
       end)

@@ -203,7 +203,7 @@ function M.renumber_shots(bufnr)
   -- Only write if buffer has a valid filename and is not a scratch buffer
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname ~= '' and vim.bo[bufnr].buftype == '' then
-    vim.cmd('write')
+    vim.cmd('silent! write')
   end
 
   return #shots

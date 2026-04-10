@@ -57,7 +57,7 @@ function M.delete_shot_under_cursor()
 
   -- Save the file
   if source_filepath ~= '' then
-    vim.cmd('write')
+    vim.cmd('silent! write')
   end
 
   utils.echo('Deleted ' .. shot_desc)

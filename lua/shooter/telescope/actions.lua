@@ -178,7 +178,7 @@ function M.delete_shot(pb, target_file, refresh_fn)
 
   -- Save the file
   vim.api.nvim_buf_call(bufnr, function()
-    vim.cmd('silent write')
+    vim.cmd('silent! write')
   end)
 
   utils.echo('Deleted shot ' .. shot_num)
