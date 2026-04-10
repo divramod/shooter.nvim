@@ -286,13 +286,25 @@ function M.get_prompt_files(folder_filter_or_opts, project)
   -- Determine which projects to include
   if opts.include_all_projects then
     -- Include root + all projects
-    local git_root = files_mod.get_git_root() or utils.cwd()
+    -- Always resolve from main worktree so shotfiles are visible from any worktree
+    local git_worktree = require('shooter.tools.git_worktree')
+    local git_root = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
     -- Add root prompts
     add_from_prompts_dir(git_root .. '/.hal/shooter/shotfiles', '', nil)
-    -- Add all project prompts
-    local projects = project_mod.list_projects()
-    for _, p in ipairs(projects) do
-      add_from_prompts_dir(p.path .. '/.hal/shooter/shotfiles', p.name .. '/', p.name)
+    -- Add all project prompts (also from main worktree)
+    local projects_dir = git_root .. '/projects'
+    if vim.fn.isdirectory(projects_dir) == 1 then
+      local config = require('shooter.config')
+      local exclude = config.get('projects.exclude_folders') or {}
+      local exclude_set = {}
+      for _, folder in ipairs(exclude) do exclude_set[folder] = true end
+      local entries = vim.fn.readdir(projects_dir)
+      for _, name in ipairs(entries) do
+        local path = projects_dir .. '/' .. name
+        if vim.fn.isdirectory(path) == 1 and not exclude_set[name] then
+          add_from_prompts_dir(path .. '/.hal/shooter/shotfiles', name .. '/', name)
+        end
+      end
     end
   elseif opts.projects and #opts.projects > 0 then
     -- Include only specified projects

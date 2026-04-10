@@ -379,4 +379,7 @@ function M.to_main()
   switch_to_worktree(main_path)
 end
 
+-- Expose main worktree path for other modules (e.g., shotfile picker)
+M.get_main_worktree = get_main_worktree
+
 return M
