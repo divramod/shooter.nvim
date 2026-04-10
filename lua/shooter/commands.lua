@@ -801,6 +801,10 @@ local function setup_domain_commands()
   create_cmd('HalShooterDomainMoveShotfileToDomain', require_shotfile(function()
     domain.pick_and_move()
   end), { desc = 'Move shotfile to domain' })
+
+  create_cmd('HalShooterDomainRename', function()
+    domain.rename()
+  end, { desc = 'Rename domain' })
 end
 
 -- Setup all vim commands

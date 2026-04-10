@@ -130,4 +130,76 @@ function M.pick_and_move()
   }):find()
 end
 
+-- Rename a domain: pick domain, prompt for new name, rename dir, update open buffers
+function M.rename()
+  local domains = M.list_domains()
+  if #domains == 0 then
+    vim.notify('No domains found', vim.log.levels.WARN)
+    return
+  end
+
+  local ok, _ = pcall(require, 'telescope')
+  if not ok then
+    vim.notify('Telescope is required for domain picker', vim.log.levels.ERROR)
+    return
+  end
+
+  local pickers = require('telescope.pickers')
+  local finders = require('telescope.finders')
+  local conf = require('telescope.config').values
+  local actions = require('telescope.actions')
+  local action_state = require('telescope.actions.state')
+
+  pickers.new({}, {
+    prompt_title = 'Rename Domain',
+    finder = finders.new_table({
+      results = domains,
+      entry_maker = function(entry)
+        return { value = entry, display = entry.name, ordinal = entry.name }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        if not selection then return end
+        local old = selection.value
+        vim.ui.input({ prompt = 'New name for ' .. old.name .. ': ', default = old.name }, function(new_name)
+          if not new_name or new_name == '' or new_name == old.name then return end
+          local slug = new_name:lower():gsub('%s+', '-'):gsub('[^%w%-]', ''):gsub('%-+', '-'):gsub('^%-', ''):gsub('%-$', '')
+          if slug == '' or is_system_folder(slug) then
+            vim.notify('Invalid domain name', vim.log.levels.WARN)
+            return
+          end
+          local shotfiles_dir = get_shotfiles_dir()
+          local new_path = shotfiles_dir .. '/' .. slug
+          if vim.fn.isdirectory(new_path) == 1 then
+            vim.notify('Domain already exists: ' .. slug, vim.log.levels.WARN)
+            return
+          end
+          local success = os.rename(old.path, new_path)
+          if not success then
+            vim.notify('Failed to rename domain', vim.log.levels.ERROR)
+            return
+          end
+          -- Update all open buffers that were in the old domain
+          for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_loaded(buf) then
+              local bufname = vim.api.nvim_buf_get_name(buf)
+              if bufname:find(old.path, 1, true) then
+                local new_bufname = bufname:gsub(vim.pesc(old.path), new_path, 1)
+                vim.api.nvim_buf_set_name(buf, new_bufname)
+                vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
+              end
+            end
+          end
+          vim.notify('Renamed domain: ' .. old.name .. ' -> ' .. slug, vim.log.levels.INFO)
+        end)
+      end)
+      return true
+    end,
+  }):find()
+end
+
 return M

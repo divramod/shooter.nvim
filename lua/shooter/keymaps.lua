@@ -113,6 +113,7 @@ function M.setup()
   -- ============================================================
   map('n', 'dn', ':HalShooterDomainNew<cr>', 'New domain')
   map('n', 'dmf', ':HalShooterDomainMoveShotfileToDomain<cr>', 'Move shotfile to domain')
+  map('n', 'dr', ':HalShooterDomainRename<cr>', 'Rename domain')
 
   -- ============================================================
   -- TMUX NAMESPACE (t prefix)
