@@ -1,6 +1,11 @@
 # domain
 
-## shot 2 
+## x shot 2 wrong folder (2026-04-10 11:52:44) @domain_20260410_115245_shot-2
+shooter created the domain in plans/prompts
+so path is long obsolete
+all shotfiles are under .hal/shooter/shotfiles
+please research the whole codebase for the old folders and remove them, and make sure that the domain module creates subfolders under .hal/shooter/shotfiles for the domains
+also <repo>/.shooter should appear nowhere
 
 ## x shot 1 init domain module (2026-04-10 11:03:49) @domain_20260410_110349_shot-1
 i want you to introduce a new module called domain.
