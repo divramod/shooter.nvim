@@ -7,7 +7,7 @@ local config = require('shooter.config')
 local M = {}
 
 -- System folders that are NOT domains
-local SYSTEM_FOLDERS = { 'archive', 'backlog', 'done', 'reqs', 'wait', 'test' }
+local SYSTEM_FOLDERS = { 'archive', 'backlog', 'done', 'reqs', 'wait' }
 
 local function is_system_folder(name)
   for _, f in ipairs(SYSTEM_FOLDERS) do
