@@ -807,6 +807,35 @@ local function setup_domain_commands()
   end, { desc = 'Rename domain' })
 end
 
+-- Setup Session namespace commands (sc prefix in keymaps)
+local function setup_session_commands()
+  for i = 1, 9 do
+    create_cmd('HalShooterSessionClear' .. i, function()
+      local detect = require('shooter.tmux.detect')
+      local utils = require('shooter.utils')
+
+      local pane_id, err = detect.find_ai_pane(i)
+      if not pane_id then
+        utils.echo(err or 'No AI pane found')
+        return
+      end
+
+      -- Safety: never send to nvim's own pane
+      local nvim_pane = vim.trim(vim.fn.system({"tmux", "display-message", "-p", "#{pane_id}"}))
+      if pane_id == nvim_pane then
+        utils.echo('Error: AI pane ID matches nvim pane, aborting')
+        return
+      end
+
+      vim.fn.system(string.format(
+        "tmux send-keys -t %s C-c && sleep 0.05 && tmux send-keys -t %s C-u && sleep 0.1 && tmux send-keys -t %s /clear Enter",
+        pane_id, pane_id, pane_id
+      ))
+      utils.echo('Cleared session in pane ' .. i)
+    end, { desc = 'Clear AI session ' .. i })
+  end
+end
+
 -- Setup all vim commands
 function M.setup()
   setup_shotfile_commands()
@@ -814,6 +843,7 @@ function M.setup()
   setup_tmux_commands()
   setup_subproject_commands()
   setup_domain_commands()
+  setup_session_commands()
   setup_tool_commands()
   setup_cfg_commands()
   setup_hal_config_commands()

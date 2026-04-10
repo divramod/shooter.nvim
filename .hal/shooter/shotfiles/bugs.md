@@ -1,5 +1,10 @@
 # bugs
 
+## shot 8 again
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_150751.png
+i have the prompt write again.
+fix it finally.
+
 ## shot 7 
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_144134.png
 
