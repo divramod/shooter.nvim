@@ -263,6 +263,50 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
         end
       end, { desc = 'Delete file' })
 
+      -- Override default select: open file, or create if no match
+      actions.select_default:replace(function()
+        local entry = action_state.get_selected_entry()
+        if entry and entry.value and entry.value.path then
+          actions.close(prompt_bufnr)
+          vim.cmd('edit ' .. vim.fn.fnameescape(entry.value.path))
+        else
+          -- No matching file — offer to create from prompt text
+          local prompt = action_state.get_current_picker(prompt_bufnr):_get_prompt()
+          if not prompt or prompt == '' then return end
+          actions.close(prompt_bufnr)
+          local files_mod = require('shooter.core.files')
+          local git_worktree = require('shooter.tools.git_worktree')
+          local base = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
+          local shotfiles_dir = base .. '/.hal/shooter/shotfiles'
+          -- Support domain/name format
+          local dir_part, name_part = prompt:match('^(.+)/(.+)$')
+          local target_dir, title
+          if dir_part and name_part then
+            target_dir = shotfiles_dir .. '/' .. dir_part
+            title = name_part
+          else
+            target_dir = shotfiles_dir
+            title = prompt
+          end
+          vim.fn.mkdir(target_dir, 'p')
+          local slug = title:lower():gsub('%s+', '-'):gsub('[^%w%-]', ''):gsub('%-+', '-'):gsub('^%-', ''):gsub('%-$', '')
+          if slug == '' then return end
+          local filepath = target_dir .. '/' .. slug .. '.md'
+          local content = string.format('# %s\n\n## shot 1 \n', title)
+          local f = io.open(filepath, 'w')
+          if f then
+            f:write(content)
+            f:close()
+            vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+            vim.schedule(function()
+              local lc = vim.api.nvim_buf_line_count(0)
+              vim.api.nvim_win_set_cursor(0, {math.min(3, lc), 0})
+              vim.cmd('startinsert!')
+            end)
+          end
+        end
+      end)
+
       return true
     end,
   })
