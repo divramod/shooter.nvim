@@ -326,6 +326,19 @@ function M.setup()
     end,
   })
 
+  -- Auto-reload shotfiles when disk changes detected (suppresses W12 dialog)
+  -- Our writes via silent! write are authoritative — always reload silently
+  vim.api.nvim_create_autocmd('FileChangedShell', {
+    group = group,
+    pattern = '*.md',
+    callback = function(ev)
+      local filepath = vim.api.nvim_buf_get_name(ev.buf)
+      if is_prompts_file(filepath) then
+        vim.v.fcs_choice = 'reload'
+      end
+    end,
+  })
+
   -- Clear notification tracking when buffer is deleted
   vim.api.nvim_create_autocmd('BufDelete', {
     group = group,
