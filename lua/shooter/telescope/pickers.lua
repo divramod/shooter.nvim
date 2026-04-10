@@ -15,7 +15,6 @@ local session = require('shooter.session')
 local session_filter = require('shooter.session.filter')
 local session_sort = require('shooter.session.sort')
 local session_picker = require('shooter.session.picker')
-local picker_keymaps = require('shooter.keymaps.picker')
 local shooter_config = require('shooter.config')
 
 -- Re-export clear_selection from helpers for external access

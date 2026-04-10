@@ -174,9 +174,10 @@ end
 function M.move_file_path(file_path, target_folder)
   if not file_path or not files.is_in_prompts_folder(file_path) then return false end
   local filename = utils.get_filename(file_path)
-  local cwd = utils.cwd()
-  local target_dir = target_folder == '' and cwd .. '/' .. config.get('paths.prompts_root')
-    or cwd .. '/' .. config.get('paths.prompts_root') .. '/' .. target_folder
+  local git_root = files.get_git_root() or utils.cwd()
+  local prompts_root = config.get('paths.prompts_root')
+  local target_dir = target_folder == '' and git_root .. '/' .. prompts_root
+    or git_root .. '/' .. prompts_root .. '/' .. target_folder
   local target_path = target_dir .. '/' .. filename
   if not utils.file_exists(file_path) or utils.file_exists(target_path) then return false end
   utils.ensure_dir(target_dir)
@@ -189,7 +190,7 @@ end
 
 -- Move file or folder to git root
 function M.move_to_git_root()
-  local path, entry_type = files.get_current_file_or_folder_path()
+  local path = files.get_current_file_or_folder_path()
   local was_in_oil = vim.bo.filetype == 'oil'
   local cursor_line = was_in_oil and utils.get_cursor()[1] or nil
 

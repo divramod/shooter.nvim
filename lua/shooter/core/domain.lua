@@ -2,7 +2,6 @@
 -- Domains are user-created subfolders in .hal/shooter/shotfiles/
 
 local utils = require('shooter.utils')
-local config = require('shooter.config')
 
 local M = {}
 
@@ -16,12 +15,14 @@ local function is_system_folder(name)
   return false
 end
 
+local SHOTFILES_REL = '.hal/shooter/shotfiles'
+
 -- Get the shotfiles root directory (absolute path)
 local function get_shotfiles_dir()
   local files = require('shooter.core.files')
   local git_worktree = require('shooter.tools.git_worktree')
   local git_root = git_worktree.get_main_worktree() or files.get_git_root() or utils.cwd()
-  return git_root .. '/' .. config.get('paths.prompts_root')
+  return git_root .. '/' .. SHOTFILES_REL
 end
 
 -- List all domains (subdirectories that aren't system folders)
