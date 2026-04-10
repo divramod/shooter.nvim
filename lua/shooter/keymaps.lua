@@ -109,6 +109,12 @@ function M.setup()
   map('n', 'sqQ', ':HalShooterShotQueueView<cr>', 'View queue')
 
   -- ============================================================
+  -- DOMAIN NAMESPACE (d prefix)
+  -- ============================================================
+  map('n', 'dn', ':HalShooterDomainNew<cr>', 'New domain')
+  map('n', 'dmf', ':HalShooterDomainMoveShotfileToDomain<cr>', 'Move shotfile to domain')
+
+  -- ============================================================
   -- TMUX NAMESPACE (t prefix)
   -- ============================================================
   map('n', 'tt', ':HalShooterTmuxTogglePanes<cr>', 'Toggle configured panes')

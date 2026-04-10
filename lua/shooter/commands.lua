@@ -863,12 +863,32 @@ local function setup_utility_commands()
 
 end
 
+-- Setup Domain namespace commands (d prefix in keymaps)
+local function setup_domain_commands()
+  local domain = require('shooter.core.domain')
+
+  create_cmd('HalShooterDomainNew', function(opts)
+    if opts.args ~= '' then
+      domain.create_domain(opts.args)
+    else
+      vim.ui.input({ prompt = 'Domain name: ' }, function(name)
+        if name and name ~= '' then domain.create_domain(name) end
+      end)
+    end
+  end, { nargs = '?', desc = 'Create new domain' })
+
+  create_cmd('HalShooterDomainMoveShotfileToDomain', require_shotfile(function()
+    domain.pick_and_move()
+  end), { desc = 'Move shotfile to domain' })
+end
+
 -- Setup all vim commands
 function M.setup()
   setup_shotfile_commands()
   setup_shot_commands()
   setup_tmux_commands()
   setup_subproject_commands()
+  setup_domain_commands()
   setup_tool_commands()
   setup_cfg_commands()
   setup_hal_config_commands()
