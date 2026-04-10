@@ -1,18 +1,18 @@
 # domain
 
-## x shot 4 < >dmf emptied the file? (2026-04-10 14:08:53) @domain_20260410_140853_shot-4
+## x shot 4 < >dmf emptied the file? (2026-04-10 14:08:53)
 this command emptied a formerly full file
 
-## x shot 3 add domain rename functionality (2026-04-10 13:59:49) @domain_20260410_135949_shot-3
+## x shot 3 add domain rename functionality (2026-04-10 13:59:49)
 
-## x shot 2 wrong folder (2026-04-10 11:52:44) @domain_20260410_115245_shot-2
+## x shot 2 wrong folder (2026-04-10 11:52:44)
 shooter created the domain in plans/prompts
 so path is long obsolete
 all shotfiles are under .hal/shooter/shotfiles
 please research the whole codebase for the old folders and remove them, and make sure that the domain module creates subfolders under .hal/shooter/shotfiles for the domains
 also <repo>/.shooter should appear nowhere
 
-## x shot 1 init domain module (2026-04-10 11:03:49) @domain_20260410_110349_shot-1
+## x shot 1 init domain module (2026-04-10 11:03:49)
 i want you to introduce a new module called domain.
 Basically, I want to be able to categorize or collect shotfiles into domains. That means creating subfolders in the shotfiles folder, where subdomains live under a parent domain. 
 commands (HalShooterDomain*):

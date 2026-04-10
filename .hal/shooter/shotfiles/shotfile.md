@@ -9,13 +9,13 @@ when inserting /sh, it should propose all commands starting with /sh like /sho:.
 dd does nothing now in the shotfile picker.
 please acivate it and 
 
-## x shot 24 autocreate non existant shotfile (2026-04-10 12:42:59) @shotfile_20260410_124300_shot-24
+## x shot 24 autocreate non existant shotfile (2026-04-10 12:42:59)
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_124140.png
 in the shotfile picker, when i press enter on a non existant shotfile, i want shooter to offer me to create and open this shotfile (with a empty first shot like with < >N)
 
 this should also work, when i insert non-existing-domain/<shotfile-name>
 
-## x shot 23 refactoring next steps (2026-04-07 01:21:20) @shotfile_20260407_012120_shot-23
+## x shot 23 refactoring next steps (2026-04-07 01:21:20)
 as i wrote earlier, i am in the process of refactoring the codebase.
 now i want you to adapt the shotfile location.
 currently the shotfiles are living in .shooter/ai/shotfiles
@@ -23,16 +23,16 @@ i want you to move them to .hal/shooter/shotfiles
 also, the temporary image pastes should go to .hal/shooter/tmp/image-pastes
 please research the whole codebase and adapt all paths to the shotfiles and the image pastes to the new location.
 
-## x shot 22 HalShooterShotfileLast always opens test-2 shotfile in ~/a/hal (2026-04-06 19:22:02) @shotfile_20260406_192202_shot-22
+## x shot 22 HalShooterShotfileLast always opens test-2 shotfile in ~/a/hal (2026-04-06 19:22:02)
 but its not the last shotfile i edited.
 
-## x shot 21 fix create shotfile (2026-04-06 11:29:04) @shotfile_20260406_112904_shot-21
+## x shot 21 fix create shotfile (2026-04-06 11:29:04)
 < >N is failing, please fix it.
 i refactored everything in the codebase to use the hal shooter command
 after that, the command is failing.
 /Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260406_112859.png
 
-## x shot 20 new shotfile (2026-04-04 07:57:46) @shotfile_20260404_075746_shot-20
+## x shot 20 new shotfile (2026-04-04 07:57:46)
 when i run < >N to create a new shotfile, i want the cursor to be placed in the title line like how it works, when i create a new shot with < >n
 
 ## x shot 19 (2026-02-09 05:06:46) @shot-19-20260209_050646
