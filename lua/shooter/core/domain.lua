@@ -117,7 +117,11 @@ function M.pick_and_move()
         local selection = action_state.get_selected_entry()
         if selection then
           local movement = require('shooter.core.movement')
-          movement.move_file_path(file_path, selection.value.name)
+          if movement.move_file_path(file_path, selection.value.name) then
+            local filename = vim.fn.fnamemodify(file_path, ':t')
+            local target = selection.value.path .. '/' .. filename
+            vim.cmd('edit ' .. vim.fn.fnameescape(target))
+          end
         end
       end)
       return true
