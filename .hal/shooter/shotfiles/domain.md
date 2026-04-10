@@ -1,6 +1,6 @@
 # domain
 
-## shot 4 < >dmf emptied the file?
+## x shot 4 < >dmf emptied the file? (2026-04-10 14:08:53) @domain_20260410_140853_shot-4
 this command emptied a formerly full file
 
 ## x shot 3 add domain rename functionality (2026-04-10 13:59:49) @domain_20260410_135949_shot-3

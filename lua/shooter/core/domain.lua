@@ -118,8 +118,13 @@ function M.pick_and_move()
         if selection then
           -- Existing domain selected
           actions.close(prompt_bufnr)
+          vim.cmd('silent! write')
+          local old_bufnr = vim.fn.bufnr(file_path)
           local movement = require('shooter.core.movement')
           if movement.move_file_path(file_path, selection.value.name) then
+            if old_bufnr ~= -1 then
+              vim.api.nvim_buf_delete(old_bufnr, { force = true })
+            end
             local filename = vim.fn.fnamemodify(file_path, ':t')
             local target = selection.value.path .. '/' .. filename
             vim.cmd('edit ' .. vim.fn.fnameescape(target))
@@ -149,8 +154,15 @@ function M.pick_and_move()
             vim.notify('Target already exists: ' .. target_domain .. '/' .. new_filename, vim.log.levels.WARN)
             return
           end
+          -- Save buffer before moving to ensure disk is up to date
+          vim.cmd('silent! write')
+          local old_bufnr = vim.fn.bufnr(file_path)
           local success = os.rename(file_path, target_path)
           if success then
+            -- Delete the old buffer (file no longer exists at old path)
+            if old_bufnr ~= -1 then
+              vim.api.nvim_buf_delete(old_bufnr, { force = true })
+            end
             vim.cmd('edit ' .. vim.fn.fnameescape(target_path))
             -- Update title if renamed
             if new_filename ~= old_filename and name_part then
