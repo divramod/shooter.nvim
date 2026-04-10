@@ -1,6 +1,12 @@
 # refactoring 
 
 ## shot 8 
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_143908.png
+you always put the @file reference at the back of the shot.
+i dont want that anymore.
+also, i want you to write a command HalShooterShotCleanup, which removes all the @ refs from all the shots in the current projects shotfiles.
+or no, i dont need it.
+you do it manually in all repos in ~/a
 
 ## x shot 7 list hal cli usage (2026-04-10 12:24:19)
 please go through the whole codebase and tell me, where the hal cli is used and for what.

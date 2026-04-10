@@ -1,10 +1,10 @@
 # bugs
 
-## shot 5 fix diagnostic issues
+## x shot 5 fix diagnostic issues (2026-04-10 14:38:44) @bugs_20260410_143844_shot-5-4
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_141418.png
 fix this
 
-## shot 4 write to bug
+## x shot 4 write to bug (2026-04-10 14:38:44) @bugs_20260410_143844_shot-5-4
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_140758.png
 i had it again.
 
