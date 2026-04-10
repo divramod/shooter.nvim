@@ -109,10 +109,10 @@ local function setup_session_mappings(prompt_bufnr, map, refresh_fn)
 end
 
 -- Create file picker with session-based filtering
-local function create_file_picker(opts, get_files_fn, title_prefix)
+local function create_file_picker(opts, get_files_fn, title_prefix, git_root_override)
   opts = opts or {}
   local files_mod = require('shooter.core.files')
-  local git_root = files_mod.get_git_root()
+  local git_root = git_root_override or files_mod.get_git_root()
 
   -- Reload session from disk in case user edited the YAML file
   session.reload_from_disk()
@@ -275,15 +275,18 @@ function M.list_all_files(opts)
   opts = opts or {}
   local files_mod = require('shooter.core.files')
 
+  -- Resolve from main worktree so shotfiles are visible from any worktree
+  local git_worktree = require('shooter.tools.git_worktree')
+  local main_root = git_worktree.get_main_worktree() or files_mod.get_git_root()
+
   local get_files_fn = function()
     -- Get files from root + all projects (filtering happens via session)
     return helpers.get_prompt_files({ include_all_projects = true })
   end
 
-  local git_root = files_mod.get_git_root()
   local home = os.getenv('HOME') or ''
-  local repo_path = git_root and git_root:gsub('^' .. vim.pesc(home), '~') or 'Next Actions'
-  return create_file_picker(opts, get_files_fn, repo_path)
+  local repo_path = main_root and main_root:gsub('^' .. vim.pesc(home), '~') or 'Next Actions'
+  return create_file_picker(opts, get_files_fn, repo_path, main_root)
 end
 
 -- List all next-action files from ALL configured repos
