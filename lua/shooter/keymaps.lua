@@ -109,6 +109,13 @@ function M.setup()
   map('n', 'sqQ', ':HalShooterShotQueueView<cr>', 'View queue')
 
   -- ============================================================
+  -- SESSION NAMESPACE (sc prefix)
+  -- ============================================================
+  for i = 1, 9 do
+    map('n', 'sc' .. i, ':HalShooterSessionClear' .. i .. '<cr>', 'Clear session ' .. i)
+  end
+
+  -- ============================================================
   -- DOMAIN NAMESPACE (d prefix)
   -- ============================================================
   map('n', 'dn', ':HalShooterDomainNew<cr>', 'New domain')
