@@ -114,14 +114,54 @@ function M.pick_and_move()
     sorter = conf.generic_sorter({}),
     attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
         local selection = action_state.get_selected_entry()
         if selection then
+          -- Existing domain selected
+          actions.close(prompt_bufnr)
           local movement = require('shooter.core.movement')
           if movement.move_file_path(file_path, selection.value.name) then
             local filename = vim.fn.fnamemodify(file_path, ':t')
             local target = selection.value.path .. '/' .. filename
             vim.cmd('edit ' .. vim.fn.fnameescape(target))
+          end
+        else
+          -- No match — parse prompt for domain/newname pattern
+          local prompt = action_state.get_current_picker(prompt_bufnr):_get_prompt()
+          if not prompt or prompt == '' then return end
+          actions.close(prompt_bufnr)
+          local shotfiles_dir = get_shotfiles_dir()
+          local domain_part, name_part = prompt:match('^(.+)/(.+)$')
+          local target_domain = domain_part or prompt
+          -- Create domain if needed
+          local domain_path = shotfiles_dir .. '/' .. target_domain
+          vim.fn.mkdir(domain_path, 'p')
+          -- Determine target filename
+          local old_filename = vim.fn.fnamemodify(file_path, ':t')
+          local new_filename = old_filename
+          if name_part and name_part ~= '' then
+            local slug = name_part:lower():gsub('%s+', '-'):gsub('[^%w%-]', ''):gsub('%-+', '-'):gsub('^%-', ''):gsub('%-$', '')
+            if slug ~= '' then
+              new_filename = slug .. '.md'
+            end
+          end
+          local target_path = domain_path .. '/' .. new_filename
+          if utils.file_exists(target_path) then
+            vim.notify('Target already exists: ' .. target_domain .. '/' .. new_filename, vim.log.levels.WARN)
+            return
+          end
+          local success = os.rename(file_path, target_path)
+          if success then
+            vim.cmd('edit ' .. vim.fn.fnameescape(target_path))
+            -- Update title if renamed
+            if new_filename ~= old_filename and name_part then
+              local bufnr = vim.api.nvim_get_current_buf()
+              local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] or ''
+              if first_line:match('^# ') then
+                vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { '# ' .. name_part })
+                vim.cmd('silent! write')
+              end
+            end
+            vim.notify('Moved to ' .. target_domain .. '/' .. new_filename, vim.log.levels.INFO)
           end
         end
       end)
