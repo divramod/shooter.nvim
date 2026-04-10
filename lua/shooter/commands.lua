@@ -39,11 +39,15 @@ local function setup_shotfile_commands()
         vim.cmd('edit! ' .. vim.fn.fnameescape(path))
         local bufnr = vim.api.nvim_get_current_buf()
         local winnr = vim.api.nvim_get_current_win()
+        -- Add shot 1 header (hal CLI only creates the title)
+        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {'', '## shot 1 '})
         vim.schedule(function()
           if not vim.api.nvim_buf_is_valid(bufnr) then return end
           if not vim.api.nvim_win_is_valid(winnr) then return end
           vim.api.nvim_set_current_win(winnr)
-          vim.api.nvim_feedkeys('ggA ', 'n', false)
+          local line_count = vim.api.nvim_buf_line_count(bufnr)
+          vim.api.nvim_win_set_cursor(winnr, {line_count, 9})
+          vim.cmd('startinsert!')
         end)
       end
     end
