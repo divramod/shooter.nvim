@@ -181,7 +181,8 @@ local function setup_shot_commands()
 
   -- HalShooterShotNew — create new shot via hal CLI
   create_cmd('HalShooterShotNew', require_shotfile(function()
-    hal.save_if_modified()
+    -- Renumber first to close gaps before assigning the next number
+    require('shooter.core.renumber').renumber_shots()
     local result = hal.run({'shot', 'new', '--file', hal.current_file()})
     if result.ok and result.data then
       hal.reload()
@@ -355,11 +356,12 @@ local function setup_shot_commands()
   create_cmd('HalShooterShotCreateFromClaude', shot_actions.create_shot_from_claude,
     { desc = 'Cut Claude text, create shot in right pane' })
 
-  -- HalShooterShotsRenumber — renumber via hal CLI
+  -- HalShooterShotsRenumber — renumber via Lua (correct sort: open desc at top, done at bottom)
   create_cmd('HalShooterShotsRenumber', require_shotfile(function()
-    local result = hal.modify({'shot', 'renumber', '--file', hal.current_file()})
-    if result.ok and result.data then
-      vim.notify(string.format('Renumbered %d shots (%d changed)', result.data.total, result.data.renumbered), vim.log.levels.INFO)
+    local renumber = require('shooter.core.renumber')
+    local count = renumber.renumber_shots()
+    if count > 0 then
+      vim.notify(string.format('Renumbered %d shots', count), vim.log.levels.INFO)
     end
   end), { desc = 'Renumber shots sequentially' })
 
