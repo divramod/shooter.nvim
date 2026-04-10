@@ -1,5 +1,9 @@
 # refactoring 
 
+## shot 8 
+
+## shot 7 
+
 ## x shot 6 fix renumbering (2026-04-10 10:15:42) @refactoring_20260410_101542_shot-6
 when i run < >sr, it runs the sorting in the wrong direction.
 can you fix that?
