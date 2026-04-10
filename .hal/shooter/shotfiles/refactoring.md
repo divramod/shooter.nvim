@@ -1,5 +1,11 @@
 # refactoring 
 
+## x shot 4  add shot 4 to new files (2026-04-10 09:57:18) @refactoring_20260410_095719_shot-4
+
+when running < >N, before the refactoring, it would also add a shot 1 and jump to it in insert mode ad `## shot _`
+this does not work anymore.
+can you fix it?
+
 ## x shot 3 its still showing the shotfile from the worktree (2026-04-10 09:49:14) @refactoring_20260410_094914_shot-3
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_094911.png
 
