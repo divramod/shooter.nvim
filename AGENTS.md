@@ -19,17 +19,16 @@ Neovim plugin for managing iterative AI development workflows through numbered "
 
 ## Architecture
 
-shooter.nvim is a thin Neovim wrapper around the `hal shooter` CLI. Core logic lives in `hal shooter` subcommands (JSON APIs). The Lua plugin handles UI concerns (buffers, cursors, pickers, keymaps) and delegates via `lua/shooter/hal.lua`.
+shooter.nvim is a pure Lua Neovim plugin. All core logic (shot parsing, file management, tmux sending) is implemented in Lua modules. No external CLI dependency for core operations.
 
 ### Key Layers
 
 | Layer | Location | Responsibility |
 |-------|----------|---------------|
-| CLI backend | `hal shooter` (external) | Shotfile CRUD, shot operations, tmux send, sound |
 | Plugin entry | `lua/shooter/init.lua` | Setup, config merge, module loading |
 | Commands | `lua/shooter/commands.lua` | 50+ user commands (`HalShooter*` prefix) |
-| Core | `lua/shooter/core/` | Shot parsing, file management, renumbering, movement |
-| Tmux | `lua/shooter/tmux/` | Pane detection, send operations, provider routing |
+| Core | `lua/shooter/core/` | Shot parsing, file management, renumbering, movement, domains |
+| Tmux | `lua/shooter/tmux/` | Pane detection, send operations (direct tmux commands), provider routing |
 | Providers | `lua/shooter/providers/` | AI provider abstraction (Claude, Codex, Copilot, Gemini, OpenCode) |
 | Pickers | `lua/shooter/telescope/` | Telescope-based file/shot/queue pickers |
 | Session | `lua/shooter/session/` | Non-telescope picker UI |
@@ -37,15 +36,9 @@ shooter.nvim is a thin Neovim wrapper around the `hal shooter` CLI. Core logic l
 ### Data Flow
 
 1. User triggers command (keymap or `:HalShooter*`)
-2. `commands.lua` delegates to `hal.run()` or core Lua modules
-3. `hal shooter` CLI mutates files on disk, returns JSON
-4. Plugin reloads buffer (`hal.reload()`) and positions cursor
-
-### hal.lua Interface
-
-- `hal.run(args)` — synchronous `hal shooter <args> --json`, returns `{ok, data, error}`
-- `hal.run_raw(args)` — without `--json`, returns `{ok, raw, error}`
-- `hal.modify(args)` — save + run + reload (for file-mutating commands)
+2. `commands.lua` delegates to core Lua modules (shot_actions, files, renumber, etc.)
+3. Lua modules modify buffer in-place via `nvim_buf_set_lines`
+4. Buffer is saved with `silent! write`
 
 ## Module Guide
 
@@ -61,7 +54,7 @@ shooter.nvim is a thin Neovim wrapper around the `hal shooter` CLI. Core logic l
 
 ### tmux/
 
-- `send.lua` — send text/file-refs to tmux panes via `hal shooter tmux send`
+- `send.lua` — send text/file-refs to tmux panes via direct tmux commands (temp file + paste-buffer)
 - `detect.lua` — detect AI panes by tmux variables and process patterns
 - `operations.lua` — high-level: send current shot, send all, send visual
 - `messages.lua` — format shot content with context injection
@@ -133,4 +126,3 @@ Each file has a `# title` header followed by shots in reverse-number order (high
 - Neovim >= 0.9.0
 - telescope.nvim + plenary.nvim
 - tmux (system)
-- hal CLI (system, for `hal shooter` commands)
