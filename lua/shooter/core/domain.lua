@@ -120,14 +120,14 @@ function M.pick_and_move()
           actions.close(prompt_bufnr)
           vim.cmd('silent! write')
           local old_bufnr = vim.fn.bufnr(file_path)
+          local filename = vim.fn.fnamemodify(file_path, ':t')
+          local target = selection.value.path .. '/' .. filename
           local movement = require('shooter.core.movement')
           if movement.move_file_path(file_path, selection.value.name) then
-            if old_bufnr ~= -1 then
+            vim.cmd('edit! ' .. vim.fn.fnameescape(target))
+            if old_bufnr ~= -1 and vim.api.nvim_buf_is_valid(old_bufnr) and old_bufnr ~= vim.api.nvim_get_current_buf() then
               vim.api.nvim_buf_delete(old_bufnr, { force = true })
             end
-            local filename = vim.fn.fnamemodify(file_path, ':t')
-            local target = selection.value.path .. '/' .. filename
-            vim.cmd('edit ' .. vim.fn.fnameescape(target))
           end
         else
           -- No match — parse prompt for domain/newname pattern
@@ -137,10 +137,8 @@ function M.pick_and_move()
           local shotfiles_dir = get_shotfiles_dir()
           local domain_part, name_part = prompt:match('^(.+)/(.+)$')
           local target_domain = domain_part or prompt
-          -- Create domain if needed
           local domain_path = shotfiles_dir .. '/' .. target_domain
           vim.fn.mkdir(domain_path, 'p')
-          -- Determine target filename
           local old_filename = vim.fn.fnamemodify(file_path, ':t')
           local new_filename = old_filename
           if name_part and name_part ~= '' then
@@ -154,16 +152,15 @@ function M.pick_and_move()
             vim.notify('Target already exists: ' .. target_domain .. '/' .. new_filename, vim.log.levels.WARN)
             return
           end
-          -- Save buffer before moving to ensure disk is up to date
           vim.cmd('silent! write')
           local old_bufnr = vim.fn.bufnr(file_path)
           local success = os.rename(file_path, target_path)
           if success then
-            -- Delete the old buffer (file no longer exists at old path)
-            if old_bufnr ~= -1 then
+            -- Open new file first, then clean up old buffer
+            vim.cmd('edit! ' .. vim.fn.fnameescape(target_path))
+            if old_bufnr ~= -1 and vim.api.nvim_buf_is_valid(old_bufnr) and old_bufnr ~= vim.api.nvim_get_current_buf() then
               vim.api.nvim_buf_delete(old_bufnr, { force = true })
             end
-            vim.cmd('edit ' .. vim.fn.fnameescape(target_path))
             -- Update title if renamed
             if new_filename ~= old_filename and name_part then
               local bufnr = vim.api.nvim_get_current_buf()

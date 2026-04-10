@@ -1,6 +1,5 @@
 # bugs
 
-
 ## shot 3 write to bug
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_140758.png
 i had it again.
