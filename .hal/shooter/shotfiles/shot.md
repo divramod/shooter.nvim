@@ -29,14 +29,14 @@ i want both cases to work
 ## shot 67 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
 
-## x shot 66 < >n cursor not right (2026-04-06 18:36:11) @shot_20260406_183612_shot-66
+## x shot 66 < >n cursor not right (2026-04-06 18:36:11)
 the cursor position for the new shot command is not anymore after the a space after the shot number after the refactoring.
 
-## x shot 65 fix < >. (2026-04-06 12:59:51) @shot_20260406_125952_shot-65
+## x shot 65 fix < >. (2026-04-06 12:59:51)
 the command is not correctly sorting the shots after marking a shot as done.
 please fix it
 
-## x shot 64 fix refactoring issues (2026-04-06 11:32:56) @shot_20260406_113256_shot-64
+## x shot 64 fix refactoring issues (2026-04-06 11:32:56)
 i refactored shooter.nvim to be a thin wrapper around the `hal shooter` command.
 the idea is, to make all the hal shooter commands also easily available in the terminal and also to be able to use the hal shooter commands in other contexts, for example in scripts or other editors.
 please mention this in the project.md
@@ -44,24 +44,24 @@ now, after the refatoring, some things are not working properly anymore. i want 
 for the shot sending for example, the shtofile is created and send into the tmux pane with the agent instance, but for claude, the enter is not triggered anymore.
 please fix
 
-## x shot 63 (2026-02-11 01:53:11) @shot_20260211_015311_shot-63
+## x shot 63 (2026-02-11 01:53:11)
 for the latest sent shot, can you only color the title of the shot and not the rest?
 i just see, for the closed shots for first of the day and last closed, we need three colors each with background and foreground color possible to set.
 prefix, title, postfix
 /Users/mod/a/shooter.nvim/.hal/shooter/tmp/image-pastes/clipboard_20260211_015306.png
 
-## x shot 62 shot header titles 2 (2026-02-11 01:36:59) @shot_20260211_013659_shot-62
+## x shot 62 shot header titles 2 (2026-02-11 01:36:59)
 do the same for first shot of the day and closed shots 
 
-## x shot 61 (2026-02-11 01:27:37) @shot_20260211_012738_shot-61
+## x shot 61 (2026-02-11 01:27:37)
 have different colors for shot headers for the shot number and the shot title.
 i want to be able to configure the colors for both separately, so that i can have a better overview of the shots in the shotfile.
 please also add this as always to the configuration of the plugin, so that i can easily change it in the future, when i want to have different colors.
 
-## x shot 60 (2026-02-11 01:16:49) @shot_20260211_011649_shot-60
+## x shot 60 (2026-02-11 01:16:49)
 create new shot cmd and in general all ShooterShot commands should only work in files, in the .shooter/ai/shotfiles folder
 
-## x shot 59 (2026-02-11 00:09:09) @shot_20260211_000909_shot-59
+## x shot 59 (2026-02-11 00:09:09)
 i had a big refactoring.
 the shotfiles are now located at .shooter/ai/shotfiles
 please adapt that everywher in the codebase
