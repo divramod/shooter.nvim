@@ -1,5 +1,7 @@
 # domain
 
+## x shot 3 add domain rename functionality (2026-04-10 13:59:49) @domain_20260410_135949_shot-3
+
 ## x shot 2 wrong folder (2026-04-10 11:52:44) @domain_20260410_115245_shot-2
 shooter created the domain in plans/prompts
 so path is long obsolete
