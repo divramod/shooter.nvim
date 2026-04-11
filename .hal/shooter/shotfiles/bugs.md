@@ -1,19 +1,24 @@
 # bugs
 
-## shot 10 bug < >v in ~/a/me
+## shot 11 bug < >v in ~/a/me
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260411_024507.png
 i get this error, when running < >v in ~/a/me
 can you please find the error and fix it?
 
-## shot 9 merge < >fmf and < >dmf
+## shot 10 merge < >fmf and < >dmf
 
-## shot 8 again
+## shot 9 again
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_150751.png
 i have the prompt write again.
 fix it finally.
 
-## shot 7 
+## shot 8 
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_144134.png
+
+## x shot 7 multisend not working (2026-04-11 08:02:34)
+i marked 4 shots in the shot picker and pressed 2 in normal mode.
+it was not sending anything. did nothing.
+also, i want the entry mode for the shotpicker to be normal mode, not insert mode
 
 ## x shot 6 < >fmm brings vim to crash (2026-04-10 14:53:28) @bugs_20260410_145328_shot-6
 fix it
