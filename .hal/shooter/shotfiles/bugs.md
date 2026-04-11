@@ -1,5 +1,12 @@
 # bugs
 
+## shot 10 bug < >v in ~/a/me
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260411_024507.png
+i get this error, when running < >v in ~/a/me
+can you please find the error and fix it?
+
+## shot 9 merge < >fmf and < >dmf
+
 ## shot 8 again
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_150751.png
 i have the prompt write again.
