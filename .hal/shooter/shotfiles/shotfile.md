@@ -1,13 +1,31 @@
 # shotfile
 
 
-## shot 26
+## shot 27
 when in a shotfile, i want to be able to have autocompletion for my shooter commands when inserting /shoc, it should propose /shoc:build
 when inserting /sh, it should propose all commands starting with /sh like /sho:... /shoc:...
 
-## shot 25
+## shot 26
 dd does nothing now in the shotfile picker.
 please acivate it and 
+
+## x shot 25 title adaption of shotfiles on move and creation (2026-04-11 05:40:38)
+I’m already quite okay with how renaming and creating new shotfiles work. But now I have a special case: when I create shotfiles, or when I move shotfiles into domains, I want the domain folder to also appear in the title. like this for example
+
+file: test/test.md
+title: # test/test
+
+or 
+
+file: test.md
+title: # test
+
+or file: test/test/test.md
+title: # test/test/test
+
+This is important when you rename a shotfile, move a shotfile, or rename a domain. Please have a look and go deep into the code, because I think this has implications in a lot of different areas.
+
+I want this fixed everywhere.
 
 ## x shot 24 autocreate non existant shotfile (2026-04-10 12:42:59)
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260410_124140.png
