@@ -148,19 +148,13 @@ function M.pick_and_move()
           local old_bufnr = vim.fn.bufnr(file_path)
           local success = os.rename(file_path, target_path)
           if success then
+            -- Update title to reflect new location
+            local files_mod = require('shooter.core.files')
+            files_mod.update_file_title(target_path, files_mod.title_from_path(target_path))
             -- Open new file first, then clean up old buffer
             vim.cmd('edit! ' .. vim.fn.fnameescape(target_path))
             if old_bufnr ~= -1 and vim.api.nvim_buf_is_valid(old_bufnr) and old_bufnr ~= vim.api.nvim_get_current_buf() then
               vim.api.nvim_buf_delete(old_bufnr, { force = true })
-            end
-            -- Update title if renamed
-            if new_filename ~= old_filename and name_part then
-              local bufnr = vim.api.nvim_get_current_buf()
-              local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] or ''
-              if first_line:match('^# ') then
-                vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { '# ' .. name_part })
-                vim.cmd('silent! write')
-              end
             end
           end
         end
@@ -226,6 +220,21 @@ function M.rename()
                 local new_bufname = bufname:gsub(vim.pesc(old.path), new_path, 1)
                 vim.api.nvim_buf_set_name(buf, new_bufname)
                 vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
+              end
+            end
+          end
+          -- Update titles in all files in the renamed domain (after buffers written)
+          local files_mod = require('shooter.core.files')
+          local md_files = vim.fn.globpath(new_path, '**/*.md', false, true)
+          for _, f in ipairs(md_files) do
+            files_mod.update_file_title(f, files_mod.title_from_path(f))
+          end
+          -- Reload open buffers to reflect title changes
+          for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_loaded(buf) then
+              local bufname = vim.api.nvim_buf_get_name(buf)
+              if bufname:find(new_path, 1, true) then
+                vim.api.nvim_buf_call(buf, function() vim.cmd('edit!') end)
               end
             end
           end

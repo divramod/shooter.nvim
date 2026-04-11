@@ -171,6 +171,33 @@ function M.generate_filename(title)
   return string.format('%s.md', slug)
 end
 
+-- Compute title from file path (relative path from shotfiles root, without .md)
+-- e.g., /repo/.hal/shooter/shotfiles/test/test.md → "test/test"
+-- e.g., /repo/.hal/shooter/shotfiles/test.md → "test"
+function M.title_from_path(filepath)
+  local match = filepath:match('/%.hal/shooter/shotfiles/(.+)$')
+  if match then
+    return match:gsub('%.md$', '')
+  end
+  return vim.fn.fnamemodify(filepath, ':t:r')
+end
+
+-- Update the # title heading in a file on disk
+function M.update_file_title(filepath, new_title)
+  local content = utils.read_file(filepath)
+  if not content then return false end
+  local safe_title = new_title:gsub('%%', '%%%%')
+  local updated = content:gsub('^(#%s+)[^\n]+', '%1' .. safe_title, 1)
+  if updated == content then
+    updated = content:gsub('\n(#%s+)[^\n]+', '\n%1' .. safe_title, 1)
+  end
+  if updated ~= content then
+    utils.write_file(filepath, updated)
+    return true
+  end
+  return false
+end
+
 -- Create new shooter file (project-aware)
 -- project = nil means root level, string means specific project
 function M.create_file(title, folder, initial_content, project)
@@ -190,6 +217,10 @@ function M.create_file(title, folder, initial_content, project)
   local dir = utils.get_dirname(full_path)
   utils.ensure_dir(dir)
 
+  -- Build the title including folder path
+  local slug = filename:gsub('%.md$', '')
+  local path_title = (folder ~= '') and (folder .. '/' .. slug) or slug
+
   -- Build file content
   local file_content
 
@@ -198,12 +229,12 @@ function M.create_file(title, folder, initial_content, project)
     local has_shot_pattern = initial_content:match(config.get('patterns.shot_header'))
 
     if has_shot_pattern then
-      file_content = string.format('# %s\n\n\n%s\n', title, initial_content)
+      file_content = string.format('# %s\n\n\n%s\n', path_title, initial_content)
     else
-      file_content = string.format('# %s\n\n## shot 1\n%s\n', title, initial_content)
+      file_content = string.format('# %s\n\n## shot 1\n%s\n', path_title, initial_content)
     end
   else
-    file_content = string.format('# %s\n\n## shot 1\n\n', title)
+    file_content = string.format('# %s\n\n## shot 1\n\n', path_title)
   end
 
   -- Write the file

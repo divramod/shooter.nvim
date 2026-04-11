@@ -1,7 +1,6 @@
 -- File rename module for shooter.nvim
 -- Flow: prompt for title -> generate filename slug -> update title heading -> rename file
 
-local utils = require('shooter.utils')
 local files = require('shooter.core.files')
 
 local M = {}
@@ -15,35 +14,6 @@ end
 -- Extract directory and filename from path
 local function split_path(filepath)
   return vim.fn.fnamemodify(filepath, ':h'), vim.fn.fnamemodify(filepath, ':t')
-end
-
--- Extract title from file's first # heading
-local function extract_title(filepath)
-  local file = io.open(filepath, 'r')
-  if not file then return nil end
-  for line in file:lines() do
-    local title = line:match('^#%s+(.+)$')
-    if title then file:close(); return title end
-  end
-  file:close()
-  return nil
-end
-
--- Update the first # heading in file with new title
-local function update_title_in_file(filepath, new_title)
-  local content = utils.read_file(filepath)
-  if not content then return false end
-  -- Use [^\n]+ to match only until end of line (not across newlines)
-  local updated = content:gsub('^(#%s+)[^\n]+', '%1' .. new_title, 1)
-  if updated == content then
-    -- No heading found, try after first line (might have frontmatter)
-    updated = content:gsub('\n(#%s+)[^\n]+', '\n%1' .. new_title, 1)
-  end
-  if updated ~= content then
-    utils.write_file(filepath, updated)
-    return true
-  end
-  return false
 end
 
 -- Perform the actual rename operation
@@ -88,27 +58,23 @@ function M.rename_current_file()
   -- Get the buffer number for this file (if it's open)
   local bufnr = vim.fn.bufnr(filepath)
 
-  -- Extract current title from file
-  local current_title = extract_title(filepath)
-  if not current_title then
-    -- Fallback to filename without extension if no title heading
-    current_title = vim.fn.fnamemodify(filepath, ':t:r')
-  end
+  -- Use filename (without ext) as the editable name
+  local current_name = vim.fn.fnamemodify(filepath, ':t:r')
 
-  -- Prompt user to edit the title
+  -- Prompt user to edit the name
   vim.ui.input({
     prompt = 'New title: ',
-    default = current_title,
-  }, function(new_title)
-    if not new_title or new_title == '' then
+    default = current_name,
+  }, function(new_name)
+    if not new_name or new_name == '' then
       return
     end
-    if new_title == current_title then
+    if new_name == current_name then
       return
     end
 
-    -- Generate new filename from title
-    local new_filename = files.generate_filename(new_title)
+    -- Generate new filename from name
+    local new_filename = files.generate_filename(new_name)
     local dir = split_path(filepath)
     local new_path = dir .. '/' .. new_filename
 
@@ -130,21 +96,18 @@ function M.rename_current_file()
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
 
-    -- Update title heading in file (on disk, buffer is now closed)
-    local title_updated = update_title_in_file(filepath, new_title)
+    -- Update title to match new path (includes domain prefix)
+    local new_title = files.title_from_path(new_path)
+    files.update_file_title(filepath, new_title)
 
     -- Perform file rename
-    local success, err, info = M.perform_rename(filepath, new_filename)
+    local success, _, info = M.perform_rename(filepath, new_filename)
     if not success then
       return
     end
 
     -- Open the renamed file fresh
     vim.cmd('edit ' .. vim.fn.fnameescape(info.new_path))
-
-    -- Report results
-    local msg = 'Renamed to "' .. new_title .. '"'
-    if title_updated then msg = msg .. ' (title updated)' end
   end)
 end
 

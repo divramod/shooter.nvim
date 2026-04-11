@@ -116,6 +116,9 @@ function M.move_to_folder(target_folder, open_in_oil)
   -- Move the file
   local success = os.rename(file_path, target_path)
   if success then
+    -- Update title to reflect new location
+    files.update_file_title(target_path, files.title_from_path(target_path))
+
     local display_folder = target_folder == '' and 'prompts' or target_folder
     utils.echo('Moved to ' .. display_folder .. '/' .. filename)
 
@@ -183,6 +186,8 @@ function M.move_file_path(file_path, target_folder)
   utils.ensure_dir(target_dir)
   local success = os.rename(file_path, target_path)
   if success then
+    -- Update title to reflect new location
+    files.update_file_title(target_path, files.title_from_path(target_path))
     utils.echo('Moved to ' .. (target_folder == '' and 'prompts' or target_folder) .. '/' .. filename)
   end
   return success
