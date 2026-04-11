@@ -45,6 +45,7 @@ local function serialize_yaml(session)
   local lines = {}
   table.insert(lines, 'name: ' .. session.name)
   table.insert(lines, 'vimMode:')
+  table.insert(lines, '  shotPicker: ' .. (session.vimMode and session.vimMode.shotPicker or 'normal'))
   table.insert(lines, '  shotfilePicker: ' .. (session.vimMode and session.vimMode.shotfilePicker or 'insert'))
   table.insert(lines, '  projectPicker: ' .. (session.vimMode and session.vimMode.projectPicker or 'insert'))
   table.insert(lines, '  sortPicker: ' .. (session.vimMode and session.vimMode.sortPicker or 'insert'))
@@ -91,6 +92,11 @@ local function parse_yaml(content)
       session.name = name_match:gsub('%s+$', '')
     end
     -- Parse vimMode settings
+    local shot_mode = line:match('^%s+shotPicker:%s*(.+)$')
+    if shot_mode then
+      session.vimMode = session.vimMode or {}
+      session.vimMode.shotPicker = shot_mode:gsub('%s+$', '')
+    end
     local shotfile_mode = line:match('^%s+shotfilePicker:%s*(.+)$')
     if shotfile_mode then
       session.vimMode = session.vimMode or {}

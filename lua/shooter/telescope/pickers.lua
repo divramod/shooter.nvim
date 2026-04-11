@@ -375,11 +375,16 @@ function M.list_open_shots(opts)
       or 'Open Shots: ' .. filename .. ' (a=all files, 1-4=send, h=hide, q=quit)'
   end
 
+  -- Get initial mode from session vimMode setting (default to normal)
+  local session = require('shooter.session')
+  local current = session.get_current_session()
+  local vim_mode = current.vimMode and current.vimMode.shotPicker or 'normal'
+
   local picker_instance = pickers.new(opts, {
     prompt_title = title,
     layout_strategy = 'vertical',
     layout_config = {width = 0.9, height = 0.9, preview_height = 0.5},
-    initial_mode = 'insert',
+    initial_mode = vim_mode,
     finder = finders.new_table({
       results = shot_entries,
       entry_maker = function(e) return {value = e, display = e.display, ordinal = e.display} end,

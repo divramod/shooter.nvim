@@ -8,6 +8,7 @@ local M = {}
 M.DEFAULT = {
   name = 'init',
   vimMode = {
+    shotPicker = 'normal',
     shotfilePicker = 'insert',
     projectPicker = 'insert',
     sortPicker = 'insert',
@@ -71,6 +72,7 @@ function M.validate_session(session)
 
   -- Ensure vimMode exists with defaults
   session.vimMode = session.vimMode or {}
+  session.vimMode.shotPicker = session.vimMode.shotPicker or 'normal'
   session.vimMode.shotfilePicker = session.vimMode.shotfilePicker or 'insert'
   session.vimMode.projectPicker = session.vimMode.projectPicker or 'insert'
   session.vimMode.sortPicker = session.vimMode.sortPicker or 'insert'

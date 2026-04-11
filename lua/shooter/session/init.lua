@@ -176,6 +176,14 @@ function M.get_current_session_name()
   return M.get_current_session().name
 end
 
+-- Set vim mode for a picker and auto-save
+function M.set_vim_mode(picker_name, mode)
+  local sess = M.get_current_session()
+  sess.vimMode = sess.vimMode or {}
+  sess.vimMode[picker_name] = mode
+  M.save_current()
+end
+
 -- Toggle layout between horizontal and vertical
 function M.toggle_layout()
   local sess = M.get_current_session()
