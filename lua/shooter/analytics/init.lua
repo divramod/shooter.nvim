@@ -19,7 +19,6 @@ local function open_file_on_line(path_map)
   -- Try to match any path-like string (e.g., /path/to/file.md)
   local path = line:match('([/%w_%-%.]+%.md)')
   if path and vim.fn.filereadable(path) == 1 then vim.cmd('edit ' .. vim.fn.fnameescape(path)); return end
-  vim.notify('No openable file found on this line', vim.log.levels.INFO)
 end
 
 -- Show analytics in a new buffer
@@ -42,7 +41,7 @@ function M.show_global() M.show(nil) end
 function M.show_project()
   local files = require('shooter.core.files')
   local git_root = files.get_git_root()
-  if not git_root then vim.notify('Not in a git repository', vim.log.levels.WARN); return end
+  if not git_root then return end
   local user, repo = data.get_git_remote_info(git_root)
   if user and repo then
     M.show(user .. '/' .. repo)

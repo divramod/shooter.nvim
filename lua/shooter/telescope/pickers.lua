@@ -49,7 +49,6 @@ local function setup_folder_mappings(prompt_bufnr, map, refresh_fn)
     map('n', key, function()
       local new_state = session.toggle_folder(folder)
       local msg = folder .. ': ' .. (new_state and 'ON' or 'OFF')
-      vim.notify(msg, vim.log.levels.INFO)
       refresh_fn(prompt_bufnr)
     end, { desc = 'toggle: ' .. folder })
   end
@@ -57,7 +56,6 @@ local function setup_folder_mappings(prompt_bufnr, map, refresh_fn)
   map('n', 'A', function()
     local all_enabled = session.toggle_all_folders()
     local msg = all_enabled and 'All folders enabled' or 'Prompts only'
-    vim.notify(msg, vim.log.levels.INFO)
     refresh_fn(prompt_bufnr)
   end, { desc = 'toggle all folders' })
 end
@@ -67,7 +65,6 @@ local function setup_session_mappings(prompt_bufnr, map, refresh_fn)
   -- ss: save session (manual)
   map('n', 'ss', function()
     session.save_current()
-    vim.notify('Session saved: ' .. session.get_current_session_name(), vim.log.levels.INFO)
   end, { desc = 'save session' })
 
   -- sl: load session
@@ -92,7 +89,6 @@ local function setup_session_mappings(prompt_bufnr, map, refresh_fn)
       if confirm == 'y' then
         local name = session.get_current_session_name()
         session.delete_current_session()
-        vim.notify('Session deleted: ' .. name, vim.log.levels.INFO)
         refresh_fn(prompt_bufnr)
       end
     end)
@@ -195,7 +191,6 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
       -- 'L' toggles layout between horizontal and vertical
       map('n', 'L', function()
         local new_layout = session.toggle_layout()
-        vim.notify('Layout: ' .. new_layout, vim.log.levels.INFO)
         actions.close(prompt_bufnr)
         M.list_all_files({ initial_mode = 'normal' }):find()
       end, { desc = 'toggle layout' })
@@ -256,7 +251,6 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
           vim.ui.input({ prompt = 'Delete ' .. filename .. '? (y/n): ' }, function(confirm)
             if confirm == 'y' then
               vim.fn.delete(filepath)
-              vim.notify('Deleted: ' .. filename, vim.log.levels.INFO)
               refresh_picker(prompt_bufnr)
             end
           end)

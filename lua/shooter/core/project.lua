@@ -119,7 +119,6 @@ function M.pick_project(callback, opts)
 
   local projects = M.list_projects()
   if #projects == 0 then
-    vim.notify('No projects found in projects/ folder', vim.log.levels.WARN)
     callback(nil)
     return
   end

@@ -88,7 +88,6 @@ function M.move_shot()
   -- Find current shot
   local start_line, end_line, _ = shots.find_current_shot(bufnr, cursor_line)
   if not start_line then
-    utils.notify('No shot found under cursor', vim.log.levels.WARN)
     return
   end
 
@@ -111,7 +110,6 @@ function M.move_shot()
   end
 
   if #filtered == 0 then
-    utils.notify('No other shotfiles found', vim.log.levels.WARN)
     return
   end
 
@@ -146,7 +144,6 @@ function M.move_shot()
 
         -- Insert into target
         if not insert_shot_into_file(target_path, shot_lines, new_num) then
-          utils.notify('Failed to insert shot into target', vim.log.levels.ERROR)
           return
         end
 
@@ -154,7 +151,6 @@ function M.move_shot()
         delete_shot_from_buffer(bufnr, start_line, end_line, cursor_line)
         vim.cmd('silent! write')
 
-        utils.notify(string.format('Moved to %s as shot %d', entry.value.display, new_num), vim.log.levels.INFO)
       end)
       return true
     end,

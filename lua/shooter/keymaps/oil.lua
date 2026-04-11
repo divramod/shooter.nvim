@@ -28,7 +28,6 @@ end
 local function move_oil_file_to(folder)
   local filepath = get_oil_file()
   if not filepath then
-    vim.notify('No file under cursor', vim.log.levels.WARN)
     return
   end
   local movement = require('shooter.core.movement')
@@ -42,7 +41,6 @@ end
 local function rename_oil_file()
   local filepath = get_oil_file()
   if not filepath then
-    vim.notify('No file under cursor', vim.log.levels.WARN)
     return
   end
   -- Open the file first, then rename
@@ -54,14 +52,12 @@ end
 local function delete_oil_file()
   local filepath = get_oil_file()
   if not filepath then
-    vim.notify('No file under cursor', vim.log.levels.WARN)
     return
   end
   local filename = vim.fn.fnamemodify(filepath, ':t')
   vim.ui.input({ prompt = 'Delete ' .. filename .. '? (y/n): ' }, function(confirm)
     if confirm == 'y' then
       vim.fn.delete(filepath)
-      vim.notify('Deleted: ' .. filename, vim.log.levels.INFO)
       -- Refresh Oil
       vim.cmd('edit')
     end

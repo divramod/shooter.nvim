@@ -33,7 +33,6 @@ end
 -- Toggle pane zoom (M-z equivalent)
 function M.zoom_toggle()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   tmux_cmd('resize-pane -Z')
@@ -42,7 +41,6 @@ end
 -- Edit pane content in vim (M-u / d-tmux-edit-vim)
 function M.edit_in_vim()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   run_script('d-tmux-edit-vim')
@@ -51,7 +49,6 @@ end
 -- Toggle git status display (M-G)
 function M.git_status_toggle()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   run_script('d-tmux-git-status --toggle')
@@ -60,7 +57,6 @@ end
 -- Toggle light/dark theme (M-I)
 function M.lightswitch()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   -- This needs to run in a split and source config
@@ -73,7 +69,6 @@ end
 -- Kill all panes except current (M-O)
 function M.kill_other_panes()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   run_script('cd ~/dev/scripts/common && ./tmux_pane_kill_all_execpt_current')
@@ -82,7 +77,6 @@ end
 -- Reload tmuxp session (M-R)
 function M.reload_session()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   local cmd = [[run-shell "echo $(tmux display-message -p '#S') > ~/.tmux.reload" ; ]] ..
@@ -95,7 +89,6 @@ end
 -- Delete session picker (M-o)
 function M.delete_session()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   tmux_cmd('split-window "cd ~/dev/scripts && ./d-tmux-delete-session"')
@@ -104,7 +97,6 @@ end
 -- Load smug session (M-t)
 function M.smug_load()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   tmux_cmd('split-window "cd ~/dev/scripts && ./d-smug-load"')
@@ -113,7 +105,6 @@ end
 -- Yank pane content to vim
 function M.yank_to_vim()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   run_script('cd ~/dev/scripts/common && ./tmux_yank_pane_to_vim')
@@ -122,7 +113,6 @@ end
 -- Choose tree/session (M-s)
 function M.choose_session()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   tmux_cmd('choose-tree -s')
@@ -131,7 +121,6 @@ end
 -- Switch to last client (M-P)
 function M.switch_last()
   if not in_tmux() then
-    vim.notify('Not in tmux session', vim.log.levels.WARN)
     return
   end
   tmux_cmd('switch-client -l')

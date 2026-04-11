@@ -10,7 +10,6 @@ M._config = nil
 -- Setup function - must be called by user to initialize the plugin
 function M.setup(user_config)
   if M._initialized then
-    vim.notify('shooter.nvim is already initialized', vim.log.levels.WARN)
     return M._config
   end
 

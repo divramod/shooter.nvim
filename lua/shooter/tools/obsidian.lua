@@ -54,14 +54,12 @@ function M.open_in_obsidian()
   -- Get current file path
   local filepath = vim.fn.expand('%:p')
   if filepath == '' then
-    vim.notify('No file open', vim.log.levels.WARN)
     return false
   end
 
   -- Find the vault
   local vault_root, vault_name = M.find_vault(filepath)
   if not vault_root then
-    vim.notify(vault_name, vim.log.levels.WARN) -- vault_name contains error message
     return false
   end
 
@@ -82,7 +80,6 @@ function M.open_in_obsidian()
   elseif vim.fn.has('unix') == 1 then
     open_cmd = 'xdg-open'
   else
-    vim.notify('Unsupported platform', vim.log.levels.ERROR)
     return false
   end
 
@@ -90,10 +87,8 @@ function M.open_in_obsidian()
   local result = os.execute(cmd)
 
   if result == 0 then
-    vim.notify(string.format('Opened in Obsidian: %s', relative_path), vim.log.levels.INFO)
     return true
   else
-    vim.notify('Failed to open Obsidian', vim.log.levels.ERROR)
     return false
   end
 end

@@ -246,7 +246,6 @@ end
 function M.toggle_day_marker()
   day_marker_enabled = not day_marker_enabled
   local status = day_marker_enabled and 'enabled' or 'disabled'
-  vim.notify('Day marker coloring: ' .. status, vim.log.levels.INFO)
   -- Reapply syntax immediately
   local bufnr = vim.api.nvim_get_current_buf()
   local filepath = vim.api.nvim_buf_get_name(bufnr)
@@ -287,7 +286,6 @@ local function show_shotfile_info(bufnr)
       and vim.fn.fnamemodify(git_root[1], ':t') or ''
 
     local msg = string.format('%s/%s  %d/%d shots open', repo, filename, #open, #all)
-    vim.notify(msg, vim.log.levels.INFO, { timeout = 3000 })
   end)
 end
 
@@ -378,7 +376,6 @@ function M.setup()
         local parts = { 'reloaded' }
         if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
         if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
-        vim.notify('Shooter config: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
       end
     end,
   })
@@ -404,7 +401,6 @@ function M.setup()
         local parts = {}
         if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
         if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
-        vim.notify('Config auto-fixed: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
       end
     end,
   })

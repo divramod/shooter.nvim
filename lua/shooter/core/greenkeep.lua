@@ -132,9 +132,7 @@ function M.run()
   if stats.files_renamed > 0 then table.insert(parts, stats.files_renamed .. ' file(s) renamed') end
 
   if #parts == 0 then
-    utils.notify('Greenkeep: Nothing to update', vim.log.levels.INFO)
   else
-    utils.notify('Greenkeep: Updated ' .. table.concat(parts, ', '), vim.log.levels.INFO)
   end
 
   return stats

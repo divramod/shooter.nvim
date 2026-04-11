@@ -25,7 +25,7 @@ end
 
 -- Step 3: Show open shots in a file
 local function show_shots(file_entry, back_fn)
-  if #file_entry.shots == 0 then vim.notify('No open shots', vim.log.levels.INFO); return end
+  if #file_entry.shots == 0 then return end
 
   pickers.new({}, vim.tbl_extend('force', layout, {
     prompt_title = 'Shots: ' .. file_entry.title,
@@ -83,7 +83,7 @@ end
 
 -- Step 2: Show in-progress files in a repo
 local function show_files(repo, back_fn)
-  if #repo.files == 0 then vim.notify('No in-progress files', vim.log.levels.INFO); return end
+  if #repo.files == 0 then return end
 
   pickers.new({}, vim.tbl_extend('force', layout, {
     prompt_title = string.format('Files: %s (%d/%d open)', repo.name, repo.open_shots, repo.total_shots),
@@ -125,7 +125,7 @@ end
 -- Step 1: Show all repos
 local function show_repos()
   local repos = data.get_all_repos()
-  if #repos == 0 then vim.notify('No repos with open shots found', vim.log.levels.INFO); return end
+  if #repos == 0 then return end
 
   pickers.new({}, vim.tbl_extend('force', layout, {
     prompt_title = 'Dashboard: Select Repo',

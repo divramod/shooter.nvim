@@ -147,7 +147,6 @@ function M.renumber_shots(bufnr)
 
   local shots = find_all_shots_with_info(bufnr)
   if #shots == 0 then
-    utils.notify('No shots found in file', vim.log.levels.INFO)
     return 0
   end
 

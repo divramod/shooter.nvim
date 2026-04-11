@@ -10,7 +10,6 @@ local M = {}
 function M.show_file_picker()
   local files = inbox.get_inbox_files()
   if #files == 0 then
-    utils.notify('No inbox files configured. Add inbox.search_dirs or inbox.direct_paths to config', vim.log.levels.WARN)
     return
   end
 
@@ -63,7 +62,6 @@ end
 function M.show_action_picker(filepath)
   local next_actions = inbox.parse_next_actions(filepath)
   if #next_actions == 0 then
-    utils.notify('No next actions found in file', vim.log.levels.INFO)
     return
   end
 
@@ -155,7 +153,6 @@ function M.import_actions(actions_to_import, source_filepath)
 
   -- Check we're in a shooter file
   if not current_file:match('%.md$') then
-    utils.notify('Current file must be a markdown file', vim.log.levels.WARN)
     return
   end
 
@@ -215,7 +212,6 @@ function M.import_actions(actions_to_import, source_filepath)
   -- Save current buffer
   vim.cmd('silent! write')
 
-  utils.notify(string.format('Imported %d action(s) as new shots', added), vim.log.levels.INFO)
 end
 
 return M

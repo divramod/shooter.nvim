@@ -43,7 +43,6 @@ local function move_file_to_folder(file_path, target_folder_path, was_in_oil, cu
 
   -- Check if source file exists
   if not utils.file_exists(file_path) then
-    vim.notify('File not found: ' .. file_path, vim.log.levels.ERROR)
     return false
   end
 
@@ -52,14 +51,12 @@ local function move_file_to_folder(file_path, target_folder_path, was_in_oil, cu
 
   -- Check if target already exists
   if utils.file_exists(target_path) then
-    vim.notify('Target already exists: ' .. target_path, vim.log.levels.ERROR)
     return false
   end
 
   -- Move the file
   local success = os.rename(file_path, target_path)
   if success then
-    vim.notify('Moved to ' .. target_folder_path)
 
     if was_in_oil then
       -- Refresh Oil buffer
@@ -76,7 +73,6 @@ local function move_file_to_folder(file_path, target_folder_path, was_in_oil, cu
     end
     return true
   else
-    vim.notify('Failed to move file', vim.log.levels.ERROR)
     return false
   end
 end
@@ -88,14 +84,12 @@ function M.open_picker()
   local cursor_line = was_in_oil and vim.api.nvim_win_get_cursor(0)[1] or nil
 
   if not file_path or file_path == '' then
-    vim.notify('No file selected', vim.log.levels.WARN)
     return
   end
 
   local folders = get_shotfile_folders()
 
   if #folders == 0 then
-    vim.notify('No folders found', vim.log.levels.WARN)
     return
   end
 

@@ -253,7 +253,6 @@ local function switch_to_worktree(target_root)
   end
 
   vim.cmd('edit ' .. vim.fn.fnameescape(target_file))
-  vim.notify('Switched to worktree: ' .. target_root, vim.log.levels.INFO)
 end
 
 -- Switch to worktree by number
@@ -269,7 +268,6 @@ function M.switch_to(number)
         return
       end
     end
-    vim.notify('Worktree ' .. num_str .. ' not found', vim.log.levels.WARN)
     return
   end
 
@@ -282,13 +280,11 @@ function M.pick_worktree(worktrees)
   worktrees = worktrees or get_numbered_worktrees()
 
   if #worktrees == 0 then
-    vim.notify('No worktrees found', vim.log.levels.WARN)
     return
   end
 
   local ok, _ = pcall(require, 'telescope')
   if not ok then
-    vim.notify('Telescope is required for worktree picker', vim.log.levels.ERROR)
     return
   end
 
@@ -346,7 +342,6 @@ end
 function M.to_last()
   local last_id = read_last_worktree()
   if not last_id then
-    vim.notify('No last worktree saved', vim.log.levels.WARN)
     return
   end
 
@@ -358,12 +353,10 @@ function M.to_last()
   -- It's a numbered worktree
   local repo_name = get_repo_name()
   if not repo_name then
-    vim.notify('Could not determine repo name', vim.log.levels.ERROR)
     return
   end
   local target = WORKTREE_BASE .. '/' .. repo_name .. '/' .. last_id
   if vim.fn.isdirectory(target) ~= 1 then
-    vim.notify('Last worktree ' .. last_id .. ' no longer exists', vim.log.levels.WARN)
     return
   end
   switch_to_worktree(target)
@@ -373,7 +366,6 @@ end
 function M.to_main()
   local main_path = get_main_worktree()
   if not main_path then
-    vim.notify('Could not find main worktree', vim.log.levels.ERROR)
     return
   end
   switch_to_worktree(main_path)

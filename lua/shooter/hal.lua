@@ -81,7 +81,6 @@ function M.modify(args)
   if result.ok then
     M.reload()
   else
-    vim.notify('hal shooter: ' .. (result.error or 'unknown error'), vim.log.levels.ERROR)
   end
   return result
 end

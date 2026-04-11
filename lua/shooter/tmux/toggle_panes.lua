@@ -147,14 +147,12 @@ end
 function M.hide(name)
   local pane_state = state[name]
   if not pane_state or not pane_state.pane_id then
-    utils.notify('Pane "' .. name .. '" is not visible', vim.log.levels.WARN)
     return false
   end
 
   -- Check pane still exists
   if not pane_exists(pane_state.pane_id) then
     state[name] = nil
-    utils.notify('Pane "' .. name .. '" no longer exists', vim.log.levels.WARN)
     return false
   end
 
@@ -172,11 +170,9 @@ function M.hide(name)
   if hidden_session.hide_pane(pane_state.pane_id, window_name) then
     pane_state.window_name = window_name
     pane_state.pane_id = nil
-    utils.notify('Pane "' .. name .. '" hidden', vim.log.levels.INFO)
     return true
   end
 
-  utils.notify('Failed to hide pane', vim.log.levels.ERROR)
   return false
 end
 
@@ -186,14 +182,12 @@ end
 function M.show(name)
   -- Check tmux is available
   if not detect.check_tmux_installed() or not detect.in_tmux() then
-    utils.notify('Not in tmux', vim.log.levels.WARN)
     return false
   end
 
   -- Get pane config
   local config = config_panes.find_by_name(name)
   if not config then
-    utils.notify('Pane "' .. name .. '" not found in config', vim.log.levels.ERROR)
     return false
   end
 
@@ -202,7 +196,6 @@ function M.show(name)
 
   -- If pane is already visible, just notify
   if pane_state.pane_id and pane_exists(pane_state.pane_id) then
-    utils.notify('Pane "' .. name .. '" is already visible', vim.log.levels.INFO)
     return true
   end
 
@@ -220,7 +213,6 @@ function M.show(name)
       pane_state.pane_id = pane_id
       pane_state.window_name = nil
       hidden_session.cleanup_session()
-      utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
       return true
     end
   end
@@ -237,7 +229,6 @@ function M.show(name)
       pane_state.window_name = nil
       pane_state.folder = folder
       hidden_session.cleanup_session()
-      utils.notify('Pane "' .. name .. '" shown', vim.log.levels.INFO)
       return true
     end
   end
@@ -248,7 +239,6 @@ function M.show(name)
   local pane_id = create_bottom_pane(height, focus)
 
   if not pane_id then
-    utils.notify('Failed to create pane', vim.log.levels.ERROR)
     return false
   end
 
@@ -265,7 +255,6 @@ function M.show(name)
     pane_state.commands_run = true
   end
 
-  utils.notify('Pane "' .. name .. '" created', vim.log.levels.INFO)
   return true
 end
 

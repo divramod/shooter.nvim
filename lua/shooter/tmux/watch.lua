@@ -28,26 +28,22 @@ end
 function M.open_watch_pane()
   -- Validate environment
   if not check_tmux() then
-    vim.notify('tmux is not installed', vim.log.levels.ERROR)
     return false
   end
 
   if not in_tmux() then
-    vim.notify('Not running inside tmux', vim.log.levels.ERROR)
     return false
   end
 
   -- Check if shooter CLI is available
   local shooter_check = vim.fn.system('which shooter 2>/dev/null')
   if vim.v.shell_error ~= 0 or shooter_check == '' then
-    vim.notify('shooter CLI not found in PATH', vim.log.levels.ERROR)
     return false
   end
 
   -- Save current layout BEFORE splitting (to restore when watch exits)
   local saved_layout = tmux_cmd('display-message -p "#{window_layout}"')
   if not saved_layout or saved_layout == '' then
-    vim.notify('Failed to save window layout', vim.log.levels.ERROR)
     return false
   end
 
@@ -66,7 +62,6 @@ function M.open_watch_pane()
   local new_pane = tmux_cmd(string.format('split-window -vb -P -F "#{pane_id}" "%s"', cmd))
 
   if not new_pane or new_pane == '' then
-    vim.notify('Failed to create watch pane', vim.log.levels.ERROR)
     return false
   end
 
@@ -74,7 +69,6 @@ function M.open_watch_pane()
   vim.fn.system('sleep 0.1')
   tmux_cmd('resize-pane -Z -t ' .. new_pane)
 
-  vim.notify('Watch pane opened', vim.log.levels.INFO)
   return true
 end
 

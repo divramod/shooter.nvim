@@ -628,10 +628,6 @@ function M.file_stats()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local filename = bufname ~= '' and vim.fn.fnamemodify(bufname, ':t') or 'untitled'
 
-  vim.notify(
-    string.format('%s  |  total: %d  open: %d  closed: %d', filename, total, open, closed),
-    vim.log.levels.INFO
-  )
 end
 
 -- Create a shot from text stored in a file (called via tmux send-keys from another pane)
@@ -691,11 +687,11 @@ local function write_shot_creator_script(shot_file, script_file)
   local script = string.format([[
 local filepath = "%s"
 local f = io.open(filepath, "r")
-if not f then vim.notify("No temp file found", vim.log.levels.ERROR); return end
+if not f then return end
 local content = f:read("*a")
 f:close()
 content = vim.trim(content)
-if content == "" then vim.notify("Empty content", vim.log.levels.WARN); return end
+if content == "" then return end
 
 local bufnr = 0
 local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)

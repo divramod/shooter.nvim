@@ -147,7 +147,6 @@ function M.show_help()
     'q/Esc  - Close picker',
   }
 
-  vim.notify(table.concat(help_lines, '\n'), vim.log.levels.INFO)
 end
 
 return M

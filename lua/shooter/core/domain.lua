@@ -51,24 +51,20 @@ function M.create_domain(name)
   -- Sanitize: lowercase, replace spaces with dashes, strip non-alnum
   local slug = name:lower():gsub('%s+', '-'):gsub('[^%w%-]', ''):gsub('%-+', '-'):gsub('^%-', ''):gsub('%-$', '')
   if slug == '' then
-    vim.notify('Invalid domain name', vim.log.levels.WARN)
     return nil
   end
 
   if is_system_folder(slug) then
-    vim.notify('Cannot use system folder name as domain: ' .. slug, vim.log.levels.WARN)
     return nil
   end
 
   local shotfiles_dir = get_shotfiles_dir()
   local domain_path = shotfiles_dir .. '/' .. slug
   if vim.fn.isdirectory(domain_path) == 1 then
-    vim.notify('Domain already exists: ' .. slug, vim.log.levels.INFO)
     return domain_path
   end
 
   vim.fn.mkdir(domain_path, 'p')
-  vim.notify('Created domain: ' .. slug, vim.log.levels.INFO)
   return domain_path
 end
 
@@ -77,19 +73,16 @@ function M.pick_and_move()
   local files = require('shooter.core.files')
   local file_path = files.get_current_file_path()
   if not file_path or not files.is_in_prompts_folder(file_path) then
-    vim.notify('Not in a shotfile', vim.log.levels.WARN)
     return
   end
 
   local domains = M.list_domains()
   if #domains == 0 then
-    vim.notify('No domains found. Create one with :HalShooterDomainNew', vim.log.levels.WARN)
     return
   end
 
   local ok, _ = pcall(require, 'telescope')
   if not ok then
-    vim.notify('Telescope is required for domain picker', vim.log.levels.ERROR)
     return
   end
 
@@ -149,7 +142,6 @@ function M.pick_and_move()
           end
           local target_path = domain_path .. '/' .. new_filename
           if utils.file_exists(target_path) then
-            vim.notify('Target already exists: ' .. target_domain .. '/' .. new_filename, vim.log.levels.WARN)
             return
           end
           vim.cmd('silent! write')
@@ -170,7 +162,6 @@ function M.pick_and_move()
                 vim.cmd('silent! write')
               end
             end
-            vim.notify('Moved to ' .. target_domain .. '/' .. new_filename, vim.log.levels.INFO)
           end
         end
       end)
@@ -183,13 +174,11 @@ end
 function M.rename()
   local domains = M.list_domains()
   if #domains == 0 then
-    vim.notify('No domains found', vim.log.levels.WARN)
     return
   end
 
   local ok, _ = pcall(require, 'telescope')
   if not ok then
-    vim.notify('Telescope is required for domain picker', vim.log.levels.ERROR)
     return
   end
 
@@ -218,18 +207,15 @@ function M.rename()
           if not new_name or new_name == '' or new_name == old.name then return end
           local slug = new_name:lower():gsub('%s+', '-'):gsub('[^%w%-]', ''):gsub('%-+', '-'):gsub('^%-', ''):gsub('%-$', '')
           if slug == '' or is_system_folder(slug) then
-            vim.notify('Invalid domain name', vim.log.levels.WARN)
             return
           end
           local shotfiles_dir = get_shotfiles_dir()
           local new_path = shotfiles_dir .. '/' .. slug
           if vim.fn.isdirectory(new_path) == 1 then
-            vim.notify('Domain already exists: ' .. slug, vim.log.levels.WARN)
             return
           end
           local success = os.rename(old.path, new_path)
           if not success then
-            vim.notify('Failed to rename domain', vim.log.levels.ERROR)
             return
           end
           -- Update all open buffers that were in the old domain
@@ -243,7 +229,6 @@ function M.rename()
               end
             end
           end
-          vim.notify('Renamed domain: ' .. old.name .. ' -> ' .. slug, vim.log.levels.INFO)
         end)
       end)
       return true

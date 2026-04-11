@@ -88,7 +88,6 @@ end
 function M.create_in_repo_picker()
   local repos = M.get_all_repos()
   if #repos == 0 then
-    utils.notify('No repos configured. Add repos.search_dirs or repos.direct_paths to config', vim.log.levels.WARN)
     return
   end
 

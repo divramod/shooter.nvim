@@ -83,7 +83,7 @@ end
 -- Main entry point: prompt user for new title, then rename file accordingly
 function M.rename_current_file()
   local filepath = get_current_filepath()
-  if not filepath then utils.notify('No file selected', vim.log.levels.WARN); return end
+  if not filepath then return end
 
   -- Get the buffer number for this file (if it's open)
   local bufnr = vim.fn.bufnr(filepath)
@@ -101,10 +101,10 @@ function M.rename_current_file()
     default = current_title,
   }, function(new_title)
     if not new_title or new_title == '' then
-      utils.notify('Rename cancelled', vim.log.levels.INFO); return
+      return
     end
     if new_title == current_title then
-      utils.notify('Title unchanged', vim.log.levels.INFO); return
+      return
     end
 
     -- Generate new filename from title
@@ -114,7 +114,7 @@ function M.rename_current_file()
 
     -- Check if target exists
     if vim.fn.filereadable(new_path) == 1 then
-      utils.notify('File already exists: ' .. new_filename, vim.log.levels.ERROR); return
+      return
     end
 
     -- CRITICAL: Save and close the buffer before modifying file on disk
@@ -136,7 +136,7 @@ function M.rename_current_file()
     -- Perform file rename
     local success, err, info = M.perform_rename(filepath, new_filename)
     if not success then
-      utils.notify('Rename failed: ' .. (err or 'unknown error'), vim.log.levels.ERROR); return
+      return
     end
 
     -- Open the renamed file fresh
@@ -145,7 +145,6 @@ function M.rename_current_file()
     -- Report results
     local msg = 'Renamed to "' .. new_title .. '"'
     if title_updated then msg = msg .. ' (title updated)' end
-    utils.notify(msg, vim.log.levels.INFO)
   end)
 end
 

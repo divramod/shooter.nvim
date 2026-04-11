@@ -53,19 +53,16 @@ function M.show_token_count()
   local filename = vim.fn.expand('%:t')
 
   if filepath == '' then
-    vim.notify('No file open', vim.log.levels.WARN)
     return
   end
 
   local count, err = M.count_tokens(filepath)
   if err then
-    vim.notify(err, vim.log.levels.ERROR)
     return
   end
 
   -- Format count with thousands separator
   local formatted = tostring(count):reverse():gsub('(%d%d%d)', '%1,'):reverse():gsub('^,', '')
-  vim.notify(string.format('%s: %s tokens', filename, formatted), vim.log.levels.INFO)
 end
 
 return M

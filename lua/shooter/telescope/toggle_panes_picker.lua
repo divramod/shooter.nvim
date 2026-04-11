@@ -108,7 +108,6 @@ function M.show_picker()
   local all_config = config_panes.get_current()
 
   if not all_config or #all_config == 0 then
-    utils.notify('No panes configured in .shooter/config/nvim/tmux.yml', vim.log.levels.WARN)
     return
   end
 
@@ -121,7 +120,6 @@ function M.show_picker()
   end
 
   if #config == 0 then
-    utils.notify('All panes are hidden', vim.log.levels.WARN)
     return
   end
 
@@ -178,7 +176,6 @@ function M.show_picker()
             end,
           }), { reset_prompt = false })
         else
-          utils.notify('Pane "' .. pane.name .. '" is not visible', vim.log.levels.WARN)
         end
       end, { desc = 'Hide pane' })
 
@@ -204,7 +201,6 @@ function M.show_picker()
             end,
           }), { reset_prompt = false })
         else
-          utils.notify('Pane "' .. pane.name .. '" is already visible', vim.log.levels.INFO)
         end
       end, { desc = 'Show pane' })
 

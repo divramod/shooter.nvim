@@ -52,7 +52,6 @@ local function hide_pane(pane_index, pane_id)
   -- Get the window that was just created (the broken pane is now in it)
   local win_handle = io.popen("tmux list-windows -F '#{window_id}' 2>/dev/null | tail -1")
   if not win_handle then
-    utils.notify('Failed to track hidden pane', vim.log.levels.ERROR)
     return false
   end
   local new_window = win_handle:read("*l")
@@ -73,14 +72,12 @@ local function show_pane(pane_index)
   local info = hidden_panes[pane_index]
 
   if not info or not info.window_id then
-    utils.notify('No hidden pane ' .. pane_index .. ' to show', vim.log.levels.WARN)
     return false
   end
 
   -- Check the hidden window still exists
   if not window_exists(info.window_id) then
     hidden_panes[pane_index] = nil
-    utils.notify('Hidden pane window no longer exists', vim.log.levels.WARN)
     return false
   end
 
@@ -112,14 +109,12 @@ function M.toggle(pane_index)
 
   -- Check tmux is available
   if not detect.check_tmux_installed() or not detect.in_tmux() then
-    utils.notify('Not in tmux', vim.log.levels.WARN)
     return
   end
 
   -- If pane is hidden, show it
   if M.is_hidden(pane_index) then
     if show_pane(pane_index) then
-      utils.notify('Pane ' .. pane_index .. ' shown', vim.log.levels.INFO)
     end
     return
   end
@@ -127,7 +122,6 @@ function M.toggle(pane_index)
   -- Otherwise, hide the pane at this index
   local pane_id = get_pane_id_by_index(pane_index)
   if not pane_id then
-    utils.notify('No pane ' .. pane_index .. ' to hide', vim.log.levels.WARN)
     return
   end
 
@@ -137,13 +131,11 @@ function M.toggle(pane_index)
     local current_pane = current_handle:read("*l")
     current_handle:close()
     if current_pane == pane_id then
-      utils.notify('Cannot hide current pane', vim.log.levels.WARN)
       return
     end
   end
 
   if hide_pane(pane_index, pane_id) then
-    utils.notify('Pane ' .. pane_index .. ' hidden', vim.log.levels.INFO)
   end
 end
 

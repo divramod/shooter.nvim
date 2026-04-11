@@ -9,7 +9,6 @@ local function require_shotfile(fn)
   return function(opts)
     local files = require('shooter.core.files')
     if not files.is_shooter_file() then
-      vim.notify('This command only works in shotfiles (.hal/shooter/shotfiles)', vim.log.levels.WARN)
       return
     end
     fn(opts)
@@ -99,14 +98,12 @@ local function setup_shotfile_commands()
   create_cmd('HalShooterShotfileDelete', function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if bufname == '' then
-      vim.notify('No file to delete', vim.log.levels.WARN)
       return
     end
     vim.ui.input({ prompt = 'Delete ' .. vim.fn.fnamemodify(bufname, ':t') .. '? (y/n): ' }, function(confirm)
       if confirm == 'y' then
         vim.cmd('bdelete!')
         vim.fn.delete(bufname)
-        vim.notify('Deleted: ' .. vim.fn.fnamemodify(bufname, ':t'), vim.log.levels.INFO)
       end
     end)
   end, { desc = 'Delete current shotfile' })
@@ -119,7 +116,6 @@ local function setup_shotfile_commands()
     -- Auto-create missing theme shotfiles from .shooter/themes.json
     local created = files.ensure_theme_shotfiles()
     if created > 0 then
-      vim.notify(string.format('Created %d theme shotfiles', created), vim.log.levels.INFO)
     end
     vim.cmd('Oil ' .. prompts_dir)
   end, { desc = 'Open Oil in prompts folder' })
@@ -133,7 +129,6 @@ local function setup_shotfile_commands()
       vim.fn.mkdir(plans_dir, 'p')
       vim.cmd('Oil ' .. plans_dir)
     else
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
     end
   end, { desc = 'Open plans folder in Oil' })
 
@@ -146,7 +141,6 @@ local function setup_shotfile_commands()
       vim.fn.mkdir(shooter_dir, 'p')
       vim.cmd('Oil ' .. shooter_dir)
     else
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
     end
   end, { desc = 'Open .shooter/config/nvim folder in Oil' })
 
@@ -298,7 +292,6 @@ local function setup_shot_commands()
     local renumber = require('shooter.core.renumber')
     local count = renumber.renumber_shots()
     if count > 0 then
-      vim.notify(string.format('Renumbered %d shots', count), vim.log.levels.INFO)
     end
   end), { desc = 'Renumber shots sequentially' })
 
@@ -343,7 +336,6 @@ local function setup_tmux_commands()
   -- Manually set up tmux keybinding for hiding panes (prefix + H)
   create_cmd('HalShooterTmuxSetupHideKey', function()
     require('shooter.tmux.toggle_panes').setup_tmux_keybinding()
-    vim.notify('Tmux keybinding prefix+H set up for hiding panes', vim.log.levels.INFO)
   end, { desc = 'Tmux: set up prefix+H keybinding for hiding panes' })
 end
 
@@ -356,7 +348,6 @@ local function setup_subproject_commands()
   create_cmd('HalShooterSubprojectNew', function(opts)
     local git_root = files.get_git_root()
     if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
     end
 
@@ -364,7 +355,6 @@ local function setup_subproject_commands()
       if not name or name == '' then return end
       local project_path = git_root .. '/projects/' .. name
       if vim.fn.isdirectory(project_path) == 1 then
-        vim.notify('Project already exists: ' .. name, vim.log.levels.WARN)
         return
       end
       -- Create standard folder structure
@@ -373,7 +363,6 @@ local function setup_subproject_commands()
       for _, folder in ipairs(folders) do
         vim.fn.mkdir(project_path .. '/' .. folder, 'p')
       end
-      vim.notify('Created project: ' .. name, vim.log.levels.INFO)
       vim.cmd('Oil ' .. project_path)
     end
 
@@ -388,7 +377,6 @@ local function setup_subproject_commands()
   create_cmd('HalShooterSubprojectList', function()
     local projects = project_mod.list_projects()
     if #projects == 0 then
-      vim.notify('No projects found', vim.log.levels.INFO)
       return
     end
     project_mod.pick_project(function(project)
@@ -404,7 +392,6 @@ local function setup_subproject_commands()
     local core_files = require('shooter.core.files')
     local git_root = core_files.get_git_root()
     if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
     end
     local project = project_mod.detect_from_cwd()
@@ -420,7 +407,6 @@ local function setup_subproject_commands()
     if created > 0 then
       msg = msg .. string.format(' + %d theme shotfiles created', created)
     end
-    vim.notify(msg, vim.log.levels.INFO)
   end, { desc = 'Ensure standard folders exist' })
 end
 
@@ -489,7 +475,6 @@ local function setup_cfg_commands()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
     end
     local project_path = git_root .. '/' .. config.get('paths.project_context')
@@ -501,7 +486,6 @@ local function setup_cfg_commands()
   create_cmd('HalShooterCfgPlugin', function()
     local config_path = utils.find_config_file()
     if not config_path then
-      vim.notify('Shooter config file not found', vim.log.levels.WARN)
       return
     end
     vim.cmd('edit ' .. vim.fn.fnameescape(config_path))
@@ -518,7 +502,6 @@ local function setup_cfg_commands()
       if m == current_mode then next_idx = (i % #modes) + 1 end
     end
     session.set_vim_mode('shotPicker', modes[next_idx])
-    vim.notify('Shot picker mode: ' .. modes[next_idx], vim.log.levels.INFO)
   end, { desc = 'Toggle shot picker vim mode' })
 
   -- ShoCfgReload — reload ext_config YAML and reapply syntax
@@ -526,7 +509,6 @@ local function setup_cfg_commands()
     local ext_config = require('shooter.core.ext_config')
     ext_config.reload()
     require('shooter.syntax').reapply_all()
-    vim.notify('Shooter config reloaded', vim.log.levels.INFO)
   end, { desc = 'Reload YAML config and reapply' })
 
   -- ShoCfgEditGlobal — open global config.yaml
@@ -543,7 +525,6 @@ local function setup_cfg_commands()
     if path then
       vim.cmd('edit ' .. vim.fn.fnameescape(path))
     else
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
     end
   end, { desc = 'Edit project-local YAML config' })
 
@@ -554,7 +535,6 @@ local function setup_cfg_commands()
     local is_global = bufpath:match('shooter/nvim/config%.yaml$') and not bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
     local is_local = bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
     if not is_global and not is_local then
-      vim.notify('Not a shooter config file', vim.log.levels.WARN)
       return
     end
     local removed, added = ext_config.fix_config_buffer(0, is_global)
@@ -562,7 +542,6 @@ local function setup_cfg_commands()
     if removed > 0 then table.insert(parts, 'removed ' .. removed .. ' invalid') end
     if added > 0 then table.insert(parts, 'added ' .. added .. ' missing') end
     if #parts == 0 then table.insert(parts, 'config OK') end
-    vim.notify('HalShooterCfgFix: ' .. table.concat(parts, ', '), vim.log.levels.INFO)
   end, { desc = 'Fix config: strip invalid keys, fill missing defaults' })
 
   -- ShoCfgShotfile = ShoShotfileCfg (shotfile picker config - sessions)
@@ -600,7 +579,6 @@ local function setup_hal_config_commands()
     -- Hal<Domain>ConfigShow — open config in a readonly split
     create_cmd('Hal' .. domain.name .. 'ConfigShow', function()
       if vim.fn.filereadable(config_path) ~= 1 then
-        vim.notify('No config file at ' .. config_path, vim.log.levels.WARN)
         return
       end
       vim.cmd('split ' .. vim.fn.fnameescape(config_path))
@@ -684,14 +662,12 @@ local function setup_nav_commands()
   create_cmd('HalShooterNavLastEditedFile', function()
     local git_root = files.get_git_root()
     if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
     end
     local results = get_last_edited_files(git_root, 1)
     if #results > 0 then
       vim.cmd('edit ' .. vim.fn.fnameescape(results[1]))
     else
-      vim.notify('No files found in repository', vim.log.levels.INFO)
     end
   end, { desc = 'Open last edited file in repo' })
 
@@ -701,13 +677,11 @@ local function setup_nav_commands()
   create_cmd('HalShooterNavLastEditedFiles', function(opts)
     local git_root = files.get_git_root()
     if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
     end
     local count = tonumber(opts.args) or 10
     local results = get_last_edited_files(git_root, count)
     if #results == 0 then
-      vim.notify('No files found in repository', vim.log.levels.INFO)
       return
     end
 
@@ -763,7 +737,6 @@ local function setup_utility_commands()
   create_cmd('HalShooterClearFilter', function()
     local filter_state = require('shooter.filter_state')
     filter_state.clear_all_filters()
-    vim.notify('Filters cleared', vim.log.levels.INFO)
   end, { desc = 'Clear all filters' })
 
   -- Inbox (at git root)
@@ -771,7 +744,6 @@ local function setup_utility_commands()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if not git_root then
-      vim.notify('Not in a git repository', vim.log.levels.WARN)
       return
     end
     local inbox_path = git_root .. '/INBOX.md'

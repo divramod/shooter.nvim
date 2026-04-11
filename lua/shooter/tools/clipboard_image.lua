@@ -102,14 +102,12 @@ function M.paste_image_insert()
     utils.echo('Pasted image')
     return true
   end
-  utils.notify('Failed to save clipboard image', vim.log.levels.ERROR)
   return false
 end
 
 -- Paste clipboard image path on next line (normal mode)
 function M.paste_image_normal()
   if not M.has_image() then
-    utils.notify('No image in clipboard', vim.log.levels.WARN)
     return false
   end
   local save_dir = M.get_save_dir()
@@ -121,7 +119,6 @@ function M.paste_image_normal()
     utils.echo('Pasted image')
     return true
   end
-  utils.notify('Failed to save clipboard image', vim.log.levels.ERROR)
   return false
 end
 
@@ -144,7 +141,6 @@ function M.smart_paste_before()
       vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { path })
       utils.echo('Pasted image')
     else
-      utils.notify('Failed to save clipboard image', vim.log.levels.ERROR)
     end
   else
     vim.cmd('normal! P')
@@ -164,9 +160,7 @@ end
 -- Check command - notify if clipboard has image
 function M.check()
   if M.has_image() then
-    utils.notify('Clipboard contains an image', vim.log.levels.INFO)
   else
-    utils.notify('Clipboard does not contain an image', vim.log.levels.INFO)
   end
 end
 
