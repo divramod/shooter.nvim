@@ -836,6 +836,65 @@ local function setup_session_commands()
   end
 end
 
+-- Setup HalConfigPicker — telescope picker for all .yml files under ~/.config/hal
+local function setup_hal_config_picker()
+  create_cmd('HalConfigPicker', function()
+    local home = vim.fn.expand('~')
+    local hal_dir = home .. '/.config/hal'
+
+    local handle = io.popen(string.format('find "%s" -name "*.yml" -type f 2>/dev/null | sort', hal_dir))
+    if not handle then
+      vim.notify('Could not scan ' .. hal_dir, vim.log.levels.WARN)
+      return
+    end
+    local results = {}
+    for line in handle:lines() do
+      if line ~= '' then table.insert(results, line) end
+    end
+    handle:close()
+
+    if #results == 0 then
+      vim.notify('No .yml files found in ' .. hal_dir, vim.log.levels.INFO)
+      return
+    end
+
+    local pickers = require('telescope.pickers')
+    local finders = require('telescope.finders')
+    local conf = require('telescope.config').values
+    local actions = require('telescope.actions')
+    local action_state = require('telescope.actions.state')
+    local previewers = require('telescope.previewers')
+
+    pickers.new({}, {
+      prompt_title = 'Hal Config (~/.config/hal)',
+      finder = finders.new_table({
+        results = results,
+        entry_maker = function(entry)
+          local short = entry:gsub('^' .. vim.pesc(hal_dir) .. '/', '')
+          return { value = entry, display = short, ordinal = short }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      previewer = previewers.new_buffer_previewer({
+        title = 'Config Preview',
+        define_preview = function(self, entry)
+          conf.buffer_previewer_maker(entry.value, self.state.bufnr, {
+            bufname = self.state.bufname,
+          })
+        end,
+      }),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          if selection then vim.cmd('edit ' .. vim.fn.fnameescape(selection.value)) end
+        end)
+        return true
+      end,
+    }):find()
+  end, { desc = 'Pick hal config file (~/.config/hal)' })
+end
+
 -- Setup all vim commands
 function M.setup()
   setup_shotfile_commands()
@@ -847,6 +906,7 @@ function M.setup()
   setup_tool_commands()
   setup_cfg_commands()
   setup_hal_config_commands()
+  setup_hal_config_picker()
   setup_analytics_commands()
   setup_help_commands()
   setup_nav_commands()

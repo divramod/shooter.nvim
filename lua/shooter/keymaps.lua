@@ -174,6 +174,7 @@ function M.setup()
   map('n', 'cG', ':HalShooterCfgEditGlobal<cr>', 'Edit global YAML config')
   map('n', 'cL', ':HalShooterCfgEditLocal<cr>', 'Edit local YAML config')
   map('n', 'cF', ':HalShooterCfgFix<cr>', 'Fix YAML config')
+  map('n', 'C', ':HalConfigPicker<cr>', 'Hal config picker')
 
   -- ============================================================
   -- ANALYTICS NAMESPACE (a prefix)
