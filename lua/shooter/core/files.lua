@@ -187,9 +187,10 @@ function M.update_file_title(filepath, new_title)
   local content = utils.read_file(filepath)
   if not content then return false end
   local safe_title = new_title:gsub('%%', '%%%%')
-  local updated = content:gsub('^(#%s+)[^\n]+', '%1' .. safe_title, 1)
+  -- Use [ \t]+ instead of %s+ to avoid matching across newlines
+  local updated = content:gsub('^(#[ \t]+)[^\n]+', '%1' .. safe_title, 1)
   if updated == content then
-    updated = content:gsub('\n(#%s+)[^\n]+', '\n%1' .. safe_title, 1)
+    updated = content:gsub('\n(#[ \t]+)[^\n]+', '\n%1' .. safe_title, 1)
   end
   if updated ~= content then
     utils.write_file(filepath, updated)
