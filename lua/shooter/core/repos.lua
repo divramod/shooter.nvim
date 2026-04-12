@@ -110,7 +110,8 @@ function M.create_in_repo_picker()
         end,
       }),
       sorter = conf.generic_sorter({}),
-      attach_mappings = function(prompt_bufnr)
+      attach_mappings = function(prompt_bufnr, map)
+        require('shooter.keymaps.picker').setup_nav_keymaps(map)
         actions.select_default:replace(function()
           local entry = action_state.get_selected_entry()
           actions.close(prompt_bufnr)

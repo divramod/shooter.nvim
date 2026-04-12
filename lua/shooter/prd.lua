@@ -154,6 +154,7 @@ function M.list()
       end,
     }),
     attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       actions.select_default:replace(function()
         local sel = action_state.get_selected_entry()
         actions.close(prompt_bufnr)

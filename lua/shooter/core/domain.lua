@@ -105,7 +105,8 @@ function M.pick_and_move()
       end,
     }),
     sorter = conf.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr)
+    attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       actions.select_default:replace(function()
         local selection = action_state.get_selected_entry()
         if selection then
@@ -191,7 +192,8 @@ function M.rename()
       end,
     }),
     sorter = conf.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr)
+    attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       actions.select_default:replace(function()
         actions.close(prompt_bufnr)
         local selection = action_state.get_selected_entry()

@@ -722,7 +722,8 @@ local function setup_nav_commands()
         end,
       }),
       sorter = conf.generic_sorter({}),
-      attach_mappings = function(prompt_bufnr)
+      attach_mappings = function(prompt_bufnr, map)
+        require('shooter.keymaps.picker').setup_nav_keymaps(map)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()
@@ -876,7 +877,8 @@ local function setup_hal_config_picker()
           })
         end,
       }),
-      attach_mappings = function(prompt_bufnr)
+      attach_mappings = function(prompt_bufnr, map)
+        require('shooter.keymaps.picker').setup_nav_keymaps(map)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()

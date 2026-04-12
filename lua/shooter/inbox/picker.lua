@@ -45,7 +45,8 @@ function M.show_file_picker()
     }),
     layout_strategy = 'vertical',
     layout_config = { width = 0.9, height = 0.9, preview_height = 0.5 },
-    attach_mappings = function(prompt_bufnr)
+    attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       actions.select_default:replace(function()
         local entry = action_state.get_selected_entry()
         actions.close(prompt_bufnr)
@@ -99,6 +100,7 @@ function M.show_action_picker(filepath)
     layout_config = { width = 0.9, height = 0.9, preview_height = 0.5 },
     initial_mode = 'insert',
     attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       -- Toggle selection with Tab (use telescope's built-in)
       map('n', '<Tab>', function()
         actions.toggle_selection(prompt_bufnr)

@@ -140,6 +140,7 @@ function M.show_picker()
     sorter = conf.generic_sorter({}),
     previewer = create_previewer(),
     attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       -- Default action: toggle directly without confirmation
       actions.select_default:replace(function()
         local selection = action_state.get_selected_entry()

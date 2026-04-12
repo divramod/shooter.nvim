@@ -128,6 +128,7 @@ function M.show_queue_picker()
     }),
     sorter = conf.generic_sorter({}),
     attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       return setup_queue_actions(prompt_bufnr, map, queue_data)
     end,
   }):find()

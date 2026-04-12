@@ -1,5 +1,7 @@
 # bugs
 
+## shot 13 nvim-oil cleanup
+
 ## shot 12 bug < >v in ~/a/me
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260411_024507.png
 i get this error, when running < >v in ~/a/me

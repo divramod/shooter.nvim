@@ -151,6 +151,18 @@ function M.setup_shotfile_picker_keymaps(prompt_bufnr, map, opts)
   end, { desc = 'Last file' })
 end
 
+-- Minimal nav helper — only C-n/C-p in both normal and insert mode.
+-- Call this from any picker's attach_mappings to make arrow-like navigation
+-- work in normal mode (insert mode is telescope's default, this makes both
+-- consistent with the rest of the shooter pickers).
+function M.setup_nav_keymaps(map)
+  local actions = require('telescope.actions')
+  map('n', '<C-n>', actions.move_selection_next, { desc = 'Next result' })
+  map('n', '<C-p>', actions.move_selection_previous, { desc = 'Previous result' })
+  map('i', '<C-n>', actions.move_selection_next, { desc = 'Next result' })
+  map('i', '<C-p>', actions.move_selection_previous, { desc = 'Previous result' })
+end
+
 -- Common picker keymaps (navigation, close, help)
 function M.setup_common_keymaps(prompt_bufnr, map, opts)
   opts = opts or {}

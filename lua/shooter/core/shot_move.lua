@@ -120,7 +120,8 @@ function M.move_shot()
       entry_maker = function(e) return { value = e, display = e.display, ordinal = e.display, path = e.path } end,
     }),
     sorter = conf.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr, _)
+    attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       actions.select_default:replace(function()
         local entry = action_state.get_selected_entry()
         actions.close(prompt_bufnr)
