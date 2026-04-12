@@ -203,6 +203,14 @@ end
 -- project = nil means root level, string means specific project
 function M.create_file(title, folder, initial_content, project)
   folder = folder or ''
+
+  -- Let users type `sub/dir/my title` to drop the shotfile in a nested folder.
+  local title_dir, title_name = title:match('^(.+)/([^/]+)$')
+  if title_dir and title_name then
+    folder = (folder ~= '') and (folder .. '/' .. title_dir) or title_dir
+    title = title_name
+  end
+
   local project_mod = require('shooter.core.project')
   local base_path = project_mod.get_prompts_root(project)
 
