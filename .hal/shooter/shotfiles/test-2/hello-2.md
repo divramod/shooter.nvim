@@ -1,3 +1,3 @@
-# hello-2
+# test-2/hello-2
 
 ## shot 1 hello 2
