@@ -38,3 +38,4 @@ plugin/packer_compiled.lua
 .beads/beads.db
 .beads/last-touched
 .hal/shooter/tmp/image-pastes/
+envfiles/

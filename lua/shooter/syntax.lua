@@ -307,6 +307,8 @@ function M.setup()
         require('shooter.core.files').track_last_shotfile(filepath)
         apply_syntax(ev.buf)
         show_shotfile_info(ev.buf)
+        -- Enable autoread so checktime polling picks up external writes (e.g. iOS app)
+        vim.bo[ev.buf].autoread = true
       end
     end,
   })
@@ -333,6 +335,19 @@ function M.setup()
       vim.v.fcs_choice = 'reload'
     end,
   })
+
+  -- Poll for external changes every second so edits from the iOS app
+  -- (or any other tool) are picked up without needing a focus event.
+  -- Only runs checktime when the current buffer is a shotfile.
+  vim.fn.timer_start(1000, function()
+    vim.schedule(function()
+      local buf = vim.api.nvim_get_current_buf()
+      local filepath = vim.api.nvim_buf_get_name(buf)
+      if filepath ~= '' and is_prompts_file(filepath) then
+        vim.cmd('silent! checktime')
+      end
+    end)
+  end, { ['repeat'] = -1 })
 
   -- Clear notification tracking when buffer is deleted
   vim.api.nvim_create_autocmd('BufDelete', {
