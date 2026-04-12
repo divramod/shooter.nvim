@@ -4,7 +4,7 @@ local utils = require('shooter.utils')
 
 describe('shooter.core.git_push', function()
   local repo = '/tmp/shooter_git_push_test'
-  local shooter_dir = repo .. '/.shooter'
+  local target = repo .. '/.hal/shooter/shotfiles'
 
   local function git(...)
     local cmd = { 'git', '-C', repo }
@@ -23,7 +23,7 @@ describe('shooter.core.git_push', function()
 
   before_each(function()
     os.execute('rm -rf ' .. repo)
-    os.execute('mkdir -p ' .. shooter_dir)
+    os.execute('mkdir -p ' .. target)
     vim.fn.system({ 'git', '-C', repo, 'init', '-q' })
     vim.fn.system({ 'git', '-C', repo, 'config', 'user.email', 'test@test' })
     vim.fn.system({ 'git', '-C', repo, 'config', 'user.name', 'Test' })
@@ -36,7 +36,7 @@ describe('shooter.core.git_push', function()
   end)
 
   describe('stage_and_commit', function()
-    it('reports nothing to commit when .shooter has no changes', function()
+    it('reports nothing to commit when shotfiles has no changes', function()
       local ok, msg, committed = git_push.stage_and_commit(repo)
       assert.is_true(ok)
       assert.is_false(committed)
@@ -44,8 +44,8 @@ describe('shooter.core.git_push', function()
       assert.equals(1, count_commits())
     end)
 
-    it('commits new files under .shooter', function()
-      utils.write_file(shooter_dir .. '/config.yml', 'key: value\n')
+    it('commits new shotfiles', function()
+      utils.write_file(target .. '/feats.md', '# feats\n')
 
       local ok, msg, committed = git_push.stage_and_commit(repo)
       assert.is_true(ok, msg)
@@ -53,14 +53,14 @@ describe('shooter.core.git_push', function()
       assert.equals(2, count_commits())
 
       local subject = git('log', '-1', '--format=%s')
-      assert.truthy(subject:find('chore%(shooter%): sync'))
+      assert.truthy(subject:find('chore%(shotfiles%): sync'))
     end)
 
-    it('commits modifications under .shooter', function()
-      local filepath = shooter_dir .. '/config.yml'
-      utils.write_file(filepath, 'key: old\n')
+    it('commits modifications to existing shotfiles', function()
+      local filepath = target .. '/bugs.md'
+      utils.write_file(filepath, '# bugs\n')
       git_push.stage_and_commit(repo)  -- initial commit of file
-      utils.write_file(filepath, 'key: new\n')
+      utils.write_file(filepath, '# bugs\n\n## shot 1\n')
 
       local ok, _, committed = git_push.stage_and_commit(repo)
       assert.is_true(ok)
@@ -68,9 +68,9 @@ describe('shooter.core.git_push', function()
       assert.equals(3, count_commits())
     end)
 
-    it('commits deletions under .shooter', function()
-      local filepath = shooter_dir .. '/gone.yml'
-      utils.write_file(filepath, 'bye\n')
+    it('commits deletions of shotfiles', function()
+      local filepath = target .. '/gone.md'
+      utils.write_file(filepath, '# gone\n')
       git_push.stage_and_commit(repo)
 
       os.remove(filepath)
@@ -79,25 +79,25 @@ describe('shooter.core.git_push', function()
       assert.is_true(committed)
 
       local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
-      assert.truthy(files_in_commit:find('gone.yml'))
+      assert.truthy(files_in_commit:find('gone.md'))
     end)
 
-    it('commits nested files under .shooter', function()
-      os.execute('mkdir -p ' .. shooter_dir .. '/ai/context')
-      utils.write_file(shooter_dir .. '/ai/context/memory.md', '# memory\n')
+    it('commits nested shotfiles in subfolders', function()
+      os.execute('mkdir -p ' .. target .. '/some/test')
+      utils.write_file(target .. '/some/test/title-haaa.md', '# some/test/title-haaa\n')
 
       local ok, _, committed = git_push.stage_and_commit(repo)
       assert.is_true(ok)
       assert.is_true(committed)
 
       local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
-      assert.truthy(files_in_commit:find('%.shooter/ai/context/memory%.md'))
+      assert.truthy(files_in_commit:find('some/test/title%-haaa%.md'))
     end)
 
     it('leaves unrelated staged changes untouched', function()
       utils.write_file(repo .. '/other.txt', 'hello\n')
       vim.fn.system({ 'git', '-C', repo, 'add', 'other.txt' })
-      utils.write_file(shooter_dir .. '/config.yml', 'key: value\n')
+      utils.write_file(target .. '/feats.md', '# feats\n')
 
       local ok, _, committed = git_push.stage_and_commit(repo)
       assert.is_true(ok)
@@ -106,16 +106,16 @@ describe('shooter.core.git_push', function()
       -- other.txt should still be staged (not in the commit)
       local staged = staged_files()
       assert.truthy(staged:find('other.txt'))
-      assert.is_nil(staged:find('%.shooter'))
+      assert.is_nil(staged:find('feats%.md'))
 
-      -- commit should contain .shooter/config.yml only
+      -- commit should contain the shotfile only
       local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
-      assert.truthy(files_in_commit:find('%.shooter/config%.yml'))
+      assert.truthy(files_in_commit:find('feats%.md'))
       assert.is_nil(files_in_commit:find('other%.txt'))
     end)
 
-    it('returns error when .shooter folder is missing', function()
-      os.execute('rm -rf ' .. shooter_dir)
+    it('returns error when target folder is missing', function()
+      os.execute('rm -rf ' .. target)
       local ok, msg, committed = git_push.stage_and_commit(repo)
       assert.is_false(ok)
       assert.is_false(committed)
@@ -131,8 +131,8 @@ describe('shooter.core.git_push', function()
     it('returns error when git_root is not a git repo', function()
       local not_repo = '/tmp/shooter_git_push_not_repo'
       os.execute('rm -rf ' .. not_repo)
-      os.execute('mkdir -p ' .. not_repo .. '/.shooter')
-      utils.write_file(not_repo .. '/.shooter/x', 'y')
+      os.execute('mkdir -p ' .. not_repo .. '/.hal/shooter/shotfiles')
+      utils.write_file(not_repo .. '/.hal/shooter/shotfiles/x.md', '# x\n')
 
       local ok, msg = git_push.stage_and_commit(not_repo)
       assert.is_false(ok)
@@ -160,14 +160,14 @@ describe('shooter.core.git_push', function()
       local branch = vim.fn.system({ 'git', '-C', repo, 'branch', '--show-current' }):gsub('%s+$', '')
       vim.fn.system({ 'git', '-C', repo, 'push', '-u', '-q', 'origin', branch })
 
-      utils.write_file(shooter_dir .. '/new.yml', 'x: 1\n')
+      utils.write_file(target .. '/new.md', '# new\n')
       local ok, msg = git_push.run(repo)
       assert.is_true(ok, msg)
       assert.truthy(msg:find('committed & pushed'))
 
       -- Verify remote received the commit
       local remote_log = vim.fn.system({ 'git', '-C', remote, 'log', '--format=%s' })
-      assert.truthy(remote_log:find('chore%(shooter%): sync'))
+      assert.truthy(remote_log:find('chore%(shotfiles%): sync'))
 
       os.execute('rm -rf ' .. remote)
     end)

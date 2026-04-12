@@ -211,7 +211,7 @@ function M.setup()
   -- ============================================================
   -- GIT NAMESPACE (g prefix)
   -- ============================================================
-  map('n', 'gp', ':HalShooterGitPush<cr>', 'Git add/commit/push .shooter')
+  map('n', 'gp', ':HalShooterGitPush<cr>', 'Git add/commit/push shotfiles')
 
   -- Git worktree subnamespace (gw prefix)
   for i = 0, 9 do

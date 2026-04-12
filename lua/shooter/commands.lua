@@ -776,7 +776,7 @@ local function setup_utility_commands()
     vim.cmd('edit ' .. vim.fn.fnameescape(inbox_path))
   end, { desc = 'Open INBOX.md at git root' })
 
-  -- HalShooterGitPush — add/commit/push the .shooter folder
+  -- HalShooterGitPush — add/commit/push the shotfiles tree
   create_cmd('HalShooterGitPush', function()
     local files = require('shooter.core.files')
     local utils = require('shooter.utils')
@@ -787,8 +787,8 @@ local function setup_utility_commands()
       return
     end
     local ok, msg = git_push.run(git_root)
-    utils.echo(msg or (ok and '.shooter: done' or 'git push failed'))
-  end, { desc = 'git add/commit/push .shooter folder' })
+    utils.echo(msg or (ok and 'shotfiles: done' or 'git push failed'))
+  end, { desc = 'git add/commit/push .hal/shooter/shotfiles' })
 
 end
 
