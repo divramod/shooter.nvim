@@ -6,28 +6,40 @@ local M = {}
 local utils = require('shooter.utils')
 local files = require('shooter.core.files')
 
--- Get shotfile folders (system folders + domains) and the resolved shotfiles root.
+-- Collect every subfolder under shotfiles_dir, recursively, as a sorted list.
+-- The first entry is always `(root)` pointing at shotfiles_dir itself. Display
+-- paths are relative to shotfiles_dir (e.g. "apps/next/domain"); full path is
+-- absolute so picker callbacks can move files into the exact directory.
+function M.collect_shotfile_folders(shotfiles_dir)
+  local folders = { { display = '(root)', path = shotfiles_dir } }
+
+  if not utils.dir_exists(shotfiles_dir) then
+    return folders
+  end
+
+  local function walk(dir, rel_prefix)
+    local entries = vim.fn.readdir(dir)
+    for _, entry in ipairs(entries) do
+      local full_path = dir .. '/' .. entry
+      if vim.fn.isdirectory(full_path) == 1 then
+        local display = rel_prefix == '' and entry or (rel_prefix .. '/' .. entry)
+        table.insert(folders, { display = display, path = full_path })
+        walk(full_path, display)
+      end
+    end
+  end
+
+  walk(shotfiles_dir, '')
+  table.sort(folders, function(a, b) return a.display < b.display end)
+  return folders
+end
+
+-- Get shotfile folders and the resolved shotfiles root for the current repo.
 local function get_shotfile_folders()
   local git_worktree = require('shooter.tools.git_worktree')
   local git_root = git_worktree.get_main_worktree() or files.get_git_root() or utils.cwd()
   local shotfiles_dir = git_root .. '/.hal/shooter/shotfiles'
-
-  local folders = {}
-  -- Root (prompts)
-  table.insert(folders, { display = '(root)', path = shotfiles_dir })
-
-  if not utils.dir_exists(shotfiles_dir) then return folders, shotfiles_dir end
-
-  local entries = vim.fn.readdir(shotfiles_dir)
-  for _, entry in ipairs(entries) do
-    local full_path = shotfiles_dir .. '/' .. entry
-    if vim.fn.isdirectory(full_path) == 1 then
-      table.insert(folders, { display = entry, path = full_path })
-    end
-  end
-
-  table.sort(folders, function(a, b) return a.display < b.display end)
-  return folders, shotfiles_dir
+  return M.collect_shotfile_folders(shotfiles_dir), shotfiles_dir
 end
 
 -- Parse a free-form telescope prompt into (target_dir, target_basename).
@@ -185,6 +197,7 @@ function M.open_picker()
     }),
     sorter = conf.generic_sorter({}),
     attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
       -- Close on C-c in both modes
       map('i', '<C-c>', function() actions.close(prompt_bufnr) end)
       map('n', '<C-c>', function() actions.close(prompt_bufnr) end)

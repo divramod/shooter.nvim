@@ -234,4 +234,74 @@ describe('shooter.core.move_picker', function()
       assert.equals(1, vim.fn.isdirectory(outside_dir))
     end)
   end)
+
+  describe('collect_shotfile_folders', function()
+    local test_dir = '/tmp/shooter_collect_folders_test'
+
+    before_each(function()
+      os.execute('rm -rf ' .. test_dir)
+      os.execute('mkdir -p ' .. test_dir)
+    end)
+
+    after_each(function()
+      os.execute('rm -rf ' .. test_dir)
+    end)
+
+    local function displays(folders)
+      local out = {}
+      for _, f in ipairs(folders) do table.insert(out, f.display) end
+      return out
+    end
+
+    it('returns just (root) for an empty directory', function()
+      local folders = move_picker.collect_shotfile_folders(test_dir)
+      assert.equals(1, #folders)
+      assert.equals('(root)', folders[1].display)
+      assert.equals(test_dir, folders[1].path)
+    end)
+
+    it('returns just (root) when the directory does not exist', function()
+      local missing = '/tmp/shooter_collect_missing_' .. os.time() .. '_' .. math.random(100000)
+      local folders = move_picker.collect_shotfile_folders(missing)
+      assert.equals(1, #folders)
+      assert.equals('(root)', folders[1].display)
+    end)
+
+    it('lists first-level subdirs', function()
+      os.execute('mkdir -p ' .. test_dir .. '/archive ' .. test_dir .. '/domains')
+      assert.are.same(
+        { '(root)', 'archive', 'domains' },
+        displays(move_picker.collect_shotfile_folders(test_dir))
+      )
+    end)
+
+    it('recurses into all levels of subdirs', function()
+      os.execute('mkdir -p ' .. test_dir .. '/apps/next/domain')
+      os.execute('mkdir -p ' .. test_dir .. '/apps/other')
+      os.execute('mkdir -p ' .. test_dir .. '/archive')
+      assert.are.same(
+        { '(root)', 'apps', 'apps/next', 'apps/next/domain', 'apps/other', 'archive' },
+        displays(move_picker.collect_shotfile_folders(test_dir))
+      )
+    end)
+
+    it('exposes absolute paths alongside relative displays', function()
+      os.execute('mkdir -p ' .. test_dir .. '/a/b')
+      local folders = move_picker.collect_shotfile_folders(test_dir)
+      local by_display = {}
+      for _, f in ipairs(folders) do by_display[f.display] = f.path end
+      assert.equals(test_dir, by_display['(root)'])
+      assert.equals(test_dir .. '/a', by_display['a'])
+      assert.equals(test_dir .. '/a/b', by_display['a/b'])
+    end)
+
+    it('ignores files at any depth', function()
+      os.execute('mkdir -p ' .. test_dir .. '/apps')
+      os.execute('touch ' .. test_dir .. '/root.md ' .. test_dir .. '/apps/leaf.md')
+      assert.are.same(
+        { '(root)', 'apps' },
+        displays(move_picker.collect_shotfile_folders(test_dir))
+      )
+    end)
+  end)
 end)
