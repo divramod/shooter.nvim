@@ -1,5 +1,9 @@
 # feats
 
+## x shot 4 HalShooterGitPush (2026-04-12 19:45:09)
+I want a command that git adds, commits, and pushes the `.shooter` folder. 
+map it to < >gp
+
 ## x shot 3 < >fmm improvements (2026-04-12 13:36:47)
 also, when a file is moved from a subfolder, which only contains this one file, to another folder, the empty folder should be deleted.
 
