@@ -143,6 +143,16 @@ describe('shooter.core.git_push', function()
   end)
 
   describe('run (composite)', function()
+    local function setup_remote()
+      local remote = '/tmp/shooter_git_push_remote'
+      os.execute('rm -rf ' .. remote)
+      vim.fn.system({ 'git', 'init', '--bare', '-q', remote })
+      vim.fn.system({ 'git', '-C', repo, 'remote', 'add', 'origin', remote })
+      local branch = vim.fn.system({ 'git', '-C', repo, 'branch', '--show-current' }):gsub('%s+$', '')
+      vim.fn.system({ 'git', '-C', repo, 'push', '-u', '-q', 'origin', branch })
+      return remote
+    end
+
     it('short-circuits push when nothing to commit', function()
       local ok, msg = git_push.run(repo)
       assert.is_true(ok)
@@ -151,21 +161,66 @@ describe('shooter.core.git_push', function()
       assert.equals(1, count_commits())
     end)
 
-    it('pushes after a successful commit to a local bare remote', function()
-      local remote = '/tmp/shooter_git_push_remote'
-      os.execute('rm -rf ' .. remote)
-      vim.fn.system({ 'git', 'init', '--bare', '-q', remote })
-      vim.fn.system({ 'git', '-C', repo, 'remote', 'add', 'origin', remote })
-      -- Get the current branch (git default varies: main vs master)
-      local branch = vim.fn.system({ 'git', '-C', repo, 'branch', '--show-current' }):gsub('%s+$', '')
-      vim.fn.system({ 'git', '-C', repo, 'push', '-u', '-q', 'origin', branch })
+    it('fixes wrong titles and commits them before sync', function()
+      -- Create a shotfile with a WRONG H1 title
+      local filepath = target .. '/feats.md'
+      utils.write_file(filepath, '# wrong-title\n\n## shot 1\n')
+      -- Stage + commit it so fix_titles has something to fix on a clean tree
+      vim.fn.system({ 'git', '-C', repo, 'add', '-A' })
+      vim.fn.system({ 'git', '-C', repo, 'commit', '-q', '-m', 'seed' })
+      local before = count_commits()
 
-      utils.write_file(target .. '/new.md', '# new\n')
+      local remote = setup_remote()
       local ok, msg = git_push.run(repo)
       assert.is_true(ok, msg)
-      assert.truthy(msg:find('committed & pushed'))
+      assert.truthy(msg:find('fixed 1 title'))
+      assert.truthy(msg:find('pushed'))
 
-      -- Verify remote received the commit
+      -- Title was corrected on disk
+      local content = utils.read_file(filepath)
+      assert.equals('# feats', content:match('^([^\n]+)'))
+
+      -- One new commit (the title fix), not two
+      assert.equals(before + 1, count_commits())
+      local subject = vim.fn.system({ 'git', '-C', repo, 'log', '-1', '--format=%s' })
+      assert.truthy(subject:find('fix%(shotfiles%)'))
+
+      os.execute('rm -rf ' .. remote)
+    end)
+
+    it('creates two commits when both title fixes and new shotfiles exist', function()
+      -- Pre-existing tracked file with wrong title
+      local wrong = target .. '/bugs.md'
+      utils.write_file(wrong, '# stale\n\n## shot 1\n')
+      vim.fn.system({ 'git', '-C', repo, 'add', '-A' })
+      vim.fn.system({ 'git', '-C', repo, 'commit', '-q', '-m', 'seed' })
+      -- Untracked new shotfile with correct title
+      utils.write_file(target .. '/feats.md', '# feats\n\n## shot 1\n')
+      local before = count_commits()
+
+      local remote = setup_remote()
+      local ok, msg = git_push.run(repo)
+      assert.is_true(ok, msg)
+      assert.truthy(msg:find('fixed 1 title'))
+      assert.truthy(msg:find('synced'))
+      assert.truthy(msg:find('pushed'))
+
+      -- Two new commits (title fix + sync)
+      assert.equals(before + 2, count_commits())
+
+      os.execute('rm -rf ' .. remote)
+    end)
+
+    it('pushes sync-only commit when no titles need fixing', function()
+      local remote = setup_remote()
+      utils.write_file(target .. '/feats.md', '# feats\n\n## shot 1\n')
+
+      local ok, msg = git_push.run(repo)
+      assert.is_true(ok, msg)
+      assert.falsy(msg:find('fixed'))
+      assert.truthy(msg:find('synced'))
+      assert.truthy(msg:find('pushed'))
+
       local remote_log = vim.fn.system({ 'git', '-C', remote, 'log', '--format=%s' })
       assert.truthy(remote_log:find('chore%(shotfiles%): sync'))
 

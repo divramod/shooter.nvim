@@ -58,14 +58,26 @@ function M.push(git_root)
   return true, nil
 end
 
--- Composite: stage+commit, then push if something was committed.
+-- Composite: fix titles, stage+commit any shotfile changes, push if any commit landed.
 -- Returns: ok_bool, msg_for_user
 function M.run(git_root)
-  local ok, msg, committed = M.stage_and_commit(git_root)
+  local fix_titles = require('shooter.core.fix_titles')
+  local stats = fix_titles.fix_all_titles(git_root)
+  local title_committed = false
+  if stats.fixed > 0 then
+    local ok, err = fix_titles.commit_fixes(git_root, stats.changes)
+    if not ok then
+      return false, 'title fix commit failed: ' .. (err or 'unknown')
+    end
+    title_committed = true
+  end
+
+  local ok, msg, sync_committed = M.stage_and_commit(git_root)
   if not ok then
     return false, msg
   end
-  if not committed then
+
+  if not title_committed and not sync_committed then
     return true, msg  -- 'nothing to commit'
   end
 
@@ -73,7 +85,16 @@ function M.run(git_root)
   if not push_ok then
     return false, 'committed but ' .. push_msg
   end
-  return true, 'shotfiles: committed & pushed'
+
+  local parts = {}
+  if title_committed then
+    table.insert(parts, string.format('fixed %d title%s', stats.fixed, stats.fixed == 1 and '' or 's'))
+  end
+  if sync_committed then
+    table.insert(parts, 'synced')
+  end
+  table.insert(parts, 'pushed')
+  return true, 'shotfiles: ' .. table.concat(parts, ', ')
 end
 
 return M
