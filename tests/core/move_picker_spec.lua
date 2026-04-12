@@ -142,5 +142,96 @@ describe('shooter.core.move_picker', function()
         shotfiles_dir .. '/apps/foo.md', true)
       assert.is_false(ok)
     end)
+
+    it('deletes the source folder if it becomes empty', function()
+      local src_dir = shotfiles_dir .. '/apps'
+      os.execute('mkdir -p ' .. src_dir)
+      local src = src_dir .. '/next.md'
+      utils.write_file(src, '# apps/next\n')
+
+      local ok = move_picker.move_file_to_path(src,
+        shotfiles_dir .. '/archive/next.md', true)
+      assert.is_true(ok)
+
+      assert.equals(0, vim.fn.filereadable(src))
+      assert.equals(0, vim.fn.isdirectory(src_dir))
+    end)
+
+    it('keeps the source folder if other files remain', function()
+      local src_dir = shotfiles_dir .. '/apps'
+      os.execute('mkdir -p ' .. src_dir)
+      utils.write_file(src_dir .. '/next.md', '# apps/next\n')
+      utils.write_file(src_dir .. '/other.md', '# apps/other\n')
+
+      local ok = move_picker.move_file_to_path(
+        src_dir .. '/next.md',
+        shotfiles_dir .. '/archive/next.md',
+        true
+      )
+      assert.is_true(ok)
+
+      assert.equals(1, vim.fn.isdirectory(src_dir))
+      assert.equals(1, vim.fn.filereadable(src_dir .. '/other.md'))
+    end)
+
+    it('walks up and deletes nested empty parents', function()
+      local nested = shotfiles_dir .. '/a/b/c'
+      os.execute('mkdir -p ' .. nested)
+      utils.write_file(nested .. '/file.md', '# a/b/c/file\n')
+
+      local ok = move_picker.move_file_to_path(
+        nested .. '/file.md',
+        shotfiles_dir .. '/archive/file.md',
+        true
+      )
+      assert.is_true(ok)
+
+      assert.equals(0, vim.fn.isdirectory(nested))
+      assert.equals(0, vim.fn.isdirectory(shotfiles_dir .. '/a/b'))
+      assert.equals(0, vim.fn.isdirectory(shotfiles_dir .. '/a'))
+      assert.equals(1, vim.fn.isdirectory(shotfiles_dir))
+    end)
+
+    it('stops walking up when hitting a non-empty ancestor', function()
+      local src_dir = shotfiles_dir .. '/keep/inner'
+      os.execute('mkdir -p ' .. src_dir)
+      utils.write_file(shotfiles_dir .. '/keep/sibling.md', '# keep/sibling\n')
+      utils.write_file(src_dir .. '/file.md', '# keep/inner/file\n')
+
+      local ok = move_picker.move_file_to_path(
+        src_dir .. '/file.md',
+        shotfiles_dir .. '/archive/file.md',
+        true
+      )
+      assert.is_true(ok)
+
+      assert.equals(0, vim.fn.isdirectory(src_dir))
+      assert.equals(1, vim.fn.isdirectory(shotfiles_dir .. '/keep'))
+      assert.equals(1, vim.fn.filereadable(shotfiles_dir .. '/keep/sibling.md'))
+    end)
+
+    it('never deletes the shotfiles root itself', function()
+      local src = shotfiles_dir .. '/foo.md'
+      utils.write_file(src, '# foo\n')
+
+      local ok = move_picker.move_file_to_path(src,
+        shotfiles_dir .. '/sub/foo.md', true)
+      assert.is_true(ok)
+      assert.equals(1, vim.fn.isdirectory(shotfiles_dir))
+    end)
+
+    it('leaves source folders outside a shotfiles tree alone', function()
+      local outside_dir = test_root .. '/not_shotfiles'
+      os.execute('mkdir -p ' .. outside_dir)
+      local src = outside_dir .. '/file.md'
+      utils.write_file(src, '# file\n')
+
+      local ok = move_picker.move_file_to_path(src,
+        shotfiles_dir .. '/file.md', true)
+      assert.is_true(ok)
+
+      -- The outside dir is now empty but must NOT be deleted by our cleanup.
+      assert.equals(1, vim.fn.isdirectory(outside_dir))
+    end)
   end)
 end)

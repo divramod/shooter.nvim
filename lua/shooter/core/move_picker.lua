@@ -81,6 +81,23 @@ local function refresh_oil_buffer()
   end
 end
 
+-- Walk up from the given directory and remove any now-empty subfolder of
+-- .hal/shooter/shotfiles. Stops at the first non-empty directory, the
+-- shotfiles root itself, or any directory outside a shotfiles tree.
+local function cleanup_empty_source_dirs(source_dir)
+  while source_dir and source_dir ~= '' do
+    -- Only walk inside a .hal/shooter/shotfiles/<sub>/... subtree.
+    -- The trailing slash in the literal match excludes the shotfiles root itself.
+    if not source_dir:find('/.hal/shooter/shotfiles/', 1, true) then
+      return
+    end
+    local entries = vim.fn.readdir(source_dir)
+    if #entries > 0 then return end
+    if vim.fn.delete(source_dir, 'd') ~= 0 then return end
+    source_dir = vim.fn.fnamemodify(source_dir, ':h')
+  end
+end
+
 -- Move a shotfile to an absolute target path.
 -- Creates the parent directory if needed, refuses to overwrite, updates the H1
 -- title to match the new path, and reopens the file / oil buffer appropriately.
@@ -103,6 +120,8 @@ function M.move_file_to_path(file_path, target_path, was_in_oil)
     return false
   end
 
+  local source_dir = vim.fn.fnamemodify(file_path, ':h')
+
   local success = os.rename(file_path, target_path)
   if not success then
     utils.echo('Failed to move file')
@@ -110,6 +129,7 @@ function M.move_file_to_path(file_path, target_path, was_in_oil)
   end
 
   files.update_file_title(target_path, files.title_from_path(target_path))
+  cleanup_empty_source_dirs(source_dir)
 
   if was_in_oil then
     refresh_oil_buffer()

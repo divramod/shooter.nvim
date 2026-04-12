@@ -1,5 +1,8 @@
 # feats
 
+## x shot 3 < >fmm improvements (2026-04-12 13:36:47)
+also, when a file is moved from a subfolder, which only contains this one file, to another folder, the empty folder should be deleted.
+
 ## x shot 2 < >fmm improvements (2026-04-12 13:16:44)
 i want to move a shotfile
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260412_131237.png
