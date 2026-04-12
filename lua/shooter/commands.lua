@@ -86,7 +86,7 @@ local function setup_shotfile_commands()
   -- HalShooterShotfileLast — Neovim tracking first, hal CLI fallback
   create_cmd('HalShooterShotfileLast', function()
     local last_file = files.get_last_edited_file()
-    if last_file then vim.cmd('edit ' .. vim.fn.fnameescape(last_file)) end
+    if last_file then vim.cmd('hide edit ' .. vim.fn.fnameescape(last_file)) end
   end, { desc = 'Open last edited shotfile' })
 
   -- ShoShotfileRename
