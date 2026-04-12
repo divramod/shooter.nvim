@@ -4,16 +4,16 @@ template_mappings:
       - .hal/envfile/templates/.env.base
       - .hal/envfile/templates/.env.remote-production
     targets:
-      - .env.remote-production
+      - envfiles/.env.remote-production
   - environment: local-development
     templates:
       - .hal/envfile/templates/.env.base
       - .hal/envfile/templates/.env.local-development
     targets:
-      - .env.local-development
+      - envfiles/.env.local-development
   - environment: worktree
     templates:
       - .hal/envfile/templates/.env.base
       - .hal/envfile/templates/.env.worktree
     targets:
-      - .env.local-development
+      - envfiles/.env.local-development
