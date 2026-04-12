@@ -268,25 +268,25 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
           local prompt = action_state.get_current_picker(prompt_bufnr):_get_prompt()
           if not prompt or prompt == '' then return end
           actions.close(prompt_bufnr)
-          local files_mod = require('shooter.core.files')
           local git_worktree = require('shooter.tools.git_worktree')
           local base = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
           local shotfiles_dir = base .. '/.hal/shooter/shotfiles'
           -- Support domain/name format
           local dir_part, name_part = prompt:match('^(.+)/(.+)$')
-          local target_dir, title
+          local target_dir, name
           if dir_part and name_part then
             target_dir = shotfiles_dir .. '/' .. dir_part
-            title = name_part
+            name = name_part
           else
             target_dir = shotfiles_dir
-            title = prompt
+            name = prompt
           end
           vim.fn.mkdir(target_dir, 'p')
-          local slug = title:lower():gsub('%s+', '-'):gsub('[^%w%-]', ''):gsub('%-+', '-'):gsub('^%-', ''):gsub('%-$', '')
+          local slug = files_mod.generate_filename(name):gsub('%.md$', '')
           if slug == '' then return end
           local filepath = target_dir .. '/' .. slug .. '.md'
-          local content = string.format('# %s\n\n## shot 1 \n', title)
+          local path_title = files_mod.title_from_path(filepath)
+          local content = string.format('# %s\n\n## shot 1 \n', path_title)
           local f = io.open(filepath, 'w')
           if f then
             f:write(content)

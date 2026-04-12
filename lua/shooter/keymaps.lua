@@ -57,6 +57,7 @@ function M.setup()
   map('n', 'fd', ':HalShooterShotfileDelete<cr>', 'Delete current')
   map('n', 'fo', ':HalShooterShotfileOpenPrompts<cr>', 'Oil prompts folder')
   map('n', 'fs', ':HalShooterFileStats<cr>', 'File stats')
+  map('n', 'fft', ':HalShooterFixTitles<cr>', 'Fix all shotfile titles')
   map('n', 'fcf', ':HalShooterFileToggleFirstShotOfDayColoring<cr>', 'Toggle day markers')
 
   -- Shotfile move commands (fm prefix)

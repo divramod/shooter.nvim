@@ -159,6 +159,27 @@ local function setup_shotfile_commands()
     require('shooter.core.move_picker').open_picker()
   end, { desc = 'Move file via fuzzy picker' })
 
+  -- HalShooterFixTitles — walk every shotfile and fix H1 to canonical path-based title
+  create_cmd('HalShooterFixTitles', function()
+    local fix_titles = require('shooter.core.fix_titles')
+    local stats = fix_titles.fix_all_titles()
+    local msg
+    if stats.fixed == 0 then
+      msg = string.format('Shotfile titles: %d checked, all already correct', stats.checked)
+    else
+      msg = string.format('Shotfile titles: fixed %d / %d', stats.fixed, stats.checked)
+      local git_root = files.get_git_root()
+      if git_root then
+        local ok, err = fix_titles.commit_fixes(git_root, stats.changes)
+        msg = msg .. (ok and ' — committed' or (' — commit failed: ' .. (err or 'unknown')))
+      end
+    end
+    if #stats.errors > 0 then
+      msg = msg .. string.format(' (%d errors)', #stats.errors)
+    end
+    require('shooter.utils').echo(msg)
+  end, { desc = 'Fix H1 titles in all shotfiles to match canonical path' })
+
   -- ShoShotfileCfg = ShoCfgShotfile (bidirectional alias handled in Cfg)
 end
 

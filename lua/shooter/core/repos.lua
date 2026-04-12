@@ -65,20 +65,15 @@ function M.create_file_in_repo(repo_path, title)
   local prompts_dir = repo_path .. '/.hal/shooter/shotfiles'
   vim.fn.mkdir(prompts_dir, 'p')
 
-  -- Generate filename
-  local date = os.date('%Y%m%d')
-  local time = os.date('%H%M')
-  local safe_title = title:lower():gsub('%s+', '-'):gsub('[^%w%-]', '')
-  local filename = string.format('%s_%s_%s.md', date, time, safe_title)
+  local filename = files.generate_filename(title)
   local filepath = prompts_dir .. '/' .. filename
 
-  -- Create file with title
   local file = io.open(filepath, 'w')
   if not file then
     utils.echo('Failed to create file: ' .. filepath)
     return nil
   end
-  file:write('# ' .. title .. '\n\n')
+  file:write('# ' .. files.title_from_path(filepath) .. '\n\n')
   file:close()
 
   return filepath

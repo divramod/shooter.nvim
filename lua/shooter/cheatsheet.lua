@@ -18,6 +18,7 @@ M.sections = {
     { 'fn', 'New shotfile' }, { 'fN', 'New in repo' }, { 'fp', 'Picker' },
     { 'fP', 'All repos picker' }, { 'fl', 'Last file' }, { 'fr', 'Rename' },
     { 'fd', 'Delete' }, { 'fo', 'Oil prompts' }, { 'fi', 'History' },
+    { 'fft', 'Fix titles' },
   }},
   { 'MOVE (fm)', {
     { 'fma', 'archive' }, { 'fmb', 'backlog' }, { 'fmd', 'done' },

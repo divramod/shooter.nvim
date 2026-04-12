@@ -57,6 +57,8 @@ local function move_file_to_folder(file_path, target_folder_path, was_in_oil, cu
   -- Move the file
   local success = os.rename(file_path, target_path)
   if success then
+    -- Update title to reflect new location
+    files.update_file_title(target_path, files.title_from_path(target_path))
 
     if was_in_oil then
       -- Refresh Oil buffer
