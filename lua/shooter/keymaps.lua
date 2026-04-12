@@ -209,8 +209,11 @@ function M.setup()
   map('n', 'rl', ':HalShooterRepoOpenLastEditedFile<cr>', 'Last edited file in repo')
 
   -- ============================================================
-  -- GIT WORKTREE NAMESPACE (gw prefix)
+  -- GIT NAMESPACE (g prefix)
   -- ============================================================
+  map('n', 'gp', ':HalShooterGitPush<cr>', 'Git add/commit/push .shooter')
+
+  -- Git worktree subnamespace (gw prefix)
   for i = 0, 9 do
     map('n', 'gw' .. i, ':HalShooteroterGitWorktreeSwitchTo ' .. i .. '<cr>', 'Switch to worktree ' .. i)
   end
