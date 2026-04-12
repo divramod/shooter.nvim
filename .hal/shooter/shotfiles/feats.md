@@ -1,6 +1,24 @@
 # feats
 
-## shot 2 
+## x shot 2 < >fmm improvements (2026-04-12 13:16:44)
+i want to move a shotfile
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260412_131237.png
+this is the file from where i start the command.
+.../shotfiles/apps/next.md
+i want to be able to insert the following in the telescope picker input field, with the following results
+```txt
+# case 1: input apps/next/domain
+- moves the file to .../shotfiles/apps/next/domain.md and adapts the title accordingly to `# apps/next/domain`
+
+# case 2: input apps/next/
+- moves the file to .../shotfiles/apps/next/next.md and adapts the title accordingly to `# apps/next/next`
+
+in general, when the last sign is a /, the file should just be moved and the folder should be created if it does not exist, the name stays the same
+
+if the last sign is not a /, the file should be moved and renamed to the name of the last part of the path, and the title should be adapted accordingly
+
+in every case, the title should be adapted to the new path and name of the file, following the pattern described in the first command (HalShooterFixTitles)
+```
 
 ## x shot 1 HalShooterFixTitles (2026-04-12 11:58:07)
 I want you to create a command that systematically goes through every single shot file of a repo and fixes the title of the shot file.
