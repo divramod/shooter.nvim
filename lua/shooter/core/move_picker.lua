@@ -1,18 +1,12 @@
 -- Move file to folder via Telescope picker
--- Fuzzy search folders like Obsidian
+-- Fuzzy search folders like Obsidian, with free-form path input as an alternative.
 
 local M = {}
 
 local utils = require('shooter.utils')
 local files = require('shooter.core.files')
 
-local pickers = require('telescope.pickers')
-local finders = require('telescope.finders')
-local conf = require('telescope.config').values
-local actions = require('telescope.actions')
-local action_state = require('telescope.actions.state')
-
--- Get shotfile folders (system folders + domains)
+-- Get shotfile folders (system folders + domains) and the resolved shotfiles root.
 local function get_shotfile_folders()
   local git_worktree = require('shooter.tools.git_worktree')
   local git_root = git_worktree.get_main_worktree() or files.get_git_root() or utils.cwd()
@@ -22,7 +16,7 @@ local function get_shotfile_folders()
   -- Root (prompts)
   table.insert(folders, { display = '(root)', path = shotfiles_dir })
 
-  if not utils.dir_exists(shotfiles_dir) then return folders, git_root end
+  if not utils.dir_exists(shotfiles_dir) then return folders, shotfiles_dir end
 
   local entries = vim.fn.readdir(shotfiles_dir)
   for _, entry in ipairs(entries) do
@@ -33,70 +27,130 @@ local function get_shotfile_folders()
   end
 
   table.sort(folders, function(a, b) return a.display < b.display end)
-  return folders, git_root
+  return folders, shotfiles_dir
 end
 
--- Move file to selected folder
-local function move_file_to_folder(file_path, target_folder_path, was_in_oil, cursor_line)
-  local filename = utils.get_filename(file_path)
-  local target_path = target_folder_path .. '/' .. filename
+-- Parse a free-form telescope prompt into (target_dir, target_basename).
+--
+--   "apps/next/domain"  -> (shotfiles_dir/apps/next, "domain.md")
+--   "apps/next/"        -> (shotfiles_dir/apps/next, nil)   (nil = keep source name)
+--   "/"                 -> (shotfiles_dir,             nil)
+--   "foo.md"            -> (shotfiles_dir,             "foo.md") — only if the caller
+--                         routed us here (i.e. the prompt contained a slash or was a
+--                         rename); callers should only invoke this when the prompt
+--                         contains a slash so fuzzy filtering still works for plain
+--                         folder names.
+--
+-- Returns nil for empty prompts.
+function M.parse_move_prompt(prompt, shotfiles_dir)
+  if not prompt or prompt == '' then return nil end
 
-  -- Check if source file exists
-  if not utils.file_exists(file_path) then
-    return false
+  -- Strip leading slashes so absolute-looking inputs stay within shotfiles_dir.
+  local path = prompt:gsub('^/+', '')
+  if path == '' then
+    return shotfiles_dir, nil
   end
 
-  -- Ensure target directory exists
-  utils.ensure_dir(target_folder_path)
-
-  -- Check if target already exists
-  if utils.file_exists(target_path) then
-    return false
-  end
-
-  -- Move the file
-  local success = os.rename(file_path, target_path)
-  if success then
-    -- Update title to reflect new location
-    files.update_file_title(target_path, files.title_from_path(target_path))
-
-    if was_in_oil then
-      -- Refresh Oil buffer
-      local ok, oil = pcall(require, 'oil')
-      if ok then
-        local current_dir = oil.get_current_dir()
-        if current_dir then
-          vim.cmd('edit ' .. vim.fn.fnameescape(current_dir))
-        end
-      end
-    else
-      -- Open file at new location
-      vim.cmd('edit ' .. vim.fn.fnameescape(target_path))
+  local trailing = path:sub(-1) == '/'
+  if trailing then
+    local dir = path:gsub('/+$', '')
+    if dir == '' then
+      return shotfiles_dir, nil
     end
-    return true
-  else
-    return false
+    return shotfiles_dir .. '/' .. dir, nil
+  end
+
+  local dir, name = path:match('^(.-)/([^/]+)$')
+  if dir and dir ~= '' then
+    local base = name:gsub('%.md$', '')
+    return shotfiles_dir .. '/' .. dir, base .. '.md'
+  end
+  -- Prompt had no interior slash (e.g. just "foo"); only reached here if caller
+  -- routed us here explicitly. Treat as "rename at shotfiles root".
+  local base = path:gsub('%.md$', '')
+  return shotfiles_dir, base .. '.md'
+end
+
+-- Refresh Oil buffer in place after a filesystem change.
+local function refresh_oil_buffer()
+  local ok, oil = pcall(require, 'oil')
+  if not ok then return end
+  local current_dir = oil.get_current_dir()
+  if current_dir then
+    vim.cmd('edit ' .. vim.fn.fnameescape(current_dir))
   end
 end
 
--- Open folder picker to move current file
+-- Move a shotfile to an absolute target path.
+-- Creates the parent directory if needed, refuses to overwrite, updates the H1
+-- title to match the new path, and reopens the file / oil buffer appropriately.
+-- Returns ok_bool.
+function M.move_file_to_path(file_path, target_path, was_in_oil)
+  if not file_path or file_path == '' then return false end
+  if not utils.file_exists(file_path) then
+    utils.echo('Source file not found')
+    return false
+  end
+  if file_path == target_path then
+    return false
+  end
+
+  local target_dir = vim.fn.fnamemodify(target_path, ':h')
+  utils.ensure_dir(target_dir)
+
+  if utils.file_exists(target_path) then
+    utils.echo('Target already exists: ' .. vim.fn.fnamemodify(target_path, ':t'))
+    return false
+  end
+
+  local success = os.rename(file_path, target_path)
+  if not success then
+    utils.echo('Failed to move file')
+    return false
+  end
+
+  files.update_file_title(target_path, files.title_from_path(target_path))
+
+  if was_in_oil then
+    refresh_oil_buffer()
+  else
+    vim.cmd('edit ' .. vim.fn.fnameescape(target_path))
+  end
+
+  local shown = target_path:gsub('^' .. vim.pesc(vim.fn.getcwd() .. '/'), '')
+  utils.echo('Moved to ' .. shown)
+  return true
+end
+
+-- Move file into a target folder, keeping its current filename.
+local function move_file_to_folder(file_path, target_folder_path, was_in_oil)
+  local filename = utils.get_filename(file_path)
+  return M.move_file_to_path(file_path, target_folder_path .. '/' .. filename, was_in_oil)
+end
+
+-- Open folder picker to move current file.
 function M.open_picker()
   local file_path = files.get_current_file_path()
   local was_in_oil = vim.bo.filetype == 'oil'
-  local cursor_line = was_in_oil and vim.api.nvim_win_get_cursor(0)[1] or nil
 
   if not file_path or file_path == '' then
     return
   end
 
-  local folders = get_shotfile_folders()
+  local folders, shotfiles_dir = get_shotfile_folders()
 
   if #folders == 0 then
     return
   end
 
+  local pickers = require('telescope.pickers')
+  local finders = require('telescope.finders')
+  local conf = require('telescope.config').values
+  local actions = require('telescope.actions')
+  local action_state = require('telescope.actions.state')
+
   pickers.new({}, {
-    prompt_title = 'Move to Folder',
+    prompt_title = 'Move to Folder (type path/name or path/ to rename or keep)',
     layout_strategy = 'vertical',
     layout_config = { width = 0.6, height = 0.6 },
     finder = finders.new_table({
@@ -117,10 +171,27 @@ function M.open_picker()
       map('n', 'q', function() actions.close(prompt_bufnr) end)
 
       actions.select_default:replace(function()
+        local picker = action_state.get_current_picker(prompt_bufnr)
+        local prompt = picker and picker:_get_prompt() or ''
+
+        -- If the prompt contains a slash, the user is entering an explicit path
+        -- instead of selecting one of the fuzzy-filtered folders. Route through
+        -- parse_move_prompt so trailing-slash (keep name) and non-trailing-slash
+        -- (rename) both work.
+        if prompt ~= '' and prompt:find('/', 1, true) then
+          actions.close(prompt_bufnr)
+          local target_dir, target_basename = M.parse_move_prompt(prompt, shotfiles_dir)
+          if not target_dir then return end
+          local filename = target_basename or utils.get_filename(file_path)
+          M.move_file_to_path(file_path, target_dir .. '/' .. filename, was_in_oil)
+          return
+        end
+
+        -- Otherwise fall back to existing folder-selection behaviour.
         local entry = action_state.get_selected_entry()
         actions.close(prompt_bufnr)
         if entry and entry.value then
-          move_file_to_folder(file_path, entry.value.path, was_in_oil, cursor_line)
+          move_file_to_folder(file_path, entry.value.path, was_in_oil)
         end
       end)
       return true
