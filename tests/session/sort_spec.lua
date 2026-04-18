@@ -51,9 +51,9 @@ describe('session.sort', function()
 
     it('should show enabled criteria with direction', function()
       local session = defaults.create_session('test')
-      -- Default has filename enabled
+      -- Default has modified enabled (desc)
       local status = sort.get_sort_status(session)
-      assert.matches('filename', status)
+      assert.matches('modified', status)
     end)
 
     it('should show desc for descending', function()
@@ -70,9 +70,9 @@ describe('session.sort', function()
     -- Create mock files for testing
     local function make_files()
       return {
-        { path = '/repo/.hal/shooter/shotfiles/b-file.md', display = 'b-file.md' },
-        { path = '/repo/.hal/shooter/shotfiles/a-file.md', display = 'a-file.md' },
-        { path = '/repo/.hal/shooter/shotfiles/c-file.md', display = 'c-file.md' },
+        { path = '/repo/.hal/util/shooter/shotfiles/b-file.md', display = 'b-file.md' },
+        { path = '/repo/.hal/util/shooter/shotfiles/a-file.md', display = 'a-file.md' },
+        { path = '/repo/.hal/util/shooter/shotfiles/c-file.md', display = 'c-file.md' },
       }
     end
 
@@ -88,7 +88,13 @@ describe('session.sort', function()
 
     it('should sort by filename ascending', function()
       local session = defaults.create_session('test')
-      -- filename is enabled by default with priority 1, ascending true
+      -- Explicitly enable filename sort
+      for _, c in ipairs(defaults.get_sort_criteria()) do
+        session.sortBy[c].enabled = false
+      end
+      session.sortBy.filename.enabled = true
+      session.sortBy.filename.priority = 1
+      session.sortBy.filename.ascending = true
       local files = make_files()
       local sorted = sort.sort_files(files, session)
       assert.equals('a-file.md', sorted[1].display)
@@ -98,6 +104,11 @@ describe('session.sort', function()
 
     it('should sort by filename descending', function()
       local session = defaults.create_session('test')
+      for _, c in ipairs(defaults.get_sort_criteria()) do
+        session.sortBy[c].enabled = false
+      end
+      session.sortBy.filename.enabled = true
+      session.sortBy.filename.priority = 1
       session.sortBy.filename.ascending = false
       local files = make_files()
       local sorted = sort.sort_files(files, session)

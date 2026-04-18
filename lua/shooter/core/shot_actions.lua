@@ -462,7 +462,8 @@ function M.yank_shot()
     return
   end
 
-  -- Get shot info
+  -- Get shot info — capture header before marking as done so the yanked
+  -- text contains the original "## shot N ..." line, not the executed form.
   local content = shots.get_shot_content(bufnr, start_line, end_line)
   local header_text = utils.get_buf_lines(bufnr, header_line - 1, header_line)[1]
   local shot_num = shots.parse_shot_header(header_text) or '?'
@@ -477,9 +478,10 @@ function M.yank_shot()
     vim.api.nvim_win_set_cursor(0, { new_header, 0 })
   end
 
-  -- Yank to clipboard
-  vim.fn.setreg('+', content)
-  vim.fn.setreg('"', content)
+  -- Yank header + body to clipboard.
+  local yank_text = content ~= '' and (header_text .. '\n' .. content) or header_text
+  vim.fn.setreg('+', yank_text)
+  vim.fn.setreg('"', yank_text)
   utils.echo('Yanked shot ' .. shot_num .. ' and marked done')
 end
 

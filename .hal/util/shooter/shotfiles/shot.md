@@ -1,15 +1,32 @@
 # shot
 
-## shot 68
+## shot 71 switch to use template for shotfile content
 i changed my pattern for the shots a little bit.
 last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
 but this information is not included in the shotfile.
 can we in general change the hard coded shotfile template into a file template approach?
-i like to have the shotfile template in ~/.config/shooter/nvim/file/template.md
+i like to have the shotfile template in ~/.config/hal/util/shooter/nvim/file/template.md
 please create it, from the hardcoded template, which is used right now and put it in this folder.
 then change the code, so that it reads the template and replaces the following placeholders:
-- {{shot_number}} with the shot number
-- {{shot_title}} with the shot title, which is the first line of the shot,
+- ${SHOT_NUMBER} with the shot number
+- ${SHOT_TITLE} with the shot title, which is the text after the shotnumber in first line of the shot, please strip the whitespaces, if there are some
+- ${SHOT_CONTENT}
+- ${SHOT_SENT_DATE}
+- ${SHOT_SENT_TIME}
+- ${REPO_NAME}
+- ${REPO_BRANCH}
+- ${REPO_PATH}
+- ${REPO_ALIAS} --> from file .hal/ALIAS (if exists)
+- ${REPO_PORT_PREFIX} --> from file .hal/PORT_PREFIX (if exists)
+- ${VERSION} --> from file .hal/VERSION (if exists)
+- ${SHOTFILE_DIR_RELATIVE} with the directory of the shotfile in the .hal/util/shooter directory
+- ${SHOTFILE_NAME} with the name of the shotfile without extension
+- ${SHOTFILE_TITLE} with the title of the shotfile, which is the first line in the shotfile without the # and without the whitespaces
+- ${SHOTFILE_FILE_ABSOLUTE} with the absolute path of the shotfile
+
+if there is no template there, then it should be autocreated from the hardcoded template, which is used right now, but with the placeholders used.
+and it should be ensured, that the a file ~/.config/hal/util/shooter/nvim/file/template.example.md always exists, which contains all possible templates vairables, whith a short explanation, on how they are compiled (the sources)
+
 - some shots look like this now
 ```markdown
 ## shot 64 shot sent notification
@@ -22,8 +39,30 @@ do something
 ```
 i want both cases to work
 
-## shot 67 shot sent notification
+## shot 70 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
+
+## x shot 69 sort shotfiles by edited last (last first) (2026-04-18 12:38:52)
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260418_123849.png
+
+## x shot 68 shotfile cleanup (2026-04-16 08:12:14)
+/Users/mod/a/hal/.shooter/tmp/image-pastes/clipboard_20260416_080846.png
+i have this two fix commands
+< >fff fixes the current shotfile
+< >fft fixes the shotfile titles of all shotfiles in the repo
+
+< >fft should do the same as < >fff, but for all shotfiles in the repo. (fix all possible issues in shotfiles in all shotfiles in the repo, then commit them with a senseful commit message)
+the old < >fff command can be deleted
+
+after that, i want you to remap < >fff to < >ff and < >fft to < >fa
+
+## x shot 67 bullet directory (2026-04-16 08:07:19)
+HalShooterBulletPickerCurrentFile < >bf
+HalShooterBulletPickerCurrentRepo < >br
+HalShooterBulletPickerAllRepos < >ba
+i want you to create three new commands for picking bullet files.
+the bullets are the files, which are created from the shots and then sent to the agents as file path
+please create these three telescope pickers and map them
 
 ## x shot 66 < >n cursor not right (2026-04-06 18:36:11)
 the cursor position for the new shot command is not anymore after the a space after the shot number after the refactoring.
@@ -140,7 +179,7 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
+color the background color of the last shot made green
 
 ## x shot 44 (2026-02-07 18:13:22)
 selecting multiple shot pickers and then hitting 1 to send them does not 
@@ -150,7 +189,7 @@ the < >sy command should also mark the shot as done and call the renumber functi
 i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 42 (2026-02-07 18:13:22)
-color the background color of the last shot made green
+the command < >. should also call the renumber function, after is marked a shot as done
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test

@@ -86,7 +86,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
       -- Optional: override defaults
       paths = {
         global_context = '~/.config/shooter.nvim/shooter-context-global.md',
-        prompts_root = '.hal/shooter/shotfiles',
+        prompts_root = '.hal/util/shooter/shotfiles',
       },
       keymaps = {
         enabled = true,  -- Enable default keymaps
@@ -119,7 +119,7 @@ use {
    ```
    :ShoCreate
    ```
-   Enter a feature name when prompted. This creates a timestamped markdown file in `.hal/shooter/shotfiles/`.
+   Enter a feature name when prompted. This creates a timestamped markdown file in `.hal/util/shooter/shotfiles/`.
 
 2. **Add shots to your file** (latest shot at top):
    ```markdown
@@ -361,7 +361,7 @@ All keybindings use `<space>` prefix (customizable). Commands are organized into
 ### Smart Paste (Global Keymaps)
 
 Automatically paste clipboard images instead of text when an image is in the clipboard.
-Images are saved to `<repo>/.hal/shooter/tmp/image-pastes/clipboard_YYYYMMDD_HHMMSS.png`.
+Images are saved to `<repo>/.hal/util/shooter/tmp/image-pastes/clipboard_YYYYMMDD_HHMMSS.png`.
 
 | Key | Action |
 |-----|--------|
@@ -450,10 +450,10 @@ require('shooter').setup({
     message_template = 'templates/shooter-context-message.md',
 
     -- Queue file location (relative to cwd)
-    queue_file = '.hal/shooter/shotfiles/.shot-queue.json',
+    queue_file = '.hal/util/shooter/shotfiles/.shot-queue.json',
 
     -- Prompts root directory (relative to cwd)
-    prompts_root = '.hal/shooter/shotfiles',
+    prompts_root = '.hal/util/shooter/shotfiles',
   },
 
   -- ═══════════════════════════════════════════════════════════════════════════
@@ -711,7 +711,7 @@ Use `{{variable_name}}` syntax in your templates:
 |----------|-------------|---------|
 | `{{shot_num}}` | Current shot number | `117` |
 | `{{shot_nums}}` | Comma-separated (multishot) | `1, 2, 3` |
-| `{{file_path}}` | File path (with ~ for home) | `~/dev/.hal/shooter/shotfiles/file.md` |
+| `{{file_path}}` | File path (with ~ for home) | `~/dev/.hal/util/shooter/shotfiles/file.md` |
 | `{{file_name}}` | Filename with extension | `20260118_0516_feature.md` |
 | `{{file_title}}` | Title from first # heading | `2026-01-18 - feature name` |
 | `{{repo_name}}` | Repository name from git | `divramod/shooter.nvim` |
@@ -734,7 +734,7 @@ See `templates/VARIABLES.md` for full documentation
 ## File Structure
 
 ```
-.hal/shooter/shotfiles/
+.hal/util/shooter/shotfiles/
 ├── 20260121_0930_add-auth.md          # In-progress
 ├── archive/
 │   └── 20260120_1015_setup-db.md      # Completed
@@ -751,14 +751,14 @@ For mono-repos with multiple projects, shooter.nvim supports a `projects/` folde
 
 ```
 repo/
-├── .hal/shooter/shotfiles/              # Root-level prompts
+├── .hal/util/shooter/shotfiles/              # Root-level prompts
 │   └── shared-feature.md
 └── projects/
     ├── frontend/
-    │   └── .hal/shooter/shotfiles/      # Frontend project prompts
+    │   └── .hal/util/shooter/shotfiles/      # Frontend project prompts
     │       └── add-login.md
     └── backend/
-        └── .hal/shooter/shotfiles/      # Backend project prompts
+        └── .hal/util/shooter/shotfiles/      # Backend project prompts
             └── api-routes.md
 ```
 
@@ -768,7 +768,7 @@ When a `projects/` folder exists at git root:
 
 1. **Auto-detection**: If your cwd is inside `projects/<name>/`, that project is automatically used
 2. **Project picker**: If at repo root, `<space>n` and `<space>v` show a project picker first
-3. **Root option**: The picker includes "(root)" to create files at `.hal/shooter/shotfiles/` instead
+3. **Root option**: The picker includes "(root)" to create files at `.hal/util/shooter/shotfiles/` instead
 4. **Dashboard**: Shows files from all projects with project prefix (e.g., `frontend/add-login.md`)
 6. **All Repos picker**: `<space>T` includes files from all projects across all repos
 
@@ -784,7 +784,7 @@ When a `projects/` folder exists at git root:
 
 ### Backward Compatibility
 
-Repos without a `projects/` folder work exactly as before - all commands create/list files at `.hal/shooter/shotfiles/`.
+Repos without a `projects/` folder work exactly as before - all commands create/list files at `.hal/util/shooter/shotfiles/`.
 
 ## Shot Format
 

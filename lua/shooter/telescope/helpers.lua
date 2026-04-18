@@ -127,7 +127,7 @@ function M.get_repo_prompt_files()
   local files_mod = require('shooter.core.files')
   local git_root = files_mod.get_git_root()
   if not git_root then return {} end
-  local prompts_dir = git_root .. '/.hal/shooter/shotfiles'
+  local prompts_dir = git_root .. '/.hal/util/shooter/shotfiles'
   if not utils.dir_exists(prompts_dir) then return {} end
   return vim.fn.globpath(prompts_dir, '**/*.md', false, true)
 end
@@ -237,7 +237,7 @@ function M.restore_selection_state(prompt_bufnr, target_file, retry_count)
   end
 end
 
--- Get files for telescope picker (returns display paths without .hal/shooter/shotfiles prefix)
+-- Get files for telescope picker (returns display paths without .hal/util/shooter/shotfiles prefix)
 -- opts table supports:
 --   folder_filter: 'a', 'b', 'd', 'r', 'w', 'p' or full folder name
 --   project: single project name (legacy support)
@@ -290,7 +290,7 @@ function M.get_prompt_files(folder_filter_or_opts, project)
     local git_worktree = require('shooter.tools.git_worktree')
     local git_root = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
     -- Add root prompts
-    add_from_prompts_dir(git_root .. '/.hal/shooter/shotfiles', '', nil)
+    add_from_prompts_dir(git_root .. '/.hal/util/shooter/shotfiles', '', nil)
     -- Add all project prompts (also from main worktree)
     local projects_dir = git_root .. '/projects'
     if vim.fn.isdirectory(projects_dir) == 1 then
@@ -302,7 +302,7 @@ function M.get_prompt_files(folder_filter_or_opts, project)
       for _, name in ipairs(entries) do
         local path = projects_dir .. '/' .. name
         if vim.fn.isdirectory(path) == 1 and not exclude_set[name] then
-          add_from_prompts_dir(path .. '/.hal/shooter/shotfiles', name .. '/', name)
+          add_from_prompts_dir(path .. '/.hal/util/shooter/shotfiles', name .. '/', name)
         end
       end
     end
@@ -373,7 +373,7 @@ function M.get_all_repos_prompt_files(folder_filter_or_opts)
   -- Helper to add files from a repo (root + all projects)
   local function add_repo_files(repo_path, repo_name)
     -- Add root prompts
-    add_prompts_dir(repo_path .. '/.hal/shooter/shotfiles', repo_name .. '/', repo_name)
+    add_prompts_dir(repo_path .. '/.hal/util/shooter/shotfiles', repo_name .. '/', repo_name)
 
     -- Add project prompts if projects/ folder exists
     local projects_dir = repo_path .. '/projects'
@@ -381,7 +381,7 @@ function M.get_all_repos_prompt_files(folder_filter_or_opts)
       local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')
       if handle then
         for project in handle:lines() do
-          local project_prompts = projects_dir .. '/' .. project .. '/.hal/shooter/shotfiles'
+          local project_prompts = projects_dir .. '/' .. project .. '/.hal/util/shooter/shotfiles'
           add_prompts_dir(project_prompts, repo_name .. '/' .. project .. '/', repo_name)
         end
         handle:close()
@@ -420,6 +420,74 @@ function M.get_all_repos_prompt_files(folder_filter_or_opts)
       return M.get_file_mtime(a.path) > M.get_file_mtime(b.path)
     end)
   end
+
+  return results
+end
+
+-- Get bullet files from the bullets directory
+-- opts:
+--   scope: 'file' (current shotfile), 'repo' (current repo), 'all' (all repos)
+--   shotfile_basename: filter by shotfile name (for scope='file')
+--   repo_slug: filter by repo name (for scope='repo')
+function M.get_bullet_files(opts)
+  opts = opts or {}
+  local ext_config = require('shooter.core.ext_config')
+  local bullets_root = ext_config.bullets_dir()
+  local results = {}
+
+  if not utils.dir_exists(bullets_root) then return results end
+
+  local function add_bullets_from_dir(dir, repo_name)
+    if not utils.dir_exists(dir) then return end
+    local files = vim.fn.globpath(dir, '*.md', false, true)
+    for _, filepath in ipairs(files) do
+      local filename = vim.fn.fnamemodify(filepath, ':t')
+      local display = repo_name and (repo_name .. '/' .. filename) or filename
+      table.insert(results, {
+        display = display,
+        path = filepath,
+        repo = repo_name,
+        _mtime = M.get_file_mtime(filepath),
+      })
+    end
+  end
+
+  if opts.scope == 'file' then
+    local repo_slug = opts.repo_slug
+    local basename = opts.shotfile_basename
+    if not repo_slug or not basename then return results end
+    local dir = bullets_root .. '/' .. repo_slug
+    if not utils.dir_exists(dir) then return results end
+    local files = vim.fn.globpath(dir, basename .. '_*.md', false, true)
+    for _, filepath in ipairs(files) do
+      local filename = vim.fn.fnamemodify(filepath, ':t')
+      table.insert(results, {
+        display = filename,
+        path = filepath,
+        repo = repo_slug,
+        _mtime = M.get_file_mtime(filepath),
+      })
+    end
+  elseif opts.scope == 'repo' then
+    local repo_slug = opts.repo_slug
+    if not repo_slug then return results end
+    add_bullets_from_dir(bullets_root .. '/' .. repo_slug, nil)
+  else
+    local handle = io.popen('ls -1 "' .. bullets_root .. '" 2>/dev/null')
+    if handle then
+      for repo_name in handle:lines() do
+        local repo_dir = bullets_root .. '/' .. repo_name
+        if vim.fn.isdirectory(repo_dir) == 1 then
+          add_bullets_from_dir(repo_dir, repo_name)
+        end
+      end
+      handle:close()
+    end
+  end
+
+  table.sort(results, function(a, b)
+    return (a._mtime or 0) > (b._mtime or 0)
+  end)
 
   return results
 end

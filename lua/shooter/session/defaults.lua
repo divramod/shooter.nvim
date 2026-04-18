@@ -30,8 +30,8 @@ M.DEFAULT = {
   },
   sortBy = {
     created = { enabled = false, priority = 0, ascending = true },
-    filename = { enabled = true, priority = 1, ascending = true },
-    modified = { enabled = false, priority = 0, ascending = false },
+    filename = { enabled = false, priority = 0, ascending = true },
+    modified = { enabled = true, priority = 1, ascending = false },
     path = { enabled = false, priority = 0, ascending = true },
     projectname = { enabled = false, priority = 0, ascending = true },
     shotcount = { enabled = false, priority = 0, ascending = false },
@@ -92,6 +92,15 @@ function M.validate_session(session)
   end
 
   session.sortBy = session.sortBy or {}
+  -- Migrate old default: filename was enabled but sort was never applied.
+  -- Switch to modified desc which is the new functional default.
+  if session.sortBy.filename and session.sortBy.filename.enabled
+    and session.sortBy.filename.priority == 1
+    and (not session.sortBy.modified or not session.sortBy.modified.enabled) then
+    session.sortBy.filename.enabled = false
+    session.sortBy.filename.priority = 0
+    session.sortBy.modified = { enabled = true, priority = 1, ascending = false }
+  end
   -- Ensure all sort criteria exist
   for criterion, default_val in pairs(M.DEFAULT.sortBy) do
     if not session.sortBy[criterion] then

@@ -1,5 +1,5 @@
 -- Domain management for shooter.nvim
--- Domains are user-created subfolders in .hal/shooter/shotfiles/
+-- Domains are user-created subfolders in .hal/util/shooter/shotfiles/
 
 local utils = require('shooter.utils')
 
@@ -15,7 +15,7 @@ local function is_system_folder(name)
   return false
 end
 
-local SHOTFILES_REL = '.hal/shooter/shotfiles'
+local SHOTFILES_REL = '.hal/util/shooter/shotfiles'
 
 -- Get the shotfiles root directory (absolute path)
 local function get_shotfiles_dir()

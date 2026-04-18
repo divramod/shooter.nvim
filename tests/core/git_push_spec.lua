@@ -4,7 +4,7 @@ local utils = require('shooter.utils')
 
 describe('shooter.core.git_push', function()
   local repo = '/tmp/shooter_git_push_test'
-  local target = repo .. '/.hal/shooter/shotfiles'
+  local target = repo .. '/.hal/util/shooter/shotfiles'
 
   local function git(...)
     local cmd = { 'git', '-C', repo }
@@ -131,8 +131,8 @@ describe('shooter.core.git_push', function()
     it('returns error when git_root is not a git repo', function()
       local not_repo = '/tmp/shooter_git_push_not_repo'
       os.execute('rm -rf ' .. not_repo)
-      os.execute('mkdir -p ' .. not_repo .. '/.hal/shooter/shotfiles')
-      utils.write_file(not_repo .. '/.hal/shooter/shotfiles/x.md', '# x\n')
+      os.execute('mkdir -p ' .. not_repo .. '/.hal/util/shooter/shotfiles')
+      utils.write_file(not_repo .. '/.hal/util/shooter/shotfiles/x.md', '# x\n')
 
       local ok, msg = git_push.stage_and_commit(not_repo)
       assert.is_false(ok)

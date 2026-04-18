@@ -138,6 +138,14 @@ end
 ---@param session table Session object
 ---@return table[] Sorted files
 function M.sort_files(files, session)
+  -- Populate _mtime on all entries (used for age display in picker)
+  for _, e in ipairs(files) do
+    if not e._mtime then
+      local meta = M.get_file_metadata(e.path)
+      e._mtime = meta.mtime
+    end
+  end
+
   if not session or not session.sortBy then
     return files
   end

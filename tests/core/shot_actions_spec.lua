@@ -14,6 +14,48 @@ describe('shot_actions module', function()
     require('shooter.utils').echo = original_echo
   end)
 
+  describe('yank_shot', function()
+    it('yanks the shot header along with the body content', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        '# feats',
+        '',
+        '## shot 1 HalShooterShotYank',
+        'first line of body',
+        'second line of body',
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+
+      shot_actions.yank_shot()
+
+      local yanked = vim.fn.getreg('"')
+      assert.truthy(yanked:find('## shot 1 HalShooterShotYank', 1, true))
+      assert.truthy(yanked:find('first line of body', 1, true))
+      assert.truthy(yanked:find('second line of body', 1, true))
+      -- Header must come before the body in the yanked text.
+      local h = yanked:find('## shot 1', 1, true)
+      local b = yanked:find('first line', 1, true)
+      assert.is_true(h < b)
+    end)
+
+    it('yanks just the header when the shot has no body', function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        '# feats',
+        '',
+        '## shot 1 empty',
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+
+      shot_actions.yank_shot()
+
+      local yanked = vim.fn.getreg('"')
+      assert.truthy(yanked:find('## shot 1 empty', 1, true))
+    end)
+  end)
+
   describe('find_insertion_line (via create_new_shot)', function()
     it('creates shot without trailing blank when first shot in empty file', function()
       local bufnr = vim.api.nvim_create_buf(false, true)

@@ -22,7 +22,7 @@ describe('shooter.core.files', function()
     it('creates file with slugified title at shotfiles root', function()
       local path = files.create_file('My Feature', '', '', nil)
       assert.is_truthy(path)
-      assert.equals(test_root .. '/.hal/shooter/shotfiles/my-feature.md', path)
+      assert.equals(test_root .. '/.hal/util/shooter/shotfiles/my-feature.md', path)
       assert.equals(1, vim.fn.filereadable(path))
     end)
 
@@ -30,7 +30,7 @@ describe('shooter.core.files', function()
       local path = files.create_file('some/test/title haaa', '', '', nil)
       assert.is_truthy(path)
       assert.equals(
-        test_root .. '/.hal/shooter/shotfiles/some/test/title-haaa.md',
+        test_root .. '/.hal/util/shooter/shotfiles/some/test/title-haaa.md',
         path
       )
       assert.equals(1, vim.fn.filereadable(path))
@@ -42,7 +42,7 @@ describe('shooter.core.files', function()
     it('handles single-level subpath in title', function()
       local path = files.create_file('sub/thing', '', '', nil)
       assert.equals(
-        test_root .. '/.hal/shooter/shotfiles/sub/thing.md',
+        test_root .. '/.hal/util/shooter/shotfiles/sub/thing.md',
         path
       )
       assert.equals(1, vim.fn.filereadable(path))
@@ -51,7 +51,7 @@ describe('shooter.core.files', function()
     it('leaves bare title untouched', function()
       local path = files.create_file('plain title', '', '', nil)
       assert.equals(
-        test_root .. '/.hal/shooter/shotfiles/plain-title.md',
+        test_root .. '/.hal/util/shooter/shotfiles/plain-title.md',
         path
       )
     end)

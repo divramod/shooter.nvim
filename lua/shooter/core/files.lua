@@ -111,10 +111,10 @@ function M.is_in_prompts_folder(path)
   -- Check using git root (handles cwd != repo root)
   local git_root = M.get_git_root()
   if git_root then
-    if path:find(git_root .. '/.hal/shooter/shotfiles', 1, true) then
+    if path:find(git_root .. '/.hal/util/shooter/shotfiles', 1, true) then
       return true
     end
-    if path:find(git_root .. '/projects/.+/.hal/shooter/shotfiles') then
+    if path:find(git_root .. '/projects/.+/.hal/util/shooter/shotfiles') then
       return true
     end
   end
@@ -127,7 +127,7 @@ function M.is_shooter_file(filepath)
   return M.is_in_prompts_folder(filepath)
 end
 
--- Get shooter files from directory (returns display paths without .hal/shooter/shotfiles prefix)
+-- Get shooter files from directory (returns display paths without .hal/util/shooter/shotfiles prefix)
 -- project = nil means root level, string means specific project
 function M.get_prompt_files(project)
   local prompts_dir = M.get_prompts_dir(project)
@@ -135,7 +135,7 @@ function M.get_prompt_files(project)
   local results = {}
 
   for _, file in ipairs(files) do
-    -- Store both display path (without .hal/shooter/shotfiles/) and full path
+    -- Store both display path (without .hal/util/shooter/shotfiles/) and full path
     local display = file:gsub('^' .. utils.escape_pattern(prompts_dir) .. '/', '')
     table.insert(results, { display = display, path = file, project = project })
   end
@@ -159,23 +159,42 @@ function M.get_file_title(bufnr)
   return utils.get_basename(vim.fn.expand('%:p'))
 end
 
--- Generate filename from title (slug.md)
-function M.generate_filename(title)
-  -- Slugify title
-  local slug = title:lower()
+-- Slugify a single path segment (lowercase, non-alnum → dashes, dedupe,
+-- trim). Exposed so callers can sanitise multi-segment paths.
+function M.slugify_segment(segment)
+  if not segment or segment == '' then return '' end
+  local slug = segment:lower()
   slug = slug:gsub('%s+', '-')
   slug = slug:gsub('[^%w%-]', '')
   slug = slug:gsub('%-+', '-')
   slug = slug:gsub('^%-', ''):gsub('%-$', '')
+  return slug
+end
 
-  return string.format('%s.md', slug)
+-- Slugify every segment of a slash-separated path. Preserves an empty
+-- trailing segment so "foo bar/" stays a folder-like "foo-bar/" input.
+function M.slugify_path(path)
+  if not path or path == '' then return '' end
+  local trailing = path:sub(-1) == '/'
+  local parts = {}
+  for seg in path:gmatch('[^/]+') do
+    table.insert(parts, M.slugify_segment(seg))
+  end
+  local out = table.concat(parts, '/')
+  if trailing then out = out .. '/' end
+  return out
+end
+
+-- Generate filename from title (slug.md)
+function M.generate_filename(title)
+  return string.format('%s.md', M.slugify_segment(title))
 end
 
 -- Compute title from file path (relative path from shotfiles root, without .md)
--- e.g., /repo/.hal/shooter/shotfiles/test/test.md → "test/test"
--- e.g., /repo/.hal/shooter/shotfiles/test.md → "test"
+-- e.g., /repo/.hal/util/shooter/shotfiles/test/test.md → "test/test"
+-- e.g., /repo/.hal/util/shooter/shotfiles/test.md → "test"
 function M.title_from_path(filepath)
-  local match = filepath:match('/%.hal/shooter/shotfiles/(.+)$')
+  local match = filepath:match('/%.hal/util/shooter/shotfiles/(.+)$')
   if match then
     return match:gsub('%.md$', '')
   end

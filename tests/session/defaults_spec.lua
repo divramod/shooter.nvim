@@ -22,9 +22,10 @@ describe('session.defaults', function()
       assert.is_true(folders.prompts)
     end)
 
-    it('should have sortBy with filename enabled', function()
-      assert.is_true(defaults.DEFAULT.sortBy.filename.enabled)
-      assert.equals(1, defaults.DEFAULT.sortBy.filename.priority)
+    it('should have sortBy with modified enabled by default', function()
+      assert.is_true(defaults.DEFAULT.sortBy.modified.enabled)
+      assert.equals(1, defaults.DEFAULT.sortBy.modified.priority)
+      assert.is_false(defaults.DEFAULT.sortBy.modified.ascending)
     end)
   end)
 
@@ -75,6 +76,21 @@ describe('session.defaults', function()
       })
       assert.is_false(session.filters.folders.backlog)
       assert.is_true(session.filters.folders.prompts)
+    end)
+
+    it('should migrate old filename sort default to modified desc', function()
+      local session = defaults.validate_session({
+        name = 'test',
+        sortBy = {
+          filename = { enabled = true, priority = 1, ascending = true },
+          modified = { enabled = false, priority = 0, ascending = false },
+        },
+      })
+      assert.is_false(session.sortBy.filename.enabled)
+      assert.equals(0, session.sortBy.filename.priority)
+      assert.is_true(session.sortBy.modified.enabled)
+      assert.equals(1, session.sortBy.modified.priority)
+      assert.is_false(session.sortBy.modified.ascending)
     end)
   end)
 

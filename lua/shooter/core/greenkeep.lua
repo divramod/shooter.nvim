@@ -94,7 +94,7 @@ end
 function M.get_all_prompt_files()
   local git_root = files.get_git_root()
   if not git_root then return {} end
-  local prompts_dir = git_root .. '/.hal/shooter/shotfiles'
+  local prompts_dir = git_root .. '/.hal/util/shooter/shotfiles'
   if not utils.dir_exists(prompts_dir) then return {} end
   return vim.fn.globpath(prompts_dir, '**/*.md', false, true)
 end

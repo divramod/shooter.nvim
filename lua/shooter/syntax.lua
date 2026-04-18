@@ -70,6 +70,12 @@ local function define_highlights()
     bg = day_marker_postfix.bg or nil,
     bold = day_marker_postfix.bold or false,
   })
+
+  -- Markdown links and file paths: blue underlined link look.
+  vim.api.nvim_set_hl(0, 'HalShooterMdLink', {
+    fg = '#4fa3ff',
+    underline = true,
+  })
 end
 
 -- Check if a line is a fenced code block delimiter (not inline code)
@@ -211,6 +217,12 @@ apply_syntax = function(bufnr)
           -- No title, highlight entire line as number
           table.insert(matches, { i, 'HalShooterOpenShot' })
         end
+      else
+        -- Highlight markdown links and file paths on non-shot lines.
+        local md_links = require('shooter.markdown_links')
+        for _, r in ipairs(md_links.find_ranges(line)) do
+          table.insert(matches, { i, 'HalShooterMdLink', r[1], r[2] })
+        end
       end
     end
   end
@@ -234,12 +246,12 @@ apply_syntax = function(bufnr)
   end
 end
 
--- Check if file is a prompts file (not Oil buffer, must be actual .md file in .hal/shooter/shotfiles)
+-- Check if file is a prompts file (not Oil buffer, must be actual .md file in .hal/util/shooter/shotfiles)
 local function is_prompts_file(filepath)
   -- Exclude Oil buffers
   if filepath:match('^oil://') then return false end
-  -- Must be a .md file in .hal/shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
-  return filepath:match('.hal/shooter/shotfiles/.+%.md$') ~= nil
+  -- Must be a .md file in .hal/util/shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
+  return filepath:match('.hal/util/shooter/shotfiles/.+%.md$') ~= nil
 end
 
 -- Toggle day marker coloring on/off
@@ -302,7 +314,7 @@ function M.setup()
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
-      -- Only apply to markdown files in .hal/shooter/shotfiles (not oil, not other filetypes)
+      -- Only apply to markdown files in .hal/util/shooter/shotfiles (not oil, not other filetypes)
       if ft == 'markdown' and is_prompts_file(filepath) then
         require('shooter.core.files').track_last_shotfile(filepath)
         apply_syntax(ev.buf)

@@ -38,7 +38,7 @@ end
 local function get_shotfile_folders()
   local git_worktree = require('shooter.tools.git_worktree')
   local git_root = git_worktree.get_main_worktree() or files.get_git_root() or utils.cwd()
-  local shotfiles_dir = git_root .. '/.hal/shooter/shotfiles'
+  local shotfiles_dir = git_root .. '/.hal/util/shooter/shotfiles'
   return M.collect_shotfile_folders(shotfiles_dir), shotfiles_dir
 end
 
@@ -69,18 +69,22 @@ function M.parse_move_prompt(prompt, shotfiles_dir)
     if dir == '' then
       return shotfiles_dir, nil
     end
-    return shotfiles_dir .. '/' .. dir, nil
+    local dir_slug = files.slugify_path(dir)
+    return shotfiles_dir .. (dir_slug ~= '' and ('/' .. dir_slug) or ''), nil
   end
 
   local dir, name = path:match('^(.-)/([^/]+)$')
   if dir and dir ~= '' then
     local base = name:gsub('%.md$', '')
-    return shotfiles_dir .. '/' .. dir, base .. '.md'
+    local dir_slug = files.slugify_path(dir)
+    local name_slug = files.slugify_segment(base)
+    return shotfiles_dir .. (dir_slug ~= '' and ('/' .. dir_slug) or ''),
+      name_slug .. '.md'
   end
   -- Prompt had no interior slash (e.g. just "foo"); only reached here if caller
   -- routed us here explicitly. Treat as "rename at shotfiles root".
   local base = path:gsub('%.md$', '')
-  return shotfiles_dir, base .. '.md'
+  return shotfiles_dir, files.slugify_segment(base) .. '.md'
 end
 
 -- Refresh Oil buffer in place after a filesystem change.
@@ -94,13 +98,13 @@ local function refresh_oil_buffer()
 end
 
 -- Walk up from the given directory and remove any now-empty subfolder of
--- .hal/shooter/shotfiles. Stops at the first non-empty directory, the
+-- .hal/util/shooter/shotfiles. Stops at the first non-empty directory, the
 -- shotfiles root itself, or any directory outside a shotfiles tree.
 local function cleanup_empty_source_dirs(source_dir)
   while source_dir and source_dir ~= '' do
-    -- Only walk inside a .hal/shooter/shotfiles/<sub>/... subtree.
+    -- Only walk inside a .hal/util/shooter/shotfiles/<sub>/... subtree.
     -- The trailing slash in the literal match excludes the shotfiles root itself.
-    if not source_dir:find('/.hal/shooter/shotfiles/', 1, true) then
+    if not source_dir:find('/.hal/util/shooter/shotfiles/', 1, true) then
       return
     end
     local entries = vim.fn.readdir(source_dir)

@@ -16,6 +16,7 @@ local session_filter = require('shooter.session.filter')
 local session_sort = require('shooter.session.sort')
 local session_picker = require('shooter.session.picker')
 local shooter_config = require('shooter.config')
+local recency = require('shooter.telescope.recency')
 
 -- Re-export clear_selection from helpers for external access
 M.clear_selection = helpers.clear_selection
@@ -116,7 +117,16 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
   local all_files = get_files_fn()
   local current = session.get_current_session()
   local filtered = session_filter.apply_filters(all_files, current, git_root)
+  -- Apply session sort criteria (default: modified desc)
   local sorted = session_sort.sort_files(filtered, current)
+  -- Ensure _mtime is populated for age display
+  local now = os.time()
+  for _, e in ipairs(sorted) do
+    if not e._mtime then
+      e._mtime = recency.file_mtime(e.path)
+    end
+    e.display = recency.append_age(e.display, e._mtime, now)
+  end
 
   local title = build_picker_title(title_prefix)
   if #sorted == 0 then
@@ -128,6 +138,13 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
     local new_current = session.get_current_session()
     local new_filtered = session_filter.apply_filters(new_files, new_current, git_root)
     local new_sorted = session_sort.sort_files(new_filtered, new_current)
+    local refresh_now = os.time()
+    for _, e in ipairs(new_sorted) do
+      if not e._mtime then
+        e._mtime = recency.file_mtime(e.path)
+      end
+      e.display = recency.append_age(e.display, e._mtime, refresh_now)
+    end
     local picker = action_state.get_current_picker(prompt_bufnr)
     picker.prompt_border:change_title(build_picker_title(title_prefix))
     picker:refresh(finders.new_table({
@@ -270,12 +287,14 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
           actions.close(prompt_bufnr)
           local git_worktree = require('shooter.tools.git_worktree')
           local base = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
-          local shotfiles_dir = base .. '/.hal/shooter/shotfiles'
-          -- Support domain/name format
+          local shotfiles_dir = base .. '/.hal/util/shooter/shotfiles'
+          -- Support domain/name format. Slugify every path segment so
+          -- "some/folder/some file" becomes "some/folder/some-file.md".
           local dir_part, name_part = prompt:match('^(.+)/(.+)$')
           local target_dir, name
           if dir_part and name_part then
-            target_dir = shotfiles_dir .. '/' .. dir_part
+            local dir_slug = files_mod.slugify_path(dir_part)
+            target_dir = shotfiles_dir .. (dir_slug ~= '' and ('/' .. dir_slug) or '')
             name = name_part
           else
             target_dir = shotfiles_dir
@@ -504,6 +523,95 @@ function M.list_open_shots(opts)
     end,
   })
   return picker_instance
+end
+
+-- Get repo slug from git root
+local function get_repo_slug()
+  local root = vim.fn.systemlist('git rev-parse --show-toplevel 2>/dev/null')
+  if vim.v.shell_error == 0 and #root > 0 then
+    return vim.fn.fnamemodify(root[1], ':t')
+  end
+  return nil
+end
+
+-- Bullet picker: show bullet files in telescope with preview
+local function create_bullet_picker(bullet_files, title)
+  if #bullet_files == 0 then
+    utils.echo('No bullet files found')
+    return nil
+  end
+
+  local now = os.time()
+  for _, e in ipairs(bullet_files) do
+    e.display = recency.append_age(e.display, e._mtime, now)
+  end
+
+  local picker_instance = pickers.new({}, {
+    prompt_title = title,
+    layout_strategy = 'vertical',
+    layout_config = { width = 0.95, height = 0.9, preview_height = 0.5 },
+    finder = finders.new_table({
+      results = bullet_files,
+      entry_maker = function(entry)
+        return { value = entry, display = entry.display, ordinal = entry.display, path = entry.path }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    previewer = previewers_mod.file_previewer(),
+    attach_mappings = function(prompt_bufnr, map)
+      require('shooter.keymaps.picker').setup_nav_keymaps(map)
+      map('n', '<C-c>', actions.close, { desc = 'close' })
+      map('n', 'q', actions.close, { desc = 'close' })
+
+      actions.select_default:replace(function()
+        local entry = action_state.get_selected_entry()
+        actions.close(prompt_bufnr)
+        if entry and entry.value and entry.value.path then
+          vim.cmd('edit ' .. vim.fn.fnameescape(entry.value.path))
+        end
+      end)
+
+      return true
+    end,
+  })
+  return picker_instance
+end
+
+-- Bullet picker: current file's bullets
+function M.list_bullets_current_file()
+  local repo_slug = get_repo_slug()
+  if not repo_slug then
+    utils.echo('Not in a git repo')
+    return nil
+  end
+  local filepath = vim.fn.expand('%:p')
+  local basename = vim.fn.fnamemodify(filepath, ':t:r')
+  local bullet_files = helpers.get_bullet_files({
+    scope = 'file',
+    repo_slug = repo_slug,
+    shotfile_basename = basename,
+  })
+  return create_bullet_picker(bullet_files, 'Bullets: ' .. basename)
+end
+
+-- Bullet picker: current repo's bullets
+function M.list_bullets_current_repo()
+  local repo_slug = get_repo_slug()
+  if not repo_slug then
+    utils.echo('Not in a git repo')
+    return nil
+  end
+  local bullet_files = helpers.get_bullet_files({
+    scope = 'repo',
+    repo_slug = repo_slug,
+  })
+  return create_bullet_picker(bullet_files, 'Bullets: ' .. repo_slug)
+end
+
+-- Bullet picker: all repos' bullets
+function M.list_bullets_all_repos()
+  local bullet_files = helpers.get_bullet_files({ scope = 'all' })
+  return create_bullet_picker(bullet_files, 'Bullets: All Repos')
 end
 
 return M

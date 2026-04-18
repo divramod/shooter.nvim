@@ -57,7 +57,11 @@ function M.setup()
   map('n', 'fd', ':HalShooterShotfileDelete<cr>', 'Delete current')
   map('n', 'fo', ':HalShooterShotfileOpenPrompts<cr>', 'Oil prompts folder')
   map('n', 'fs', ':HalShooterFileStats<cr>', 'File stats')
-  map('n', 'fft', ':HalShooterFixTitles<cr>', 'Fix all shotfile titles')
+  map('n', 'ff', ':HalShooterShotfileFix<cr>', 'Fix current shotfile (title, empties, renumber, commit)')
+  map('n', 'fa', ':HalShooterFixAll<cr>', 'Fix all shotfiles in repo')
+  map('n', 'fM', ':HalShooterShotfileMergeInto<cr>', 'Merge current shotfile into another')
+  map('n', 'x', ':HalShooterOpenLinkPicker<cr>', 'Open link picker (current file)')
+  map('n', 'X', ':HalShooterOpenLinkPickerTmux<cr>', 'Open link picker (tmux window)')
   map('n', 'fcf', ':HalShooterFileToggleFirstShotOfDayColoring<cr>', 'Toggle day markers')
 
   -- Shotfile move commands (fm prefix)
@@ -115,6 +119,13 @@ function M.setup()
   for i = 1, 9 do
     map('n', 'sc' .. i, ':HalShooterSessionClear' .. i .. '<cr>', 'Clear session ' .. i)
   end
+
+  -- ============================================================
+  -- BULLET NAMESPACE (b prefix)
+  -- ============================================================
+  map('n', 'bf', ':HalShooterBulletPickerCurrentFile<cr>', 'Bullet picker (current file)')
+  map('n', 'br', ':HalShooterBulletPickerCurrentRepo<cr>', 'Bullet picker (current repo)')
+  map('n', 'ba', ':HalShooterBulletPickerAllRepos<cr>', 'Bullet picker (all repos)')
 
   -- ============================================================
   -- DOMAIN NAMESPACE (d prefix)
@@ -216,6 +227,10 @@ function M.setup()
   -- Git worktree subnamespace (gw prefix)
   for i = 0, 9 do
     map('n', 'gw' .. i, ':HalShooteroterGitWorktreeSwitchTo ' .. i .. '<cr>', 'Switch to worktree ' .. i)
+  end
+  for i = 1, 9 do
+    map('n', 'gwd' .. i, ':HalShooterGitWorktreeOpenOil ' .. i .. '<cr>',
+      'Open oil at parallel folder in worktree ' .. i)
   end
   map('n', 'gwl', ':HalShooteroterGitWorktreeLast<cr>', 'Switch to last worktree')
   map('n', 'gwm', ':HalShooteroterGitWorktreeToMain<cr>', 'Switch to main worktree')

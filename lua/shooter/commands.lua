@@ -3,7 +3,7 @@
 
 local M = {}
 
--- Guard: wraps a function so it only runs in shotfiles (.hal/shooter/shotfiles)
+-- Guard: wraps a function so it only runs in shotfiles (.hal/util/shooter/shotfiles)
 -- Returns the original function wrapped with an is_shooter_file() check
 local function require_shotfile(fn)
   return function(opts)
@@ -159,26 +159,18 @@ local function setup_shotfile_commands()
     require('shooter.core.move_picker').open_picker()
   end, { desc = 'Move file via fuzzy picker' })
 
-  -- HalShooterFixTitles — walk every shotfile and fix H1 to canonical path-based title
-  create_cmd('HalShooterFixTitles', function()
-    local fix_titles = require('shooter.core.fix_titles')
-    local stats = fix_titles.fix_all_titles()
-    local msg
-    if stats.fixed == 0 then
-      msg = string.format('Shotfile titles: %d checked, all already correct', stats.checked)
-    else
-      msg = string.format('Shotfile titles: fixed %d / %d', stats.fixed, stats.checked)
-      local git_root = files.get_git_root()
-      if git_root then
-        local ok, err = fix_titles.commit_fixes(git_root, stats.changes)
-        msg = msg .. (ok and ' — committed' or (' — commit failed: ' .. (err or 'unknown')))
-      end
-    end
-    if #stats.errors > 0 then
-      msg = msg .. string.format(' (%d errors)', #stats.errors)
-    end
-    require('shooter.utils').echo(msg)
-  end, { desc = 'Fix H1 titles in all shotfiles to match canonical path' })
+  -- HalShooterFixAll — walk every shotfile and apply full cleanup (title, empties, blanks) + commit
+  create_cmd('HalShooterFixAll', function()
+    local shotfile_fix = require('shooter.core.shotfile_fix')
+    local ok, msg = shotfile_fix.run_all()
+    require('shooter.utils').echo(msg or (ok and 'shotfiles fix: done' or 'shotfiles fix failed'))
+  end, { desc = 'Fix all shotfiles in repo (title, empties, blanks, commit)' })
+
+  -- HalShooterShotfileFix — cleanup current shotfile: title, empty shots, renumber, commit
+  create_cmd('HalShooterShotfileFix', require_shotfile(function()
+    local ok, msg = require('shooter.core.shotfile_fix').run()
+    require('shooter.utils').echo(msg or (ok and 'shotfile fix: done' or 'shotfile fix failed'))
+  end), { desc = 'Fix current shotfile: title, empty shots, renumber, commit' })
 
   -- ShoShotfileCfg = ShoCfgShotfile (bidirectional alias handled in Cfg)
 end
@@ -379,8 +371,8 @@ local function setup_subproject_commands()
         return
       end
       -- Create standard folder structure
-      local folders = { '.hal/shooter/shotfiles', '.hal/shooter/shotfiles/archive', '.hal/shooter/shotfiles/backlog',
-        '.hal/shooter/shotfiles/done', '.hal/shooter/shotfiles/reqs', '.hal/shooter/shotfiles/test', '.hal/shooter/shotfiles/wait' }
+      local folders = { '.hal/util/shooter/shotfiles', '.hal/util/shooter/shotfiles/archive', '.hal/util/shooter/shotfiles/backlog',
+        '.hal/util/shooter/shotfiles/done', '.hal/util/shooter/shotfiles/reqs', '.hal/util/shooter/shotfiles/test', '.hal/util/shooter/shotfiles/wait' }
       for _, folder in ipairs(folders) do
         vim.fn.mkdir(project_path .. '/' .. folder, 'p')
       end
@@ -417,8 +409,8 @@ local function setup_subproject_commands()
     end
     local project = project_mod.detect_from_cwd()
     local base = project and (git_root .. '/projects/' .. project) or git_root
-    local folders = { '.hal/shooter/shotfiles', '.hal/shooter/shotfiles/archive', '.hal/shooter/shotfiles/backlog',
-      '.hal/shooter/shotfiles/done', '.hal/shooter/shotfiles/reqs', '.hal/shooter/shotfiles/test', '.hal/shooter/shotfiles/wait' }
+    local folders = { '.hal/util/shooter/shotfiles', '.hal/util/shooter/shotfiles/archive', '.hal/util/shooter/shotfiles/backlog',
+      '.hal/util/shooter/shotfiles/done', '.hal/util/shooter/shotfiles/reqs', '.hal/util/shooter/shotfiles/test', '.hal/util/shooter/shotfiles/wait' }
     for _, folder in ipairs(folders) do
       vim.fn.mkdir(base .. '/' .. folder, 'p')
     end
@@ -788,7 +780,123 @@ local function setup_utility_commands()
     end
     local ok, msg = git_push.run(git_root)
     utils.echo(msg or (ok and 'shotfiles: done' or 'git push failed'))
-  end, { desc = 'git add/commit/push .hal/shooter/shotfiles' })
+  end, { desc = 'git add/commit/push .hal/util/shooter/shotfiles' })
+
+  -- HalShooterShotfileMergeInto — pick a target shotfile and merge the
+  -- current shotfile's shots into it, deleting the current file afterwards.
+  create_cmd('HalShooterShotfileMergeInto', require_shotfile(function()
+    local source_path = vim.api.nvim_buf_get_name(0)
+    if source_path == '' then
+      require('shooter.utils').echo('no current file')
+      return
+    end
+
+    local helpers = require('shooter.telescope.helpers')
+    local tele_pickers = require('telescope.pickers')
+    local finders = require('telescope.finders')
+    local conf = require('telescope.config').values
+    local actions = require('telescope.actions')
+    local action_state = require('telescope.actions.state')
+
+    local all = helpers.get_prompt_files({ include_all_projects = true })
+    local candidates = {}
+    for _, entry in ipairs(all) do
+      if entry.path ~= source_path then table.insert(candidates, entry) end
+    end
+    if #candidates == 0 then
+      require('shooter.utils').echo('no other shotfile to merge into')
+      return
+    end
+
+    tele_pickers.new({}, {
+      prompt_title = 'Merge into shotfile',
+      layout_strategy = 'vertical',
+      layout_config = { width = 0.8, height = 0.6 },
+      finder = finders.new_table({
+        results = candidates,
+        entry_maker = function(e)
+          return { value = e, display = e.display, ordinal = e.display, path = e.path }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(prompt_bufnr, map)
+        actions.select_default:replace(function()
+          local entry = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+          if not entry or not entry.value or not entry.value.path then return end
+          local target_path = entry.value.path
+          vim.ui.input({
+            prompt = 'Merge into ' .. vim.fn.fnamemodify(target_path, ':t')
+              .. '? (y/n): '
+          }, function(confirm)
+            if confirm == 'y' then
+              local merge = require('shooter.core.shotfile_merge')
+              local ok, msg = merge.merge_into(source_path, target_path)
+              require('shooter.utils').echo(msg or (ok and 'merged' or 'merge failed'))
+            end
+          end)
+        end)
+        map('n', '<C-c>', actions.close, { desc = 'close' })
+        map('n', 'q', actions.close, { desc = 'close' })
+        return true
+      end,
+    }):find()
+  end), { desc = 'Merge current shotfile into another (pick target)' })
+
+  -- HalShooterOpenLinkPicker — telescope picker of links in the current
+  -- buffer; select to open in browser / nvim / oil / system opener.
+  create_cmd('HalShooterOpenLinkPicker', function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local links = require('shooter.tools.links')
+    local entries = links.collect_from_lines(lines, nil)
+    table.sort(entries, function(a, b)
+      if a.line == b.line then return a.col < b.col end
+      return a.line < b.line
+    end)
+    require('shooter.telescope.link_picker').open(entries, {
+      title = 'Links in ' .. vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t'),
+    })
+  end, { desc = 'Open link picker for current buffer' })
+
+  -- HalShooterOpenLinkPickerTmux — collect links from every tmux pane in
+  -- the current window and open them via the same picker.
+  create_cmd('HalShooterOpenLinkPickerTmux', function()
+    local tmux = require('shooter.tools.tmux_panes')
+    if not tmux.in_tmux() then
+      require('shooter.utils').echo('not inside a tmux session')
+      return
+    end
+    local panes, err = tmux.list_current_window()
+    if err or #panes == 0 then
+      require('shooter.utils').echo(err or 'no tmux panes')
+      return
+    end
+    local links = require('shooter.tools.links')
+    local all = {}
+    for _, pane in ipairs(panes) do
+      local pane_lines = tmux.capture(pane.id)
+      if pane_lines then
+        local pane_entries = links.collect_from_lines(pane_lines, pane.title)
+        for _, e in ipairs(pane_entries) do table.insert(all, e) end
+      end
+    end
+    require('shooter.telescope.link_picker').open(all, {
+      title = 'Links in tmux window',
+      with_source = true,
+    })
+  end, { desc = 'Open link picker for tmux window panes' })
+
+  -- HalShooterGitWorktreeOpenOil — open oil at the parallel folder of the
+  -- current file in another worktree, without changing cwd.
+  create_cmd('HalShooterGitWorktreeOpenOil', function(opts)
+    local number = tonumber(opts.args)
+    if not number then
+      require('shooter.utils').echo('usage: :HalShooterGitWorktreeOpenOil <number>')
+      return
+    end
+    require('shooter.tools.git_worktree_oil').open_in_worktree(number)
+  end, { nargs = 1, desc = 'Open oil at parallel folder in worktree <n>' })
 
 end
 
@@ -904,10 +1012,32 @@ local function setup_hal_config_picker()
   end, { desc = 'Pick hal config file (~/.config/hal)' })
 end
 
+-- Setup Bullet namespace commands (b prefix in keymaps)
+local function setup_bullet_commands()
+  create_cmd('HalShooterBulletPickerCurrentFile', require_shotfile(function()
+    local pickers = require('shooter.telescope.pickers')
+    local picker = pickers.list_bullets_current_file()
+    if picker then picker:find() end
+  end), { desc = 'Bullet picker (current file)' })
+
+  create_cmd('HalShooterBulletPickerCurrentRepo', function()
+    local pickers = require('shooter.telescope.pickers')
+    local picker = pickers.list_bullets_current_repo()
+    if picker then picker:find() end
+  end, { desc = 'Bullet picker (current repo)' })
+
+  create_cmd('HalShooterBulletPickerAllRepos', function()
+    local pickers = require('shooter.telescope.pickers')
+    local picker = pickers.list_bullets_all_repos()
+    if picker then picker:find() end
+  end, { desc = 'Bullet picker (all repos)' })
+end
+
 -- Setup all vim commands
 function M.setup()
   setup_shotfile_commands()
   setup_shot_commands()
+  setup_bullet_commands()
   setup_tmux_commands()
   setup_subproject_commands()
   setup_domain_commands()
