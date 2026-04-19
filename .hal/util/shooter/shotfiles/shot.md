@@ -1,6 +1,6 @@
 # shot
 
-## shot 71 switch to use template for shotfile content
+## shot 73 switch to use template for shotfile content
 i changed my pattern for the shots a little bit.
 last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
 but this information is not included in the shotfile.
@@ -39,8 +39,20 @@ do something
 ```
 i want both cases to work
 
-## shot 70 shot sent notification
+## shot 72 shot sent notification
 after a shot was sent, a short notification should appear with the file name without extension, the shot number, and the number of tokens, which have been sent with the shot. tokens in llm speak
+
+## x shot 71 < >gp should also add the new shotfiles (2026-04-19 04:28:36)
+so that the .hal/util/shoooter/shotfiles folder is clean after running that command
+
+`git_push.run` now writes any modified shotfile buffers to disk (`flush_shotfile_buffers`) before staging, so a brand-new shotfile typed in a buffer — or unsaved edits to an existing one — get included in the sync commit. Tests added in `tests/core/git_push_spec.lua`.
+
+## x shot 70 respect meta area in shotfiles (2026-04-18 13:36:23)
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260418_133457.png
+i sometimes put links or info to the top of a shotfile under the title.
+i dont want the shot to be put in front of this meta area.
+i want to keep it there, when a new shot is created, so that the meta information is always at the top of the file and then the shots are below it.
+please look through the whole codebase and make sure, that the meta area is respected in all functionalities, for example when creating a new shot, when renumbering the shots, when moving shots and so on, when running shotfile file fixes and so on.
 
 ## x shot 69 sort shotfiles by edited last (last first) (2026-04-18 12:38:52)
 /Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260418_123849.png
@@ -179,17 +191,17 @@ in that case, please also color it in a lighter green then currently
 you colored shot 46, the one with the highest number, i want wanted to have the latest shootern shot instead. on the pic, it would be shot 41
 
 ## x shot 45 (2026-02-07 18:13:22)
-color the background color of the last shot made green
-
-## x shot 44 (2026-02-07 18:13:22)
 selecting multiple shot pickers and then hitting 1 to send them does not 
 
+## x shot 44 (2026-02-07 18:13:22)
+color the background color of the last shot made green
+
 ## x shot 43 (2026-02-07 18:13:22)
-the < >sy command should also mark the shot as done and call the renumber function
-i call this command usually, when i want to manually paste a shot to a agent cli
+the command < >. should also call the renumber function, after is marked a shot as done
 
 ## x shot 42 (2026-02-07 18:13:22)
-the command < >. should also call the renumber function, after is marked a shot as done
+the < >sy command should also mark the shot as done and call the renumber function
+i call this command usually, when i want to manually paste a shot to a agent cli
 
 ## x shot 41 (2026-02-07 09:14:41) @shot-41-20260207_091442
 test
