@@ -6,7 +6,8 @@ local shots = require('shooter.core.shots')
 
 local M = {}
 
--- Find the insertion point for new shots (after title, before first shot or orphan text)
+-- Find the insertion point for new shots (after title + meta area, before first shot)
+-- The meta area is any non-shot content between the title and the first shot header.
 -- Returns: insert_line, needs_blank_before, has_content_below
 local function find_insertion_line(bufnr)
   local lines = utils.get_buf_lines(bufnr, 0, -1)
@@ -32,31 +33,22 @@ local function find_insertion_line(bufnr)
     end
   end
 
-  -- Check for orphan text between title and first shot (or end of file)
-  local search_end = first_shot_line and (first_shot_line - 1) or #lines
-  local orphan_start = nil
-
-  for i = title_line + 1, search_end do
-    if not lines[i]:match('^%s*$') then
-      orphan_start = i
-      break
-    end
-  end
-
-  if orphan_start then
-    -- Insert above orphan text (content below = true)
-    local prev_line = lines[orphan_start - 1] or ''
-    return orphan_start, not prev_line:match('^%s*$'), true
-  end
-
   if first_shot_line then
     -- Insert before first shot (content below = true)
     local prev_line = lines[first_shot_line - 1] or ''
     return first_shot_line, not prev_line:match('^%s*$'), true
   end
 
-  -- No shots and no orphan text, insert after title (content below = false)
-  return title_line + 1, true, false
+  -- No shots found — find end of meta area (last non-blank line after title)
+  local last_content_line = title_line
+  for i = title_line + 1, #lines do
+    if not lines[i]:match('^%s*$') then
+      last_content_line = i
+    end
+  end
+
+  -- Insert after the last content line (title or meta area)
+  return last_content_line + 1, true, false
 end
 
 -- Create a new shot at the top (below title, above other shots)
@@ -172,21 +164,14 @@ function M.delete_last_shot()
   -- Delete the range
   utils.set_buf_lines(bufnr, shot_start - 1, shot_end, {})
 
-  -- Ensure blank line after title if next line is a shot header
+  -- Ensure blank line before first shot header (after title/meta area)
   local new_lines = utils.get_buf_lines(bufnr, 0, -1)
-  local title_line = nil
   for i, line in ipairs(new_lines) do
-    if line:match('^#%s+[^#]') then
-      title_line = i
+    if line:match('^##%s+x?%s*shot') then
+      if i > 1 and not new_lines[i - 1]:match('^%s*$') then
+        utils.set_buf_lines(bufnr, i - 1, i - 1, { '' })
+      end
       break
-    end
-  end
-
-  if title_line and title_line < #new_lines then
-    local next_line = new_lines[title_line + 1]
-    if next_line and next_line:match('^##%s+x?%s*shot') then
-      -- No blank line between title and first shot, insert one
-      utils.set_buf_lines(bufnr, title_line, title_line, { '' })
     end
   end
 

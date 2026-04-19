@@ -47,10 +47,10 @@ local function insert_shot_into_file(filepath, shot_lines, new_shot_num)
   local lines = {}
   for line in content:gmatch('([^\n]*)') do table.insert(lines, line) end
 
-  -- Find where to insert (after title, before first shot)
+  -- Find where to insert (after title + meta area, before first shot)
   local insert_at = #lines + 1
   for i, line in ipairs(lines) do
-    if line:match('^##%s+') then insert_at = i; break end
+    if line:match('^##%s+x?%s*shot') then insert_at = i; break end
   end
 
   -- Build new content

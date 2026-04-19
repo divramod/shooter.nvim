@@ -153,12 +153,12 @@ describe('shot_actions module', function()
       assert.is_true(shot2_line < shot1_line, 'Shot 2 should be before shot 1')
     end)
 
-    it('inserts above orphan text when orphan text exists', function()
+    it('inserts after meta area when meta area exists', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
       local lines = {
         '# Test Title',
         '',
-        'orphan text here',
+        'meta info here',
         '',
         '## shot 1',
         'Shot 1 content',
@@ -170,26 +170,26 @@ describe('shot_actions module', function()
       vim.cmd('stopinsert')
 
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      -- Find positions of new shot header and orphan text
+      -- Find positions of new shot header and meta text
       local new_shot_line = nil
-      local orphan_line = nil
+      local meta_line = nil
       for i, line in ipairs(result) do
         if line:match('^## shot 2') then
           new_shot_line = i
         end
-        if line == 'orphan text here' then
-          orphan_line = i
+        if line == 'meta info here' then
+          meta_line = i
         end
       end
 
-      -- New shot should be BEFORE orphan text (orphan becomes part of new shot)
+      -- New shot should be AFTER meta area (meta stays at top)
       assert.is_not_nil(new_shot_line)
-      assert.is_not_nil(orphan_line)
-      assert.is_true(new_shot_line < orphan_line,
-        'New shot should be before orphan text, got shot=' .. tostring(new_shot_line) .. ' orphan=' .. tostring(orphan_line))
+      assert.is_not_nil(meta_line)
+      assert.is_true(new_shot_line > meta_line,
+        'New shot should be after meta area, got shot=' .. tostring(new_shot_line) .. ' meta=' .. tostring(meta_line))
     end)
 
-    it('handles orphan text with no existing shots', function()
+    it('handles meta area with no existing shots', function()
       local bufnr = vim.api.nvim_create_buf(false, true)
       local lines = {
         '# Test Title',
@@ -204,7 +204,7 @@ describe('shot_actions module', function()
       vim.cmd('stopinsert')
 
       local result = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      -- New shot should be before the orphan notes
+      -- New shot should be after the meta notes
       local new_shot_line = nil
       local notes_line = nil
       for i, line in ipairs(result) do
@@ -218,7 +218,8 @@ describe('shot_actions module', function()
 
       assert.is_not_nil(new_shot_line)
       assert.is_not_nil(notes_line)
-      assert.is_true(new_shot_line < notes_line)
+      assert.is_true(new_shot_line > notes_line,
+        'New shot should be after meta notes, got shot=' .. tostring(new_shot_line) .. ' notes=' .. tostring(notes_line))
     end)
   end)
 
