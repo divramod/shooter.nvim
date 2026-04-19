@@ -381,12 +381,12 @@ Disable with `keymaps.smart_paste = false` in config.
 | `<space>cs` | Shot picker config |
 | `<space>cf` | Shotfile picker config |
 
-### Analytics Namespace (`<space>a`)
+### Analytics Namespace (`<space>A`)
 
 | Key | Action |
 |-----|--------|
-| `<space>aa` | Project analytics |
-| `<space>aA` | Global analytics |
+| `<space>Ap` | Project analytics |
+| `<space>Aa` | Global analytics |
 
 ### Help Namespace (`<space>h`)
 

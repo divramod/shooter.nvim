@@ -189,10 +189,10 @@ function M.setup()
   map('n', 'C', ':HalConfigPicker<cr>', 'Hal config picker')
 
   -- ============================================================
-  -- ANALYTICS NAMESPACE (a prefix)
+  -- ANALYTICS NAMESPACE (A prefix)
   -- ============================================================
-  map('n', 'aa', ':HalShooterAnalyticsProject<cr>', 'Project analytics')
-  map('n', 'aA', ':HalShooterAnalyticsGlobal<cr>', 'Global analytics')
+  map('n', 'Ap', ':HalShooterAnalyticsProject<cr>', 'Project analytics')
+  map('n', 'Aa', ':HalShooterAnalyticsGlobal<cr>', 'Global analytics')
 
   -- ============================================================
   -- HELP NAMESPACE (h prefix)

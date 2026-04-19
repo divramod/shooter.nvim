@@ -52,8 +52,8 @@ M.sections = {
     { 'cg', 'Global context' }, { 'cp', 'Project context' }, { 'ce', 'Plugin config' },
     { 'cs', 'Shot picker cfg' }, { 'cf', 'Shotfile cfg' },
   }},
-  { 'ANALYTICS (a)', {
-    { 'aa', 'Project' }, { 'aA', 'Global' },
+  { 'ANALYTICS (A)', {
+    { 'Ap', 'Project' }, { 'Aa', 'Global' },
   }},
   { 'HELP (h)', {
     { 'hh', 'Help' }, { 'hH', 'Health check' }, { 'hd', 'Dashboard' },

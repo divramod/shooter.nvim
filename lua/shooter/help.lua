@@ -121,9 +121,9 @@ CFG NAMESPACE (c prefix)
   cL        Edit local YAML       Open <repo>/.shooter/cfg/nvim/config.yaml
   cF        Fix YAML config       Strip invalid keys, fill missing defaults (global)
 
-ANALYTICS NAMESPACE (a prefix)
-  aa        Project analytics     Show project shot analytics
-  aA        Global analytics      Show global shot analytics
+ANALYTICS NAMESPACE (A prefix)
+  Ap        Project analytics     Show project shot analytics
+  Aa        Global analytics      Show global shot analytics
 
 HELP NAMESPACE (h prefix)
   hh        Help                  Show this help message

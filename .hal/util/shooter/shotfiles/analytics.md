@@ -1,11 +1,17 @@
 # analytics
 
-## shot 8
+## shot 9
 add git commit stats to analytics.
 as you also created a nice bar chart for the shots i created, i want a similar bar chart for the number of commits i did
 
-## shot 7
+## shot 8
 add lines of code stats per to analytics
+
+## x shot 7 remap < >a and < >A (2026-04-19 05:57:15)
+remap < >a to < >Ap
+remap < >A to < >Aa
+
+Renamed analytics namespace from `a` → `A`: `<leader>aa` → `<leader>Ap` (project), `<leader>aA` → `<leader>Aa` (global). Updated `keymaps.lua`, `cheatsheet.lua`, `help.lua`, `README.md`.
 
 ## x shot 6 (2026-02-04 08:56:48) @shot-6-20260204_085649
 the dot in the repo name makes problems, its still not working.
