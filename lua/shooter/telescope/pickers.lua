@@ -112,6 +112,8 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
 
   -- Reload session from disk in case user edited the YAML file
   session.reload_from_disk()
+  -- Clear sort metadata cache so mtime reflects current state
+  session_sort.clear_cache()
 
   -- Get all files then apply session filters
   local all_files = get_files_fn()
@@ -134,6 +136,7 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
   end
 
   local function refresh_picker(prompt_bufnr)
+    session_sort.clear_cache()
     local new_files = get_files_fn()
     local new_current = session.get_current_session()
     local new_filtered = session_filter.apply_filters(new_files, new_current, git_root)

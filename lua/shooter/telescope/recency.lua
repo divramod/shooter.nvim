@@ -5,7 +5,7 @@ local M = {}
 -- "1d", "3w", "2mo", "1y"). Returns "just now" for < 60s.
 function M.format_relative(diff)
   if diff < 0 then diff = 0 end
-  if diff < 60 then return 'just now' end
+  if diff < 60 then return string.format('%ds ago', diff) end
   if diff < 3600 then
     return string.format('%dm ago', math.floor(diff / 60))
   end
@@ -16,10 +16,18 @@ function M.format_relative(diff)
     return string.format('%dh ago', h)
   end
   if diff < 604800 then
-    return string.format('%dd ago', math.floor(diff / 86400))
+    local d = math.floor(diff / 86400)
+    local h = math.floor((diff % 86400) / 3600)
+    local m = math.floor((diff % 3600) / 60)
+    if h > 0 and m > 0 then return string.format('%dd %dh %dm ago', d, h, m) end
+    if h > 0 then return string.format('%dd %dh ago', d, h) end
+    return string.format('%dd ago', d)
   end
   if diff < 2592000 then
-    return string.format('%dw ago', math.floor(diff / 604800))
+    local w = math.floor(diff / 604800)
+    local d = math.floor((diff % 604800) / 86400)
+    if d > 0 then return string.format('%dw %dd ago', w, d) end
+    return string.format('%dw ago', w)
   end
   if diff < 31536000 then
     return string.format('%dmo ago', math.floor(diff / 2592000))
