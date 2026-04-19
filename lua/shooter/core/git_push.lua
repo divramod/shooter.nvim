@@ -13,6 +13,25 @@ local function git(git_root, ...)
   return out, vim.v.shell_error
 end
 
+-- Persist any modified buffers whose file lives under the shotfiles tree, so
+-- git sees the latest content (incl. brand-new shotfiles) before staging.
+-- Compares via realpath because vim resolves symlinks (e.g. /tmp → /private/tmp
+-- on macOS) when opening buffers, while git_root keeps the unresolved path.
+function M.flush_shotfile_buffers(git_root)
+  if not git_root or git_root == '' then return end
+  local prefix = (vim.uv.fs_realpath(git_root) or git_root)
+    .. '/' .. TARGET_PATH .. '/'
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified then
+      local name = vim.api.nvim_buf_get_name(buf)
+      local resolved = name ~= '' and (vim.uv.fs_realpath(name) or name) or ''
+      if resolved ~= '' and resolved:sub(1, #prefix) == prefix then
+        vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
+      end
+    end
+  end
+end
+
 -- Stage all shotfile changes and commit them with a fixed subject.
 -- Returns: ok_bool, msg_or_nil, committed_bool
 --   ok=true, committed=false → nothing to commit (no-op, msg explains)
@@ -61,6 +80,7 @@ end
 -- Composite: fix titles, stage+commit any shotfile changes, push if any commit landed.
 -- Returns: ok_bool, msg_for_user
 function M.run(git_root)
+  M.flush_shotfile_buffers(git_root)
   local fix_titles = require('shooter.core.fix_titles')
   local stats = fix_titles.fix_all_titles(git_root)
   local title_committed = false

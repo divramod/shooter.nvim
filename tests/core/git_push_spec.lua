@@ -226,5 +226,58 @@ describe('shooter.core.git_push', function()
 
       os.execute('rm -rf ' .. remote)
     end)
+
+    it('persists modified shotfile buffers before staging', function()
+      local remote = setup_remote()
+      local filepath = target .. '/feats.md'
+      -- File on disk is empty; buffer adds the content the user just typed.
+      utils.write_file(filepath, '')
+      vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false,
+        { '# feats', '', '## shot 1', 'unsaved body' })
+      assert.is_true(vim.bo[bufnr].modified)
+
+      local ok, msg = git_push.run(repo)
+      assert.is_true(ok, msg)
+      assert.truthy(msg:find('synced'))
+      assert.is_false(vim.bo[bufnr].modified)
+
+      -- Committed content matches the buffer, not the original empty file.
+      local committed = vim.fn.system({
+        'git', '-C', repo, 'show', 'HEAD:.hal/util/shooter/shotfiles/feats.md',
+      })
+      assert.truthy(committed:find('unsaved body'))
+
+      vim.cmd('bdelete! ' .. bufnr)
+      os.execute('rm -rf ' .. remote)
+    end)
+  end)
+
+  describe('flush_shotfile_buffers', function()
+    it('only writes buffers under the shotfiles tree', function()
+      local inside = target .. '/inside.md'
+      local outside = repo .. '/outside.md'
+      utils.write_file(inside, '')
+      utils.write_file(outside, '')
+
+      vim.cmd('edit ' .. vim.fn.fnameescape(inside))
+      local in_buf = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(in_buf, 0, -1, false, { 'inside-new' })
+
+      vim.cmd('edit ' .. vim.fn.fnameescape(outside))
+      local out_buf = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(out_buf, 0, -1, false, { 'outside-new' })
+
+      git_push.flush_shotfile_buffers(repo)
+
+      assert.is_false(vim.bo[in_buf].modified)
+      assert.is_true(vim.bo[out_buf].modified)
+      assert.truthy(utils.read_file(inside):find('inside', 1, true))
+      assert.falsy((utils.read_file(outside) or ''):find('outside', 1, true))
+
+      vim.cmd('bdelete! ' .. in_buf)
+      vim.cmd('bdelete! ' .. out_buf)
+    end)
   end)
 end)
