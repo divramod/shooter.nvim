@@ -1,5 +1,7 @@
 # shot
 
+## shot 74 
+
 ## shot 73 switch to use template for shotfile content
 i changed my pattern for the shots a little bit.
 last, i often write a title to the shot, which is a short description of the shot, so that i can easier identify it in the shotfile.
