@@ -9,24 +9,8 @@ local M = {}
 -- Last shotfile tracking (in-memory + persisted to disk)
 local _last_shotfile = nil
 
--- Resolve the main worktree's toplevel so persistence is shared across all
--- worktrees of the same repo. Falls back to the current git toplevel when
--- `git worktree list` is unavailable or we're not in a worktree.
-function M.get_main_git_root()
-  local wt_lines = vim.fn.systemlist('git worktree list --porcelain')
-  if vim.v.shell_error == 0 then
-    for _, line in ipairs(wt_lines) do
-      local path = line:match('^worktree (.+)')
-      if path and path ~= '' then return path end
-    end
-  end
-  local root = vim.fn.systemlist('git rev-parse --show-toplevel')
-  if vim.v.shell_error == 0 and #root > 0 then return root[1] end
-  return nil
-end
-
 local function _last_shotfile_path_for_main()
-  local git_root = M.get_main_git_root()
+  local git_root = M.get_git_root()
   if not git_root then return nil end
   local storage = require('shooter.session.storage')
   local ext_config = require('shooter.core.ext_config')
@@ -53,14 +37,37 @@ local function _load_last_shotfile()
   return nil
 end
 
--- Called by syntax.lua on BufEnter for shotfiles
+-- Called by syntax.lua on BufEnter for shotfiles. Only tracks files living in
+-- the main worktree's shotfiles dir — we never want < >l to bring the user
+-- back to a worktree-local shotfile.
 function M.track_last_shotfile(filepath)
+  if not M.is_in_prompts_folder(filepath) then return end
   _last_shotfile = filepath
   _persist_last_shotfile(filepath)
 end
 
--- Helper: Get git root directory
+-- Helper: Get the git root that owns shotfile state — always the main
+-- worktree's toplevel, regardless of cwd. Shotfiles live on one branch; this
+-- keeps every command (open, edit, rename, move, pick, list, fix) pointed at
+-- that single source of truth, so a worktree never edits its own copy.
+-- Falls back to the current toplevel when `git worktree list` is unavailable.
 function M.get_git_root()
+  local wt_lines = vim.fn.systemlist('git worktree list --porcelain')
+  if vim.v.shell_error == 0 then
+    for _, line in ipairs(wt_lines) do
+      local path = line:match('^worktree (.+)')
+      if path and path ~= '' then return path end
+    end
+  end
+  local root = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error == 0 and #root > 0 then return root[1] end
+  return nil
+end
+
+-- Helper: Get the current cwd's git toplevel. Use this only for non-shotfile
+-- operations that should follow the worktree the user is actually in (e.g.
+-- "last edited file in repo" navigation).
+function M.get_cwd_git_root()
   local result = vim.fn.systemlist('git rev-parse --show-toplevel')
   if vim.v.shell_error == 0 and #result > 0 then
     return result[1]
@@ -141,23 +148,19 @@ function M.get_prompts_dir(project)
   return project_mod.get_prompts_dir(project)
 end
 
--- Helper: Check if path is in prompts folder (checks both root and project paths)
+-- Helper: Check if path is in the prompts folder of the main worktree only.
+-- A shotfile living inside a numbered worktree is deliberately NOT recognised
+-- — shotfiles are single-source on the main branch and worktree copies must
+-- not be edited through shooter commands.
 function M.is_in_prompts_folder(path)
   if not path then return false end
-  -- Check root prompts path (cwd-based)
-  local root_prompts = utils.cwd() .. '/' .. config.get('paths.prompts_root')
-  if path:find(root_prompts, 1, true) then
+  local git_root = M.get_git_root()
+  if not git_root then return false end
+  if path:find(git_root .. '/.hal/util/shooter/shotfiles', 1, true) then
     return true
   end
-  -- Check using git root (handles cwd != repo root)
-  local git_root = M.get_git_root()
-  if git_root then
-    if path:find(git_root .. '/.hal/util/shooter/shotfiles', 1, true) then
-      return true
-    end
-    if path:find(git_root .. '/projects/.+/.hal/util/shooter/shotfiles') then
-      return true
-    end
+  if path:find(git_root .. '/projects/.+/.hal/util/shooter/shotfiles') then
+    return true
   end
   return false
 end

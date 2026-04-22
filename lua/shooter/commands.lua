@@ -677,7 +677,7 @@ local function setup_nav_commands()
 
   -- ShoNavLastEditedFile - opens most recently modified file in repo
   create_cmd('HalShooterNavLastEditedFile', function()
-    local git_root = files.get_git_root()
+    local git_root = files.get_cwd_git_root()
     if not git_root then
       return
     end
@@ -692,7 +692,7 @@ local function setup_nav_commands()
 
   -- ShoNavLastEditedFiles - telescope picker for last N edited files
   create_cmd('HalShooterNavLastEditedFiles', function(opts)
-    local git_root = files.get_git_root()
+    local git_root = files.get_cwd_git_root()
     if not git_root then
       return
     end

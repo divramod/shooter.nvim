@@ -2,6 +2,10 @@
 local files = require('shooter.core.files')
 local utils = require('shooter.utils')
 
+-- Capture real get_git_root before the outer describe monkey-patches it, so
+-- nested specs can exercise the true main-worktree resolution.
+local real_get_git_root = files.get_git_root
+
 describe('shooter.core.files', function()
   local test_root = '/tmp/shooter_files_test'
   local original_get_git_root
@@ -143,7 +147,7 @@ describe('shooter.core.files', function()
     end)
   end)
 
-  describe('get_main_git_root', function()
+  describe('get_git_root (main-worktree-oriented)', function()
     local main_root = '/tmp/shooter_main_wt'
     local wt_root = '/tmp/shooter_wt_1'
     local prev_cwd
@@ -157,6 +161,8 @@ describe('shooter.core.files', function()
         .. 'commit -q --allow-empty -m init')
       os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
         .. wt_root .. ' >/dev/null 2>&1')
+      -- Outer describe monkey-patches get_git_root; restore the real one.
+      files.get_git_root = real_get_git_root
     end)
 
     after_each(function()
@@ -168,16 +174,23 @@ describe('shooter.core.files', function()
 
     it('returns the main worktree path when cwd is a worktree', function()
       vim.cmd('cd ' .. wt_root)
-      local root = files.get_main_git_root()
+      local root = files.get_git_root()
       assert.truthy(root)
       assert.truthy(root:match('shooter_main_wt$'))
     end)
 
     it('returns the main worktree path when cwd is main', function()
       vim.cmd('cd ' .. main_root)
-      local root = files.get_main_git_root()
+      local root = files.get_git_root()
       assert.truthy(root)
       assert.truthy(root:match('shooter_main_wt$'))
+    end)
+
+    it('get_cwd_git_root returns the current worktree toplevel', function()
+      vim.cmd('cd ' .. wt_root)
+      local root = files.get_cwd_git_root()
+      assert.truthy(root)
+      assert.truthy(root:match('shooter_wt_1$'))
     end)
   end)
 end)
