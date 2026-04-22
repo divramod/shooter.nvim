@@ -1,5 +1,9 @@
 # fix
 
+## x shot 5 < >v should also switch the cwd to main (2026-04-22 16:50:33)
+
+## x shot 4 < >n not working after running < >l from a non main worktree (2026-04-22 16:50:33)
+
 ## x shot 3 < >l from worktree not working (2026-04-22 16:37:59)
 running < >l from a worktree (cwd) is not opening the last shotfile in main right now. it should do it. please fix it
 
