@@ -1,5 +1,9 @@
 # fix
 
+## x shot 7 HalShooterShotfileLast opens a shotfile from a worktree, when ran on startup in ~/a/hal (2026-04-22 17:25:16)
+this is maybe from before the fix.
+please have a look, that HalShooterShotfileLast always opens the last shotfile from the main branch, even when ran from a worktree.
+
 ## x shot 6 edit shotfiles only in main (2026-04-22 17:11:42)
 I want to edit shotfiles only in the main branch. So regardless of where I call Space+v to open the last shotfile, it should always show me the last shotfile from the main branch. I don’t want to work with shotfiles inside worktrees.
 
