@@ -91,4 +91,42 @@ describe('shooter.core.files', function()
       assert.is_nil(files.get_file_git_root(''))
     end)
   end)
+
+  describe('get_main_git_root', function()
+    local main_root = '/tmp/shooter_main_wt'
+    local wt_root = '/tmp/shooter_wt_1'
+    local prev_cwd
+
+    before_each(function()
+      prev_cwd = vim.fn.getcwd()
+      os.execute('rm -rf ' .. main_root .. ' ' .. wt_root)
+      os.execute('mkdir -p ' .. main_root)
+      os.execute('git -C ' .. main_root .. ' init -q -b main')
+      os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
+        .. 'commit -q --allow-empty -m init')
+      os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
+        .. wt_root .. ' >/dev/null 2>&1')
+    end)
+
+    after_each(function()
+      vim.cmd('cd ' .. vim.fn.fnameescape(prev_cwd))
+      os.execute('git -C ' .. main_root .. ' worktree remove -f ' .. wt_root
+        .. ' >/dev/null 2>&1')
+      os.execute('rm -rf ' .. main_root .. ' ' .. wt_root)
+    end)
+
+    it('returns the main worktree path when cwd is a worktree', function()
+      vim.cmd('cd ' .. wt_root)
+      local root = files.get_main_git_root()
+      assert.truthy(root)
+      assert.truthy(root:match('shooter_main_wt$'))
+    end)
+
+    it('returns the main worktree path when cwd is main', function()
+      vim.cmd('cd ' .. main_root)
+      local root = files.get_main_git_root()
+      assert.truthy(root)
+      assert.truthy(root:match('shooter_main_wt$'))
+    end)
+  end)
 end)

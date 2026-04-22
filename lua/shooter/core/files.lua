@@ -9,25 +9,42 @@ local M = {}
 -- Last shotfile tracking (in-memory + persisted to disk)
 local _last_shotfile = nil
 
-local function _persist_last_shotfile(filepath)
-  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
-  if vim.v.shell_error ~= 0 or #git_root == 0 then return end
+-- Resolve the main worktree's toplevel so persistence is shared across all
+-- worktrees of the same repo. Falls back to the current git toplevel when
+-- `git worktree list` is unavailable or we're not in a worktree.
+function M.get_main_git_root()
+  local wt_lines = vim.fn.systemlist('git worktree list --porcelain')
+  if vim.v.shell_error == 0 then
+    for _, line in ipairs(wt_lines) do
+      local path = line:match('^worktree (.+)')
+      if path and path ~= '' then return path end
+    end
+  end
+  local root = vim.fn.systemlist('git rev-parse --show-toplevel')
+  if vim.v.shell_error == 0 and #root > 0 then return root[1] end
+  return nil
+end
+
+local function _last_shotfile_path_for_main()
+  local git_root = M.get_main_git_root()
+  if not git_root then return nil end
   local storage = require('shooter.session.storage')
   local ext_config = require('shooter.core.ext_config')
-  local slug = storage.get_repo_slug(git_root[1])
-  local path = ext_config.last_shotfile_path(slug:gsub('/', '_'))
+  local slug = storage.get_repo_slug(git_root)
+  return ext_config.last_shotfile_path(slug:gsub('/', '_'))
+end
+
+local function _persist_last_shotfile(filepath)
+  local path = _last_shotfile_path_for_main()
+  if not path then return end
   utils.ensure_dir(utils.get_dirname(path))
   local f = io.open(path, 'w')
   if f then f:write(filepath); f:close() end
 end
 
 local function _load_last_shotfile()
-  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
-  if vim.v.shell_error ~= 0 or #git_root == 0 then return nil end
-  local storage = require('shooter.session.storage')
-  local ext_config = require('shooter.core.ext_config')
-  local slug = storage.get_repo_slug(git_root[1])
-  local path = ext_config.last_shotfile_path(slug:gsub('/', '_'))
+  local path = _last_shotfile_path_for_main()
+  if not path then return nil end
   local f = io.open(path, 'r')
   if f then
     local content = f:read('*l'); f:close()
