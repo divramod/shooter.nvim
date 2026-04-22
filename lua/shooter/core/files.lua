@@ -32,7 +32,12 @@ local function _load_last_shotfile()
   local f = io.open(path, 'r')
   if f then
     local content = f:read('*l'); f:close()
-    if content and vim.fn.filereadable(content) == 1 then return content end
+    -- Reject stale entries that point into a worktree copy of the shotfiles
+    -- tree (pre-shot-6 persisted state) so < >l always returns to main.
+    if content and vim.fn.filereadable(content) == 1
+        and M.is_in_prompts_folder(content) then
+      return content
+    end
   end
   return nil
 end
@@ -322,8 +327,9 @@ end
 -- Find last edited shooter file (project-aware)
 -- Uses tracked shotfile (set by BufEnter autocmd) first, falls back to ls -t
 function M.find_last_file(project)
-  -- Primary: return Neovim-tracked last shotfile
-  if _last_shotfile and vim.fn.filereadable(_last_shotfile) == 1 then
+  -- Primary: return Neovim-tracked last shotfile (must live under main)
+  if _last_shotfile and vim.fn.filereadable(_last_shotfile) == 1
+      and M.is_in_prompts_folder(_last_shotfile) then
     return _last_shotfile
   end
 

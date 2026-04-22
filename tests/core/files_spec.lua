@@ -1,6 +1,8 @@
 -- Tests for shooter.core.files
 local files = require('shooter.core.files')
 local utils = require('shooter.utils')
+local ext_config = require('shooter.core.ext_config')
+local storage = require('shooter.session.storage')
 
 -- Capture real get_git_root before the outer describe monkey-patches it, so
 -- nested specs can exercise the true main-worktree resolution.
@@ -191,6 +193,73 @@ describe('shooter.core.files', function()
       local root = files.get_cwd_git_root()
       assert.truthy(root)
       assert.truthy(root:match('shooter_wt_1$'))
+    end)
+  end)
+
+  describe('find_last_file stale-state rejection', function()
+    local base = vim.fn.expand('~') .. '/.cache/shooter_stale_test'
+    local main_root = base .. '/main'
+    local wt_root = base .. '/wt_1'
+    local prev_cwd
+    local persisted_path
+    local original_persisted
+
+    before_each(function()
+      prev_cwd = vim.fn.getcwd()
+      os.execute('rm -rf ' .. base)
+      os.execute('mkdir -p ' .. main_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('git -C ' .. main_root .. ' init -q -b main')
+      os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
+        .. 'commit -q --allow-empty -m init')
+      os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
+        .. wt_root .. ' >/dev/null 2>&1')
+      os.execute('mkdir -p ' .. wt_root .. '/.hal/util/shooter/shotfiles')
+      -- Main shotfile exists so mtime fallback has something to return
+      local main_file = main_root .. '/.hal/util/shooter/shotfiles/main-only.md'
+      local mf = io.open(main_file, 'w'); mf:write('# main-only\n'); mf:close()
+      -- Stale worktree shotfile persisted from before the fix
+      local stale_file = wt_root .. '/.hal/util/shooter/shotfiles/stale.md'
+      local sf = io.open(stale_file, 'w'); sf:write('# stale\n'); sf:close()
+
+      files.get_git_root = real_get_git_root
+      vim.cmd('cd ' .. main_root)
+      local slug = storage.get_repo_slug(real_get_git_root()):gsub('/', '_')
+      persisted_path = ext_config.last_shotfile_path(slug)
+      -- Back up any real persisted file, write the stale worktree path
+      local b = io.open(persisted_path, 'r')
+      if b then original_persisted = b:read('*a'); b:close() end
+      utils.ensure_dir(utils.get_dirname(persisted_path))
+      local pf = io.open(persisted_path, 'w')
+      pf:write(stale_file); pf:close()
+    end)
+
+    after_each(function()
+      vim.cmd('cd ' .. vim.fn.fnameescape(prev_cwd))
+      if original_persisted then
+        local pf = io.open(persisted_path, 'w'); pf:write(original_persisted); pf:close()
+      else
+        os.remove(persisted_path)
+      end
+      original_persisted = nil
+      os.execute('git -C ' .. main_root .. ' worktree remove -f ' .. wt_root
+        .. ' >/dev/null 2>&1')
+      os.execute('rm -rf ' .. base)
+    end)
+
+    it('rejects a persisted worktree-path shotfile and falls back to main', function()
+      vim.cmd('cd ' .. main_root)
+      local last = files.find_last_file()
+      assert.truthy(last)
+      assert.truthy(last:match('main%-only%.md$'),
+        'expected main-only.md, got: ' .. tostring(last))
+    end)
+
+    it('from a worktree cwd, still returns the main-path shotfile', function()
+      vim.cmd('cd ' .. wt_root)
+      local last = files.find_last_file()
+      assert.truthy(last)
+      assert.truthy(last:match('main%-only%.md$'),
+        'expected main-only.md, got: ' .. tostring(last))
     end)
   end)
 end)
