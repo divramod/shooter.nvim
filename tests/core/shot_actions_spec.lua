@@ -1,5 +1,6 @@
 -- Test suite for shooter.core.shot_actions module
 local shot_actions = require('shooter.core.shot_actions')
+local files = require('shooter.core.files')
 
 describe('shot_actions module', function()
   local original_echo
@@ -541,6 +542,61 @@ describe('shot_actions module', function()
       shot_actions.goto_prev_sent_shot()
       cursor = vim.api.nvim_win_get_cursor(0)
       assert.are.equal(3, cursor[1])
+    end)
+  end)
+
+  -- Regression: after < >l opens a main-worktree shotfile from a numbered
+  -- worktree (cd-to-main + edit), < >n must find the buffer as a shotfile and
+  -- create a new shot. Before the < >l cd fix, cwd stayed in the worktree so
+  -- is_shooter_file returned false and the require_shotfile guard silently
+  -- dropped < >n.
+  describe('new shot after opening main shotfile from a worktree', function()
+    local base = vim.fn.expand('~') .. '/.cache/shooter_flow_test'
+    local main_root = base .. '/main'
+    local wt_root = base .. '/wt_1'
+    local shotfile
+    local prev_cwd
+
+    before_each(function()
+      prev_cwd = vim.fn.getcwd()
+      os.execute('rm -rf ' .. base)
+      os.execute('mkdir -p ' .. main_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('git -C ' .. main_root .. ' init -q -b main')
+      os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
+        .. 'commit -q --allow-empty -m init')
+      os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
+        .. wt_root .. ' >/dev/null 2>&1')
+      shotfile = main_root .. '/.hal/util/shooter/shotfiles/thing.md'
+      local f = io.open(shotfile, 'w')
+      f:write('# thing\n\n## shot 1 existing\n')
+      f:close()
+    end)
+
+    after_each(function()
+      vim.cmd('cd ' .. vim.fn.fnameescape(prev_cwd))
+      vim.cmd('silent! %bdelete!')
+      os.execute('git -C ' .. main_root .. ' worktree remove -f ' .. wt_root
+        .. ' >/dev/null 2>&1')
+      os.execute('rm -rf ' .. base)
+    end)
+
+    it('< >l cds to main then < >n adds a shot to the main shotfile', function()
+      vim.cmd('cd ' .. wt_root)
+      files.open_shotfile(shotfile)
+      assert.truthy(vim.fn.getcwd():match('/main$'),
+        'cwd should switch to main worktree')
+      assert.truthy(files.is_shooter_file(),
+        'current buffer should register as a shotfile after cd+edit')
+
+      shot_actions.create_new_shot()
+      vim.cmd('stopinsert')
+
+      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+      local has_shot_2 = false
+      for _, line in ipairs(lines) do
+        if line:match('^## shot 2') then has_shot_2 = true; break end
+      end
+      assert.is_true(has_shot_2, 'create_new_shot should have inserted shot 2')
     end)
   end)
 end)
