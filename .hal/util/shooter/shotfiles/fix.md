@@ -1,5 +1,12 @@
 # fix
 
+## x shot 6 edit shotfiles only in main (2026-04-22 17:11:42)
+I want to edit shotfiles only in the main branch. So regardless of where I call Space+v to open the last shotfile, it should always show me the last shotfile from the main branch. I don’t want to work with shotfiles inside worktrees.
+
+I just ran Space+v and it opened a shotfile inside the worktree I was in at that moment. Do you understand what I mean? This is really important so I don’t get conflicts with shotfiles.
+
+Please adapt that across the whole shooter codebase so that all commands that open shotfiles, edit shotfiles, or rename them are aware of that. 
+
 ## x shot 5 < >v should also switch the cwd to main (2026-04-22 16:50:33)
 
 ## x shot 4 < >n not working after running < >l from a non main worktree (2026-04-22 16:50:33)
