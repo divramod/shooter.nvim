@@ -83,10 +83,18 @@ local function setup_shotfile_commands()
     if picker then picker:find() end
   end, { desc = 'Shotfile picker (all repos)' })
 
-  -- HalShooterShotfileLast — Neovim tracking first, hal CLI fallback
+  -- HalShooterShotfileLast — Neovim tracking first, hal CLI fallback.
+  -- If the shotfile lives in a different git worktree (e.g. main) than the
+  -- current cwd (e.g. a numbered worktree), cd to that worktree so buffer and
+  -- cwd stay aligned.
   create_cmd('HalShooterShotfileLast', function()
     local last_file = files.get_last_edited_file()
-    if last_file then vim.cmd('hide edit ' .. vim.fn.fnameescape(last_file)) end
+    if not last_file then return end
+    local target_root = files.get_file_git_root(last_file)
+    if target_root and target_root ~= vim.fn.getcwd() then
+      vim.cmd('cd ' .. vim.fn.fnameescape(target_root))
+    end
+    vim.cmd('hide edit ' .. vim.fn.fnameescape(last_file))
   end, { desc = 'Open last edited shotfile' })
 
   -- ShoShotfileRename

@@ -51,6 +51,19 @@ function M.get_git_root()
   return nil
 end
 
+-- Helper: Get git root (toplevel) that contains a given file path.
+-- Works across worktrees — each worktree returns its own toplevel.
+function M.get_file_git_root(filepath)
+  if not filepath or filepath == '' then return nil end
+  local dir = vim.fn.fnamemodify(filepath, ':h')
+  if dir == '' or vim.fn.isdirectory(dir) ~= 1 then return nil end
+  local result = vim.fn.systemlist('git -C ' .. vim.fn.shellescape(dir) .. ' rev-parse --show-toplevel')
+  if vim.v.shell_error == 0 and #result > 0 and result[1] ~= '' then
+    return result[1]
+  end
+  return nil
+end
+
 -- Helper: Get file path (works in normal buffer and Oil)
 function M.get_current_file_path()
   local filetype = vim.bo.filetype
