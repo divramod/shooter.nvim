@@ -81,6 +81,17 @@ function M.get_file_git_root(filepath)
   return nil
 end
 
+-- Open a shotfile path, cd-ing to its git root first if different from cwd.
+-- Keeps buffer and cwd aligned when the file lives in another worktree.
+function M.open_shotfile(filepath)
+  if not filepath or filepath == '' then return end
+  local target_root = M.get_file_git_root(filepath)
+  if target_root and target_root ~= vim.fn.getcwd() then
+    vim.cmd('cd ' .. vim.fn.fnameescape(target_root))
+  end
+  vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+end
+
 -- Helper: Get file path (works in normal buffer and Oil)
 function M.get_current_file_path()
   local filetype = vim.bo.filetype

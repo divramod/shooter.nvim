@@ -282,7 +282,7 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
         local entry = action_state.get_selected_entry()
         if entry and entry.value and entry.value.path then
           actions.close(prompt_bufnr)
-          vim.cmd('edit ' .. vim.fn.fnameescape(entry.value.path))
+          files_mod.open_shotfile(entry.value.path)
         else
           -- No matching file — offer to create from prompt text
           local prompt = action_state.get_current_picker(prompt_bufnr):_get_prompt()
@@ -313,7 +313,7 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
           if f then
             f:write(content)
             f:close()
-            vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+            files_mod.open_shotfile(filepath)
             vim.schedule(function()
               local lc = vim.api.nvim_buf_line_count(0)
               vim.api.nvim_win_set_cursor(0, {math.min(3, lc), 0})

@@ -92,6 +92,57 @@ describe('shooter.core.files', function()
     end)
   end)
 
+  describe('open_shotfile', function()
+    local main_root = '/tmp/shooter_open_main'
+    local wt_root = '/tmp/shooter_open_wt_1'
+    local shotfile
+    local prev_cwd
+
+    before_each(function()
+      prev_cwd = vim.fn.getcwd()
+      os.execute('rm -rf ' .. main_root .. ' ' .. wt_root)
+      os.execute('mkdir -p ' .. main_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('git -C ' .. main_root .. ' init -q -b main')
+      os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
+        .. 'commit -q --allow-empty -m init')
+      os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
+        .. wt_root .. ' >/dev/null 2>&1')
+      shotfile = main_root .. '/.hal/util/shooter/shotfiles/thing.md'
+      local f = io.open(shotfile, 'w'); f:write('# thing\n'); f:close()
+    end)
+
+    after_each(function()
+      vim.cmd('cd ' .. vim.fn.fnameescape(prev_cwd))
+      vim.cmd('silent! %bdelete!')
+      os.execute('git -C ' .. main_root .. ' worktree remove -f ' .. wt_root
+        .. ' >/dev/null 2>&1')
+      os.execute('rm -rf ' .. main_root .. ' ' .. wt_root)
+    end)
+
+    it('cds to the file git root when cwd differs', function()
+      vim.cmd('cd ' .. wt_root)
+      files.open_shotfile(shotfile)
+      assert.truthy(vim.fn.getcwd():match('shooter_open_main$'))
+      assert.truthy(vim.fn.expand('%:p'):match('thing%.md$'))
+    end)
+
+    it('leaves cwd unchanged when file is already in current root', function()
+      vim.cmd('cd ' .. main_root)
+      local before = vim.fn.getcwd()
+      files.open_shotfile(shotfile)
+      assert.equals(before, vim.fn.getcwd())
+      assert.truthy(vim.fn.expand('%:p'):match('thing%.md$'))
+    end)
+
+    it('is a no-op for nil or empty path', function()
+      vim.cmd('cd ' .. wt_root)
+      local before = vim.fn.getcwd()
+      files.open_shotfile(nil)
+      files.open_shotfile('')
+      assert.equals(before, vim.fn.getcwd())
+    end)
+  end)
+
   describe('get_main_git_root', function()
     local main_root = '/tmp/shooter_main_wt'
     local wt_root = '/tmp/shooter_wt_1'

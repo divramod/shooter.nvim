@@ -90,11 +90,7 @@ local function setup_shotfile_commands()
   create_cmd('HalShooterShotfileLast', function()
     local last_file = files.get_last_edited_file()
     if not last_file then return end
-    local target_root = files.get_file_git_root(last_file)
-    if target_root and target_root ~= vim.fn.getcwd() then
-      vim.cmd('cd ' .. vim.fn.fnameescape(target_root))
-    end
-    vim.cmd('hide edit ' .. vim.fn.fnameescape(last_file))
+    files.open_shotfile(last_file)
   end, { desc = 'Open last edited shotfile' })
 
   -- ShoShotfileRename
