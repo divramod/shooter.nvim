@@ -39,3 +39,6 @@ plugin/packer_compiled.lua
 .beads/last-touched
 .hal/util/shooter/tmp/image-pastes/
 envfiles/
+
+# Claude Code worktree slot marker (local runtime state)
+.claude-context
