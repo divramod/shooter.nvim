@@ -114,6 +114,57 @@ describe('shooter.core.git_push', function()
       assert.is_nil(files_in_commit:find('other%.txt'))
     end)
 
+    it('commits docs/ files alongside shotfiles when docs/ exists', function()
+      os.execute('mkdir -p ' .. repo .. '/docs/sub')
+      utils.write_file(repo .. '/docs/readme.md', '# readme\n')
+      utils.write_file(repo .. '/docs/sub/note.md', '# note\n')
+      utils.write_file(target .. '/feats.md', '# feats\n')
+
+      local ok, _, committed = git_push.stage_and_commit(repo)
+      assert.is_true(ok)
+      assert.is_true(committed)
+
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find('feats%.md'))
+      assert.truthy(files_in_commit:find('docs/readme%.md'))
+      assert.truthy(files_in_commit:find('docs/sub/note%.md'))
+    end)
+
+    it('commits docs-only changes when shotfiles tree is unchanged', function()
+      os.execute('mkdir -p ' .. repo .. '/docs')
+      utils.write_file(repo .. '/docs/readme.md', '# readme\n')
+
+      local ok, _, committed = git_push.stage_and_commit(repo)
+      assert.is_true(ok)
+      assert.is_true(committed)
+
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find('docs/readme%.md'))
+    end)
+
+    it('skips docs/ silently when the folder does not exist', function()
+      utils.write_file(target .. '/feats.md', '# feats\n')
+      local ok, _, committed = git_push.stage_and_commit(repo)
+      assert.is_true(ok)
+      assert.is_true(committed)
+    end)
+
+    it('does not stage files outside shotfiles or docs/', function()
+      os.execute('mkdir -p ' .. repo .. '/docs')
+      utils.write_file(repo .. '/docs/readme.md', '# readme\n')
+      utils.write_file(repo .. '/other.txt', 'hello\n')
+      utils.write_file(target .. '/feats.md', '# feats\n')
+
+      local ok, _, committed = git_push.stage_and_commit(repo)
+      assert.is_true(ok)
+      assert.is_true(committed)
+
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find('feats%.md'))
+      assert.truthy(files_in_commit:find('docs/readme%.md'))
+      assert.is_nil(files_in_commit:find('other%.txt'))
+    end)
+
     it('returns error when target folder is missing', function()
       os.execute('rm -rf ' .. target)
       local ok, msg, committed = git_push.stage_and_commit(repo)
@@ -278,6 +329,24 @@ describe('shooter.core.git_push', function()
 
       vim.cmd('bdelete! ' .. in_buf)
       vim.cmd('bdelete! ' .. out_buf)
+    end)
+
+    it('also writes buffers under docs/', function()
+      os.execute('mkdir -p ' .. repo .. '/docs')
+      local docs_file = repo .. '/docs/readme.md'
+      utils.write_file(docs_file, '')
+
+      vim.cmd('edit ' .. vim.fn.fnameescape(docs_file))
+      local doc_buf = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(doc_buf, 0, -1, false, { 'docs-new' })
+      assert.is_true(vim.bo[doc_buf].modified)
+
+      git_push.flush_shotfile_buffers(repo)
+
+      assert.is_false(vim.bo[doc_buf].modified)
+      assert.truthy(utils.read_file(docs_file):find('docs-new', 1, true))
+
+      vim.cmd('bdelete! ' .. doc_buf)
     end)
   end)
 end)

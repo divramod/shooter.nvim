@@ -4,6 +4,7 @@
 local M = {}
 
 local TARGET_PATH = '.hal/util/shooter/shotfiles'
+local DOCS_PATH = 'docs'
 local COMMIT_MSG = 'chore(shotfiles): sync'
 
 local function git(git_root, ...)
@@ -13,26 +14,50 @@ local function git(git_root, ...)
   return out, vim.v.shell_error
 end
 
--- Persist any modified buffers whose file lives under the shotfiles tree, so
--- git sees the latest content (incl. brand-new shotfiles) before staging.
--- Compares via realpath because vim resolves symlinks (e.g. /tmp → /private/tmp
--- on macOS) when opening buffers, while git_root keeps the unresolved path.
+local function git_args(git_root, args)
+  local cmd = { 'git', '-C', git_root }
+  for _, a in ipairs(args) do table.insert(cmd, a) end
+  local out = vim.fn.system(cmd)
+  return out, vim.v.shell_error
+end
+
+-- Pathspecs to sync: shotfiles tree (always) and docs/ when it exists.
+local function sync_pathspecs(git_root)
+  local specs = { TARGET_PATH }
+  if vim.fn.isdirectory(git_root .. '/' .. DOCS_PATH) == 1 then
+    table.insert(specs, DOCS_PATH)
+  end
+  return specs
+end
+
+-- Persist any modified buffers whose file lives under a synced tree, so git
+-- sees the latest content (incl. brand-new files) before staging. Compares via
+-- realpath because vim resolves symlinks (e.g. /tmp → /private/tmp on macOS)
+-- when opening buffers, while git_root keeps the unresolved path.
 function M.flush_shotfile_buffers(git_root)
   if not git_root or git_root == '' then return end
-  local prefix = (vim.uv.fs_realpath(git_root) or git_root)
-    .. '/' .. TARGET_PATH .. '/'
+  local resolved_root = vim.uv.fs_realpath(git_root) or git_root
+  local prefixes = {
+    resolved_root .. '/' .. TARGET_PATH .. '/',
+    resolved_root .. '/' .. DOCS_PATH .. '/',
+  }
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified then
       local name = vim.api.nvim_buf_get_name(buf)
       local resolved = name ~= '' and (vim.uv.fs_realpath(name) or name) or ''
-      if resolved ~= '' and resolved:sub(1, #prefix) == prefix then
-        vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
+      if resolved ~= '' then
+        for _, prefix in ipairs(prefixes) do
+          if resolved:sub(1, #prefix) == prefix then
+            vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
+            break
+          end
+        end
       end
     end
   end
 end
 
--- Stage all shotfile changes and commit them with a fixed subject.
+-- Stage all shotfile + docs changes and commit them with a fixed subject.
 -- Returns: ok_bool, msg_or_nil, committed_bool
 --   ok=true, committed=false → nothing to commit (no-op, msg explains)
 --   ok=true, committed=true  → committed (msg nil)
@@ -45,19 +70,31 @@ function M.stage_and_commit(git_root)
     return false, TARGET_PATH .. ' folder not found', false
   end
 
-  -- -A picks up additions, modifications, and deletions under the pathspec.
-  local add_out, add_err = git(git_root, 'add', '-A', '--', TARGET_PATH)
+  local pathspecs = sync_pathspecs(git_root)
+
+  -- -A picks up additions, modifications, and deletions under the pathspecs.
+  local add = { 'add', '-A', '--' }
+  for _, p in ipairs(pathspecs) do table.insert(add, p) end
+  local add_out, add_err = git_args(git_root, add)
   if add_err ~= 0 then
     return false, 'git add failed: ' .. add_out:gsub('\n', ' '), false
   end
 
-  -- Exit 0 from --quiet means no staged diff for the pathspec.
-  local _, diff_err = git(git_root, 'diff', '--cached', '--quiet', '--', TARGET_PATH)
-  if diff_err == 0 then
+  -- Per-pathspec diff: skip pathspecs with no staged changes so `git commit`
+  -- doesn't error on a pathspec that doesn't match any tracked files (e.g. a
+  -- docs-only or shotfiles-only sync).
+  local changed = {}
+  for _, p in ipairs(pathspecs) do
+    local _, err = git(git_root, 'diff', '--cached', '--quiet', '--', p)
+    if err ~= 0 then table.insert(changed, p) end
+  end
+  if #changed == 0 then
     return true, 'shotfiles: nothing to commit', false
   end
 
-  local commit_out, commit_err = git(git_root, 'commit', '-m', COMMIT_MSG, '--', TARGET_PATH)
+  local commit = { 'commit', '-m', COMMIT_MSG, '--' }
+  for _, p in ipairs(changed) do table.insert(commit, p) end
+  local commit_out, commit_err = git_args(git_root, commit)
   if commit_err ~= 0 then
     return false, 'git commit failed: ' .. commit_out:gsub('\n', ' '), false
   end
