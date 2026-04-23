@@ -1,5 +1,7 @@
 # fix
 
+## shot 8 
+
 ## x shot 7 HalShooterShotfileLast opens a shotfile from a worktree, when ran on startup in ~/a/hal (2026-04-22 17:25:16)
 this is maybe from before the fix.
 please have a look, that HalShooterShotfileLast always opens the last shotfile from the main branch, even when ran from a worktree.

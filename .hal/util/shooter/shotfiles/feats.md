@@ -1,5 +1,7 @@
 # feats
 
+## x shot 12 < >gp should also include all <reporoot>/docs files in the commit (2026-04-23 07:37:35)
+
 ## x shot 11 < >y should also copy the header of the shot (2026-04-15 02:23:01)
 
 ## x shot 10 the base path for the shooter files is now .hal/util/shooter/shotfiles (2026-04-15 00:58:09)
