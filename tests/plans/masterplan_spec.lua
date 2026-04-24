@@ -280,6 +280,33 @@ describe('shooter.plans.masterplan', function()
       assert.truthy(content:find('body', 1, true))
     end)
 
+    it('sweeps legacy shotfiles/plans/ into shotfiles/docs/plans/', function()
+      local old_dir = repo .. '/.hal/util/shooter/shotfiles/plans'
+      vim.fn.mkdir(old_dir, 'p')
+      vim.fn.mkdir(plans_dir, 'p')
+      -- Duplicate (exists in both): legacy copy should be deleted, new kept.
+      utils.write_file(old_dir .. '/0001-alpha.md', '# plans/0001-alpha (old)\n')
+      utils.write_file(plans_dir .. '/0001-alpha.md',
+        '# docs/plans/0001-alpha\n\nnew content\n')
+      -- Unique to legacy: should be moved into the new folder.
+      utils.write_file(old_dir .. '/0002-beta.md', '# plans/0002-beta\n\nbody\n')
+
+      write_plan('## in progress\n- 0001-alpha\n- 0002-beta\n')
+      assert.is_true(masterplan.fix(repo))
+
+      -- Legacy dir is gone once it ends up empty.
+      assert.is_false(utils.dir_exists(old_dir))
+      -- Both plans exist in the new authoritative location.
+      assert.is_true(utils.file_exists(plans_dir .. '/0001-alpha.md'))
+      assert.is_true(utils.file_exists(plans_dir .. '/0002-beta.md'))
+      -- The new copy's content is preserved for the duplicate.
+      assert.truthy(utils.read_file(plans_dir .. '/0001-alpha.md'):find(
+        'new content', 1, true))
+      -- The moved-only file's body survives the move.
+      assert.truthy(utils.read_file(plans_dir .. '/0002-beta.md'):find(
+        'body', 1, true))
+    end)
+
     it('leaves an already-correct plan shotfile in place', function()
       vim.fn.mkdir(plans_dir, 'p')
       local p = plans_dir .. '/0001-alpha.md'

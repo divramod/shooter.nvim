@@ -266,6 +266,33 @@ function M.ensure_plan_shotfile(git_root, plan_name)
   return true, 'created'
 end
 
+-- One-time migration: before shot 19 plan shotfiles lived under
+-- .hal/util/shooter/shotfiles/plans/. Shot 19 moved them under
+-- .hal/util/shooter/shotfiles/docs/plans/ but didn't sweep the legacy folder,
+-- so users end up with two parallel trees. This helper moves files that only
+-- exist in the legacy folder into the new location and drops the legacy copy
+-- when a same-named file already exists in the new folder (the new folder is
+-- authoritative post-shot-19). Removes the legacy dir if it ends up empty.
+function M.migrate_legacy_plans(git_root)
+  if not git_root or git_root == '' then return 0 end
+  local old_dir = git_root .. '/.hal/util/shooter/shotfiles/plans'
+  local new_dir = git_root .. '/.hal/util/shooter/shotfiles/docs/plans'
+  if vim.fn.isdirectory(old_dir) ~= 1 then return 0 end
+  vim.fn.mkdir(new_dir, 'p')
+  local moved, deleted = 0, 0
+  for _, name in ipairs(vim.fn.readdir(old_dir)) do
+    local src = old_dir .. '/' .. name
+    local dst = new_dir .. '/' .. name
+    if vim.fn.filereadable(dst) == 1 then
+      os.remove(src); deleted = deleted + 1
+    else
+      if os.rename(src, dst) then moved = moved + 1 end
+    end
+  end
+  if #vim.fn.readdir(old_dir) == 0 then vim.fn.delete(old_dir, 'd') end
+  return moved, deleted
+end
+
 -- Fix masterplan.md: rewrites via parse/render and syncs each plan's shotfile.
 -- Start number for `## next plans` is max(existing plan numbers) + 1 so it
 -- never collides with plans already started. After renumbering, every plan in
@@ -274,6 +301,7 @@ function M.fix(git_root)
   if not git_root or git_root == '' then return false, 'no git root' end
   local path = M.get_path(git_root)
   vim.fn.mkdir(git_root .. '/docs/plans', 'p')
+  M.migrate_legacy_plans(git_root)
 
   local bufnr = find_loaded_buf(path)
   local content
