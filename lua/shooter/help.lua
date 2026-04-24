@@ -96,10 +96,10 @@ TMUX NAMESPACE (t prefix)
   t0-9      Toggle pane           Toggle visibility of tmux pane #0-9
                                   Hides pane to background, or shows again
 
-SUBPROJECT NAMESPACE (p prefix)
-  pn        New subproject        Create new subproject
-  pl        List subprojects      List and select subproject
-  pe        Ensure folders        Ensure standard folder structure exists
+PLAN NAMESPACE (p prefix)
+  pp        Pick plan.md          Pick a docs/plans/**/plan.md file
+  pc        Pick context.md       Pick a docs/plans/**/context.md file
+  ps        Pick spec.md          Pick a docs/plans/**/spec.md file
 
 TOOLS NAMESPACE (l prefix)
   lt        Token counter         Count tokens in file using ttok

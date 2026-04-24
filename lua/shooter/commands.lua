@@ -1,5 +1,5 @@
 -- Command registration for shooter.nvim
--- Organized by namespace: Shotfile, Shot, Tmux, Subproject, Tool, Cfg, HalConfig, Analytics, Help
+-- Organized by namespace: Shotfile, Shot, Tmux, Plan, Tool, Cfg, HalConfig, Analytics, Help
 
 local M = {}
 
@@ -356,75 +356,41 @@ local function setup_tmux_commands()
   end, { desc = 'Tmux: set up prefix+H keybinding for hiding panes' })
 end
 
--- Setup Subproject namespace commands (p prefix in keymaps)
-local function setup_subproject_commands()
-  local project_mod = require('shooter.core.project')
+-- Setup Plan namespace commands (p prefix in keymaps)
+local function setup_plan_commands()
   local files = require('shooter.core.files')
+  local plan_picker = require('shooter.core.plan_picker')
+  local utils = require('shooter.utils')
 
-  -- ShoSubprojectNew
-  create_cmd('HalShooterSubprojectNew', function(opts)
+  local function open(basename)
     local git_root = files.get_git_root()
     if not git_root then
+      utils.echo('Not in a git repo')
       return
     end
+    plan_picker.open(git_root, basename)
+  end
 
-    local function create_project(name)
-      if not name or name == '' then return end
-      local project_path = git_root .. '/projects/' .. name
-      if vim.fn.isdirectory(project_path) == 1 then
-        return
-      end
-      -- Create standard folder structure
-      local folders = { '.hal/util/shooter/shotfiles', '.hal/util/shooter/shotfiles/archive', '.hal/util/shooter/shotfiles/backlog',
-        '.hal/util/shooter/shotfiles/done', '.hal/util/shooter/shotfiles/reqs', '.hal/util/shooter/shotfiles/test', '.hal/util/shooter/shotfiles/wait' }
-      for _, folder in ipairs(folders) do
-        vim.fn.mkdir(project_path .. '/' .. folder, 'p')
-      end
-      vim.cmd('Oil ' .. project_path)
-    end
+  create_cmd('HalShooterPlanPickerPlan',    function() open('plan')    end,
+    { desc = 'Pick a docs/plans/**/plan.md file' })
+  create_cmd('HalShooterPlanPickerContext', function() open('context') end,
+    { desc = 'Pick a docs/plans/**/context.md file' })
+  create_cmd('HalShooterPlanPickerSpec',    function() open('spec')    end,
+    { desc = 'Pick a docs/plans/**/spec.md file' })
 
-    if opts.args ~= '' then
-      create_project(opts.args)
+  -- HalShooterPlanEdit — open/create/rename shotfile for plan under cursor
+  create_cmd('HalShooterPlanEdit', function()
+    local masterplan = require('shooter.core.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then utils.echo('Not in a git repo'); return end
+    local line = vim.api.nvim_get_current_line()
+    local ok, msg = masterplan.edit_plan_at_line(git_root, line)
+    if not ok then
+      utils.echo('PlanEdit: ' .. (msg or 'unknown'))
     else
-      vim.ui.input({ prompt = 'Project name: ' }, create_project)
+      utils.echo('plan: ' .. msg)
     end
-  end, { nargs = '?', desc = 'Create new subproject' })
-
-  -- ShoSubprojectList
-  create_cmd('HalShooterSubprojectList', function()
-    local projects = project_mod.list_projects()
-    if #projects == 0 then
-      return
-    end
-    project_mod.pick_project(function(project)
-      if project then
-        local git_root = files.get_git_root()
-        vim.cmd('Oil ' .. git_root .. '/projects/' .. project)
-      end
-    end)
-  end, { desc = 'List and select subproject' })
-
-  -- ShoSubprojectEnsure
-  create_cmd('HalShooterSubprojectEnsure', function()
-    local core_files = require('shooter.core.files')
-    local git_root = core_files.get_git_root()
-    if not git_root then
-      return
-    end
-    local project = project_mod.detect_from_cwd()
-    local base = project and (git_root .. '/projects/' .. project) or git_root
-    local folders = { '.hal/util/shooter/shotfiles', '.hal/util/shooter/shotfiles/archive', '.hal/util/shooter/shotfiles/backlog',
-      '.hal/util/shooter/shotfiles/done', '.hal/util/shooter/shotfiles/reqs', '.hal/util/shooter/shotfiles/test', '.hal/util/shooter/shotfiles/wait' }
-    for _, folder in ipairs(folders) do
-      vim.fn.mkdir(base .. '/' .. folder, 'p')
-    end
-    -- Also ensure theme shotfiles from .shooter/themes.json
-    local created = core_files.ensure_theme_shotfiles()
-    local msg = 'Standard folders ensured'
-    if created > 0 then
-      msg = msg .. string.format(' + %d theme shotfiles created', created)
-    end
-  end, { desc = 'Ensure standard folders exist' })
+  end, { desc = 'Edit shotfile for plan under cursor (create/rename/open)' })
 end
 
 -- Setup Tool namespace commands (l prefix in keymaps)
@@ -772,6 +738,49 @@ local function setup_utility_commands()
     vim.cmd('edit ' .. vim.fn.fnameescape(inbox_path))
   end, { desc = 'Open INBOX.md at git root' })
 
+  -- Masterplan (docs/plans/masterplan.md at git root)
+  create_cmd('HalShooterMasterplanOpen', function()
+    local files = require('shooter.core.files')
+    local utils = require('shooter.utils')
+    local masterplan = require('shooter.core.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then
+      utils.echo('Not in a git repo')
+      return
+    end
+    masterplan.fix(git_root)
+    vim.cmd('edit ' .. vim.fn.fnameescape(masterplan.get_path(git_root)))
+  end, { desc = 'Open docs/plans/masterplan.md at git root (fix on open)' })
+
+  -- HalShooterMasterplanFix — normalize title, sections, numbering, slugs
+  create_cmd('HalShooterMasterplanFix', function()
+    local files = require('shooter.core.files')
+    local utils = require('shooter.utils')
+    local masterplan = require('shooter.core.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then
+      utils.echo('Not in a git repo')
+      return
+    end
+    local ok, err = masterplan.fix(git_root)
+    utils.echo(ok and 'masterplan: fixed' or ('masterplan fix failed: ' .. (err or '')))
+  end, { desc = 'Fix masterplan.md (title, sections, numbering, slugs)' })
+
+  -- HalShooterMasterplanMarkDone — move plan under cursor to ## done
+  create_cmd('HalShooterMasterplanMarkDone', function()
+    local files = require('shooter.core.files')
+    local utils = require('shooter.utils')
+    local masterplan = require('shooter.core.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then
+      utils.echo('Not in a git repo')
+      return
+    end
+    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local ok, err = masterplan.mark_done(git_root, lnum)
+    utils.echo(ok and 'masterplan: marked done' or ('masterplan mark done failed: ' .. (err or '')))
+  end, { desc = 'Move plan under cursor to ## done with timestamp' })
+
   -- HalShooterGitPush — add/commit/push the shotfiles tree
   create_cmd('HalShooterGitPush', function()
     local files = require('shooter.core.files')
@@ -1043,7 +1052,7 @@ function M.setup()
   setup_shot_commands()
   setup_bullet_commands()
   setup_tmux_commands()
-  setup_subproject_commands()
+  setup_plan_commands()
   setup_domain_commands()
   setup_session_commands()
   setup_tool_commands()

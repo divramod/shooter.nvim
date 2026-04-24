@@ -157,11 +157,12 @@ function M.setup()
   end
 
   -- ============================================================
-  -- SUBPROJECT NAMESPACE (p prefix)
+  -- PLAN NAMESPACE (p prefix)
   -- ============================================================
-  map('n', 'pn', ':HalShooterSubprojectNew<cr>', 'New subproject')
-  map('n', 'pl', ':HalShooterSubprojectList<cr>', 'List subprojects')
-  map('n', 'pe', ':HalShooterSubprojectEnsure<cr>', 'Ensure standard folders')
+  map('n', 'pp', ':HalShooterPlanPickerPlan<cr>',    'Pick docs/plans/**/plan.md')
+  map('n', 'pc', ':HalShooterPlanPickerContext<cr>', 'Pick docs/plans/**/context.md')
+  map('n', 'ps', ':HalShooterPlanPickerSpec<cr>',    'Pick docs/plans/**/spec.md')
+  map('n', 'pe', ':HalShooterPlanEdit<cr>',          'Edit plan shotfile (create/rename/open)')
 
   -- ============================================================
   -- TOOLS NAMESPACE (l prefix)
@@ -218,6 +219,13 @@ function M.setup()
   -- REPO NAMESPACE (r prefix)
   -- ============================================================
   map('n', 'rl', ':HalShooterRepoOpenLastEditedFile<cr>', 'Last edited file in repo')
+
+  -- ============================================================
+  -- MASTERPLAN NAMESPACE (m prefix)
+  -- ============================================================
+  map('n', 'mm', ':HalShooterMasterplanOpen<cr>', 'Open docs/plans/masterplan.md')
+  map('n', 'mf', ':HalShooterMasterplanFix<cr>', 'Fix masterplan (renumber, slugify, title)')
+  map('n', 'md', ':HalShooterMasterplanMarkDone<cr>', 'Mark plan under cursor as done')
 
   -- ============================================================
   -- GIT NAMESPACE (g prefix)
