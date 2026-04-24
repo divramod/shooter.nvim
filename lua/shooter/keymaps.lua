@@ -32,6 +32,7 @@ function M.setup()
   map('n', 'y', ':HalShooterShotYank<cr>', 'Yank shot')
   map('n', 'z', ':HalShooterNavLastEditedFiles 10<cr>', 'Last 10 edited files')
   map('n', '?', ':HalShooterCheatsheet<cr>', 'Cheatsheet')
+  map('n', 'H', ':HalShooterHelp<cr>', 'Hal plugin help')
 
   -- Shot navigation - root level for speed
   map('n', ']', ':HalShooterShotNavNext<cr>', 'Next open shot')
@@ -157,12 +158,20 @@ function M.setup()
   end
 
   -- ============================================================
-  -- PLAN NAMESPACE (p prefix)
+  -- PLAN NAMESPACE (p prefix) — masterplan + per-plan + pickers
   -- ============================================================
-  map('n', 'pp', ':HalShooterPlanPickerPlan<cr>',    'Pick docs/plans/**/plan.md')
-  map('n', 'pc', ':HalShooterPlanPickerContext<cr>', 'Pick docs/plans/**/context.md')
-  map('n', 'ps', ':HalShooterPlanPickerSpec<cr>',    'Pick docs/plans/**/spec.md')
-  map('n', 'pe', ':HalShooterPlanEdit<cr>',          'Edit plan shotfile (create/rename/open)')
+  -- Masterplan file + cursor-based plan ops
+  map('n', 'pm', ':HalShooterMasterplanOpen<cr>',         'Open docs/plans/masterplan.md')
+  map('n', 'pf', ':HalShooterMasterplanFix<cr>',          'Fix masterplan (renumber, slugify, title, sync)')
+  map('n', 'pd', ':HalShooterMasterplanMarkDone<cr>',     'Mark plan under cursor as done')
+  map('n', 'pp', ':HalShooterMasterplanOpenPlan<cr>',     'Open plan.md for plan under cursor')
+  map('n', 'pc', ':HalShooterMasterplanOpenContext<cr>',  'Open context.md for plan under cursor')
+  map('n', 'ps', ':HalShooterMasterplanOpenSpec<cr>',     'Open spec.md for plan under cursor')
+  map('n', 'pe', ':HalShooterPlanEdit<cr>',               'Edit plan shotfile (create/rename/open)')
+  -- Pickers (uppercase to disambiguate from cursor-based ops)
+  map('n', 'pP', ':HalShooterPlanPickerPlan<cr>',         'Pick docs/plans/**/plan.md')
+  map('n', 'pC', ':HalShooterPlanPickerContext<cr>',      'Pick docs/plans/**/context.md')
+  map('n', 'pS', ':HalShooterPlanPickerSpec<cr>',         'Pick docs/plans/**/spec.md')
 
   -- ============================================================
   -- TOOLS NAMESPACE (l prefix)
@@ -219,16 +228,6 @@ function M.setup()
   -- REPO NAMESPACE (r prefix)
   -- ============================================================
   map('n', 'rl', ':HalShooterRepoOpenLastEditedFile<cr>', 'Last edited file in repo')
-
-  -- ============================================================
-  -- MASTERPLAN NAMESPACE (m prefix)
-  -- ============================================================
-  map('n', 'mm', ':HalShooterMasterplanOpen<cr>', 'Open docs/plans/masterplan.md')
-  map('n', 'mf', ':HalShooterMasterplanFix<cr>', 'Fix masterplan (renumber, slugify, title)')
-  map('n', 'md', ':HalShooterMasterplanMarkDone<cr>', 'Mark plan under cursor as done')
-  map('n', 'mp', ':HalShooterMasterplanOpenPlan<cr>',    'Open plan.md for plan under cursor')
-  map('n', 'mc', ':HalShooterMasterplanOpenContext<cr>', 'Open context.md for plan under cursor')
-  map('n', 'ms', ':HalShooterMasterplanOpenSpec<cr>',    'Open spec.md for plan under cursor')
 
   -- ============================================================
   -- GIT NAMESPACE (g prefix)

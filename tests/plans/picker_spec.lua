@@ -1,8 +1,8 @@
--- Tests for shooter.core.plan_picker
-local plan_picker = require('shooter.core.plan_picker')
+-- Tests for shooter.plans.picker
+local plan_picker = require('shooter.plans.picker')
 local utils = require('shooter.utils')
 
-describe('shooter.core.plan_picker', function()
+describe('shooter.plans.picker', function()
   local repo = '/tmp/shooter_plan_picker_test'
 
   local function mkfile(path, content)

@@ -1,8 +1,8 @@
--- Tests for shooter.core.masterplan
-local masterplan = require('shooter.core.masterplan')
+-- Tests for shooter.plans.masterplan
+local masterplan = require('shooter.plans.masterplan')
 local utils = require('shooter.utils')
 
-describe('shooter.core.masterplan', function()
+describe('shooter.plans.masterplan', function()
   local repo = '/tmp/shooter_masterplan_test'
   local path = repo .. '/docs/plans/masterplan.md'
 
