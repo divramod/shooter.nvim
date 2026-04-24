@@ -571,6 +571,73 @@ describe('shooter.plans.masterplan', function()
       assert.is_false(ok2); assert.truthy(err2)
     end)
 
+    it('appends the plan to ## next plans in masterplan.md', function()
+      write_plan('## in progress\n- 0002-current\n')
+      local ok = masterplan.new_plan(repo, 'fresh')
+      assert.is_true(ok)
+      local mp = read_plan()
+      -- Number picked is max(0002) + 1 = 0003; entry lands in next plans.
+      assert.truthy(mp:find('## next plans', 1, true))
+      local np = mp:match('## next plans.-\n(.-)\n##')
+      assert.truthy(np and np:find('- 0003-fresh', 1, true))
+    end)
+
+    it('runs fix(): renumbering is idempotent and plan shotfile is created', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      write_plan('## done\n- 0003-old (2026-01-01 00:00:00)\n')
+      local ok, path = masterplan.new_plan(repo, 'alpha')
+      assert.is_true(ok)
+      assert.equals(repo .. '/docs/plans/0005-alpha/plan.md', path)
+
+      -- After fix, the next-plans entry keeps its 0005 number
+      -- (max_plan_number ignores the 0005-alpha folder because that plan is
+      -- in ## next plans).
+      local mp = read_plan()
+      assert.truthy(mp:find('- 0005-alpha', 1, true))
+      assert.is_nil(mp:find('- 0006-alpha', 1, true))
+
+      -- Plan shotfile was synced.
+      assert.is_true(utils.file_exists(
+        repo .. '/.hal/util/shooter/shotfiles/docs/plans/0005-alpha.md'))
+    end)
+
+    it('does not duplicate the entry when run twice with the same title', function()
+      assert.is_true(masterplan.new_plan(repo, 'twice'))
+      assert.is_true(masterplan.new_plan(repo, 'twice'))
+      local mp = read_plan()
+      assert.truthy(mp:find('- 0001-twice', 1, true))
+      assert.truthy(mp:find('- 0002-twice', 1, true))
+      -- No phantom second copy of either slot.
+      local _, count1 = mp:gsub('0001%-twice', '')
+      local _, count2 = mp:gsub('0002%-twice', '')
+      assert.equals(1, count1)
+      assert.equals(1, count2)
+    end)
+  end)
+
+  describe('max_plan_number (next-plans aware)', function()
+    it('ignores docs/plans folders that match `## next plans` entries', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0007-future', 'p')
+      local parsed = masterplan.parse(table.concat({
+        '## in progress', '- 0004-seeded',
+        '## next plans', '- 0007-future',
+        '## backlog', '',
+        '## done', '',
+      }, '\n'))
+      assert.equals(4, masterplan.max_plan_number(repo, parsed.sections))
+    end)
+  end)
+
+  describe('next_free_plan_number', function()
+    it('returns max across everything (including next plans) + 1', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0002-foo', 'p')
+      local parsed = masterplan.parse(table.concat({
+        '## next plans', '- 0005-bar',
+        '## done', '- 0003-baz (2026-01-01 00:00:00)',
+      }, '\n'))
+      assert.equals(6, masterplan.next_free_plan_number(repo, parsed.sections))
+    end)
   end)
 
   describe('open_plan_file', function()

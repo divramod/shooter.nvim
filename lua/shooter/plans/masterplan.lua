@@ -123,11 +123,51 @@ local function render_entry(entry, out)
   end
 end
 
--- Highest plan number visible anywhere outside `## next plans`: scans
--- docs/plans/NNNN-*/ folders and the masterplan's in-progress/backlog/done
--- entries. Used by fix() to pick the starting number for next-plans renumbering
--- so it never collides with a plan that has already been started.
+-- Names currently listed in `## next plans` (set of "NNNN-slug" strings).
+-- Used to exclude docs/plans folders that correspond to not-yet-started plans
+-- from the max-number calculation.
+local function next_plan_names(sections)
+  local set = {}
+  for _, entry in ipairs((sections or {})['next plans'] or {}) do
+    local name = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+    if name then set[name] = true end
+  end
+  return set
+end
+
+-- Highest plan number that counts as "already used" — i.e. plans that are in
+-- progress / backlog / done or have a docs/plans/ folder that is NOT merely a
+-- placeholder for a `## next plans` entry. Used by fix() to pick the starting
+-- number for next-plans renumbering so it never collides with a started plan,
+-- yet also doesn't bump itself upward on every run.
 function M.max_plan_number(git_root, sections)
+  local max = 0
+  local function bump(n) if n and n > max then max = n end end
+
+  local next_set = next_plan_names(sections)
+  local plans_dir = git_root and (git_root .. '/docs/plans') or nil
+  if plans_dir and vim.fn.isdirectory(plans_dir) == 1 then
+    for _, name in ipairs(vim.fn.readdir(plans_dir)) do
+      local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+      if pname and not next_set[pname] then
+        bump(tonumber(pname:match('^(%d%d%d%d)%-')))
+      end
+    end
+  end
+
+  sections = sections or {}
+  for _, sect in ipairs({ 'in progress', 'backlog', 'done' }) do
+    for _, entry in ipairs(sections[sect] or {}) do
+      bump(tonumber(entry.text:match('^(%d%d%d%d)%-')))
+    end
+  end
+  return max
+end
+
+-- Next free plan number across EVERYTHING (docs/plans folders + every
+-- masterplan section, including `## next plans`). Used by new_plan to pick a
+-- number that won't collide with anything currently in the system.
+function M.next_free_plan_number(git_root, sections)
   local max = 0
   local function bump(n) if n and n > max then max = n end end
 
@@ -139,12 +179,12 @@ function M.max_plan_number(git_root, sections)
   end
 
   sections = sections or {}
-  for _, sect in ipairs({ 'in progress', 'backlog', 'done' }) do
+  for _, sect in ipairs(SECTIONS) do
     for _, entry in ipairs(sections[sect] or {}) do
       bump(tonumber(entry.text:match('^(%d%d%d%d)%-')))
     end
   end
-  return max
+  return max + 1
 end
 
 -- Render parsed + title back to canonical masterplan content.
@@ -266,8 +306,63 @@ function M.ensure_plan_shotfile(git_root, plan_name)
   return true, 'created'
 end
 
--- Create a new docs/plans/<NNNN-slug>/plan.md. Number is the next free one
--- (max plan number visible anywhere + 1). Returns ok_bool, path_or_error.
+-- Append `- <plan_name>` under `## next plans` in masterplan.md. If the
+-- masterplan file or the section is missing, it's created on the fly. No-op
+-- when the plan is already listed. Reads/writes the buffer in-place when one
+-- is loaded.
+local function append_to_next_plans(git_root, plan_name)
+  local path = M.get_path(git_root)
+  local bufnr = find_loaded_buf(path)
+  local lines
+  if bufnr then
+    lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  else
+    lines = vim.split(read_file(path) or '', '\n', { plain = true })
+  end
+
+  -- Already present? Bail.
+  local in_section = false
+  for _, line in ipairs(lines) do
+    local h2 = line:match('^##%s+(.-)%s*$')
+    if h2 then in_section = (h2:lower() == 'next plans') end
+    if in_section and line:match('^%-%s+' .. vim.pesc(plan_name) .. '%s*$') then
+      return
+    end
+  end
+
+  -- Locate `## next plans` and the start of the next section.
+  local np_start, np_end
+  for i, line in ipairs(lines) do
+    if line:match('^##%s+next plans%s*$') then np_start = i
+    elseif np_start and not np_end and line:match('^##%s') then np_end = i - 1 end
+  end
+
+  if not np_start then
+    -- No masterplan structure yet — let fix() build the skeleton first.
+    M.fix(git_root)
+    return append_to_next_plans(git_root, plan_name)
+  end
+  if not np_end then np_end = #lines end
+  -- Trim trailing blank lines inside the section.
+  local insert_at = np_end + 1
+  while insert_at > np_start + 1 and (lines[insert_at - 1] == nil or lines[insert_at - 1] == '') do
+    insert_at = insert_at - 1
+  end
+  table.insert(lines, insert_at, '- ' .. plan_name)
+
+  if bufnr then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+  else
+    write_file(path, table.concat(lines, '\n'))
+  end
+end
+
+-- Create a new docs/plans/<NNNN-slug>/plan.md, add the plan to the masterplan
+-- under `## next plans`, and run fix() to reconcile everything (canonical
+-- sections, renumbering, plan-shotfile sync). Number is the next free one
+-- across docs/plans folders and all masterplan sections.
+-- Returns ok_bool, path_or_error.
 function M.new_plan(git_root, title)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not title or title:match('^%s*$') then return false, 'empty title' end
@@ -276,13 +371,17 @@ function M.new_plan(git_root, title)
 
   local parsed = M.parse(read_file(M.get_path(git_root)) or '')
   local plan_name = string.format('%04d-%s',
-    M.max_plan_number(git_root, parsed.sections) + 1, slug)
+    M.next_free_plan_number(git_root, parsed.sections), slug)
+
   local plan_dir = git_root .. '/docs/plans/' .. plan_name
   vim.fn.mkdir(plan_dir, 'p')
   local path = plan_dir .. '/plan.md'
   if not write_file(path, '# ' .. plan_name .. '\n\n') then
     return false, 'cannot write ' .. path
   end
+
+  append_to_next_plans(git_root, plan_name)
+  M.fix(git_root)
   return true, path
 end
 
