@@ -773,7 +773,8 @@ local function setup_utility_commands()
     vim.cmd('edit ' .. vim.fn.fnameescape(masterplan.get_path(git_root)))
   end, { desc = 'Open docs/plans/masterplan.md at git root (fix on open)' })
 
-  -- HalShooterMasterplanFix — normalize title, sections, numbering, slugs
+  -- HalShooterMasterplanFix — normalize title, sections, numbering, slugs,
+  -- sync plan shotfiles, then git-add+commit (no push) the plan folders.
   create_cmd('HalShooterMasterplanFix', function()
     local files = require('shooter.core.files')
     local utils = require('shooter.utils')
@@ -784,8 +785,19 @@ local function setup_utility_commands()
       return
     end
     local ok, err = masterplan.fix(git_root)
-    utils.echo(ok and 'masterplan: fixed' or ('masterplan fix failed: ' .. (err or '')))
-  end, { desc = 'Fix masterplan.md (title, sections, numbering, slugs)' })
+    if not ok then
+      utils.echo('masterplan fix failed: ' .. (err or ''))
+      return
+    end
+    local cok, cmsg, committed = masterplan.commit_plans(git_root)
+    if not cok then
+      utils.echo('masterplan: fixed; commit failed: ' .. (cmsg or ''))
+    elseif committed then
+      utils.echo('masterplan: fixed + committed')
+    else
+      utils.echo('masterplan: fixed (' .. (cmsg or 'no changes to commit') .. ')')
+    end
+  end, { desc = 'Fix masterplan.md and commit docs/plans + plan shotfiles' })
 
   -- HalShooterMasterplanOpen{Plan,Context,Spec} — open the docs/plans/<plan>/
   -- <kind>.md file for the plan under cursor

@@ -8,6 +8,11 @@ local M = {}
 
 local SECTIONS = { 'in progress', 'next plans', 'backlog', 'done' }
 local TIMESTAMP_TAIL = '%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)$'
+local COMMIT_PATHS = {
+  'docs/plans',
+  '.hal/util/shooter/shotfiles/docs/plans',
+}
+local COMMIT_MSG = 'chore(plans): sync masterplan + plan shotfiles'
 
 function M.get_path(git_root)
   return git_root .. '/docs/plans/masterplan.md'
@@ -570,6 +575,87 @@ function M.open_plan_file(git_root, line, kind)
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(path))
   return true, 'opened'
+end
+
+-- Flush any modified buffers whose file lives under docs/plans/ or
+-- .hal/util/shooter/shotfiles/docs/plans/, so `git add` sees the latest
+-- content the user actually typed.
+local function flush_plans_buffers(git_root)
+  local resolved_root = vim.uv.fs_realpath(git_root) or git_root
+  local prefixes = {}
+  for _, rel in ipairs(COMMIT_PATHS) do
+    table.insert(prefixes, resolved_root .. '/' .. rel .. '/')
+  end
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified then
+      local name = vim.api.nvim_buf_get_name(buf)
+      local resolved = name ~= '' and (vim.uv.fs_realpath(name) or name) or ''
+      if resolved ~= '' then
+        for _, prefix in ipairs(prefixes) do
+          if resolved:sub(1, #prefix) == prefix then
+            vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
+            break
+          end
+        end
+      end
+    end
+  end
+end
+
+local function git(git_root, args)
+  local cmd = { 'git', '-C', git_root }
+  for _, a in ipairs(args) do table.insert(cmd, a) end
+  local out = vim.fn.system(cmd)
+  return out, vim.v.shell_error
+end
+
+-- git add + commit (no push) the plan folders. Only folders that actually
+-- exist are included in the pathspec, so a repo with nothing plan-related
+-- yet is a no-op rather than an error.
+-- Returns: ok_bool, msg_or_nil, committed_bool
+--   ok=true, committed=false → nothing to commit (msg explains)
+--   ok=true, committed=true  → committed (msg nil)
+--   ok=false                 → failure (msg = error)
+function M.commit_plans(git_root)
+  if not git_root or git_root == '' then return false, 'no git root', false end
+
+  local present = {}
+  for _, rel in ipairs(COMMIT_PATHS) do
+    if vim.fn.isdirectory(git_root .. '/' .. rel) == 1 then
+      table.insert(present, rel)
+    end
+  end
+  if #present == 0 then
+    return true, 'plans: no folders to commit', false
+  end
+
+  flush_plans_buffers(git_root)
+
+  local add = { 'add', '-A', '--' }
+  for _, p in ipairs(present) do table.insert(add, p) end
+  local add_out, add_err = git(git_root, add)
+  if add_err ~= 0 then
+    return false, 'git add failed: ' .. add_out:gsub('\n', ' '), false
+  end
+
+  -- Only include pathspecs with actual staged changes in the commit, so
+  -- `git commit -- ...` never errors on a pathspec that matches nothing.
+  local changed = {}
+  for _, p in ipairs(present) do
+    local _, err = git(git_root, { 'diff', '--cached', '--quiet', '--', p })
+    if err ~= 0 then table.insert(changed, p) end
+  end
+  if #changed == 0 then
+    return true, 'plans: nothing to commit', false
+  end
+
+  local commit = { 'commit', '-m', COMMIT_MSG, '--' }
+  for _, p in ipairs(changed) do table.insert(commit, p) end
+  local commit_out, commit_err = git(git_root, commit)
+  if commit_err ~= 0 then
+    return false, 'git commit failed: ' .. commit_out:gsub('\n', ' '), false
+  end
+  return true, nil, true
 end
 
 return M

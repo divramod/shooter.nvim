@@ -640,6 +640,112 @@ describe('shooter.plans.masterplan', function()
     end)
   end)
 
+  describe('commit_plans', function()
+    local gitrepo = '/tmp/shooter_masterplan_commit_test'
+    local mp_path = gitrepo .. '/docs/plans/masterplan.md'
+    local shotfiles_plans = gitrepo .. '/.hal/util/shooter/shotfiles/docs/plans'
+
+    local function git(...)
+      local cmd = { 'git', '-C', gitrepo }
+      for _, a in ipairs({ ... }) do table.insert(cmd, a) end
+      return vim.fn.system(cmd)
+    end
+    local function count_commits()
+      return tonumber(git('rev-list', '--count', 'HEAD'):match('%d+')) or 0
+    end
+
+    before_each(function()
+      os.execute('rm -rf ' .. gitrepo)
+      os.execute('mkdir -p ' .. gitrepo .. '/docs/plans')
+      os.execute('mkdir -p ' .. shotfiles_plans)
+      vim.fn.system({ 'git', '-C', gitrepo, 'init', '-q' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.email', 't@t' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.name', 't' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'commit.gpgsign', 'false' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'commit', '--allow-empty', '-q', '-m', 'init' })
+    end)
+
+    after_each(function()
+      os.execute('rm -rf ' .. gitrepo)
+    end)
+
+    it('commits changes under docs/plans and shotfiles/docs/plans', function()
+      utils.write_file(mp_path, '# masterplan\n')
+      utils.write_file(shotfiles_plans .. '/0001-foo.md', '# docs/plans/0001-foo\n')
+
+      local before = count_commits()
+      local ok, msg, committed = masterplan.commit_plans(gitrepo)
+      assert.is_true(ok, msg)
+      assert.is_true(committed)
+      assert.equals(before + 1, count_commits())
+
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find('docs/plans/masterplan%.md'))
+      assert.truthy(files_in_commit:find(
+        '%.hal/util/shooter/shotfiles/docs/plans/0001%-foo%.md'))
+
+      local subject = git('log', '-1', '--format=%s')
+      assert.truthy(subject:find('chore%(plans%): sync'))
+    end)
+
+    it('reports no changes when plan folders are clean', function()
+      utils.write_file(mp_path, '# masterplan\n')
+      git('add', '-A', '--', 'docs/plans')
+      git('commit', '-q', '-m', 'seed')
+
+      local before = count_commits()
+      local ok, msg, committed = masterplan.commit_plans(gitrepo)
+      assert.is_true(ok)
+      assert.is_false(committed)
+      assert.truthy(msg:find('nothing to commit', 1, true))
+      assert.equals(before, count_commits())
+    end)
+
+    it('leaves unrelated staged changes out of the commit', function()
+      utils.write_file(mp_path, '# masterplan\n')
+      utils.write_file(gitrepo .. '/other.txt', 'hello\n')
+      git('add', 'other.txt')
+
+      local ok, _, committed = masterplan.commit_plans(gitrepo)
+      assert.is_true(ok); assert.is_true(committed)
+
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find('docs/plans/masterplan%.md'))
+      assert.is_nil(files_in_commit:find('other%.txt'))
+      -- And other.txt is still staged
+      local staged = git('diff', '--cached', '--name-only')
+      assert.truthy(staged:find('other.txt'))
+    end)
+
+    it('commits when only one of the two folders has changes', function()
+      -- Only shotfiles side has content.
+      utils.write_file(shotfiles_plans .. '/0001-alpha.md',
+        '# docs/plans/0001-alpha\n')
+      local ok, _, committed = masterplan.commit_plans(gitrepo)
+      assert.is_true(ok); assert.is_true(committed)
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find('shotfiles/docs/plans/0001%-alpha%.md'))
+    end)
+
+    it('no-op and no-error when neither folder exists', function()
+      os.execute('rm -rf ' .. gitrepo .. '/docs/plans')
+      os.execute('rm -rf ' .. shotfiles_plans)
+      local ok, msg, committed = masterplan.commit_plans(gitrepo)
+      assert.is_true(ok)
+      assert.is_false(committed)
+      assert.truthy(msg:find('no folders', 1, true))
+    end)
+
+    it('does not push (no remote ever contacted)', function()
+      -- If commit_plans tried to push, `git log origin/main` would reflect it.
+      -- Easier assertion: no `origin` remote was added and no push ran.
+      utils.write_file(mp_path, '# masterplan\n')
+      masterplan.commit_plans(gitrepo)
+      local remotes = git('remote')
+      assert.is_true(remotes == '' or remotes == '\n')
+    end)
+  end)
+
   describe('open_plan_file', function()
     local plan_dir = repo .. '/docs/plans/0005-merge-hal-skills'
 
