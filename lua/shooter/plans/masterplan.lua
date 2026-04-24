@@ -343,9 +343,14 @@ local function append_to_next_plans(git_root, plan_name)
   end
 
   if not np_start then
-    -- No masterplan structure yet — let fix() build the skeleton first.
-    M.fix(git_root)
-    return append_to_next_plans(git_root, plan_name)
+    -- Masterplan is missing `## next plans` — append the section inline.
+    -- (Using M.fix here would re-enter the adopt-orphan step, which would
+    -- claim the new plan's folder for `## in progress` before we get a
+    -- chance to register it in `## next plans`.)
+    if #lines > 0 and lines[#lines] ~= '' then table.insert(lines, '') end
+    table.insert(lines, '## next plans')
+    np_start = #lines
+    np_end = #lines
   end
   if not np_end then np_end = #lines end
   -- Trim trailing blank lines inside the section.
@@ -408,6 +413,39 @@ function M.fix(git_root)
   end
 
   local parsed = M.parse(content)
+
+  -- Adopt any docs/plans/NNNN-<slug>/ folder that the masterplan doesn't
+  -- reference yet into `## in progress`. Agents sometimes create a fresh
+  -- plan folder (bumping the next free number) without updating the
+  -- masterplan — this keeps the two sides in sync.
+  local referenced = {}
+  for _, section_name in ipairs(SECTIONS) do
+    for _, entry in ipairs(parsed.sections[section_name] or {}) do
+      local pn = M.extract_plan_name(entry.text)
+      if pn then referenced[pn] = true end
+    end
+  end
+  local docs_plans = git_root .. '/docs/plans'
+  if vim.fn.isdirectory(docs_plans) == 1 then
+    parsed.sections['in progress'] = parsed.sections['in progress'] or {}
+    for _, name in ipairs(vim.fn.readdir(docs_plans)) do
+      local pn = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)$')
+      if pn and not referenced[pn]
+          and vim.fn.isdirectory(docs_plans .. '/' .. name) == 1 then
+        table.insert(parsed.sections['in progress'],
+          { text = pn, children = {} })
+      end
+    end
+  end
+
+  -- Keep `## in progress` sorted alphabetically (stable), so adopted plans
+  -- land in the correct slot and the list stays tidy across runs.
+  if parsed.sections['in progress'] then
+    table.sort(parsed.sections['in progress'], function(a, b)
+      return a.text < b.text
+    end)
+  end
+
   local start = M.max_plan_number(git_root, parsed.sections) + 1
   local new = M.render(parsed, M.get_title(git_root), { start_number = start })
 

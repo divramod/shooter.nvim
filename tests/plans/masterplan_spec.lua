@@ -234,6 +234,82 @@ describe('shooter.plans.masterplan', function()
     end)
   end)
 
+  describe('fix (adopt orphan docs/plans folders)', function()
+    it('adds docs/plans folders not referenced anywhere into ## in progress', function()
+      -- Masterplan has nothing; docs/plans has three folders.
+      vim.fn.mkdir(repo .. '/docs/plans/0001-alpha', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0002-beta', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0003-gamma', 'p')
+      write_plan('## in progress\n\n## next plans\n\n## backlog\n\n## done\n')
+      assert.is_true(masterplan.fix(repo))
+      local mp = read_plan()
+      local ip = mp:match('## in progress\n(.-)\n## next plans')
+      assert.truthy(ip)
+      assert.truthy(ip:find('- 0001-alpha', 1, true))
+      assert.truthy(ip:find('- 0002-beta', 1, true))
+      assert.truthy(ip:find('- 0003-gamma', 1, true))
+    end)
+
+    it('does not adopt folders already in any masterplan section', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0001-already-in-progress', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0002-already-done', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0003-already-backlog', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0004-already-next', 'p')
+      -- A new orphan that should get adopted.
+      vim.fn.mkdir(repo .. '/docs/plans/0005-brand-new', 'p')
+      write_plan(table.concat({
+        '## in progress', '- 0001-already-in-progress',
+        '## next plans',  '- 0004-already-next',
+        '## backlog',     '- 0003-already-backlog',
+        '## done',        '- 0002-already-done (2026-01-01 00:00:00)',
+      }, '\n'))
+      assert.is_true(masterplan.fix(repo))
+      local mp = read_plan()
+      local ip = mp:match('## in progress\n(.-)\n## next plans')
+      assert.truthy(ip:find('- 0001-already-in-progress', 1, true))
+      assert.truthy(ip:find('- 0005-brand-new', 1, true))
+      -- Originals stayed in their sections (in progress didn't absorb them).
+      assert.is_nil(ip:find('0003-already-backlog', 1, true))
+      assert.is_nil(ip:find('0002-already-done', 1, true))
+      assert.is_nil(ip:find('0004-already-next', 1, true))
+    end)
+
+    it('sorts ## in progress alphabetically by full NNNN-slug text', function()
+      -- Pre-existing in-progress entries in NON-alphabetical order.
+      vim.fn.mkdir(repo .. '/docs/plans/0004-apple', 'p')
+      vim.fn.mkdir(repo .. '/docs/plans/0001-zebra', 'p')
+      -- Orphan that must land in the middle by full-text sort.
+      vim.fn.mkdir(repo .. '/docs/plans/0003-mango', 'p')
+      write_plan(table.concat({
+        '## in progress',
+        '- 0004-apple',
+        '- 0001-zebra',
+      }, '\n'))
+      assert.is_true(masterplan.fix(repo))
+      local mp = read_plan()
+      local ip = mp:match('## in progress\n(.-)\n## next plans')
+      -- Full-text (number-first) sort: 0001-zebra → 0003-mango → 0004-apple.
+      local i_zebra = ip:find('0001-zebra', 1, true)
+      local i_mango = ip:find('0003-mango', 1, true)
+      local i_apple = ip:find('0004-apple', 1, true)
+      assert.is_truthy(i_zebra)
+      assert.is_truthy(i_mango)
+      assert.is_truthy(i_apple)
+      assert.is_true(i_zebra < i_mango)
+      assert.is_true(i_mango < i_apple)
+    end)
+
+    it('is idempotent — second pf does not duplicate the adopted entry', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0007-lonely', 'p')
+      write_plan('## in progress\n\n## next plans\n\n## backlog\n\n## done\n')
+      assert.is_true(masterplan.fix(repo))
+      assert.is_true(masterplan.fix(repo))
+      local mp = read_plan()
+      local _, count = mp:gsub('0007%-lonely', '')
+      assert.equals(1, count)
+    end)
+  end)
+
   describe('fix (plan shotfile sync)', function()
     local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
 
