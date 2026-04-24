@@ -307,20 +307,25 @@ function M.setup()
 
   local group = vim.api.nvim_create_augroup('HalShooterSyntax', { clear = true })
 
-  -- Apply highlighting when entering prompts files
+  -- Apply highlighting when entering prompts files; also track
+  -- docs/plans/masterplan.md for < >l (last opened file) without applying
+  -- shotfile syntax to it.
   vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
     group = group,
     pattern = '*.md',
     callback = function(ev)
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       local ft = vim.bo[ev.buf].filetype
-      -- Only apply to markdown files in .hal/util/shooter/shotfiles (not oil, not other filetypes)
-      if ft == 'markdown' and is_prompts_file(filepath) then
-        require('shooter.core.files').track_last_shotfile(filepath)
+      if ft ~= 'markdown' then return end
+      local files_mod = require('shooter.core.files')
+      if is_prompts_file(filepath) then
+        files_mod.track_last_shotfile(filepath)
         apply_syntax(ev.buf)
         show_shotfile_info(ev.buf)
         -- Enable autoread so checktime polling picks up external writes (e.g. iOS app)
         vim.bo[ev.buf].autoread = true
+      elseif files_mod.is_masterplan(filepath) then
+        files_mod.track_last_shotfile(filepath)
       end
     end,
   })

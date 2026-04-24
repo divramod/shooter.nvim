@@ -35,18 +35,31 @@ local function _load_last_shotfile()
     -- Reject stale entries that point into a worktree copy of the shotfiles
     -- tree (pre-shot-6 persisted state) so < >l always returns to main.
     if content and vim.fn.filereadable(content) == 1
-        and M.is_in_prompts_folder(content) then
+        and M.is_last_trackable(content) then
       return content
     end
   end
   return nil
 end
 
--- Called by syntax.lua on BufEnter for shotfiles. Only tracks files living in
--- the main worktree's shotfiles dir — we never want < >l to bring the user
--- back to a worktree-local shotfile.
+-- docs/plans/masterplan.md is also trackable so < >l can return to it when
+-- it was the last thing the user opened.
+function M.is_masterplan(path)
+  return path ~= nil and path:match('/docs/plans/masterplan%.md$') ~= nil
+end
+
+-- Predicate used by track/load/find for the "last opened file" flow:
+-- either a shotfile under the main worktree's shotfiles tree, or
+-- docs/plans/masterplan.md.
+function M.is_last_trackable(path)
+  return M.is_in_prompts_folder(path) or M.is_masterplan(path)
+end
+
+-- Called by syntax.lua on BufEnter for shotfiles (and for masterplan.md).
+-- Only tracks files that would be valid targets for < >l, so we never bring
+-- the user back to an unrelated buffer.
 function M.track_last_shotfile(filepath)
-  if not M.is_in_prompts_folder(filepath) then return end
+  if not M.is_last_trackable(filepath) then return end
   _last_shotfile = filepath
   _persist_last_shotfile(filepath)
 end
@@ -327,9 +340,10 @@ end
 -- Find last edited shooter file (project-aware)
 -- Uses tracked shotfile (set by BufEnter autocmd) first, falls back to ls -t
 function M.find_last_file(project)
-  -- Primary: return Neovim-tracked last shotfile (must live under main)
+  -- Primary: return Neovim-tracked last shotfile (must live under main,
+  -- or be docs/plans/masterplan.md)
   if _last_shotfile and vim.fn.filereadable(_last_shotfile) == 1
-      and M.is_in_prompts_folder(_last_shotfile) then
+      and M.is_last_trackable(_last_shotfile) then
     return _last_shotfile
   end
 

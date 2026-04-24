@@ -196,6 +196,47 @@ describe('shooter.core.files', function()
     end)
   end)
 
+  describe('is_masterplan / is_last_trackable', function()
+    it('is_masterplan matches docs/plans/masterplan.md anywhere', function()
+      assert.is_true(files.is_masterplan(test_root .. '/docs/plans/masterplan.md'))
+      assert.is_true(files.is_masterplan('/any/path/docs/plans/masterplan.md'))
+    end)
+
+    it('is_masterplan rejects other files', function()
+      assert.is_false(files.is_masterplan(test_root .. '/docs/plans/0005-foo/plan.md'))
+      assert.is_false(files.is_masterplan(test_root .. '/masterplan.md'))
+      assert.is_false(files.is_masterplan(nil))
+    end)
+
+    it('is_last_trackable accepts shotfiles AND masterplan.md', function()
+      local shotfile = test_root .. '/.hal/util/shooter/shotfiles/feats.md'
+      utils.write_file(shotfile, '# feats\n')
+      assert.is_true(files.is_last_trackable(shotfile))
+      assert.is_true(files.is_last_trackable(test_root .. '/docs/plans/masterplan.md'))
+      assert.is_false(files.is_last_trackable(test_root .. '/random.md'))
+    end)
+  end)
+
+  describe('track_last_shotfile + find_last_file (masterplan)', function()
+    it('tracks masterplan.md and returns it from find_last_file', function()
+      local mp = test_root .. '/docs/plans/masterplan.md'
+      vim.fn.mkdir(test_root .. '/docs/plans', 'p')
+      utils.write_file(mp, '# masterplan\n')
+      files.track_last_shotfile(mp)
+      assert.equals(mp, files.find_last_file())
+    end)
+
+    it('ignores unrelated files', function()
+      local other = test_root .. '/something.md'
+      utils.write_file(other, '# other\n')
+      files.track_last_shotfile(other)
+      -- Not trackable → in-memory state is untouched, find_last_file falls back
+      -- to persisted / filesystem, which is nil in this empty setup.
+      local last = files.find_last_file()
+      assert.is_true(last == nil or last ~= other)
+    end)
+  end)
+
   describe('find_last_file stale-state rejection', function()
     local base = vim.fn.expand('~') .. '/.cache/shooter_stale_test'
     local main_root = base .. '/main'
