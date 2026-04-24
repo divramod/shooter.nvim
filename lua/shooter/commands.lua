@@ -391,6 +391,27 @@ local function setup_plan_commands()
       utils.echo('plan: ' .. msg)
     end
   end, { desc = 'Edit shotfile for plan under cursor (create/rename/open)' })
+
+  -- HalShooterPlanNew — create a new docs/plans/<NNNN-slug>/plan.md
+  create_cmd('HalShooterPlanNew', function(opts)
+    local masterplan = require('shooter.plans.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then utils.echo('Not in a git repo'); return end
+    local function create(title)
+      if not title or title == '' then return end
+      local ok, path_or_err = masterplan.new_plan(git_root, title)
+      if not ok then
+        utils.echo('PlanNew: ' .. (path_or_err or 'unknown'))
+        return
+      end
+      vim.cmd('edit ' .. vim.fn.fnameescape(path_or_err))
+    end
+    if opts.args ~= '' then
+      create(opts.args)
+    else
+      vim.ui.input({ prompt = 'Plan title: ' }, create)
+    end
+  end, { nargs = '?', desc = 'Create new plan under docs/plans/<NNNN-slug>/' })
 end
 
 -- Setup Tool namespace commands (l prefix in keymaps)

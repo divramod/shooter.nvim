@@ -144,6 +144,9 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   ps        Open spec.md          Open docs/plans/<NNNN-slug>/spec.md
   pe        Edit plan shotfile    Open/rename/create the plan's shotfile
                                   under .hal/util/shooter/shotfiles/docs/plans/
+  pn        New plan              Prompt for a title, create
+                                  docs/plans/<NNNN-slug>/plan.md at the next
+                                  free number (max known plan number + 1).
 
   PICKERS (over all plans)
   pP        Pick plan.md          Telescope picker of docs/plans/**/plan.md

@@ -539,6 +539,40 @@ describe('shooter.plans.masterplan', function()
     end)
   end)
 
+  describe('new_plan', function()
+    it('creates docs/plans/<NNNN-slug>/plan.md with the next free number', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      local ok, path = masterplan.new_plan(repo, 'My Fresh Plan')
+      assert.is_true(ok, path)
+      assert.equals(repo .. '/docs/plans/0005-my-fresh-plan/plan.md', path)
+      assert.is_true(utils.file_exists(path))
+      local content = utils.read_file(path) or ''
+      assert.truthy(content:find('^# 0005%-my%-fresh%-plan'))
+    end)
+
+    it('starts at 0001 when docs/plans is empty', function()
+      local ok, path = masterplan.new_plan(repo, 'first one')
+      assert.is_true(ok)
+      assert.equals(repo .. '/docs/plans/0001-first-one/plan.md', path)
+    end)
+
+    it('also considers masterplan sections when picking the next number', function()
+      -- docs/plans is empty; masterplan has a ## done entry at 0020.
+      write_plan('## done\n- 0020-stuff (2026-01-01 00:00:00)\n')
+      local ok, path = masterplan.new_plan(repo, 'alpha')
+      assert.is_true(ok)
+      assert.equals(repo .. '/docs/plans/0021-alpha/plan.md', path)
+    end)
+
+    it('refuses an empty or whitespace title', function()
+      local ok1, err1 = masterplan.new_plan(repo, '')
+      assert.is_false(ok1); assert.truthy(err1)
+      local ok2, err2 = masterplan.new_plan(repo, '   ')
+      assert.is_false(ok2); assert.truthy(err2)
+    end)
+
+  end)
+
   describe('open_plan_file', function()
     local plan_dir = repo .. '/docs/plans/0005-merge-hal-skills'
 

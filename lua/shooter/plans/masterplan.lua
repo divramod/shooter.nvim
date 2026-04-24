@@ -266,6 +266,26 @@ function M.ensure_plan_shotfile(git_root, plan_name)
   return true, 'created'
 end
 
+-- Create a new docs/plans/<NNNN-slug>/plan.md. Number is the next free one
+-- (max plan number visible anywhere + 1). Returns ok_bool, path_or_error.
+function M.new_plan(git_root, title)
+  if not git_root or git_root == '' then return false, 'no git root' end
+  if not title or title:match('^%s*$') then return false, 'empty title' end
+  local slug = M.slugify(title)
+  if slug == '' then return false, 'invalid title' end
+
+  local parsed = M.parse(read_file(M.get_path(git_root)) or '')
+  local plan_name = string.format('%04d-%s',
+    M.max_plan_number(git_root, parsed.sections) + 1, slug)
+  local plan_dir = git_root .. '/docs/plans/' .. plan_name
+  vim.fn.mkdir(plan_dir, 'p')
+  local path = plan_dir .. '/plan.md'
+  if not write_file(path, '# ' .. plan_name .. '\n\n') then
+    return false, 'cannot write ' .. path
+  end
+  return true, path
+end
+
 -- Fix masterplan.md: rewrites via parse/render and syncs each plan's shotfile.
 -- Start number for `## next plans` is max(existing plan numbers) + 1 so it
 -- never collides with plans already started. After renumbering, every plan in
