@@ -85,7 +85,7 @@ A Neovim plugin for managing iterative development workflows with shots (numbere
     require('shooter').setup({
       -- Optional: override defaults
       paths = {
-        global_context = '~/.config/shooter.nvim/shooter-context-global.md',
+        global_context = '~/.config/hal/util/shooter/nvim/shooter-context-global.md',
         prompts_root = '.hal/util/shooter/shotfiles',
       },
       keymaps = {
@@ -425,7 +425,7 @@ In normal mode within the file picker:
 | `sr` | Rename session |
 | `?` | Show all keymaps |
 
-Sessions are saved per-repo in `~/.config/shooter.nvim/sessions/<repo>/`.
+Sessions are saved per-repo in `~/.config/hal/util/shooter/nvim/sessions/<repo>/`.
 
 ## Configuration
 
@@ -438,10 +438,10 @@ require('shooter').setup({
   -- ═══════════════════════════════════════════════════════════════════════════
   paths = {
     -- Global context file (shared across all projects)
-    global_context = '~/.config/shooter.nvim/shooter-context-global.md',
+    global_context = '~/.config/hal/util/shooter/nvim/shooter-context-global.md',
 
     -- Project context file (relative to git root)
-    project_context = '.shooter.nvim/shooter-context-project.md',
+    project_context = '.hal/util/shooter/shooter-context-project.md',
 
     -- Project context template (in plugin installation)
     project_template = 'templates/shooter-context-project-template.md',
@@ -635,21 +635,21 @@ highlight = {
 
 Shooter.nvim injects context when sending shots to AI:
 
-1. **Global Context** (`~/.config/shooter.nvim/shooter-context-global.md`)
+1. **Global Context** (`~/.config/hal/util/shooter/nvim/shooter-context-global.md`)
    - Shared across all projects
    - Your coding preferences, conventions, etc.
 
-2. **Project Context** (`.shooter.nvim/shooter-context-project.md` at git root)
+2. **Project Context** (`.hal/util/shooter/shooter-context-project.md` at git root)
    - Project-specific instructions
    - Auto-created from template on first use
 
-3. **Toggle Panes** (`.shooter.nvim/tmux.yml` at git root)
+3. **Toggle Panes** (`.hal/util/shooter/tmux.yml` at git root)
    - Configure persistent tmux panes that can be shown/hidden with `<space>tt`
    - Useful for test runners, log watchers, or development servers
 
 ### Toggle Panes Configuration
 
-Create `.shooter.nvim/tmux.yml` to configure panes that can be toggled on/off:
+Create `.hal/util/shooter/tmux.yml` to configure panes that can be toggled on/off:
 
 ```yaml
 panes:
@@ -697,8 +697,8 @@ Shooter uses customizable templates for the context instructions sent with each 
 
 ### Template Locations (Priority Order)
 
-1. **Project-specific**: `./.shooter.nvim/shooter-context-instructions.md`
-2. **Global**: `~/.config/shooter.nvim/shooter-context-instructions.md`
+1. **Project-specific**: `./.hal/util/shooter/shooter-context-instructions.md`
+2. **Global**: `~/.config/hal/util/shooter/nvim/shooter-context-instructions.md`
 3. **Plugin fallback**: Built-in templates
 
 For multi-shot sends, use `shooter-context-instructions-multishot.md`.
@@ -719,7 +719,7 @@ Use `{{variable_name}}` syntax in your templates:
 
 ### Example Custom Template
 
-Create `~/.config/shooter.nvim/shooter-context-instructions.md`:
+Create `~/.config/hal/util/shooter/nvim/shooter-context-instructions.md`:
 
 ```markdown
 # context
@@ -840,7 +840,7 @@ sound = {
 ```lua
 sound = {
   enabled = true,
-  file = '~/.config/shooter.nvim/shot.mp3',
+  file = '~/.config/hal/util/shooter/nvim/shot.mp3',
   volume = 0.7,
 }
 ```
@@ -852,7 +852,7 @@ sound = {
 ## Tips
 
 1. **Multi-select shots**: In `:ShoOpenShots`, press `Tab` to select multiple, then `1-4` to send all
-2. **Context management**: Edit `~/.config/shooter.nvim/shooter-context-global.md` to customize AI instructions
+2. **Context management**: Edit `~/.config/hal/util/shooter/nvim/shooter-context-global.md` to customize AI instructions
 3. **Queue workflow**: Queue shots while waiting for AI response, then send batch later
 4. **Oil integration**: Works seamlessly with [oil.nvim](https://github.com/stevearc/oil.nvim) for file management
 5. **File-based sending**: Shots are sent via `@filepath` syntax for reliability

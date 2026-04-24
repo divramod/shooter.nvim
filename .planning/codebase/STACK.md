@@ -69,14 +69,14 @@
 **Plugin Configuration:**
 - `lua/shooter/config.lua` - Central configuration with `M.defaults` table
 - User config merged via `require('shooter').setup(user_config)` in `lua/shooter/init.lua`
-- Global context file: `~/.config/shooter/nvim/shooter-context-global.md`
-- Project context file: `.shooter/config/nvim/shooter-context-project.md` (relative to git root)
-- Session storage: `~/.config/shooter/nvim/sessions/<repo>/` (`lua/shooter/session/storage.lua`)
+- Global context file: `~/.config/hal/util/shooter/nvim/shooter-context-global.md`
+- Project context file: `.hal/util/shooter/config/nvim/shooter-context-project.md` (relative to git root)
+- Session storage: `~/.config/hal/util/shooter/nvim/sessions/<repo>/` (`lua/shooter/session/storage.lua`)
 
 **Key Config Paths:**
-- Shot files (prompts): `.shooter/ai/shotfiles/` (relative to project root)
-- Queue file: `.shooter/ai/shotfiles/.shot-queue.json`
-- Clipboard images: `<git-root>/.shooter/config/nvim/images/`
+- Shot files (prompts): `.hal/util/shooter/ai/shotfiles/` (relative to project root)
+- Queue file: `.hal/util/shooter/ai/shotfiles/.shot-queue.json`
+- Clipboard images: `<git-root>/.hal/util/shooter/config/nvim/images/`
 - Templates: `templates/` directory within the plugin installation
 
 ## Platform Requirements

@@ -79,13 +79,13 @@
 5. `tmux/messages.lua` builds the full message (shot content + optional context injection)
 6. `tmux/send.lua` writes text to a temp file, then uses `tmux load-buffer` + `tmux paste-buffer -p` to send (or `send-keys` in keys mode)
 7. `core/shots.lua` marks the shot header as executed with timestamp
-8. A "bullet" file is saved to `~/.config/shooter/nvim/bullets/{repo}/` for analytics tracking
+8. A "bullet" file is saved to `~/.config/hal/util/shooter/nvim/bullets/{repo}/` for analytics tracking
 
 **Creating a New Shotfile:**
 
 1. User triggers `:ShoShotfileNew` with optional title argument
 2. If mono-repo with `projects/` folder: project picker shown first
-3. `core/files.lua` creates the file from template at `{git_root}/.shooter/ai/shotfiles/{name}.md`
+3. `core/files.lua` creates the file from template at `{git_root}/.hal/util/shooter/ai/shotfiles/{name}.md`
 4. Buffer opens at line 4 in insert mode
 
 **Telescope Picker Flow:**
@@ -98,10 +98,10 @@
 
 **State Management:**
 - Plugin config: In-memory Lua table merged at `setup()` time, accessed via `config.get('dotted.path')` from `lua/shooter/config.lua`
-- External config: YAML files at `~/.config/shooter/nvim/config.yaml` (global) and `{repo}/.shooter/cfg/nvim/config.yaml` (project-local), loaded with caching in `lua/shooter/core/ext_config.lua`
-- Session state: JSON files at `~/.config/shooter/nvim/sessions/{repo_slug}/` managed by `lua/shooter/session/storage.lua`
-- Queue state: JSON file at `{repo}/.shooter/ai/shotfiles/.shot-queue.json` managed by `lua/shooter/queue/storage.lua`
-- Last shotfile tracking: Per-repo file at `~/.config/shooter/nvim/last-shotfile-{slug}` managed by `lua/shooter/core/files.lua`
+- External config: YAML files at `~/.config/hal/util/shooter/nvim/config.yaml` (global) and `{repo}/.hal/util/shooter/cfg/nvim/config.yaml` (project-local), loaded with caching in `lua/shooter/core/ext_config.lua`
+- Session state: JSON files at `~/.config/hal/util/shooter/nvim/sessions/{repo_slug}/` managed by `lua/shooter/session/storage.lua`
+- Queue state: JSON file at `{repo}/.hal/util/shooter/ai/shotfiles/.shot-queue.json` managed by `lua/shooter/queue/storage.lua`
+- Last shotfile tracking: Per-repo file at `~/.config/hal/util/shooter/nvim/last-shotfile-{slug}` managed by `lua/shooter/core/files.lua`
 
 ## Key Abstractions
 
@@ -111,7 +111,7 @@
 - Pattern: Shots are detected by regex patterns defined in `config.lua` (`patterns.shot_header`, `patterns.open_shot_header`, `patterns.executed_shot_header`). A shot spans from its `##` header to the next `##` header or EOF.
 
 **Shotfile:**
-- Purpose: A markdown file containing one or more shots, living in `.shooter/ai/shotfiles/`
+- Purpose: A markdown file containing one or more shots, living in `.hal/util/shooter/ai/shotfiles/`
 - Examples: `lua/shooter/core/files.lua`
 - Pattern: Files are organized in subfolders (prompts, archive, backlog, done, reqs, wait, test) and can be moved between them
 
@@ -135,7 +135,7 @@
 **User Commands:**
 - Location: `lua/shooter/commands.lua`
 - Triggers: `:ShoXxx` commands or keymaps defined in `lua/shooter/keymaps.lua`
-- Responsibilities: Dispatch to appropriate module functions; some commands are guarded by `require_shotfile()` which ensures the current buffer is in `.shooter/ai/shotfiles/`
+- Responsibilities: Dispatch to appropriate module functions; some commands are guarded by `require_shotfile()` which ensures the current buffer is in `.hal/util/shooter/ai/shotfiles/`
 
 **Syntax/Autocommands:**
 - Location: `lua/shooter/syntax.lua`

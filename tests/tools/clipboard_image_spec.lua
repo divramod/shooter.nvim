@@ -35,7 +35,7 @@ describe('clipboard_image', function()
       vim.cmd('cd ' .. test_dir)
 
       local save_dir = clipboard_image.get_save_dir()
-      assert.truthy(save_dir:match('%.clipboard%-images$') or save_dir:match('%.shooter%.nvim/images$'))
+      assert.truthy(save_dir:match('%.clipboard%-images$'))
 
       vim.cmd('cd ' .. orig_cwd)
     end)

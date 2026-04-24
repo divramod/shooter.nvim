@@ -139,10 +139,10 @@ shooter.nvim/
 │   ├── telescope/             # Telescope tests
 │   ├── tmux/                  # Tmux tests
 │   └── tools/                 # Tools tests
-├── .shooter/                  # Project's own shooter config (dogfooding)
-│   └── ai/                    # AI-related project files
-│       ├── shotfiles/         # Shotfiles for this project
-│       └── ...                # Context, diagrams, research
+├── .hal/util/shooter/          # Project's own shooter config (dogfooding)
+│   ├── shotfiles/              # Shotfiles for this project
+│   ├── ai/                     # AI-related project files
+│   └── ...                     # Context, diagrams, research
 ├── AGENTS.md                  # AI agent instructions
 ├── CLAUDE.md                  # Claude-specific instructions
 ├── GEMINI.md                  # Gemini-specific instructions
@@ -273,12 +273,12 @@ shooter.nvim/
 
 ## Special Directories
 
-**`.shooter/`:**
+**`.hal/util/shooter/`:**
 - Purpose: Project-specific shooter configuration and AI shotfiles (the plugin dogfoods itself)
 - Generated: Partially (created by plugin commands)
 - Committed: Yes (shotfiles are version-controlled project artifacts)
 
-**`~/.config/shooter/nvim/`:**
+**`~/.config/hal/util/shooter/nvim/`:**
 - Purpose: Global user config, sessions, bullets (sent shot copies), filter state
 - Generated: Yes (created automatically on first use)
 - Committed: No (user-local data)

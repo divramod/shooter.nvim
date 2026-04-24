@@ -97,12 +97,12 @@ shooter.nvim communicates with AI coding agents running in tmux panes. It does n
 - None; all data is file-based
 
 **File Storage:**
-- Shot files: `.shooter/ai/shotfiles/*.md` (markdown, user-authored)
-- Queue: `.shooter/ai/shotfiles/.shot-queue.json` (JSON array)
-- Sessions: `~/.config/shooter/nvim/sessions/<owner>/<repo>/` (YAML files, `lua/shooter/session/storage.lua`)
-- Global context: `~/.config/shooter/nvim/shooter-context-global.md`
-- Project context: `.shooter/config/nvim/shooter-context-project.md`
-- Clipboard images: `<git-root>/.shooter/config/nvim/images/` (gitignored except .gitkeep)
+- Shot files: `.hal/util/shooter/ai/shotfiles/*.md` (markdown, user-authored)
+- Queue: `.hal/util/shooter/ai/shotfiles/.shot-queue.json` (JSON array)
+- Sessions: `~/.config/hal/util/shooter/nvim/sessions/<owner>/<repo>/` (YAML files, `lua/shooter/session/storage.lua`)
+- Global context: `~/.config/hal/util/shooter/nvim/shooter-context-global.md`
+- Project context: `.hal/util/shooter/config/nvim/shooter-context-project.md`
+- Clipboard images: `<git-root>/.hal/util/shooter/config/nvim/images/` (gitignored except .gitkeep)
 
 **Caching:**
 - None

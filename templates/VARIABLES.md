@@ -28,13 +28,13 @@ These variables are available in all shooter template files. Use the `{{variable
 
 Templates are loaded in this order (first found wins):
 
-1. **Project-specific**: `./.shooter/config/nvim/shooter-context-instructions.md`
-2. **Global**: `~/.config/shooter.nvim/shooter-context-instructions.md`
+1. **Project-specific**: `./.hal/util/shooter/config/nvim/shooter-context-instructions.md`
+2. **Global**: `~/.config/hal/util/shooter/nvim/shooter-context-instructions.md`
 3. **Plugin fallback**: `templates/shooter-context-instructions.md`
 
 ## Usage Example
 
-Create a custom template at `~/.config/shooter.nvim/shooter-context-instructions.md`:
+Create a custom template at `~/.config/hal/util/shooter/nvim/shooter-context-instructions.md`:
 
 ```markdown
 # context

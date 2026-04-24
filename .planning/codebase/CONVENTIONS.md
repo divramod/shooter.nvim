@@ -189,7 +189,7 @@ end
 
 1. **Lua config** (`lua/shooter/config.lua`): In-memory config merged from defaults + user `setup()` call. Access via `config.get('tmux.delay')` and `config.set('path', value)`.
 
-2. **External YAML config** (`lua/shooter/core/ext_config.lua`): File-based config from `~/.config/shooter/nvim/config.yaml` and `.shooter/cfg/nvim/config.yaml`. Access via `ext_config.get('file.open_shots.color_bg')`.
+2. **External YAML config** (`lua/shooter/core/ext_config.lua`): File-based config from `~/.config/hal/util/shooter/nvim/config.yaml` and `.hal/util/shooter/cfg/nvim/config.yaml`. Access via `ext_config.get('file.open_shots.color_bg')`.
 
 Both use dot-path accessors. Lua config is for plugin behavior; ext_config is for user-facing settings (colors, preferences).
 
