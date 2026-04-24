@@ -391,10 +391,10 @@ function M.setup()
       if fixing_config then return end
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       -- Only react to shooter config files (global or project-local)
-      if filepath:match('shooter/nvim/config%.yaml$') or filepath:match('%.shooter/cfg/nvim/config%.yaml$') then
+      if filepath:match('hal/util/shooter/nvim/config%.yaml$') or filepath:match('%.hal/util/shooter/cfg/nvim/config%.yaml$') then
         local ext_config = require('shooter.core.ext_config')
         -- Fix: strip invalid keys, fill missing defaults (global)
-        local is_global = filepath:match('shooter/nvim/config%.yaml$') and not filepath:match('%.shooter/cfg/nvim/config%.yaml$')
+        local is_global = filepath:match('hal/util/shooter/nvim/config%.yaml$')
         local removed, added = ext_config.fix_config_buffer(ev.buf, is_global)
         -- Silently re-save if fix changed the buffer
         if removed > 0 or added > 0 then
@@ -422,8 +422,8 @@ function M.setup()
     callback = function(ev)
       if fixed_cfg_bufs[ev.buf] then return end
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
-      local is_global = filepath:match('shooter/nvim/config%.yaml$') and not filepath:match('%.shooter/cfg/nvim/config%.yaml$')
-      local is_local = filepath:match('%.shooter/cfg/nvim/config%.yaml$')
+      local is_global = filepath:match('hal/util/shooter/nvim/config%.yaml$')
+      local is_local = filepath:match('%.hal/util/shooter/cfg/nvim/config%.yaml$')
       if not is_global and not is_local then return end
       fixed_cfg_bufs[ev.buf] = true
       local eok, ext_config = pcall(require, 'shooter.core.ext_config')

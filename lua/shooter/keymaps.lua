@@ -217,7 +217,7 @@ function M.setup()
   -- ============================================================
   map('n', ',p', ':HalShooterShotfileOpenPrompts<cr>', 'Open prompts folder')
   map('n', ',l', ':HalShooterOpenPlans<cr>', 'Open plans folder')
-  map('n', ',s', ':HalShooterOpenShoConfig<cr>', 'Open .shooter/config/nvim folder')
+  map('n', ',s', ':HalShooterOpenShoConfig<cr>', 'Open .hal/util/shooter/config/nvim folder')
 
   -- ============================================================
   -- NAV NAMESPACE (z prefix) - Navigation commands

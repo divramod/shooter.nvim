@@ -23,7 +23,7 @@ describe('session.storage', function()
   describe('get_sessions_dir', function()
     it('should return path with sanitized repo slug', function()
       local dir = storage.get_sessions_dir('owner/repo')
-      assert.matches('shooter/nvim/sessions/owner_repo$', dir)
+      assert.matches('hal/util/shooter/nvim/sessions/owner_repo$', dir)
     end)
   end)
 

@@ -117,7 +117,7 @@ local function setup_shotfile_commands()
     local config = require('shooter.config')
     local prompts_dir = config.get('paths.prompts_dir')
     vim.fn.mkdir(prompts_dir, 'p')
-    -- Auto-create missing theme shotfiles from .shooter/themes.json
+    -- Auto-create missing theme shotfiles from .hal/util/shooter/themes.json
     local created = files.ensure_theme_shotfiles()
     if created > 0 then
     end
@@ -136,17 +136,17 @@ local function setup_shotfile_commands()
     end
   end, { desc = 'Open plans folder in Oil' })
 
-  -- ShoOpenShoConfig - Open .shooter/config/nvim folder in Oil
+  -- ShoOpenShoConfig - Open .hal/util/shooter/config/nvim folder in Oil
   create_cmd('HalShooterOpenShoConfig', function()
     local files = require('shooter.core.files')
     local git_root = files.get_git_root()
     if git_root then
-      local shooter_dir = git_root .. '/.shooter/config/nvim'
+      local shooter_dir = git_root .. '/.hal/util/shooter/config/nvim'
       vim.fn.mkdir(shooter_dir, 'p')
       vim.cmd('Oil ' .. shooter_dir)
     else
     end
-  end, { desc = 'Open .shooter/config/nvim folder in Oil' })
+  end, { desc = 'Open .hal/util/shooter/config/nvim folder in Oil' })
 
   -- Move commands
   create_cmd('HalShooterShotfileMoveArchive', movement.move_to_archive, { desc = 'Move to archive' })
@@ -536,8 +536,8 @@ local function setup_cfg_commands()
   create_cmd('HalShooterCfgFix', function()
     local ext_config = require('shooter.core.ext_config')
     local bufpath = vim.api.nvim_buf_get_name(0)
-    local is_global = bufpath:match('shooter/nvim/config%.yaml$') and not bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
-    local is_local = bufpath:match('%.shooter/cfg/nvim/config%.yaml$')
+    local is_global = bufpath:match('hal/util/shooter/nvim/config%.yaml$')
+    local is_local = bufpath:match('%.hal/util/shooter/cfg/nvim/config%.yaml$')
     if not is_global and not is_local then
       return
     end

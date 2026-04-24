@@ -7,10 +7,10 @@ M.defaults = {
   -- Path configuration
   paths = {
     -- Global context file (shared across all projects)
-    global_context = '~/.config/shooter/nvim/shooter-context-global.md',
+    global_context = '~/.config/hal/util/shooter/nvim/shooter-context-global.md',
 
     -- Project context file (relative to git root)
-    project_context = '.shooter/config/nvim/shooter-context-project.md',
+    project_context = '.hal/util/shooter/config/nvim/shooter-context-project.md',
 
     -- Project context template (in plugin installation)
     project_template = 'templates/shooter-context-project-template.md',
@@ -118,7 +118,7 @@ M.defaults = {
 
     -- Sound file path (uses afplay on macOS)
     -- Can be a system sound like '/System/Library/Sounds/Glass.aiff'
-    -- or a custom path like '~/.config/shooter/nvim/shot.mp3'
+    -- or a custom path like '~/.config/hal/util/shooter/nvim/shot.mp3'
     file = '/System/Library/Sounds/Pop.aiff',
 
     -- Volume (0.0 to 1.0)

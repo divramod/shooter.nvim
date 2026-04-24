@@ -51,14 +51,14 @@ end
 function M.load_template(filename)
   local git_root = files.get_git_root()
 
-  -- Priority 1: Project-specific (./.shooter/config/nvim/)
+  -- Priority 1: Project-specific (./.hal/util/shooter/config/nvim/)
   if git_root then
-    local project_path = git_root .. '/.shooter/config/nvim/' .. filename
+    local project_path = git_root .. '/.hal/util/shooter/config/nvim/' .. filename
     local content = utils.read_file(project_path)
     if content then return trim_trailing(content) end
   end
 
-  -- Priority 2: Global (~/.config/shooter/nvim/)
+  -- Priority 2: Global (~/.config/hal/util/shooter/nvim/)
   local ext_config = require('shooter.core.ext_config')
   local global_path = ext_config.base_dir() .. '/' .. filename
   local content = utils.read_file(global_path)
@@ -157,7 +157,7 @@ function M.load_instructions(is_multishot)
 end
 
 -- Resolve theme codebase summary path from themes.json for the current shotfile
--- Checks for .shooter/codebase/<slug>/SUMMARY.md first, falls back to <slug>/README.md
+-- Checks for .hal/util/shooter/codebase/<slug>/SUMMARY.md first, falls back to <slug>/README.md
 -- Returns relative path if found, nil otherwise
 function M.get_theme_codebase_summary(bufnr)
   bufnr = bufnr or 0
@@ -166,7 +166,7 @@ function M.get_theme_codebase_summary(bufnr)
   if not git_root or not filepath or filepath == '' then return nil end
 
   -- Read themes.json
-  local themes_path = git_root .. '/.shooter/themes.json'
+  local themes_path = git_root .. '/.hal/util/shooter/themes.json'
   local content = utils.read_file(themes_path)
   if not content then return nil end
 
@@ -179,9 +179,9 @@ function M.get_theme_codebase_summary(bufnr)
       local shotfile_abs = git_root .. '/' .. theme.shotfile
       if filepath == shotfile_abs then
         -- Priority 1: Theme codebase summary
-        local summary_path = git_root .. '/.shooter/codebase/' .. theme.slug .. '/SUMMARY.md'
+        local summary_path = git_root .. '/.hal/util/shooter/codebase/' .. theme.slug .. '/SUMMARY.md'
         if vim.fn.filereadable(summary_path) == 1 then
-          return '.shooter/codebase/' .. theme.slug .. '/SUMMARY.md'
+          return '.hal/util/shooter/codebase/' .. theme.slug .. '/SUMMARY.md'
         end
         -- Priority 2: Fallback to theme README
         local slug_path = theme.path or theme.slug

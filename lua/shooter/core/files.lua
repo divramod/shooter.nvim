@@ -376,13 +376,13 @@ function M.get_last_edited_file(project)
   return M.find_last_file(project)
 end
 
--- Ensure theme shotfiles exist based on .shooter/themes.json
+-- Ensure theme shotfiles exist based on .hal/util/shooter/themes.json
 -- Creates missing shotfiles with a simple "# <title>" header
 function M.ensure_theme_shotfiles()
   local git_root = M.get_git_root()
   if not git_root then return 0 end
 
-  local themes_path = git_root .. '/.shooter/themes.json'
+  local themes_path = git_root .. '/.hal/util/shooter/themes.json'
   local f = io.open(themes_path, 'r')
   if not f then return 0 end
 

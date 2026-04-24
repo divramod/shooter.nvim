@@ -1,5 +1,5 @@
 -- Configuration loading for toggle panes
--- Parses .shooter/config/nvim/tmux.yml and merges with auto-generated script panes
+-- Parses .hal/util/shooter/config/nvim/tmux.yml and merges with auto-generated script panes
 
 local M = {}
 
@@ -12,7 +12,7 @@ local cache = {}
 ---@param git_root string
 ---@return string
 local function get_config_path(git_root)
-  return git_root .. '/.shooter/config/nvim/tmux.yml'
+  return git_root .. '/.hal/util/shooter/config/nvim/tmux.yml'
 end
 
 -- Get file modification time

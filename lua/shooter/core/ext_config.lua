@@ -1,6 +1,6 @@
 -- External YAML-based configuration for shooter.nvim
--- Handles global (~/.config/shooter/nvim/) and project-local (.shooter/cfg/nvim/) config
--- with deep merge, caching, migration from old paths, and auto-reload on save.
+-- Handles global (~/.config/hal/util/shooter/nvim/) and project-local
+-- (.hal/util/shooter/cfg/nvim/) config with deep merge, caching, and auto-reload on save.
 
 local utils = require('shooter.utils')
 
@@ -52,7 +52,7 @@ local _cache = nil
 
 -- Base directory for global config
 function M.base_dir()
-  return utils.expand_path('~/.config/shooter/nvim')
+  return utils.expand_path('~/.config/hal/util/shooter/nvim')
 end
 
 -- Sessions directory
@@ -89,7 +89,7 @@ end
 function M.local_config_path()
   local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')
   if vim.v.shell_error ~= 0 or #git_root == 0 then return nil end
-  return git_root[1] .. '/.shooter/cfg/nvim/config.yaml'
+  return git_root[1] .. '/.hal/util/shooter/cfg/nvim/config.yaml'
 end
 
 --- Simple YAML parser (schema-agnostic, indent-tracking stack)
@@ -193,7 +193,7 @@ function M.ensure_global_config()
   utils.ensure_dir(utils.get_dirname(path))
   local content = '# Shooter.nvim global configuration\n'
     .. '# Edit this file to customize behavior across all projects.\n'
-    .. '# Project-local overrides go to <repo>/.shooter/cfg/nvim/config.yaml\n'
+    .. '# Project-local overrides go to <repo>/.hal/util/shooter/cfg/nvim/config.yaml\n'
     .. M.serialize_yaml(M.DEFAULTS) .. '\n'
   utils.write_file(path, content)
 end
@@ -205,27 +205,10 @@ function M.ensure_local_config()
   if utils.file_exists(path) then return path end
   utils.ensure_dir(utils.get_dirname(path))
   local content = '# Shooter.nvim project-local configuration\n'
-    .. '# Values here override the global config at ~/.config/shooter/nvim/config.yaml\n'
+    .. '# Values here override the global config at ~/.config/hal/util/shooter/nvim/config.yaml\n'
     .. M.serialize_yaml(M.DEFAULTS) .. '\n'
   utils.write_file(path, content)
   return path
-end
-
---- Migrate from old config directory (~/.config/shooter.nvim/) to new (~/.config/shooter/nvim/)
---- Idempotent: copies contents if new dir is empty, always removes old dir if it exists.
-function M.migrate()
-  local old_dir = utils.expand_path('~/.config/shooter.nvim')
-  if not utils.dir_exists(old_dir) then return end
-
-  local new_dir = M.base_dir()
-  if not utils.dir_exists(new_dir) then
-    -- New dir doesn't exist yet: copy contents from old
-    utils.ensure_dir(new_dir)
-    vim.fn.system(string.format('cp -a %s/. %s/', vim.fn.shellescape(old_dir), vim.fn.shellescape(new_dir)))
-  end
-
-  -- Always remove old directory
-  vim.fn.delete(old_dir, 'rf')
 end
 
 --- Fix empty tables that should be leaf values (YAML parser ambiguity)
@@ -380,9 +363,9 @@ function M.fix_config(path, is_global)
   local header = is_global
     and '# Shooter.nvim global configuration\n'
       .. '# Edit this file to customize behavior across all projects.\n'
-      .. '# Project-local overrides go to <repo>/.shooter/cfg/nvim/config.yaml\n'
+      .. '# Project-local overrides go to <repo>/.hal/util/shooter/cfg/nvim/config.yaml\n'
     or '# Shooter.nvim project-local configuration\n'
-      .. '# Values here override the global config at ~/.config/shooter/nvim/config.yaml\n'
+      .. '# Values here override the global config at ~/.config/hal/util/shooter/nvim/config.yaml\n'
 
   utils.write_file(path, header .. M.serialize_yaml(cleaned) .. '\n')
   M.reload()
@@ -418,9 +401,9 @@ function M.fix_config_buffer(bufnr, is_global)
   local header = is_global
     and '# Shooter.nvim global configuration\n'
       .. '# Edit this file to customize behavior across all projects.\n'
-      .. '# Project-local overrides go to <repo>/.shooter/cfg/nvim/config.yaml\n'
+      .. '# Project-local overrides go to <repo>/.hal/util/shooter/cfg/nvim/config.yaml\n'
     or '# Shooter.nvim project-local configuration\n'
-      .. '# Values here override the global config at ~/.config/shooter/nvim/config.yaml\n'
+      .. '# Values here override the global config at ~/.config/hal/util/shooter/nvim/config.yaml\n'
 
   local new_content = header .. M.serialize_yaml(cleaned)
   local new_lines = vim.split(new_content, '\n', { plain = true })

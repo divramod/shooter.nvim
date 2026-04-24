@@ -94,24 +94,24 @@ describe('core.ext_config', function()
   end)
 
   describe('path accessors', function()
-    it('base_dir should point to ~/.config/shooter/nvim', function()
+    it('base_dir should point to ~/.config/hal/util/shooter/nvim', function()
       local dir = ext_config.base_dir()
-      assert.matches('shooter/nvim$', dir)
+      assert.matches('hal/util/shooter/nvim$', dir)
     end)
 
     it('sessions_dir should be under base_dir', function()
       local dir = ext_config.sessions_dir()
-      assert.matches('shooter/nvim/sessions$', dir)
+      assert.matches('hal/util/shooter/nvim/sessions$', dir)
     end)
 
     it('bullets_dir should be under base_dir', function()
       local dir = ext_config.bullets_dir()
-      assert.matches('shooter/nvim/bullets$', dir)
+      assert.matches('hal/util/shooter/nvim/bullets$', dir)
     end)
 
     it('filter_state_path should be under base_dir', function()
       local path = ext_config.filter_state_path()
-      assert.matches('shooter/nvim/filter%-state%.json$', path)
+      assert.matches('hal/util/shooter/nvim/filter%-state%.json$', path)
     end)
 
     it('last_shotfile_path should include slug', function()
@@ -121,7 +121,7 @@ describe('core.ext_config', function()
 
     it('global_config_path should point to config.yaml', function()
       local path = ext_config.global_config_path()
-      assert.matches('shooter/nvim/config%.yaml$', path)
+      assert.matches('hal/util/shooter/nvim/config%.yaml$', path)
     end)
   end)
 

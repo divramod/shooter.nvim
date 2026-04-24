@@ -1,5 +1,5 @@
 -- Session storage - YAML I/O and path resolution
--- Handles reading/writing session files to ~/.config/shooter/nvim/sessions/<repo>/
+-- Handles reading/writing session files to ~/.config/hal/util/shooter/nvim/sessions/<repo>/
 
 local M = {}
 local defaults = require('shooter.session.defaults')

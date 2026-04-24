@@ -169,8 +169,8 @@ CFG NAMESPACE (c prefix)
   cs        Shot picker config    Toggle shot picker vim mode
   cf        Shotfile config       Edit shotfile picker session config
   cR        Reload YAML config    Reload config.yaml and reapply syntax
-  cG        Edit global YAML      Open ~/.config/shooter/nvim/config.yaml
-  cL        Edit local YAML       Open <repo>/.shooter/cfg/nvim/config.yaml
+  cG        Edit global YAML      Open ~/.config/hal/util/shooter/nvim/config.yaml
+  cL        Edit local YAML       Open <repo>/.hal/util/shooter/cfg/nvim/config.yaml
   cF        Fix YAML config       Strip invalid keys, fill missing defaults
 
 GIT NAMESPACE (g prefix)
@@ -196,7 +196,7 @@ HELP NAMESPACE (h prefix)
 QUICK FOLDER ACCESS (, prefix)
   ,p        Prompts folder        Open .hal/util/shooter/shotfiles in Oil
   ,l        Plans folder          Open plans in Oil
-  ,s        Shooter config        Open .shooter/config/nvim in Oil
+  ,s        Shooter config        Open .hal/util/shooter/config/nvim in Oil
 
 NAV NAMESPACE (z prefix)
   zz        Last 10 edited        Picker over last 10 edited files
@@ -235,14 +235,14 @@ PROJECT SUPPORT
   - History paths include project: ~/.config/.../history/user/repo/project/...
 
 CONTEXT FILES
-  Global context:   ~/.config/shooter/nvim/shooter-context-global.md
-  Project context:  <repo>/.shooter/config/nvim/shooter-context-project.md
+  Global context:   ~/.config/hal/util/shooter/nvim/shooter-context-global.md
+  Project context:  <repo>/.hal/util/shooter/config/nvim/shooter-context-project.md
   Plugin config:    ~/.config/nvim/lua/plugins/shooter.lua (lazy.nvim)
-  Global YAML cfg:  ~/.config/shooter/nvim/config.yaml
-  Local YAML cfg:   <repo>/.shooter/cfg/nvim/config.yaml
+  Global YAML cfg:  ~/.config/hal/util/shooter/nvim/config.yaml
+  Local YAML cfg:   <repo>/.hal/util/shooter/cfg/nvim/config.yaml
 
 HISTORY
-  ~/.config/shooter/nvim/history/<user>/<repo>/   <- Shot history per repo
+  ~/.config/hal/util/shooter/nvim/history/<user>/<repo>/   <- Shot history per repo
 
 Press 'q' to close this help window.
 ]]
