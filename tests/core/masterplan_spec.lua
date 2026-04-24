@@ -538,4 +538,77 @@ describe('shooter.core.masterplan', function()
       assert.truthy(err)
     end)
   end)
+
+  describe('open_plan_file', function()
+    local plan_dir = repo .. '/docs/plans/0005-merge-hal-skills'
+
+    after_each(function()
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_valid(buf) then
+          local name = vim.api.nvim_buf_get_name(buf)
+          if name:find(repo, 1, true) then
+            vim.cmd('silent! bwipeout! ' .. buf)
+          end
+        end
+      end
+    end)
+
+    it('opens docs/plans/<plan>/plan.md for a valid plan line', function()
+      vim.fn.mkdir(plan_dir, 'p')
+      utils.write_file(plan_dir .. '/plan.md', '# plan\n')
+      local ok, msg = masterplan.open_plan_file(repo,
+        '- 0005-merge-hal-skills', 'plan')
+      assert.is_true(ok, msg)
+      assert.equals('opened', msg)
+      local bufname = vim.api.nvim_buf_get_name(0)
+      assert.truthy(bufname:find('plan.md', 1, true))
+    end)
+
+    it('opens docs/plans/<plan>/context.md', function()
+      vim.fn.mkdir(plan_dir, 'p')
+      utils.write_file(plan_dir .. '/context.md', '# context\n')
+      local ok = masterplan.open_plan_file(repo,
+        '- 0005-merge-hal-skills', 'context')
+      assert.is_true(ok)
+      assert.truthy(vim.api.nvim_buf_get_name(0):find('context.md', 1, true))
+    end)
+
+    it('opens docs/plans/<plan>/spec.md', function()
+      vim.fn.mkdir(plan_dir, 'p')
+      utils.write_file(plan_dir .. '/spec.md', '# spec\n')
+      local ok = masterplan.open_plan_file(repo,
+        '- 0005-merge-hal-skills', 'spec')
+      assert.is_true(ok)
+      assert.truthy(vim.api.nvim_buf_get_name(0):find('spec.md', 1, true))
+    end)
+
+    it('reports no plan on line when cursor line has no plan reference', function()
+      local ok, err = masterplan.open_plan_file(repo, '  - a child note', 'plan')
+      assert.is_false(ok)
+      assert.truthy(err:find('no plan on current line', 1, true))
+    end)
+
+    it('reports missing file when the specific kind does not exist', function()
+      vim.fn.mkdir(plan_dir, 'p')
+      utils.write_file(plan_dir .. '/plan.md', '# plan\n')
+      local ok, err = masterplan.open_plan_file(repo,
+        '- 0005-merge-hal-skills', 'spec')
+      assert.is_false(ok)
+      assert.truthy(err:find('no spec.md for 0005-merge-hal-skills', 1, true))
+    end)
+
+    it('reports missing file when the plan folder does not exist', function()
+      local ok, err = masterplan.open_plan_file(repo,
+        '- 0099-missing-plan', 'plan')
+      assert.is_false(ok)
+      assert.truthy(err:find('no plan.md for 0099-missing-plan', 1, true))
+    end)
+
+    it('rejects an invalid kind', function()
+      local ok, err = masterplan.open_plan_file(repo,
+        '- 0005-merge-hal-skills', 'readme')
+      assert.is_false(ok)
+      assert.truthy(err:find('invalid kind', 1, true))
+    end)
+  end)
 end)

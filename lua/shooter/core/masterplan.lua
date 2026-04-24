@@ -436,4 +436,21 @@ function M.edit_plan_at_line(git_root, line)
   return true, msg == 'exists' and 'opened' or msg
 end
 
+-- Open docs/plans/<NNNN-slug>/<kind>.md for the plan referenced on the given
+-- line. `kind` must be 'plan' | 'context' | 'spec'. Returns ok_bool, msg.
+function M.open_plan_file(git_root, line, kind)
+  if not git_root or git_root == '' then return false, 'no git root' end
+  if kind ~= 'plan' and kind ~= 'context' and kind ~= 'spec' then
+    return false, 'invalid kind: ' .. tostring(kind)
+  end
+  local plan_name = M.extract_plan_name(line)
+  if not plan_name then return false, 'no plan on current line' end
+  local path = git_root .. '/docs/plans/' .. plan_name .. '/' .. kind .. '.md'
+  if vim.fn.filereadable(path) ~= 1 then
+    return false, 'no ' .. kind .. '.md for ' .. plan_name
+  end
+  vim.cmd('edit ' .. vim.fn.fnameescape(path))
+  return true, 'opened'
+end
+
 return M

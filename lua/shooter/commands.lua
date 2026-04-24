@@ -766,6 +766,25 @@ local function setup_utility_commands()
     utils.echo(ok and 'masterplan: fixed' or ('masterplan fix failed: ' .. (err or '')))
   end, { desc = 'Fix masterplan.md (title, sections, numbering, slugs)' })
 
+  -- HalShooterMasterplanOpen{Plan,Context,Spec} — open the docs/plans/<plan>/
+  -- <kind>.md file for the plan under cursor
+  local function open_plan_file(kind)
+    local files = require('shooter.core.files')
+    local utils = require('shooter.utils')
+    local masterplan = require('shooter.core.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then utils.echo('Not in a git repo'); return end
+    local line = vim.api.nvim_get_current_line()
+    local ok, msg = masterplan.open_plan_file(git_root, line, kind)
+    if not ok then utils.echo('masterplan: ' .. (msg or 'unknown')) end
+  end
+  create_cmd('HalShooterMasterplanOpenPlan',    function() open_plan_file('plan')    end,
+    { desc = 'Open docs/plans/<plan>/plan.md for plan under cursor' })
+  create_cmd('HalShooterMasterplanOpenContext', function() open_plan_file('context') end,
+    { desc = 'Open docs/plans/<plan>/context.md for plan under cursor' })
+  create_cmd('HalShooterMasterplanOpenSpec',    function() open_plan_file('spec')    end,
+    { desc = 'Open docs/plans/<plan>/spec.md for plan under cursor' })
+
   -- HalShooterMasterplanMarkDone — move plan under cursor to ## done
   create_cmd('HalShooterMasterplanMarkDone', function()
     local files = require('shooter.core.files')

@@ -226,6 +226,9 @@ function M.setup()
   map('n', 'mm', ':HalShooterMasterplanOpen<cr>', 'Open docs/plans/masterplan.md')
   map('n', 'mf', ':HalShooterMasterplanFix<cr>', 'Fix masterplan (renumber, slugify, title)')
   map('n', 'md', ':HalShooterMasterplanMarkDone<cr>', 'Mark plan under cursor as done')
+  map('n', 'mp', ':HalShooterMasterplanOpenPlan<cr>',    'Open plan.md for plan under cursor')
+  map('n', 'mc', ':HalShooterMasterplanOpenContext<cr>', 'Open context.md for plan under cursor')
+  map('n', 'ms', ':HalShooterMasterplanOpenSpec<cr>',    'Open spec.md for plan under cursor')
 
   -- ============================================================
   -- GIT NAMESPACE (g prefix)
