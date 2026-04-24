@@ -229,7 +229,7 @@ local function write_file(path, content)
 end
 
 -- Reconcile the shotfile for a single plan under
--- .hal/util/shooter/shotfiles/plans: rename on number drift, create if absent,
+-- .hal/util/shooter/shotfiles/docs/plans: rename on number drift, create if absent,
 -- and keep the `# <path>` title in sync. Idempotent. Returns ok_bool, action.
 function M.ensure_plan_shotfile(git_root, plan_name)
   local files = require('shooter.core.files')
@@ -257,7 +257,7 @@ function M.ensure_plan_shotfile(git_root, plan_name)
   end
 
   -- action == 'new'
-  vim.fn.mkdir(git_root .. '/.hal/util/shooter/shotfiles/plans', 'p')
+  vim.fn.mkdir(git_root .. '/.hal/util/shooter/shotfiles/docs/plans', 'p')
   local title = files.title_from_path(target)
   local f = io.open(target, 'w')
   if not f then return false, 'cannot create ' .. target end
@@ -401,7 +401,7 @@ function M.resolve_plan_file(git_root, plan_name)
   if not git_root or git_root == '' then return nil, 'no git root' end
   if not plan_name or plan_name == '' then return nil, 'no plan name' end
 
-  local plans_dir = git_root .. '/.hal/util/shooter/shotfiles/plans'
+  local plans_dir = git_root .. '/.hal/util/shooter/shotfiles/docs/plans'
   local target = plans_dir .. '/' .. plan_name .. '.md'
 
   if vim.fn.filereadable(target) == 1 then
@@ -430,7 +430,7 @@ function M.edit_plan_at_line(git_root, line)
   local ok, msg = M.ensure_plan_shotfile(git_root, plan_name)
   if not ok then return false, msg end
 
-  local target = git_root .. '/.hal/util/shooter/shotfiles/plans/'
+  local target = git_root .. '/.hal/util/shooter/shotfiles/docs/plans/'
     .. plan_name .. '.md'
   vim.cmd('edit ' .. vim.fn.fnameescape(target))
   return true, msg == 'exists' and 'opened' or msg

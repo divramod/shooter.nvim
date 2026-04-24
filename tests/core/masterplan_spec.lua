@@ -235,7 +235,7 @@ describe('shooter.core.masterplan', function()
   end)
 
   describe('fix (plan shotfile sync)', function()
-    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/plans'
+    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
 
     it('creates a missing plan shotfile for each referenced plan', function()
       write_plan(table.concat({
@@ -260,7 +260,7 @@ describe('shooter.core.masterplan', function()
       assert.is_true(utils.file_exists(plans_dir .. '/0002-delta.md'))
       -- New files carry the canonical title
       local content = utils.read_file(plans_dir .. '/0004-beta.md')
-      assert.truthy(content:find('# plans/0004%-beta'))
+      assert.truthy(content:find('# docs/plans/0004%-beta'))
     end)
 
     it('renames a drifted plan shotfile when next plans is renumbered', function()
@@ -268,7 +268,7 @@ describe('shooter.core.masterplan', function()
       -- Simulate drift: the file on disk is numbered 0009, but after renumbering
       -- the plan will become 0005.
       utils.write_file(plans_dir .. '/0009-merge-hal-skills.md',
-        '# plans/0009-merge-hal-skills\n\nbody\n')
+        '# docs/plans/0009-merge-hal-skills\n\nbody\n')
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')  -- forces start=5
       write_plan('## next plans\n- 0009-merge-hal-skills\n')
 
@@ -276,14 +276,14 @@ describe('shooter.core.masterplan', function()
       assert.is_false(utils.file_exists(plans_dir .. '/0009-merge-hal-skills.md'))
       assert.is_true(utils.file_exists(plans_dir .. '/0005-merge-hal-skills.md'))
       local content = utils.read_file(plans_dir .. '/0005-merge-hal-skills.md')
-      assert.truthy(content:find('# plans/0005%-merge%-hal%-skills'))
+      assert.truthy(content:find('# docs/plans/0005%-merge%-hal%-skills'))
       assert.truthy(content:find('body', 1, true))
     end)
 
     it('leaves an already-correct plan shotfile in place', function()
       vim.fn.mkdir(plans_dir, 'p')
       local p = plans_dir .. '/0001-alpha.md'
-      utils.write_file(p, '# plans/0001-alpha\n\nnotes\n')
+      utils.write_file(p, '# docs/plans/0001-alpha\n\nnotes\n')
       write_plan('## in progress\n- 0001-alpha\n')
 
       assert.is_true(masterplan.fix(repo))
@@ -442,7 +442,7 @@ describe('shooter.core.masterplan', function()
   end)
 
   describe('resolve_plan_file', function()
-    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/plans'
+    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
 
     it('returns exists when the target file is already there', function()
       vim.fn.mkdir(plans_dir, 'p')
@@ -475,7 +475,7 @@ describe('shooter.core.masterplan', function()
   end)
 
   describe('edit_plan_at_line', function()
-    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/plans'
+    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
 
     after_each(function()
       -- Close any buffers opened during test so they don't leak
@@ -492,7 +492,7 @@ describe('shooter.core.masterplan', function()
     it('opens an existing plan shotfile', function()
       vim.fn.mkdir(plans_dir, 'p')
       local p = plans_dir .. '/0005-merge-hal-skills.md'
-      utils.write_file(p, '# plans/0005-merge-hal-skills\n\nbody\n')
+      utils.write_file(p, '# docs/plans/0005-merge-hal-skills\n\nbody\n')
 
       local ok, msg = masterplan.edit_plan_at_line(repo, '- 0005-merge-hal-skills')
       assert.is_true(ok, msg)
@@ -507,7 +507,7 @@ describe('shooter.core.masterplan', function()
       vim.fn.mkdir(plans_dir, 'p')
       local old = plans_dir .. '/0003-merge-hal-skills.md'
       local target = plans_dir .. '/0005-merge-hal-skills.md'
-      utils.write_file(old, '# plans/0003-merge-hal-skills\n\nold body\n')
+      utils.write_file(old, '# docs/plans/0003-merge-hal-skills\n\nold body\n')
 
       local ok, msg = masterplan.edit_plan_at_line(repo, '- 0005-merge-hal-skills')
       assert.is_true(ok, msg)
@@ -517,7 +517,7 @@ describe('shooter.core.masterplan', function()
       assert.is_true(utils.file_exists(target))
       -- Title was updated to the new path
       local content = utils.read_file(target) or ''
-      assert.truthy(content:find('# plans/0005%-merge%-hal%-skills'))
+      assert.truthy(content:find('# docs/plans/0005%-merge%-hal%-skills'))
       assert.truthy(content:find('old body', 1, true))
     end)
 
@@ -529,7 +529,7 @@ describe('shooter.core.masterplan', function()
       assert.is_true(ok, msg)
       assert.equals('created', msg)
       local content = utils.read_file(target) or ''
-      assert.truthy(content:find('# plans/0007%-fresh%-plan'))
+      assert.truthy(content:find('# docs/plans/0007%-fresh%-plan'))
     end)
 
     it('errors when the line has no plan reference', function()
