@@ -280,6 +280,41 @@ describe('shooter.plans.masterplan', function()
       assert.truthy(content:find('body', 1, true))
     end)
 
+    it('sweeps stub and same-slug orphans left by earlier renumberings', function()
+      vim.fn.mkdir(plans_dir, 'p')
+      -- Active plan that the masterplan references.
+      utils.write_file(plans_dir .. '/0008-fix-envfile.md',
+        '# docs/plans/0008-fix-envfile\n\nnotes\n')
+      -- Rule 2: same-slug orphan with non-stub content → also deleted
+      -- because the active 0008-fix-envfile.md is the canonical file.
+      utils.write_file(plans_dir .. '/0007-fix-envfile.md',
+        '# docs/plans/0007-fix-envfile\n\nsome old notes\n')
+      -- Rule 1: title-only stub with an unrelated slug → deleted.
+      utils.write_file(plans_dir .. '/0002-refactore-general-folder-structure.md',
+        '# docs/plans/0002-refactore-general-folder-structure\n')
+      -- Preserved: non-stub content, slug does NOT match any active plan.
+      utils.write_file(plans_dir .. '/9999-legacy-notes.md',
+        '# docs/plans/9999-legacy-notes\n\nimportant user notes here\n')
+      -- Preserved: non-NNNN name, non-stub content.
+      utils.write_file(plans_dir .. '/conformity.md',
+        '# docs/plans/conformity\n\ninteresting spec\n')
+
+      -- Seed docs/plans so max_plan_number=7, next plans starts at 0008
+      -- (keeps the fix-envfile plan at 0008 instead of renumbering to 0001).
+      vim.fn.mkdir(repo .. '/docs/plans/0007-seeded', 'p')
+      write_plan('## next plans\n- 0008-fix-envfile\n')
+      assert.is_true(masterplan.fix(repo))
+
+      assert.is_true(utils.file_exists(plans_dir .. '/0008-fix-envfile.md'))
+      assert.is_false(utils.file_exists(plans_dir .. '/0007-fix-envfile.md'))
+      assert.is_false(utils.file_exists(
+        plans_dir .. '/0002-refactore-general-folder-structure.md'))
+      assert.is_true(utils.file_exists(plans_dir .. '/9999-legacy-notes.md'))
+      assert.is_true(utils.file_exists(plans_dir .. '/conformity.md'))
+      assert.truthy(utils.read_file(plans_dir .. '/0008-fix-envfile.md')
+        :find('notes', 1, true))
+    end)
+
     it('leaves an already-correct plan shotfile in place', function()
       vim.fn.mkdir(plans_dir, 'p')
       local p = plans_dir .. '/0001-alpha.md'

@@ -419,12 +419,46 @@ function M.fix(git_root)
     if not write_file(path, new) then return false, 'cannot write ' .. path end
   end
 
-  -- Sync plan shotfiles with the post-render (renumbered) plan names.
+  -- Sync plan shotfiles with the post-render (renumbered) plan names, and
+  -- collect the set of canonical shotfile names the masterplan expects.
+  local expected = {}
   for _, section_name in ipairs(SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
       local plan_name = M.extract_plan_name(entry.text)
       if plan_name then
         M.ensure_plan_shotfile(git_root, plan_name)
+        expected[plan_name .. '.md'] = true
+      end
+    end
+  end
+
+  -- Orphan sweep under .hal/util/shooter/shotfiles/docs/plans: remove files
+  -- that are NOT listed in the masterplan under two rules:
+  --   1. Title-only stubs → always deleted (pure debris from prior renumbers).
+  --   2. NNNN-<slug>.md whose slug matches an active plan → deleted (the
+  --      active file is canonical for that slug; the orphan is a duplicate
+  --      left over when an earlier pf renumbered the plan).
+  -- Files that don't match either rule (e.g. unique user content with no
+  -- corresponding masterplan plan, or a NNNN-slug with no active same-slug
+  -- counterpart) are preserved for manual triage.
+  local plans_dir = git_root .. '/.hal/util/shooter/shotfiles/docs/plans'
+  if vim.fn.isdirectory(plans_dir) == 1 then
+    local active_by_slug = {}
+    for expected_name, _ in pairs(expected) do
+      local slug = expected_name:match('^%d%d%d%d%-(.+)%.md$')
+      if slug then active_by_slug[slug] = true end
+    end
+    for _, name in ipairs(vim.fn.readdir(plans_dir)) do
+      if name:match('%.md$') and not expected[name] then
+        local orphan_path = plans_dir .. '/' .. name
+        local content = read_file(orphan_path) or ''
+        local stripped = content
+          :gsub('^#[^\n]*\n?', '')
+          :gsub('^%s+', '')
+        local slug = name:match('^%d%d%d%d%-(.+)%.md$')
+        if stripped == '' or (slug and active_by_slug[slug]) then
+          os.remove(orphan_path)
+        end
       end
     end
   end
