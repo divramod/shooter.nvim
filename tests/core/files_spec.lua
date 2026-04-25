@@ -28,7 +28,7 @@ describe('shooter.core.files', function()
     it('creates file with slugified title at shotfiles root', function()
       local path = files.create_file('My Feature', '', '', nil)
       assert.is_truthy(path)
-      assert.equals(test_root .. '/.hal/util/shooter/shotfiles/my-feature.md', path)
+      assert.equals(test_root .. '/docs/shotfiles/my-feature.md', path)
       assert.equals(1, vim.fn.filereadable(path))
     end)
 
@@ -36,7 +36,7 @@ describe('shooter.core.files', function()
       local path = files.create_file('some/test/title haaa', '', '', nil)
       assert.is_truthy(path)
       assert.equals(
-        test_root .. '/.hal/util/shooter/shotfiles/some/test/title-haaa.md',
+        test_root .. '/docs/shotfiles/some/test/title-haaa.md',
         path
       )
       assert.equals(1, vim.fn.filereadable(path))
@@ -48,7 +48,7 @@ describe('shooter.core.files', function()
     it('handles single-level subpath in title', function()
       local path = files.create_file('sub/thing', '', '', nil)
       assert.equals(
-        test_root .. '/.hal/util/shooter/shotfiles/sub/thing.md',
+        test_root .. '/docs/shotfiles/sub/thing.md',
         path
       )
       assert.equals(1, vim.fn.filereadable(path))
@@ -57,7 +57,7 @@ describe('shooter.core.files', function()
     it('leaves bare title untouched', function()
       local path = files.create_file('plain title', '', '', nil)
       assert.equals(
-        test_root .. '/.hal/util/shooter/shotfiles/plain-title.md',
+        test_root .. '/docs/shotfiles/plain-title.md',
         path
       )
     end)
@@ -107,13 +107,13 @@ describe('shooter.core.files', function()
     before_each(function()
       prev_cwd = vim.fn.getcwd()
       os.execute('rm -rf ' .. main_root .. ' ' .. wt_root)
-      os.execute('mkdir -p ' .. main_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('mkdir -p ' .. main_root .. '/docs/shotfiles')
       os.execute('git -C ' .. main_root .. ' init -q -b main')
       os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
         .. 'commit -q --allow-empty -m init')
       os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
         .. wt_root .. ' >/dev/null 2>&1')
-      shotfile = main_root .. '/.hal/util/shooter/shotfiles/thing.md'
+      shotfile = main_root .. '/docs/shotfiles/thing.md'
       local f = io.open(shotfile, 'w'); f:write('# thing\n'); f:close()
     end)
 
@@ -209,7 +209,7 @@ describe('shooter.core.files', function()
     end)
 
     it('is_last_trackable accepts shotfiles AND masterplan.md', function()
-      local shotfile = test_root .. '/.hal/util/shooter/shotfiles/feats.md'
+      local shotfile = test_root .. '/docs/shotfiles/feats.md'
       utils.write_file(shotfile, '# feats\n')
       assert.is_true(files.is_last_trackable(shotfile))
       assert.is_true(files.is_last_trackable(test_root .. '/docs/plans/masterplan.md'))
@@ -248,18 +248,18 @@ describe('shooter.core.files', function()
     before_each(function()
       prev_cwd = vim.fn.getcwd()
       os.execute('rm -rf ' .. base)
-      os.execute('mkdir -p ' .. main_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('mkdir -p ' .. main_root .. '/docs/shotfiles')
       os.execute('git -C ' .. main_root .. ' init -q -b main')
       os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
         .. 'commit -q --allow-empty -m init')
       os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
         .. wt_root .. ' >/dev/null 2>&1')
-      os.execute('mkdir -p ' .. wt_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('mkdir -p ' .. wt_root .. '/docs/shotfiles')
       -- Main shotfile exists so mtime fallback has something to return
-      local main_file = main_root .. '/.hal/util/shooter/shotfiles/main-only.md'
+      local main_file = main_root .. '/docs/shotfiles/main-only.md'
       local mf = io.open(main_file, 'w'); mf:write('# main-only\n'); mf:close()
       -- Stale worktree shotfile persisted from before the fix
-      local stale_file = wt_root .. '/.hal/util/shooter/shotfiles/stale.md'
+      local stale_file = wt_root .. '/docs/shotfiles/stale.md'
       local sf = io.open(stale_file, 'w'); sf:write('# stale\n'); sf:close()
 
       files.get_git_root = real_get_git_root

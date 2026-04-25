@@ -3,7 +3,7 @@
 
 local M = {}
 
--- Guard: wraps a function so it only runs in shotfiles (.hal/util/shooter/shotfiles)
+-- Guard: wraps a function so it only runs in shotfiles (docs/shotfiles)
 -- Returns the original function wrapped with an is_shooter_file() check
 local function require_shotfile(fn)
   return function(opts)
@@ -845,7 +845,7 @@ local function setup_utility_commands()
     end
     local ok, msg = git_push.run(git_root)
     utils.echo(msg or (ok and 'shotfiles: done' or 'git push failed'))
-  end, { desc = 'git add/commit/push .hal/util/shooter/shotfiles' })
+  end, { desc = 'git add/commit/push docs/shotfiles' })
 
   -- HalShooterShotfileMergeInto — pick a target shotfile and merge the
   -- current shotfile's shots into it, deleting the current file afterwards.

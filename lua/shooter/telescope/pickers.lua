@@ -290,7 +290,7 @@ local function create_file_picker(opts, get_files_fn, title_prefix, git_root_ove
           actions.close(prompt_bufnr)
           local git_worktree = require('shooter.tools.git_worktree')
           local base = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
-          local shotfiles_dir = base .. '/.hal/util/shooter/shotfiles'
+          local shotfiles_dir = base .. '/docs/shotfiles'
           -- Support domain/name format. Slugify every path segment so
           -- "some/folder/some file" becomes "some/folder/some-file.md".
           local dir_part, name_part = prompt:match('^(.+)/(.+)$')

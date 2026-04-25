@@ -38,7 +38,7 @@ end
 local function get_shotfile_folders()
   local git_worktree = require('shooter.tools.git_worktree')
   local git_root = git_worktree.get_main_worktree() or files.get_git_root() or utils.cwd()
-  local shotfiles_dir = git_root .. '/.hal/util/shooter/shotfiles'
+  local shotfiles_dir = git_root .. '/docs/shotfiles'
   return M.collect_shotfile_folders(shotfiles_dir), shotfiles_dir
 end
 
@@ -98,13 +98,13 @@ local function refresh_oil_buffer()
 end
 
 -- Walk up from the given directory and remove any now-empty subfolder of
--- .hal/util/shooter/shotfiles. Stops at the first non-empty directory, the
+-- docs/shotfiles. Stops at the first non-empty directory, the
 -- shotfiles root itself, or any directory outside a shotfiles tree.
 local function cleanup_empty_source_dirs(source_dir)
   while source_dir and source_dir ~= '' do
-    -- Only walk inside a .hal/util/shooter/shotfiles/<sub>/... subtree.
+    -- Only walk inside a docs/shotfiles/<sub>/... subtree.
     -- The trailing slash in the literal match excludes the shotfiles root itself.
-    if not source_dir:find('/.hal/util/shooter/shotfiles/', 1, true) then
+    if not source_dir:find('/docs/shotfiles/', 1, true) then
       return
     end
     local entries = vim.fn.readdir(source_dir)

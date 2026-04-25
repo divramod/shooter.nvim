@@ -258,7 +258,7 @@ function M.run_all()
     total_removed = total_removed + stats.removed
   end
 
-  local shotfiles_path = '.hal/util/shooter/shotfiles'
+  local shotfiles_path = 'docs/shotfiles'
   vim.fn.system({ 'git', '-C', git_root, 'add', '-A', '--', shotfiles_path })
 
   vim.fn.system({ 'git', '-C', git_root, 'diff', '--cached', '--quiet', '--', shotfiles_path })

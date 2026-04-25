@@ -5,7 +5,7 @@ local utils = require('shooter.utils')
 
 describe('shooter.core.fix_titles', function()
   local test_root = '/tmp/shooter_fix_titles_test'
-  local shotfiles_dir = test_root .. '/.hal/util/shooter/shotfiles'
+  local shotfiles_dir = test_root .. '/docs/shotfiles'
 
   before_each(function()
     os.execute('rm -rf ' .. test_root)
@@ -52,21 +52,21 @@ describe('shooter.core.fix_titles', function()
 
   describe('files.title_from_path', function()
     it('returns filename only for root shotfiles', function()
-      assert.equals('feats', files.title_from_path('/repo/.hal/util/shooter/shotfiles/feats.md'))
+      assert.equals('feats', files.title_from_path('/repo/docs/shotfiles/feats.md'))
     end)
 
     it('returns path/name for subfolder shotfiles', function()
       assert.equals('some/test/shotfile',
-        files.title_from_path('/repo/.hal/util/shooter/shotfiles/some/test/shotfile.md'))
+        files.title_from_path('/repo/docs/shotfiles/some/test/shotfile.md'))
     end)
 
-    it('handles project shotfiles (projects/X/.hal/util/shooter/shotfiles)', function()
+    it('handles project shotfiles (projects/X/docs/shotfiles)', function()
       assert.equals('foo/bar',
-        files.title_from_path('/repo/projects/myproj/.hal/util/shooter/shotfiles/foo/bar.md'))
+        files.title_from_path('/repo/projects/myproj/docs/shotfiles/foo/bar.md'))
     end)
 
     it('strips .md extension', function()
-      local title = files.title_from_path('/repo/.hal/util/shooter/shotfiles/a/b.md')
+      local title = files.title_from_path('/repo/docs/shotfiles/a/b.md')
       assert.is_nil(title:find('%.md'))
     end)
   end)
@@ -175,7 +175,7 @@ describe('shooter.core.fix_titles', function()
 
     it('includes project shotfiles dirs', function()
       utils.write_file(shotfiles_dir .. '/root.md', '# root\n')
-      local proj_dir = test_root .. '/projects/myproj/.hal/util/shooter/shotfiles'
+      local proj_dir = test_root .. '/projects/myproj/docs/shotfiles'
       os.execute('mkdir -p ' .. proj_dir)
       utils.write_file(proj_dir .. '/proj.md', '# proj\n')
 
@@ -228,25 +228,25 @@ describe('shooter.core.fix_titles', function()
   describe('build_commit_message', function()
     it('uses a singular subject for one change', function()
       local msg = fix_titles.build_commit_message('/repo', {
-        { path = '/repo/.hal/util/shooter/shotfiles/foo.md', old = 'wrong', new = 'foo' },
+        { path = '/repo/docs/shotfiles/foo.md', old = 'wrong', new = 'foo' },
       })
       assert.truthy(msg:find('canonicalize 1 H1 title\n', 1, true))
-      assert.truthy(msg:find('- .hal/util/shooter/shotfiles/foo.md: "wrong" %-> "foo"'))
+      assert.truthy(msg:find('- docs/shotfiles/foo.md: "wrong" %-> "foo"'))
     end)
 
     it('uses a plural subject for multiple changes', function()
       local msg = fix_titles.build_commit_message('/repo', {
-        { path = '/repo/.hal/util/shooter/shotfiles/a.md', old = 'a0', new = 'a' },
-        { path = '/repo/.hal/util/shooter/shotfiles/b/c.md', old = 'c', new = 'b/c' },
+        { path = '/repo/docs/shotfiles/a.md', old = 'a0', new = 'a' },
+        { path = '/repo/docs/shotfiles/b/c.md', old = 'c', new = 'b/c' },
       })
       assert.truthy(msg:find('canonicalize 2 H1 titles'))
-      assert.truthy(msg:find('- .hal/util/shooter/shotfiles/a.md:'))
-      assert.truthy(msg:find('- .hal/util/shooter/shotfiles/b/c.md: "c" %-> "b/c"'))
+      assert.truthy(msg:find('- docs/shotfiles/a.md:'))
+      assert.truthy(msg:find('- docs/shotfiles/b/c.md: "c" %-> "b/c"'))
     end)
 
     it('labels missing old titles', function()
       local msg = fix_titles.build_commit_message('/repo', {
-        { path = '/repo/.hal/util/shooter/shotfiles/fresh.md', old = nil, new = 'fresh' },
+        { path = '/repo/docs/shotfiles/fresh.md', old = nil, new = 'fresh' },
       })
       assert.truthy(msg:find('%(missing%) %-> "fresh"'))
     end)
@@ -254,7 +254,7 @@ describe('shooter.core.fix_titles', function()
 
   describe('commit_fixes', function()
     local repo = '/tmp/shooter_commit_fixes_test'
-    local shotfiles = repo .. '/.hal/util/shooter/shotfiles'
+    local shotfiles = repo .. '/docs/shotfiles'
 
     local function git(...)
       local cmd = { 'git', '-C', repo }
@@ -300,7 +300,7 @@ describe('shooter.core.fix_titles', function()
 
       local log = git('log', '-1', '--format=%B')
       assert.truthy(log:find('fix%(shotfiles%): canonicalize 1 H1 title'))
-      assert.truthy(log:find('- .hal/util/shooter/shotfiles/foo.md: "wrong" %-> "foo"'))
+      assert.truthy(log:find('- docs/shotfiles/foo.md: "wrong" %-> "foo"'))
     end)
 
     it('commits multiple fixed files in one commit', function()
@@ -355,11 +355,11 @@ describe('shooter.core.fix_titles', function()
 
     it('reports error if git_root is not a git repo', function()
       local not_repo = '/tmp/shooter_not_a_repo_' .. os.time()
-      os.execute('mkdir -p ' .. not_repo .. '/.hal/util/shooter/shotfiles')
-      utils.write_file(not_repo .. '/.hal/util/shooter/shotfiles/foo.md', '# foo\n')
+      os.execute('mkdir -p ' .. not_repo .. '/docs/shotfiles')
+      utils.write_file(not_repo .. '/docs/shotfiles/foo.md', '# foo\n')
 
       local ok, err = fix_titles.commit_fixes(not_repo, {
-        { path = not_repo .. '/.hal/util/shooter/shotfiles/foo.md', old = 'x', new = 'foo' },
+        { path = not_repo .. '/docs/shotfiles/foo.md', old = 'x', new = 'foo' },
       })
       assert.is_false(ok)
       assert.truthy(err)
@@ -370,7 +370,7 @@ describe('shooter.core.fix_titles', function()
 
   describe('fix_all_titles + commit_fixes end to end', function()
     local repo = '/tmp/shooter_fix_e2e_test'
-    local shotfiles = repo .. '/.hal/util/shooter/shotfiles'
+    local shotfiles = repo .. '/docs/shotfiles'
 
     before_each(function()
       os.execute('rm -rf ' .. repo)

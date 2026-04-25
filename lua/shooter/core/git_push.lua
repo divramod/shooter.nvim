@@ -1,9 +1,9 @@
--- Git helpers for the shotfiles tree (.hal/util/shooter/shotfiles).
+-- Git helpers for the shotfiles tree (docs/shotfiles).
 -- Used by HalShooterGitPush: stages, commits, and pushes shotfile changes.
 
 local M = {}
 
-local TARGET_PATH = '.hal/util/shooter/shotfiles'
+local TARGET_PATH = 'docs/shotfiles'
 local DOCS_PATH = 'docs'
 local COMMIT_MSG = 'chore(shotfiles): sync'
 

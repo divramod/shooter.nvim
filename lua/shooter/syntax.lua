@@ -246,12 +246,12 @@ apply_syntax = function(bufnr)
   end
 end
 
--- Check if file is a prompts file (not Oil buffer, must be actual .md file in .hal/util/shooter/shotfiles)
+-- Check if file is a prompts file (not Oil buffer, must be actual .md file in docs/shotfiles)
 local function is_prompts_file(filepath)
   -- Exclude Oil buffers
   if filepath:match('^oil://') then return false end
-  -- Must be a .md file in .hal/util/shooter/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
-  return filepath:match('.hal/util/shooter/shotfiles/.+%.md$') ~= nil
+  -- Must be a .md file in docs/shotfiles folder (including subdirectories like backlog/, archive/, etc.)
+  return filepath:match('docs/shotfiles/.+%.md$') ~= nil
 end
 
 -- Toggle day marker coloring on/off

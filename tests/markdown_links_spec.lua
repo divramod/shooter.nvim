@@ -23,9 +23,9 @@ describe('shooter.markdown_links', function()
     end)
 
     it('matches tilde home path with extension', function()
-      local line = 'see ~/a/shooter.nvim/.hal/util/shooter/shotfiles/feats.md end'
+      local line = 'see ~/a/shooter.nvim/docs/shotfiles/feats.md end'
       local spans = extract(line, ml.find_ranges(line))
-      assert.same({ '~/a/shooter.nvim/.hal/util/shooter/shotfiles/feats.md' }, spans)
+      assert.same({ '~/a/shooter.nvim/docs/shotfiles/feats.md' }, spans)
     end)
 
     it('matches absolute path', function()

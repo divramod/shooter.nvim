@@ -560,13 +560,13 @@ describe('shot_actions module', function()
     before_each(function()
       prev_cwd = vim.fn.getcwd()
       os.execute('rm -rf ' .. base)
-      os.execute('mkdir -p ' .. main_root .. '/.hal/util/shooter/shotfiles')
+      os.execute('mkdir -p ' .. main_root .. '/docs/shotfiles')
       os.execute('git -C ' .. main_root .. ' init -q -b main')
       os.execute('git -C ' .. main_root .. ' -c user.email=t@t -c user.name=t '
         .. 'commit -q --allow-empty -m init')
       os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
         .. wt_root .. ' >/dev/null 2>&1')
-      shotfile = main_root .. '/.hal/util/shooter/shotfiles/thing.md'
+      shotfile = main_root .. '/docs/shotfiles/thing.md'
       local f = io.open(shotfile, 'w')
       f:write('# thing\n\n## shot 1 existing\n')
       f:close()

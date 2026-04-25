@@ -13,7 +13,7 @@ These variables are available in all shooter template files. Use the `{{variable
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `{{file_path}}` | Full absolute path to the file | `/Users/mod/dev/.hal/util/shooter/shotfiles/nvim-commands.md` |
+| `{{file_path}}` | Full absolute path to the file | `/Users/mod/dev/docs/shotfiles/nvim-commands.md` |
 | `{{file_name}}` | Filename with extension | `20260118_0516_nvim-commands.md` |
 | `{{file_title}}` | Title from the file's first `#` heading | `2026-01-18 - nvim next action commands` |
 

@@ -10,7 +10,7 @@ local SECTIONS = { 'in progress', 'next plans', 'backlog', 'done' }
 local TIMESTAMP_TAIL = '%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)$'
 local COMMIT_PATHS = {
   'docs/plans',
-  '.hal/util/shooter/shotfiles/docs/plans',
+  'docs/shotfiles/docs/plans',
 }
 local COMMIT_MSG = 'chore(plans): sync masterplan + plan shotfiles'
 
@@ -274,7 +274,7 @@ local function write_file(path, content)
 end
 
 -- Reconcile the shotfile for a single plan under
--- .hal/util/shooter/shotfiles/docs/plans: rename on number drift, create if absent,
+-- docs/shotfiles/docs/plans: rename on number drift, create if absent,
 -- and keep the `# <path>` title in sync. Idempotent. Returns ok_bool, action.
 function M.ensure_plan_shotfile(git_root, plan_name)
   local files = require('shooter.core.files')
@@ -302,7 +302,7 @@ function M.ensure_plan_shotfile(git_root, plan_name)
   end
 
   -- action == 'new'
-  vim.fn.mkdir(git_root .. '/.hal/util/shooter/shotfiles/docs/plans', 'p')
+  vim.fn.mkdir(git_root .. '/docs/shotfiles/docs/plans', 'p')
   local title = files.title_from_path(target)
   local f = io.open(target, 'w')
   if not f then return false, 'cannot create ' .. target end
@@ -470,7 +470,7 @@ function M.fix(git_root)
     end
   end
 
-  -- Orphan sweep under .hal/util/shooter/shotfiles/docs/plans: remove files
+  -- Orphan sweep under docs/shotfiles/docs/plans: remove files
   -- that are NOT listed in the masterplan under two rules:
   --   1. Title-only stubs → always deleted (pure debris from prior renumbers).
   --   2. NNNN-<slug>.md whose slug matches an active plan → deleted (the
@@ -479,7 +479,7 @@ function M.fix(git_root)
   -- Files that don't match either rule (e.g. unique user content with no
   -- corresponding masterplan plan, or a NNNN-slug with no active same-slug
   -- counterpart) are preserved for manual triage.
-  local plans_dir = git_root .. '/.hal/util/shooter/shotfiles/docs/plans'
+  local plans_dir = git_root .. '/docs/shotfiles/docs/plans'
   if vim.fn.isdirectory(plans_dir) == 1 then
     local active_by_slug = {}
     for expected_name, _ in pairs(expected) do
@@ -587,7 +587,7 @@ function M.extract_plan_name(line)
   return line:match('(%d%d%d%d%-[%l%d][%w%-]*)')
 end
 
--- Resolve where a plan's shotfile lives under .hal/util/shooter/shotfiles/docs/plans.
+-- Resolve where a plan's shotfile lives under docs/shotfiles/docs/plans.
 -- Returns (action, target_path, old_path):
 --   action = 'exists' → target_path already exists
 --   action = 'rename' → an NNNN-<slug>.md with a different number exists;
@@ -597,7 +597,7 @@ function M.resolve_plan_file(git_root, plan_name)
   if not git_root or git_root == '' then return nil, 'no git root' end
   if not plan_name or plan_name == '' then return nil, 'no plan name' end
 
-  local plans_dir = git_root .. '/.hal/util/shooter/shotfiles/docs/plans'
+  local plans_dir = git_root .. '/docs/shotfiles/docs/plans'
   local target = plans_dir .. '/' .. plan_name .. '.md'
 
   if vim.fn.filereadable(target) == 1 then
@@ -626,7 +626,7 @@ function M.edit_plan_at_line(git_root, line)
   local ok, msg = M.ensure_plan_shotfile(git_root, plan_name)
   if not ok then return false, msg end
 
-  local target = git_root .. '/.hal/util/shooter/shotfiles/docs/plans/'
+  local target = git_root .. '/docs/shotfiles/docs/plans/'
     .. plan_name .. '.md'
   vim.cmd('edit ' .. vim.fn.fnameescape(target))
   return true, msg == 'exists' and 'opened' or msg
@@ -650,7 +650,7 @@ function M.open_plan_file(git_root, line, kind)
 end
 
 -- Flush any modified buffers whose file lives under docs/plans/ or
--- .hal/util/shooter/shotfiles/docs/plans/, so `git add` sees the latest
+-- docs/shotfiles/docs/plans/, so `git add` sees the latest
 -- content the user actually typed.
 local function flush_plans_buffers(git_root)
   local resolved_root = vim.uv.fs_realpath(git_root) or git_root

@@ -4,7 +4,7 @@ local utils = require('shooter.utils')
 
 describe('shooter.core.git_push', function()
   local repo = '/tmp/shooter_git_push_test'
-  local target = repo .. '/.hal/util/shooter/shotfiles'
+  local target = repo .. '/docs/shotfiles'
 
   local function git(...)
     local cmd = { 'git', '-C', repo }
@@ -182,8 +182,8 @@ describe('shooter.core.git_push', function()
     it('returns error when git_root is not a git repo', function()
       local not_repo = '/tmp/shooter_git_push_not_repo'
       os.execute('rm -rf ' .. not_repo)
-      os.execute('mkdir -p ' .. not_repo .. '/.hal/util/shooter/shotfiles')
-      utils.write_file(not_repo .. '/.hal/util/shooter/shotfiles/x.md', '# x\n')
+      os.execute('mkdir -p ' .. not_repo .. '/docs/shotfiles')
+      utils.write_file(not_repo .. '/docs/shotfiles/x.md', '# x\n')
 
       local ok, msg = git_push.stage_and_commit(not_repo)
       assert.is_false(ok)
@@ -296,7 +296,7 @@ describe('shooter.core.git_push', function()
 
       -- Committed content matches the buffer, not the original empty file.
       local committed = vim.fn.system({
-        'git', '-C', repo, 'show', 'HEAD:.hal/util/shooter/shotfiles/feats.md',
+        'git', '-C', repo, 'show', 'HEAD:docs/shotfiles/feats.md',
       })
       assert.truthy(committed:find('unsaved body'))
 

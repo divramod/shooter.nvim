@@ -311,7 +311,7 @@ describe('shooter.plans.masterplan', function()
   end)
 
   describe('fix (plan shotfile sync)', function()
-    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
+    local plans_dir = repo .. '/docs/shotfiles/docs/plans'
 
     it('creates a missing plan shotfile for each referenced plan', function()
       write_plan(table.concat({
@@ -553,7 +553,7 @@ describe('shooter.plans.masterplan', function()
   end)
 
   describe('resolve_plan_file', function()
-    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
+    local plans_dir = repo .. '/docs/shotfiles/docs/plans'
 
     it('returns exists when the target file is already there', function()
       vim.fn.mkdir(plans_dir, 'p')
@@ -586,7 +586,7 @@ describe('shooter.plans.masterplan', function()
   end)
 
   describe('edit_plan_at_line', function()
-    local plans_dir = repo .. '/.hal/util/shooter/shotfiles/docs/plans'
+    local plans_dir = repo .. '/docs/shotfiles/docs/plans'
 
     after_each(function()
       -- Close any buffers opened during test so they don't leak
@@ -709,7 +709,7 @@ describe('shooter.plans.masterplan', function()
 
       -- Plan shotfile was synced.
       assert.is_true(utils.file_exists(
-        repo .. '/.hal/util/shooter/shotfiles/docs/plans/0005-alpha.md'))
+        repo .. '/docs/shotfiles/docs/plans/0005-alpha.md'))
     end)
 
     it('does not duplicate the entry when run twice with the same title', function()
@@ -754,7 +754,7 @@ describe('shooter.plans.masterplan', function()
   describe('commit_plans', function()
     local gitrepo = '/tmp/shooter_masterplan_commit_test'
     local mp_path = gitrepo .. '/docs/plans/masterplan.md'
-    local shotfiles_plans = gitrepo .. '/.hal/util/shooter/shotfiles/docs/plans'
+    local shotfiles_plans = gitrepo .. '/docs/shotfiles/docs/plans'
 
     local function git(...)
       local cmd = { 'git', '-C', gitrepo }
@@ -793,7 +793,7 @@ describe('shooter.plans.masterplan', function()
       local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
       assert.truthy(files_in_commit:find('docs/plans/masterplan%.md'))
       assert.truthy(files_in_commit:find(
-        '%.hal/util/shooter/shotfiles/docs/plans/0001%-foo%.md'))
+        'docs/shotfiles/docs/plans/0001%-foo%.md'))
 
       local subject = git('log', '-1', '--format=%s')
       assert.truthy(subject:find('chore%(plans%): sync'))

@@ -131,7 +131,7 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
                                   names, preserve (description) suffix and
                                   indented child notes, and reconcile every
                                   plan's shotfile in
-                                  .hal/util/shooter/shotfiles/docs/plans/
+                                  docs/shotfiles/docs/plans/
                                   (rename on drift, create if missing, adapt
                                   title to new name).
   pd        Mark done             Move plan under cursor to the top of
@@ -143,7 +143,7 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pc        Open context.md       Open docs/plans/<NNNN-slug>/context.md
   ps        Open spec.md          Open docs/plans/<NNNN-slug>/spec.md
   pe        Edit plan shotfile    Open/rename/create the plan's shotfile
-                                  under .hal/util/shooter/shotfiles/docs/plans/
+                                  under docs/shotfiles/docs/plans/
   pn        New plan              Prompt for a title, create
                                   docs/plans/<NNNN-slug>/plan.md at the next
                                   free number (max known plan number + 1).
@@ -174,7 +174,7 @@ CFG NAMESPACE (c prefix)
   cF        Fix YAML config       Strip invalid keys, fill missing defaults
 
 GIT NAMESPACE (g prefix)
-  gp        Git push shotfiles    add/commit/push .hal/util/shooter/shotfiles
+  gp        Git push shotfiles    add/commit/push docs/shotfiles
                                   and docs/ (title-fix + sync + push)
 
   WORKTREE (gw prefix)
@@ -194,7 +194,7 @@ HELP NAMESPACE (h prefix)
   hd        Dashboard             Open project dashboard
 
 QUICK FOLDER ACCESS (, prefix)
-  ,p        Prompts folder        Open .hal/util/shooter/shotfiles in Oil
+  ,p        Prompts folder        Open docs/shotfiles in Oil
   ,l        Plans folder          Open plans in Oil
   ,s        Shooter config        Open .hal/util/shooter/config/nvim in Oil
 
@@ -215,14 +215,14 @@ SMART PASTE (global, disable with keymaps.smart_paste = false)
   Images saved to: <repo>/.hal/util/shooter/tmp/image-pastes/clipboard_*.png
 
 FOLDER STRUCTURE
-  .hal/util/shooter/shotfiles/           <- shotfiles root
-  .hal/util/shooter/shotfiles/docs/plans <- per-plan shotfiles (managed by pe/pf)
-  .hal/util/shooter/shotfiles/archive/   <- completed/archived
-  .hal/util/shooter/shotfiles/backlog/   <- future tasks
-  .hal/util/shooter/shotfiles/done/      <- finished tasks
-  .hal/util/shooter/shotfiles/reqs/      <- requirements
-  .hal/util/shooter/shotfiles/test/      <- testing
-  .hal/util/shooter/shotfiles/wait/      <- waiting/blocked
+  docs/shotfiles/           <- shotfiles root
+  docs/shotfiles/docs/plans <- per-plan shotfiles (managed by pe/pf)
+  docs/shotfiles/archive/   <- completed/archived
+  docs/shotfiles/backlog/   <- future tasks
+  docs/shotfiles/done/      <- finished tasks
+  docs/shotfiles/reqs/      <- requirements
+  docs/shotfiles/test/      <- testing
+  docs/shotfiles/wait/      <- waiting/blocked
   docs/plans/masterplan.md               <- high-level plan index
   docs/plans/<NNNN-slug>/                <- per-plan folder with plan.md /
                                             context.md / spec.md
@@ -231,7 +231,7 @@ PROJECT SUPPORT
   If a 'projects/' folder exists at git root, shooter becomes project-aware:
   - <space>N shows project picker when at repo root
   - If cwd is inside projects/<name>/, that project is auto-detected
-  - Files are created at projects/<name>/.hal/util/shooter/shotfiles/
+  - Files are created at projects/<name>/docs/shotfiles/
   - History paths include project: ~/.config/.../history/user/repo/project/...
 
 CONTEXT FILES

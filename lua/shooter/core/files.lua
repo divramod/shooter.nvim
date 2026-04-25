@@ -174,10 +174,10 @@ function M.is_in_prompts_folder(path)
   if not path then return false end
   local git_root = M.get_git_root()
   if not git_root then return false end
-  if path:find(git_root .. '/.hal/util/shooter/shotfiles', 1, true) then
+  if path:find(git_root .. '/docs/shotfiles', 1, true) then
     return true
   end
-  if path:find(git_root .. '/projects/.+/.hal/util/shooter/shotfiles') then
+  if path:find(git_root .. '/projects/.+/docs/shotfiles') then
     return true
   end
   return false
@@ -189,7 +189,7 @@ function M.is_shooter_file(filepath)
   return M.is_in_prompts_folder(filepath)
 end
 
--- Get shooter files from directory (returns display paths without .hal/util/shooter/shotfiles prefix)
+-- Get shooter files from directory (returns display paths without docs/shotfiles prefix)
 -- project = nil means root level, string means specific project
 function M.get_prompt_files(project)
   local prompts_dir = M.get_prompts_dir(project)
@@ -197,7 +197,7 @@ function M.get_prompt_files(project)
   local results = {}
 
   for _, file in ipairs(files) do
-    -- Store both display path (without .hal/util/shooter/shotfiles/) and full path
+    -- Store both display path (without docs/shotfiles/) and full path
     local display = file:gsub('^' .. utils.escape_pattern(prompts_dir) .. '/', '')
     table.insert(results, { display = display, path = file, project = project })
   end
@@ -253,10 +253,10 @@ function M.generate_filename(title)
 end
 
 -- Compute title from file path (relative path from shotfiles root, without .md)
--- e.g., /repo/.hal/util/shooter/shotfiles/test/test.md → "test/test"
--- e.g., /repo/.hal/util/shooter/shotfiles/test.md → "test"
+-- e.g., /repo/docs/shotfiles/test/test.md → "test/test"
+-- e.g., /repo/docs/shotfiles/test.md → "test"
 function M.title_from_path(filepath)
-  local match = filepath:match('/%.hal/util/shooter/shotfiles/(.+)$')
+  local match = filepath:match('/docs/shotfiles/(.+)$')
   if match then
     return match:gsub('%.md$', '')
   end

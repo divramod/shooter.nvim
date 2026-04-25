@@ -4,7 +4,7 @@ local utils = require('shooter.utils')
 
 describe('shooter.core.move_picker', function()
   describe('parse_move_prompt', function()
-    local root = '/repo/.hal/util/shooter/shotfiles'
+    local root = '/repo/docs/shotfiles'
 
     it('returns nil for an empty prompt', function()
       assert.is_nil(move_picker.parse_move_prompt('', root))
@@ -74,7 +74,7 @@ describe('shooter.core.move_picker', function()
 
   describe('move_file_to_path', function()
     local test_root = '/tmp/shooter_move_picker_test'
-    local shotfiles_dir = test_root .. '/.hal/util/shooter/shotfiles'
+    local shotfiles_dir = test_root .. '/docs/shotfiles'
 
     before_each(function()
       os.execute('rm -rf ' .. test_root)

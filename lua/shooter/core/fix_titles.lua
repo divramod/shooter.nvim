@@ -1,7 +1,7 @@
 -- Fix H1 titles in shotfiles to match the canonical path-based format.
 -- Canonical rule:
---   .hal/util/shooter/shotfiles/foo.md            → "# foo"
---   .hal/util/shooter/shotfiles/some/test/foo.md  → "# some/test/foo"
+--   docs/shotfiles/foo.md            → "# foo"
+--   docs/shotfiles/some/test/foo.md  → "# some/test/foo"
 
 local utils = require('shooter.utils')
 local files = require('shooter.core.files')
@@ -47,14 +47,14 @@ function M.fix_title_in_file(filepath)
   return true, old_title, new_title, nil
 end
 
--- Collect all shotfile paths under .hal/util/shooter/shotfiles for the repo.
--- Also includes projects/*/.hal/util/shooter/shotfiles for mono-repos.
+-- Collect all shotfile paths under docs/shotfiles for the repo.
+-- Also includes projects/*/docs/shotfiles for mono-repos.
 function M.collect_shotfiles(git_root)
   git_root = git_root or files.get_git_root()
   if not git_root then return {} end
 
   local dirs = {}
-  local root_dir = git_root .. '/.hal/util/shooter/shotfiles'
+  local root_dir = git_root .. '/docs/shotfiles'
   if utils.dir_exists(root_dir) then
     table.insert(dirs, root_dir)
   end
@@ -62,7 +62,7 @@ function M.collect_shotfiles(git_root)
   local projects_dir = git_root .. '/projects'
   if utils.dir_exists(projects_dir) then
     for _, name in ipairs(vim.fn.readdir(projects_dir)) do
-      local proj_dir = projects_dir .. '/' .. name .. '/.hal/util/shooter/shotfiles'
+      local proj_dir = projects_dir .. '/' .. name .. '/docs/shotfiles'
       if utils.dir_exists(proj_dir) then
         table.insert(dirs, proj_dir)
       end
