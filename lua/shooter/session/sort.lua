@@ -128,8 +128,12 @@ function M.build_comparator(criteria)
         return result
       end
     end
-    -- All criteria equal, maintain original order
-    return false
+    -- All explicit criteria equal: tiebreak by filename ascending so files
+    -- sharing an mtime bucket (e.g. all shown as "30s") display in stable
+    -- alphabetical order.
+    local meta_a = M.get_file_metadata(a.path)
+    local meta_b = M.get_file_metadata(b.path)
+    return meta_a.filename:lower() < meta_b.filename:lower()
   end
 end
 

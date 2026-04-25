@@ -126,5 +126,28 @@ describe('session.sort', function()
       local cmp = sort.build_comparator(criteria)
       assert.is_function(cmp)
     end)
+
+    it('tiebreaks by filename ascending when all criteria tie', function()
+      -- Mock paths do not exist, so mtime/ctime/shotcount all default to 0
+      -- and the explicit criterion below ties for every entry. The fallback
+      -- should sort the picker alphabetically by filename.
+      local session = defaults.create_session('test')
+      for _, c in ipairs(defaults.get_sort_criteria()) do
+        session.sortBy[c].enabled = false
+      end
+      session.sortBy.modified.enabled = true
+      session.sortBy.modified.priority = 1
+      session.sortBy.modified.ascending = false
+
+      local files = {
+        { path = '/repo/docs/shotfiles/c-file.md', display = 'c-file.md' },
+        { path = '/repo/docs/shotfiles/a-file.md', display = 'a-file.md' },
+        { path = '/repo/docs/shotfiles/b-file.md', display = 'b-file.md' },
+      }
+      local sorted = sort.sort_files(files, session)
+      assert.equals('a-file.md', sorted[1].display)
+      assert.equals('b-file.md', sorted[2].display)
+      assert.equals('c-file.md', sorted[3].display)
+    end)
   end)
 end)
