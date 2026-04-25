@@ -6,12 +6,29 @@ local M = {}
 local utils = require('shooter.utils')
 local files = require('shooter.core.files')
 
+-- List the .md basenames (without extension) of files directly inside `dir`.
+-- Used to enrich folder picker entries so fuzzy-matching a file slug narrows
+-- to the folder containing that file.
+local function list_md_basenames(dir)
+  local out = {}
+  if vim.fn.isdirectory(dir) ~= 1 then return out end
+  for _, name in ipairs(vim.fn.readdir(dir)) do
+    if name:match('%.md$') and vim.fn.filereadable(dir .. '/' .. name) == 1 then
+      table.insert(out, (name:gsub('%.md$', '')))
+    end
+  end
+  return out
+end
+
 -- Collect every subfolder under shotfiles_dir, recursively, as a sorted list.
--- The first entry is always `(root)` pointing at shotfiles_dir itself. Display
--- paths are relative to shotfiles_dir (e.g. "apps/next/domain"); full path is
--- absolute so picker callbacks can move files into the exact directory.
+-- The first entry is always `(root)` pointing at shotfiles_dir itself. Each
+-- entry has display (relative path), path (absolute), and files (list of
+-- direct-child .md basenames so callers can fold filenames into the
+-- fuzzy-match key).
 function M.collect_shotfile_folders(shotfiles_dir)
-  local folders = { { display = '(root)', path = shotfiles_dir } }
+  local folders = {
+    { display = '(root)', path = shotfiles_dir, files = list_md_basenames(shotfiles_dir) },
+  }
 
   if not utils.dir_exists(shotfiles_dir) then
     return folders
@@ -23,7 +40,11 @@ function M.collect_shotfile_folders(shotfiles_dir)
       local full_path = dir .. '/' .. entry
       if vim.fn.isdirectory(full_path) == 1 then
         local display = rel_prefix == '' and entry or (rel_prefix .. '/' .. entry)
-        table.insert(folders, { display = display, path = full_path })
+        table.insert(folders, {
+          display = display,
+          path = full_path,
+          files = list_md_basenames(full_path),
+        })
         walk(full_path, display)
       end
     end
@@ -186,16 +207,23 @@ function M.open_picker()
   local action_state = require('telescope.actions.state')
 
   pickers.new({}, {
-    prompt_title = 'Move to Folder (type path/name or path/ to rename or keep)',
+    prompt_title = 'Move to Folder (type folder, file slug, or path/name to rename)',
     layout_strategy = 'vertical',
     layout_config = { width = 0.6, height = 0.6 },
     finder = finders.new_table({
       results = folders,
       entry_maker = function(entry)
+        -- Fold the names of files directly inside this folder into the
+        -- ordinal so typing a known shotfile slug narrows to its folder
+        -- (path autocompletion: file slug → containing folder entry).
+        local ordinal = entry.display
+        if entry.files and #entry.files > 0 then
+          ordinal = entry.display .. ' ' .. table.concat(entry.files, ' ')
+        end
         return {
           value = entry,
           display = entry.display,
-          ordinal = entry.display,
+          ordinal = ordinal,
         }
       end,
     }),

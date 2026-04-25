@@ -303,5 +303,34 @@ describe('shooter.core.move_picker', function()
         displays(move_picker.collect_shotfile_folders(test_dir))
       )
     end)
+
+    it('attaches direct-child .md basenames to each folder entry', function()
+      os.execute('mkdir -p ' .. test_dir .. '/apps/next ' .. test_dir .. '/archive')
+      utils.write_file(test_dir .. '/feats.md', '# feats\n')
+      utils.write_file(test_dir .. '/apps/notes.md', '# apps/notes\n')
+      utils.write_file(test_dir .. '/apps/next/domain.md', '# apps/next/domain\n')
+      utils.write_file(test_dir .. '/apps/next/router.md', '# apps/next/router\n')
+
+      local by_display = {}
+      for _, f in ipairs(move_picker.collect_shotfile_folders(test_dir)) do
+        by_display[f.display] = f.files
+      end
+
+      assert.are.same({ 'feats' }, by_display['(root)'])
+      assert.are.same({ 'notes' }, by_display['apps'])
+      table.sort(by_display['apps/next'])
+      assert.are.same({ 'domain', 'router' }, by_display['apps/next'])
+      assert.are.same({}, by_display['archive'])
+    end)
+
+    it('returns an empty files list for a folder with no .md files', function()
+      os.execute('mkdir -p ' .. test_dir .. '/empty')
+      os.execute('touch ' .. test_dir .. '/empty/notes.txt')
+      local by_display = {}
+      for _, f in ipairs(move_picker.collect_shotfile_folders(test_dir)) do
+        by_display[f.display] = f.files
+      end
+      assert.are.same({}, by_display['empty'])
+    end)
   end)
 end)
