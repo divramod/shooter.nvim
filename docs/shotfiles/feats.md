@@ -1,10 +1,46 @@
 # feats
 
-## shot 27 move improvements into new followup plan
+## shot 31 move improvements into new followup plan
 
-## shot 26 < >pa
+## shot 30 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 29 move shotfiles folder to docs/shotfiles (2026-04-25 04:31:18)
+i want to have the shotfiles folder in a different directory.
+it should be in docs/shotfiles instead of .hal/util/shooter/shotfiles
+please do the following:
+1. check the whole codebase for any pointers to the old shotfiles path and adapt them to the new path
+2. move through all repos in ~/a and move the shotfiles folder to the new location (do a git add, commit and push for this change, so that the history of the shotfiles is preserved in every repo)
+go into plan mode to not miss anything
+
+## x shot 28 path completion in < >fmm (2026-04-25 03:22:46)
+when i run the < >fmm command, i want to have the path autocompletion like in < >v
+
+## x shot 27 < >pf improvements (2026-04-24 16:08:23)
+i have thes next plans
+```md
+## next plans
+- 0007-rust-refactoring
+- 0008-fix-envfile
+- 0009-secrets-ports-envs
+- 0010-hal-cli-command-structure
+- 0011-hal-cfg-local-refactoring
+- 0012-hal-cfg-global-refactoring
+- 0013-hal-log-and-tracing-refactoring
+- 0014-context-agent-md-memory-decisions-instructions
+```
+
+i want to rename 0011-hal-cfg-local-refactoring to 0011-hal-cfg-refactoring, because i want to do both local and global refactoring in one plan, because they are closely related and should be done together.
+how will < >pf handle this?
+can it somehow remember it, that 0011 was another one before and will rename it?
+this is not trivial, but i need a solution, to rename/remove old plans
+please think deeply about this and go into plan mode and think about the best/most stabel way to implement this.
+
+## x shot 26 < >pf improvements (2026-04-24 09:23:47)
+sometimes, an ai agent also creates a follow up plan in docs/plans and takes the next free number.
+in ~/a/hal for example docs/plans/0006-...
+i want the plan fix command to add these plans from docs/plans, which are neither in `## done`, nor in `## in progress` (so not existant in the masterplan) to be added to the `## in progress` list alphabetically. the in progress list should be sorted alphabetically, so that the new plan is added to the correct position in the list
 
 ## x shot 25 cleanup .shooter folder (2026-04-24 07:58:32)
 can you look through the whole codebase and check, if there are any pointers to <reporoot>/.shooter left?
