@@ -412,6 +412,87 @@ local function setup_plan_commands()
       vim.ui.input({ prompt = 'Plan title: ' }, create)
     end
   end, { nargs = '?', desc = 'Create new plan under docs/plans/<NNNN-slug>/' })
+
+  -- HalShooterPlanRename — rename the plan under the cursor in masterplan.md
+  create_cmd('HalShooterPlanRename', function()
+    local masterplan = require('shooter.plans.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then utils.echo('Not in a git repo'); return end
+    local line = vim.api.nvim_get_current_line()
+    local old_name = masterplan.extract_plan_name(line)
+    if not old_name then
+      utils.echo('PlanRename: cursor not on a plan line')
+      return
+    end
+    vim.ui.input({ prompt = 'rename plan: ', default = old_name },
+      function(new_name)
+        if not new_name or new_name == '' then return end
+        if new_name == old_name then return end
+        local ok, msg = masterplan.rename_plan(git_root, old_name, new_name)
+        utils.echo(ok and ('plan: ' .. msg) or ('PlanRename: ' .. (msg or 'unknown')))
+      end)
+  end, { desc = 'Rename plan under cursor (folder + shotfile + masterplan)' })
+
+  -- HalShooterPlanDelete — delete the plan under the cursor in masterplan.md.
+  -- Folder and shotfile are each confirmed separately when they contain more
+  -- than a title; stub-only artifacts are removed without prompting.
+  create_cmd('HalShooterPlanDelete', function()
+    local masterplan = require('shooter.plans.masterplan')
+    local git_root = files.get_git_root()
+    if not git_root then utils.echo('Not in a git repo'); return end
+    local line = vim.api.nvim_get_current_line()
+    local name = masterplan.extract_plan_name(line)
+    if not name then
+      utils.echo('PlanDelete: cursor not on a plan line')
+      return
+    end
+
+    local folder = git_root .. '/docs/plans/' .. name
+    local shotfile = git_root .. '/docs/shotfiles/docs/plans/'
+      .. name .. '.md'
+    local folder_exists = vim.fn.isdirectory(folder) == 1
+    local shotfile_exists = vim.fn.filereadable(shotfile) == 1
+    local folder_has_content = folder_exists
+      and masterplan.folder_has_content(folder)
+    local shotfile_has_content = shotfile_exists
+      and not masterplan.is_stub_file(shotfile)
+
+    -- Chain the two confirmation prompts, then invoke delete_plan with the
+    -- resolved choices. A missing artifact is a "no-op delete" (opts flag
+    -- set to true; delete_plan tolerates missing paths).
+    local function run(folder_ok, shotfile_ok)
+      if not folder_ok and not shotfile_ok
+         and not folder_exists and not shotfile_exists then
+        -- Nothing to delete on disk; still drop the masterplan entry.
+        folder_ok = true; shotfile_ok = true
+      end
+      if not folder_ok and not shotfile_ok then
+        utils.echo('PlanDelete: aborted')
+        return
+      end
+      local ok, msg = masterplan.delete_plan(git_root, name,
+        { folder = folder_ok, shotfile = shotfile_ok })
+      utils.echo(ok and ('plan: ' .. msg) or ('PlanDelete: ' .. (msg or 'unknown')))
+    end
+
+    local function prompt_shotfile(folder_ok)
+      if not shotfile_exists then run(folder_ok, false); return end
+      if not shotfile_has_content then run(folder_ok, true); return end
+      vim.ui.input({ prompt = 'delete shotfile ' .. name .. '.md (has content)? type yes: ' },
+        function(ans) run(folder_ok, ans == 'yes') end)
+    end
+
+    if not folder_exists then
+      prompt_shotfile(false)
+      return
+    end
+    if not folder_has_content then
+      prompt_shotfile(true)
+      return
+    end
+    vim.ui.input({ prompt = 'delete folder docs/plans/' .. name .. '/ (has content)? type yes: ' },
+      function(ans) prompt_shotfile(ans == 'yes') end)
+  end, { desc = 'Delete plan under cursor (folder + shotfile + masterplan)' })
 end
 
 -- Setup Tool namespace commands (l prefix in keymaps)

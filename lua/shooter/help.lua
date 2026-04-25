@@ -147,6 +147,16 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pn        New plan              Prompt for a title, create
                                   docs/plans/<NNNN-slug>/plan.md at the next
                                   free number (max known plan number + 1).
+  pr        Rename plan           Prompt with the current NNNN-slug (editable);
+                                  renames docs/plans/<old>/ → docs/plans/<new>/
+                                  (git mv), the shotfile, updates all titles,
+                                  rewrites the masterplan line, and commits.
+  pD        Delete plan           Delete docs/plans/<name>/ and/or the plan's
+                                  shotfile. Confirms separately for folder and
+                                  shotfile when either contains more than a
+                                  title; stubs are removed without prompting.
+                                  Removes the masterplan entry when the folder
+                                  is gone, runs fix(), and commits.
 
   PICKERS (over all plans)
   pP        Pick plan.md          Telescope picker of docs/plans/**/plan.md

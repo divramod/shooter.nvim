@@ -929,4 +929,351 @@ describe('shooter.plans.masterplan', function()
       assert.truthy(err:find('invalid kind', 1, true))
     end)
   end)
+
+  describe('is_stub_file', function()
+    it('returns false for a missing file', function()
+      assert.is_false(masterplan.is_stub_file(repo .. '/nope.md'))
+    end)
+
+    it('returns true for an empty file', function()
+      utils.write_file(repo .. '/empty.md', '')
+      assert.is_true(masterplan.is_stub_file(repo .. '/empty.md'))
+    end)
+
+    it('returns true for a title-only file', function()
+      utils.write_file(repo .. '/title.md', '# title\n\n')
+      assert.is_true(masterplan.is_stub_file(repo .. '/title.md'))
+    end)
+
+    it('returns false when there is body content', function()
+      utils.write_file(repo .. '/body.md', '# title\n\nsome body here\n')
+      assert.is_false(masterplan.is_stub_file(repo .. '/body.md'))
+    end)
+
+    it('returns false for a file with a non-heading first line', function()
+      utils.write_file(repo .. '/raw.md', 'just a note\n')
+      assert.is_false(masterplan.is_stub_file(repo .. '/raw.md'))
+    end)
+  end)
+
+  describe('folder_has_content', function()
+    it('returns false for a missing directory', function()
+      assert.is_false(masterplan.folder_has_content(repo .. '/nope'))
+    end)
+
+    it('returns false for an empty directory', function()
+      vim.fn.mkdir(repo .. '/empty', 'p')
+      assert.is_false(masterplan.folder_has_content(repo .. '/empty'))
+    end)
+
+    it('returns false when every file is a stub', function()
+      vim.fn.mkdir(repo .. '/stubs', 'p')
+      utils.write_file(repo .. '/stubs/plan.md', '# stub\n')
+      utils.write_file(repo .. '/stubs/context.md', '# stub\n\n')
+      assert.is_false(masterplan.folder_has_content(repo .. '/stubs'))
+    end)
+
+    it('returns true when any file has non-title content', function()
+      vim.fn.mkdir(repo .. '/with-body', 'p')
+      utils.write_file(repo .. '/with-body/plan.md', '# plan\n')
+      utils.write_file(repo .. '/with-body/context.md',
+        '# context\n\nmeaningful notes\n')
+      assert.is_true(masterplan.folder_has_content(repo .. '/with-body'))
+    end)
+
+    it('returns true when a subdirectory exists', function()
+      vim.fn.mkdir(repo .. '/nested/sub', 'p')
+      utils.write_file(repo .. '/nested/plan.md', '# p\n')
+      assert.is_true(masterplan.folder_has_content(repo .. '/nested'))
+    end)
+  end)
+
+  describe('rewrite_masterplan_line', function()
+    it('replaces the plan name in the entry, preserves parens and children', function()
+      write_plan(table.concat({
+        '# masterplan',
+        '',
+        '## next plans',
+        '- 0003-old-name (some description)',
+        '  - a note',
+        '    - nested note',
+        '- 0004-other',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.rewrite_masterplan_line(repo,
+        '0003-old-name', '0003-new-name'))
+      local out = read_plan()
+      assert.truthy(out:find('- 0003-new-name (some description)', 1, true))
+      assert.truthy(out:find('  - a note', 1, true))
+      assert.truthy(out:find('    - nested note', 1, true))
+      assert.truthy(out:find('- 0004-other', 1, true))
+      assert.is_nil(out:find('0003-old-name', 1, true))
+    end)
+
+    it('errors when the plan is not found', function()
+      write_plan('## next plans\n- 0001-foo\n')
+      local ok, err = masterplan.rewrite_masterplan_line(repo,
+        '0099-missing', '0099-new')
+      assert.is_false(ok)
+      assert.truthy(err:find('not in masterplan', 1, true))
+    end)
+  end)
+
+  describe('remove_masterplan_entry', function()
+    it('drops entry line and its indented children', function()
+      write_plan(table.concat({
+        '## next plans',
+        '- 0001-alpha',
+        '  - child note',
+        '    - nested note',
+        '- 0002-beta',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.remove_masterplan_entry(repo, '0001-alpha'))
+      local out = read_plan()
+      assert.is_nil(out:find('0001-alpha', 1, true))
+      assert.is_nil(out:find('child note', 1, true))
+      assert.is_nil(out:find('nested note', 1, true))
+      assert.truthy(out:find('- 0002-beta', 1, true))
+    end)
+
+    it('leaves unrelated entries alone', function()
+      write_plan(table.concat({
+        '## in progress',
+        '- 0005-keep-me',
+        '',
+        '## done',
+        '- 0003-old (2026-01-01 00:00:00)',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.remove_masterplan_entry(repo, '0005-keep-me'))
+      local out = read_plan()
+      assert.is_nil(out:find('0005-keep-me', 1, true))
+      assert.truthy(out:find('- 0003-old', 1, true))
+    end)
+
+    it('is a no-op when the plan is not found', function()
+      write_plan('## next plans\n- 0001-foo\n')
+      assert.is_true(masterplan.remove_masterplan_entry(repo, '9999-ghost'))
+      assert.truthy(read_plan():find('- 0001-foo', 1, true))
+    end)
+  end)
+
+  describe('rename_plan', function()
+    local gitrepo = '/tmp/shooter_masterplan_rename_test'
+    local mp_path = gitrepo .. '/docs/plans/masterplan.md'
+    local shotfiles_plans = gitrepo .. '/docs/shotfiles/docs/plans'
+
+    local function git(...)
+      local cmd = { 'git', '-C', gitrepo }
+      for _, a in ipairs({ ... }) do table.insert(cmd, a) end
+      return vim.fn.system(cmd)
+    end
+
+    before_each(function()
+      os.execute('rm -rf ' .. gitrepo)
+      os.execute('mkdir -p ' .. gitrepo .. '/docs/plans')
+      os.execute('mkdir -p ' .. shotfiles_plans)
+      vim.fn.system({ 'git', '-C', gitrepo, 'init', '-q' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.email', 't@t' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.name', 't' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'commit.gpgsign', 'false' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'commit', '--allow-empty', '-q', '-m', 'init' })
+    end)
+
+    after_each(function()
+      os.execute('rm -rf ' .. gitrepo)
+    end)
+
+    it('renames folder, shotfile, masterplan entry, and titles', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0011-old-slug', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0011-old-slug/plan.md',
+        '# 0011-old-slug\n\nplan body\n')
+      utils.write_file(gitrepo .. '/docs/plans/0011-old-slug/context.md',
+        '# docs/plans/0011-old-slug/context\n\ncontext body\n')
+      utils.write_file(shotfiles_plans .. '/0011-old-slug.md',
+        '# docs/plans/0011-old-slug\n\nnotes\n')
+      utils.write_file(mp_path, table.concat({
+        '# masterplan',
+        '',
+        '## in progress',
+        '- 0011-old-slug (some desc)',
+        '  - a note',
+        '',
+      }, '\n'))
+      git('add', '-A')
+      git('commit', '-q', '-m', 'seed')
+
+      local ok, msg = masterplan.rename_plan(gitrepo,
+        '0011-old-slug', '0011-new-slug')
+      assert.is_true(ok, msg)
+      -- Folder renamed
+      assert.is_false(utils.dir_exists(gitrepo .. '/docs/plans/0011-old-slug'))
+      assert.is_true(utils.dir_exists(gitrepo .. '/docs/plans/0011-new-slug'))
+      -- Shotfile renamed
+      assert.is_false(utils.file_exists(shotfiles_plans .. '/0011-old-slug.md'))
+      assert.is_true(utils.file_exists(shotfiles_plans .. '/0011-new-slug.md'))
+      -- Titles updated
+      local plan_body = utils.read_file(
+        gitrepo .. '/docs/plans/0011-new-slug/plan.md')
+      assert.truthy(plan_body:find('# 0011%-new%-slug'))
+      assert.truthy(plan_body:find('plan body', 1, true))
+      local ctx_body = utils.read_file(
+        gitrepo .. '/docs/plans/0011-new-slug/context.md')
+      assert.truthy(ctx_body:find('# docs/plans/0011%-new%-slug/context'))
+      local shot_body = utils.read_file(
+        shotfiles_plans .. '/0011-new-slug.md')
+      assert.truthy(shot_body:find('# docs/plans/0011%-new%-slug'))
+      -- Masterplan updated, preserves (desc) + child note
+      local mp = utils.read_file(mp_path)
+      assert.truthy(mp:find('- 0011-new-slug (some desc)', 1, true))
+      assert.truthy(mp:find('  - a note', 1, true))
+      assert.is_nil(mp:find('0011-old-slug', 1, true))
+      -- Commit landed with rename message
+      local subject = git('log', '-1', '--format=%s')
+      assert.truthy(subject:find('chore%(plans%): rename 0011%-old%-slug'))
+    end)
+
+    it('refuses when the new name already exists as a folder', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0001-from', 'p')
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0002-to', 'p')
+      utils.write_file(mp_path, '## in progress\n- 0001-from\n')
+      local ok, err = masterplan.rename_plan(gitrepo, '0001-from', '0002-to')
+      assert.is_false(ok)
+      assert.truthy(err:find('already exists', 1, true))
+    end)
+
+    it('refuses an invalid new name', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0001-foo', 'p')
+      utils.write_file(mp_path, '## in progress\n- 0001-foo\n')
+      local ok, err = masterplan.rename_plan(gitrepo, '0001-foo', 'bad-name')
+      assert.is_false(ok)
+      assert.truthy(err:find('invalid plan name', 1, true))
+    end)
+
+    it('tolerates a missing folder (shotfile-only rename)', function()
+      utils.write_file(shotfiles_plans .. '/0003-alpha.md',
+        '# docs/plans/0003-alpha\n\nbody\n')
+      utils.write_file(mp_path, '## backlog\n- 0003-alpha\n')
+      git('add', '-A')
+      git('commit', '-q', '-m', 'seed')
+
+      local ok = masterplan.rename_plan(gitrepo, '0003-alpha', '0003-beta')
+      assert.is_true(ok)
+      assert.is_true(utils.file_exists(shotfiles_plans .. '/0003-beta.md'))
+      local mp = utils.read_file(mp_path)
+      assert.truthy(mp:find('- 0003-beta', 1, true))
+    end)
+  end)
+
+  describe('delete_plan', function()
+    local gitrepo = '/tmp/shooter_masterplan_delete_test'
+    local mp_path = gitrepo .. '/docs/plans/masterplan.md'
+    local shotfiles_plans = gitrepo .. '/docs/shotfiles/docs/plans'
+
+    local function git(...)
+      local cmd = { 'git', '-C', gitrepo }
+      for _, a in ipairs({ ... }) do table.insert(cmd, a) end
+      return vim.fn.system(cmd)
+    end
+
+    before_each(function()
+      os.execute('rm -rf ' .. gitrepo)
+      os.execute('mkdir -p ' .. gitrepo .. '/docs/plans')
+      os.execute('mkdir -p ' .. shotfiles_plans)
+      vim.fn.system({ 'git', '-C', gitrepo, 'init', '-q' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.email', 't@t' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.name', 't' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'commit.gpgsign', 'false' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'commit', '--allow-empty', '-q', '-m', 'init' })
+    end)
+
+    after_each(function()
+      os.execute('rm -rf ' .. gitrepo)
+    end)
+
+    it('deletes folder + shotfile + masterplan entry and commits', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0005-goner', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0005-goner/plan.md',
+        '# 0005-goner\n\nbody\n')
+      utils.write_file(shotfiles_plans .. '/0005-goner.md',
+        '# docs/plans/0005-goner\n\nsome notes\n')
+      utils.write_file(mp_path, table.concat({
+        '## in progress',
+        '- 0005-goner (desc)',
+        '  - a note',
+        '',
+      }, '\n'))
+      git('add', '-A')
+      git('commit', '-q', '-m', 'seed')
+
+      local ok, msg = masterplan.delete_plan(gitrepo, '0005-goner',
+        { folder = true, shotfile = true })
+      assert.is_true(ok, msg)
+      assert.is_false(utils.dir_exists(gitrepo .. '/docs/plans/0005-goner'))
+      assert.is_false(utils.file_exists(shotfiles_plans .. '/0005-goner.md'))
+      local mp = utils.read_file(mp_path)
+      assert.is_nil(mp:find('0005-goner', 1, true))
+      local subject = git('log', '-1', '--format=%s')
+      assert.truthy(subject:find('chore%(plans%): delete 0005%-goner'))
+    end)
+
+    it('keeps masterplan entry when folder stays (shotfile-only delete)', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0002-keep-folder', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0002-keep-folder/plan.md',
+        '# 0002-keep-folder\n\nvaluable body\n')
+      utils.write_file(shotfiles_plans .. '/0002-keep-folder.md',
+        '# docs/plans/0002-keep-folder\n\ndisposable notes\n')
+      utils.write_file(mp_path, table.concat({
+        '## in progress',
+        '- 0002-keep-folder',
+        '',
+      }, '\n'))
+      git('add', '-A')
+      git('commit', '-q', '-m', 'seed')
+
+      local ok = masterplan.delete_plan(gitrepo, '0002-keep-folder',
+        { folder = false, shotfile = true })
+      assert.is_true(ok)
+      -- Folder untouched
+      assert.is_true(utils.dir_exists(gitrepo .. '/docs/plans/0002-keep-folder'))
+      -- Masterplan entry remains (fix() may have re-created the shotfile stub)
+      local mp = utils.read_file(mp_path)
+      assert.truthy(mp:find('- 0002-keep-folder', 1, true))
+    end)
+
+    it('drops masterplan entry when folder goes (shotfile untouched)', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0009-orphan-shot', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0009-orphan-shot/plan.md',
+        '# 0009-orphan-shot\n')
+      utils.write_file(shotfiles_plans .. '/0009-orphan-shot.md',
+        '# docs/plans/0009-orphan-shot\n\nkeep me\n')
+      utils.write_file(mp_path, '## in progress\n- 0009-orphan-shot\n')
+      git('add', '-A')
+      git('commit', '-q', '-m', 'seed')
+
+      local ok = masterplan.delete_plan(gitrepo, '0009-orphan-shot',
+        { folder = true, shotfile = false })
+      assert.is_true(ok)
+      assert.is_false(utils.dir_exists(gitrepo .. '/docs/plans/0009-orphan-shot'))
+      -- Non-stub shotfile with no active same-slug plan is preserved by the
+      -- orphan sweep inside fix().
+      assert.is_true(utils.file_exists(shotfiles_plans .. '/0009-orphan-shot.md'))
+      local mp = utils.read_file(mp_path)
+      assert.is_nil(mp:find('0009-orphan-shot', 1, true))
+    end)
+
+    it('no-op on disk but still commits masterplan edit when nothing to delete', function()
+      -- Plan is only referenced in masterplan; no folder, no shotfile.
+      utils.write_file(mp_path, '## in progress\n- 0007-phantom\n')
+      git('add', '-A')
+      git('commit', '-q', '-m', 'seed')
+
+      local ok = masterplan.delete_plan(gitrepo, '0007-phantom',
+        { folder = true, shotfile = true })
+      assert.is_true(ok)
+      local mp = utils.read_file(mp_path)
+      assert.is_nil(mp:find('0007-phantom', 1, true))
+    end)
+  end)
 end)

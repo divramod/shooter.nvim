@@ -489,8 +489,8 @@ function M.fix(git_root)
     for _, name in ipairs(vim.fn.readdir(plans_dir)) do
       if name:match('%.md$') and not expected[name] then
         local orphan_path = plans_dir .. '/' .. name
-        local content = read_file(orphan_path) or ''
-        local stripped = content
+        local orphan_content = read_file(orphan_path) or ''
+        local stripped = orphan_content
           :gsub('^#[^\n]*\n?', '')
           :gsub('^%s+', '')
         local slug = name:match('^%d%d%d%d%-(.+)%.md$')
@@ -688,8 +688,9 @@ end
 --   ok=true, committed=false → nothing to commit (msg explains)
 --   ok=true, committed=true  → committed (msg nil)
 --   ok=false                 → failure (msg = error)
-function M.commit_plans(git_root)
+function M.commit_plans(git_root, message)
   if not git_root or git_root == '' then return false, 'no git root', false end
+  message = message or COMMIT_MSG
 
   local present = {}
   for _, rel in ipairs(COMMIT_PATHS) do
@@ -721,13 +722,285 @@ function M.commit_plans(git_root)
     return true, 'plans: nothing to commit', false
   end
 
-  local commit = { 'commit', '-m', COMMIT_MSG, '--' }
+  local commit = { 'commit', '-m', message, '--' }
   for _, p in ipairs(changed) do table.insert(commit, p) end
   local commit_out, commit_err = git(git_root, commit)
   if commit_err ~= 0 then
     return false, 'git commit failed: ' .. commit_out:gsub('\n', ' '), false
   end
   return true, nil, true
+end
+
+-- True when `path` is either missing or has at most one non-blank line and
+-- that line is a markdown heading. Used by delete_plan to decide whether a
+-- deletion is "safe" (stub) or needs user confirmation.
+function M.is_stub_file(path)
+  if not path or path == '' then return false end
+  if vim.fn.filereadable(path) ~= 1 then return false end
+  local content = read_file(path) or ''
+  local non_blank = {}
+  for _, line in ipairs(vim.split(content, '\n', { plain = true })) do
+    if line:match('%S') then table.insert(non_blank, line) end
+  end
+  if #non_blank == 0 then return true end
+  if #non_blank == 1 and non_blank[1]:match('^#') then return true end
+  return false
+end
+
+-- True if `dir` exists AND contains at least one non-stub file or any
+-- subdirectory. Used by delete_plan to decide whether to confirm with the user.
+function M.folder_has_content(dir)
+  if not dir or dir == '' then return false end
+  if vim.fn.isdirectory(dir) ~= 1 then return false end
+  for _, name in ipairs(vim.fn.readdir(dir)) do
+    local p = dir .. '/' .. name
+    if vim.fn.isdirectory(p) == 1 then return true end
+    if vim.fn.filereadable(p) == 1 and not M.is_stub_file(p) then
+      return true
+    end
+  end
+  return false
+end
+
+-- Replace the first markdown heading in `path` whose text contains `needle`
+-- with the same line, but with `needle` substituted for `replacement`. Only
+-- the first heading line is touched. No-op when the file doesn't exist or no
+-- heading references `needle`.
+local function replace_title_reference(path, needle, replacement)
+  if vim.fn.filereadable(path) ~= 1 then return end
+  local content = read_file(path)
+  if not content then return end
+  local lines = vim.split(content, '\n', { plain = true })
+  for i, line in ipairs(lines) do
+    if line:match('^#[ \t]') then
+      if line:find(needle, 1, true) then
+        lines[i] = line:gsub(vim.pesc(needle), replacement, 1)
+        write_file(path, table.concat(lines, '\n'))
+      end
+      return
+    end
+  end
+end
+
+-- Locate the masterplan line whose plan reference matches `name` and replace
+-- the name with `new_name`. Preserves anything else on the line (parens,
+-- trailing text) and leaves indented child notes untouched. Updates a loaded
+-- buffer in place when one exists.
+function M.rewrite_masterplan_line(git_root, old_name, new_name)
+  if not git_root or git_root == '' then return false, 'no git root' end
+  if not old_name or old_name == '' then return false, 'no old name' end
+  if not new_name or new_name == '' then return false, 'no new name' end
+  local path = M.get_path(git_root)
+  local bufnr = find_loaded_buf(path)
+  local lines
+  if bufnr then
+    lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  else
+    local content = read_file(path)
+    if not content then return false, 'masterplan not found' end
+    lines = vim.split(content, '\n', { plain = true })
+  end
+
+  local found = false
+  for i, line in ipairs(lines) do
+    if line:match('^%-%s') and M.extract_plan_name(line) == old_name then
+      lines[i] = line:gsub(vim.pesc(old_name), new_name, 1)
+      found = true
+      break
+    end
+  end
+  if not found then return false, 'plan not in masterplan: ' .. old_name end
+
+  if bufnr then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+  else
+    if not write_file(path, table.concat(lines, '\n')) then
+      return false, 'cannot write ' .. path
+    end
+  end
+  return true
+end
+
+-- Remove the first masterplan entry whose plan reference matches `name`,
+-- along with its indented child notes (and any trailing blank line in the
+-- child block). No-op when no matching entry exists.
+function M.remove_masterplan_entry(git_root, name)
+  if not git_root or git_root == '' then return false, 'no git root' end
+  if not name or name == '' then return false, 'no plan name' end
+  local path = M.get_path(git_root)
+  local bufnr = find_loaded_buf(path)
+  local lines
+  if bufnr then
+    lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  else
+    local content = read_file(path)
+    if not content then return true end  -- nothing to remove
+    lines = vim.split(content, '\n', { plain = true })
+  end
+
+  local start_idx
+  for i, line in ipairs(lines) do
+    if line:match('^%-%s') and M.extract_plan_name(line) == name then
+      start_idx = i
+      break
+    end
+  end
+  if not start_idx then return true end  -- no-op
+
+  local end_idx = start_idx
+  for j = start_idx + 1, #lines do
+    local nxt = lines[j]
+    if is_header(nxt) or is_top_entry(nxt) or not is_child_line(nxt) then break end
+    end_idx = j
+  end
+  while end_idx > start_idx and lines[end_idx] == '' do end_idx = end_idx - 1 end
+
+  for _ = start_idx, end_idx do
+    table.remove(lines, start_idx)
+  end
+
+  if bufnr then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+  else
+    if not write_file(path, table.concat(lines, '\n')) then
+      return false, 'cannot write ' .. path
+    end
+  end
+  return true
+end
+
+-- Save-and-close any loaded buffer pointing at `path`, so a subsequent
+-- rename/delete on disk doesn't collide with stale buffer state.
+local function close_buf_for(path)
+  local bufnr = find_loaded_buf(path)
+  if not bufnr then return end
+  if vim.bo[bufnr].modified then
+    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+  end
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end
+
+-- Rename a plan in every place it is referenced: the docs/plans/<old>/
+-- folder, the shotfile <old>.md, the masterplan line, and every title inside
+-- the folder's files + shotfile. Commits all changed files with a rename
+-- message. No-op parts (missing folder / missing shotfile) are tolerated.
+function M.rename_plan(git_root, old_name, new_name)
+  if not git_root or git_root == '' then return false, 'no git root' end
+  if not old_name or old_name == '' then return false, 'no old name' end
+  if not new_name or new_name == '' then return false, 'no new name' end
+  if old_name == new_name then return false, 'name unchanged' end
+  if not new_name:match('^%d%d%d%d%-[%l%d][%w%-]*$') then
+    return false, 'invalid plan name (need NNNN-slug)'
+  end
+
+  local plans_rel = 'docs/plans'
+  local shotfiles_rel = 'docs/shotfiles/docs/plans'
+  local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
+  local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
+  local old_shotfile = git_root .. '/' .. shotfiles_rel .. '/' .. old_name .. '.md'
+  local new_shotfile = git_root .. '/' .. shotfiles_rel .. '/' .. new_name .. '.md'
+
+  if vim.fn.isdirectory(new_folder) == 1 then
+    return false, new_folder .. ' already exists'
+  end
+  if vim.fn.filereadable(new_shotfile) == 1 then
+    return false, new_shotfile .. ' already exists'
+  end
+
+  for _, kind in ipairs({ 'plan', 'context', 'spec' }) do
+    close_buf_for(old_folder .. '/' .. kind .. '.md')
+  end
+  close_buf_for(old_shotfile)
+
+  if vim.fn.isdirectory(old_folder) == 1 then
+    local _, err = git(git_root, { 'mv',
+      plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+    if err ~= 0 then
+      if not os.rename(old_folder, new_folder) then
+        return false, 'failed to rename ' .. old_folder
+      end
+    end
+    for _, kind in ipairs({ 'plan', 'context', 'spec' }) do
+      replace_title_reference(new_folder .. '/' .. kind .. '.md',
+        old_name, new_name)
+    end
+  end
+
+  if vim.fn.filereadable(old_shotfile) == 1 then
+    local _, err = git(git_root, { 'mv',
+      shotfiles_rel .. '/' .. old_name .. '.md',
+      shotfiles_rel .. '/' .. new_name .. '.md' })
+    if err ~= 0 then
+      if not os.rename(old_shotfile, new_shotfile) then
+        return false, 'failed to rename ' .. old_shotfile
+      end
+    end
+    local files = require('shooter.core.files')
+    files.update_file_title(new_shotfile, files.title_from_path(new_shotfile))
+  end
+
+  local ok, err = M.rewrite_masterplan_line(git_root, old_name, new_name)
+  if not ok then return false, err end
+
+  local cok, cmsg, committed = M.commit_plans(git_root,
+    'chore(plans): rename ' .. old_name .. ' -> ' .. new_name)
+  if not cok then return false, cmsg end
+  return true, committed and 'renamed' or 'renamed (nothing to commit)'
+end
+
+-- Delete a plan. `opts.folder` and `opts.shotfile` select which artifacts to
+-- remove; both default to false (caller decides based on content / user
+-- confirmation). The masterplan entry is removed iff the folder is gone
+-- afterwards — otherwise fix() would just re-adopt it. fix() always runs to
+-- resort / resync, and everything is committed with a delete message.
+function M.delete_plan(git_root, name, opts)
+  if not git_root or git_root == '' then return false, 'no git root' end
+  if not name or name == '' then return false, 'no plan name' end
+  opts = opts or {}
+
+  local plans_rel = 'docs/plans'
+  local shotfiles_rel = 'docs/shotfiles/docs/plans'
+  local folder = git_root .. '/' .. plans_rel .. '/' .. name
+  local shotfile = git_root .. '/' .. shotfiles_rel .. '/' .. name .. '.md'
+
+  if opts.folder and vim.fn.isdirectory(folder) == 1 then
+    for _, kind in ipairs({ 'plan', 'context', 'spec' }) do
+      close_buf_for(folder .. '/' .. kind .. '.md')
+    end
+    local _, err = git(git_root, { 'rm', '-rf', '--',
+      plans_rel .. '/' .. name })
+    if err ~= 0 then
+      vim.fn.delete(folder, 'rf')
+    end
+  end
+
+  if opts.shotfile and vim.fn.filereadable(shotfile) == 1 then
+    close_buf_for(shotfile)
+    local _, err = git(git_root, { 'rm', '--',
+      shotfiles_rel .. '/' .. name .. '.md' })
+    if err ~= 0 then
+      os.remove(shotfile)
+    end
+  end
+
+  -- Only drop the masterplan entry when the folder is gone, so fix() doesn't
+  -- re-adopt a still-present folder and resurrect the plan.
+  if vim.fn.isdirectory(folder) ~= 1 then
+    local ok, err = M.remove_masterplan_entry(git_root, name)
+    if not ok then return false, err end
+  end
+
+  local fok, ferr = M.fix(git_root)
+  if not fok then return false, ferr end
+
+  local msg = 'chore(plans): delete ' .. name
+  if opts.folder and not opts.shotfile then msg = msg .. ' (folder only)' end
+  if opts.shotfile and not opts.folder then msg = msg .. ' (shotfile only)' end
+  local cok, cmsg, committed = M.commit_plans(git_root, msg)
+  if not cok then return false, cmsg end
+  return true, committed and 'deleted' or 'deleted (nothing to commit)'
 end
 
 return M
