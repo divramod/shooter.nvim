@@ -80,16 +80,16 @@ Each sub-module ≤ 350 LOC. `metaplan/init.lua` is re-export only. Existing `re
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T004** — Split `metaplan.lua` along identified seams
+- [x] **T004** — Split `metaplan.lua` along identified seams
   - **Acceptance:** `lua/shooter/plans/metaplan/{init,parse,render,categories,numbering,rename}.lua` exist; each ≤ 350 LOC; `lua/shooter/plans/metaplan.lua` either deleted or replaced with `return require('shooter.plans.metaplan.init')` shim. All Phase 000 + Phase 001 tests still green. Smoke loader passes.
   - **Verify:** `find lua/shooter/plans -name '*.lua' -exec wc -l {} + | awk '$1>350{exit 1}'`; tests run green; smoke loader green.
   - **Files:** `lua/shooter/plans/metaplan/*.lua`, `lua/shooter/plans/metaplan.lua`
   - **Size:** XL
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T005** — Plans/-area security fixes
   - **Acceptance:** Every plans/ finding from `baseline.md § Security Inventory` is fixed or explicitly deferred (with rationale). Path-traversal-prone rename ops use canonicalize + reject-`..` checks. Shell-outs use `shellescape` or table-form `vim.fn.system({...})`.
