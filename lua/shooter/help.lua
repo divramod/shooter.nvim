@@ -124,8 +124,8 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pm        Open masterplan       Open docs/plans/masterplan.md
                                   (runs Fix on open — always tidy)
   pf        Fix masterplan        Normalize title (# masterplan <repo> (<alias>)),
-                                  ensure the 4 sections in order (in progress /
-                                  next plans / backlog / done), renumber
+                                  ensure the 5 sections in order (in progress /
+                                  planned / next plans / backlog / done), renumber
                                   `## next plans` starting at max(docs/plans
                                   folders, started plans) + 1, slugify pre-paren
                                   names, preserve (description) suffix and

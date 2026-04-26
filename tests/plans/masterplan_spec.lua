@@ -148,10 +148,13 @@ describe('shooter.plans.masterplan', function()
       assert.truthy(out:find('- 0014-beta', 1, true))
     end)
 
-    it('starting number also considers in-progress/backlog/done numbers', function()
-      -- docs/plans is empty; max comes from done entry 0020
+    it('starting number also considers in-progress/planned/backlog/done numbers', function()
+      -- docs/plans is empty; max comes from planned entry 0022
       write_plan(table.concat({
         '## in progress',
+        '',
+        '## planned',
+        '- 0022-planned-thing',
         '',
         '## next plans',
         '- alpha',
@@ -164,13 +167,16 @@ describe('shooter.plans.masterplan', function()
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
-      assert.truthy(out:find('- 0021-alpha', 1, true))
+      assert.truthy(out:find('- 0023-alpha', 1, true))
     end)
 
-    it('does not renumber ## in progress or ## backlog', function()
+    it('does not renumber ## in progress, ## planned, or ## backlog', function()
       write_plan(table.concat({
         '## in progress',
         '- 0004-repo-root-cleanup',
+        '',
+        '## planned',
+        '- 0006-planned-feature',
         '',
         '## backlog',
         '- 0003-ios-improvements',
@@ -179,6 +185,7 @@ describe('shooter.plans.masterplan', function()
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
       assert.truthy(out:find('- 0004-repo-root-cleanup', 1, true))
+      assert.truthy(out:find('- 0006-planned-feature', 1, true))
       assert.truthy(out:find('- 0003-ios-improvements', 1, true))
     end)
   end)
@@ -194,19 +201,22 @@ describe('shooter.plans.masterplan', function()
       assert.truthy(out:find('^# masterplan ' .. tail .. ' %(shov%)'))
     end)
 
-    it('ensures the four sections in canonical order', function()
+    it('ensures the five sections in canonical order', function()
       write_plan('## done\n- x\n\n## next plans\n- y\n')
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
       local i_prog = out:find('## in progress', 1, true)
+      local i_planned = out:find('## planned', 1, true)
       local i_next = out:find('## next plans', 1, true)
       local i_back = out:find('## backlog', 1, true)
       local i_done = out:find('## done', 1, true)
       assert.is_truthy(i_prog)
+      assert.is_truthy(i_planned)
       assert.is_truthy(i_next)
       assert.is_truthy(i_back)
       assert.is_truthy(i_done)
-      assert.is_true(i_prog < i_next)
+      assert.is_true(i_prog < i_planned)
+      assert.is_true(i_planned < i_next)
       assert.is_true(i_next < i_back)
       assert.is_true(i_back < i_done)
     end)
@@ -232,6 +242,38 @@ describe('shooter.plans.masterplan', function()
       assert.is_true(masterplan.fix(repo))
       assert.is_true(utils.file_exists(path))
     end)
+
+    it('preserves `## planned` entries verbatim and in canonical position', function()
+      write_plan(table.concat({
+        '## in progress',
+        '- 0001-active',
+        '',
+        '## planned',
+        '- 0007-future-feature (with notes)',
+        '  - sub-note that travels with planned entry',
+        '',
+        '## next plans',
+        '- alpha',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.fix(repo))
+      local out = read_plan()
+      -- Planned entry kept verbatim, including paren and child note
+      assert.truthy(out:find('- 0007-future-feature (with notes)', 1, true))
+      assert.truthy(out:find('  - sub-note that travels with planned entry', 1, true))
+      -- Canonical order: in progress < planned < next plans < backlog < done
+      local i_prog = out:find('## in progress', 1, true)
+      local i_planned = out:find('## planned', 1, true)
+      local i_next = out:find('## next plans', 1, true)
+      local i_back = out:find('## backlog', 1, true)
+      local i_done = out:find('## done', 1, true)
+      assert.is_true(i_prog < i_planned)
+      assert.is_true(i_planned < i_next)
+      assert.is_true(i_next < i_back)
+      assert.is_true(i_back < i_done)
+      -- next plans renumbered starting at max(0001, 0007) + 1 = 0008
+      assert.truthy(out:find('- 0008-alpha', 1, true))
+    end)
   end)
 
   describe('fix (adopt orphan docs/plans folders)', function()
@@ -243,7 +285,7 @@ describe('shooter.plans.masterplan', function()
       write_plan('## in progress\n\n## next plans\n\n## backlog\n\n## done\n')
       assert.is_true(masterplan.fix(repo))
       local mp = read_plan()
-      local ip = mp:match('## in progress\n(.-)\n## next plans')
+      local ip = mp:match('## in progress\n(.-)\n## planned')
       assert.truthy(ip)
       assert.truthy(ip:find('- 0001-alpha', 1, true))
       assert.truthy(ip:find('- 0002-beta', 1, true))
@@ -265,7 +307,7 @@ describe('shooter.plans.masterplan', function()
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       local mp = read_plan()
-      local ip = mp:match('## in progress\n(.-)\n## next plans')
+      local ip = mp:match('## in progress\n(.-)\n## planned')
       assert.truthy(ip:find('- 0001-already-in-progress', 1, true))
       assert.truthy(ip:find('- 0005-brand-new', 1, true))
       -- Originals stayed in their sections (in progress didn't absorb them).
@@ -287,7 +329,7 @@ describe('shooter.plans.masterplan', function()
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       local mp = read_plan()
-      local ip = mp:match('## in progress\n(.-)\n## next plans')
+      local ip = mp:match('## in progress\n(.-)\n## planned')
       -- Full-text (number-first) sort: 0001-zebra → 0003-mango → 0004-apple.
       local i_zebra = ip:find('0001-zebra', 1, true)
       local i_mango = ip:find('0003-mango', 1, true)
@@ -445,8 +487,8 @@ describe('shooter.plans.masterplan', function()
       local out = read_plan()
       -- Entry is no longer under ## in progress
       local ip_start = out:find('## in progress', 1, true)
-      local np_start = out:find('## next plans', 1, true)
-      local ip_section = out:sub(ip_start, np_start - 1)
+      local ip_end = out:find('\n## ', ip_start + 1, true) or #out
+      local ip_section = out:sub(ip_start, ip_end)
       assert.is_nil(ip_section:find('0004-repo-root-cleanup', 1, true))
       -- And appears under ## done with a (YYYY-MM-DD HH:MM:SS) suffix
       local done_start = out:find('## done', 1, true)
@@ -515,8 +557,8 @@ describe('shooter.plans.masterplan', function()
 
       -- No trace under ## in progress
       local ip_start = out:find('## in progress', 1, true)
-      local np_start = out:find('## next plans', 1, true)
-      local ip_section = out:sub(ip_start, np_start - 1)
+      local ip_end = out:find('\n## ', ip_start + 1, true) or #out
+      local ip_section = out:sub(ip_start, ip_end)
       assert.is_nil(ip_section:find('cleanup', 1, true))
       assert.is_nil(ip_section:find('first note', 1, true))
 
@@ -737,6 +779,17 @@ describe('shooter.plans.masterplan', function()
         '## done', '',
       }, '\n'))
       assert.equals(4, masterplan.max_plan_number(repo, parsed.sections))
+    end)
+
+    it('counts `## planned` entries toward the max', function()
+      local parsed = masterplan.parse(table.concat({
+        '## in progress', '- 0002-active',
+        '## planned', '- 0011-coming-next',
+        '## next plans', '',
+        '## backlog', '',
+        '## done', '',
+      }, '\n'))
+      assert.equals(11, masterplan.max_plan_number(repo, parsed.sections))
     end)
   end)
 

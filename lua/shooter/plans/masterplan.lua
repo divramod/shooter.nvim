@@ -6,7 +6,7 @@
 
 local M = {}
 
-local SECTIONS = { 'in progress', 'next plans', 'backlog', 'done' }
+local SECTIONS = { 'in progress', 'planned', 'next plans', 'backlog', 'done' }
 local TIMESTAMP_TAIL = '%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)$'
 local COMMIT_PATHS = {
   'docs/plans',
@@ -161,7 +161,7 @@ function M.max_plan_number(git_root, sections)
   end
 
   sections = sections or {}
-  for _, sect in ipairs({ 'in progress', 'backlog', 'done' }) do
+  for _, sect in ipairs({ 'in progress', 'planned', 'backlog', 'done' }) do
     for _, entry in ipairs(sections[sect] or {}) do
       bump(tonumber(entry.text:match('^(%d%d%d%d)%-')))
     end
