@@ -43,40 +43,55 @@ function M.get_title(git_root)
   return string.format('# metaplan %s', repo)
 end
 
--- Classify a plan into one of the auto-managed sections based on the files
--- inside MAIN's docs/plans/<plan_name>/. Order of checks (most-committed
--- first):
+-- Classify a plan into one of the auto-managed sections based on the
+-- files inside docs/plans/<plan_name>/ in ANY worktree. A plan started
+-- in a sibling worktree (e.g. someone added spec.md there) must register
+-- as `specified` even if main hasn't seen the file yet — otherwise pf
+-- would renumber a plan that's actively being worked on. Order of
+-- checks (most-committed first):
 --   * hal.yml has `started_at:` with a non-empty value → 'in progress'
 --   * masterplan.md present → 'planned'
 --   * spec.md present → 'specified'
 --   * else → 'next plans'
 -- `## done` is sticky — only mark_done puts a plan there, fix never
 -- auto-moves plans into or out of done.
-function M.classify_plan(git_root, plan_name)
+-- Pass `worktree_roots` to skip the redundant `git worktree list` subprocess
+-- when calling in a tight loop (fix() does this — single git call per pf).
+function M.classify_plan(git_root, plan_name, worktree_roots)
   if not git_root or not plan_name or plan_name == '' then
     return 'next plans'
   end
-  local folder = git_root .. '/docs/plans/' .. plan_name
-  local hal_yml = folder .. '/hal.yml'
-  if vim.fn.filereadable(hal_yml) == 1 then
-    local f = io.open(hal_yml, 'r')
-    if f then
-      local content = f:read('*a') or ''
-      f:close()
-      -- Look for a started_at: line with a date-like value (any digit
-      -- after the colon). Tolerates indented/quoted values.
-      if content:match('[\n^]%s*started_at:%s*[%w%d]')
-          or content:match('^started_at:%s*[%w%d]') then
-        return 'in progress'
+  worktree_roots = worktree_roots or M.list_worktree_roots(git_root)
+  local has_started, has_masterplan, has_spec = false, false, false
+  for _, root in ipairs(worktree_roots) do
+    local folder = root .. '/docs/plans/' .. plan_name
+    if vim.fn.isdirectory(folder) == 1 then
+      if not has_started
+          and vim.fn.filereadable(folder .. '/hal.yml') == 1 then
+        local f = io.open(folder .. '/hal.yml', 'r')
+        if f then
+          local content = f:read('*a') or ''
+          f:close()
+          if content:match('[\n^]%s*started_at:%s*[%w%d]')
+              or content:match('^started_at:%s*[%w%d]') then
+            has_started = true
+          end
+        end
+      end
+      if not has_masterplan
+          and vim.fn.filereadable(folder .. '/masterplan.md') == 1 then
+        has_masterplan = true
+      end
+      if not has_spec
+          and vim.fn.filereadable(folder .. '/spec.md') == 1 then
+        has_spec = true
       end
     end
+    if has_started then break end  -- short-circuit
   end
-  if vim.fn.filereadable(folder .. '/masterplan.md') == 1 then
-    return 'planned'
-  end
-  if vim.fn.filereadable(folder .. '/spec.md') == 1 then
-    return 'specified'
-  end
+  if has_started then return 'in progress' end
+  if has_masterplan then return 'planned' end
+  if has_spec then return 'specified' end
   return 'next plans'
 end
 
@@ -773,17 +788,12 @@ function M.fix(git_root)
   --    keep no-folder plans where the user placed them.
   local plan_entries = {}      -- ordered list of entry tables
   local plan_index = {}        -- plan_name → index in plan_entries
-  local current_section = {}   -- plan_name (or entry.text) → original section
   local next_plans_order = {}  -- key (plan_name or text) → original index
-  local function add_plan_entry(entry, section)
+  local function add_plan_entry(entry)
     local pn = M.extract_plan_name(entry.text)
     if pn then
       if in_done[pn] or plan_index[pn] then return end
       plan_index[pn] = #plan_entries + 1
-      current_section[pn] = section
-    else
-      -- Un-numbered entries (`- foo`) flow through to render's gap-fill.
-      current_section[entry.text] = section
     end
     table.insert(plan_entries, entry)
   end
@@ -793,13 +803,13 @@ function M.fix(git_root)
   end
   for _, section_name in ipairs(AUTO_SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
-      add_plan_entry(entry, section_name)
+      add_plan_entry(entry)
     end
   end
   -- Also pick up entries from a deprecated `## backlog` section so user
-  -- data is preserved (auto-classified into the new sections).
+  -- data is preserved (will be auto-classified into the new sections).
   for _, entry in ipairs(parsed.sections['backlog'] or {}) do
-    add_plan_entry(entry, 'backlog')
+    add_plan_entry(entry)
   end
   -- Adopt orphan folders in MAIN (folders whose plan isn't already in the
   -- metaplan, and isn't in done). With auto-classification they'll land
@@ -839,24 +849,13 @@ function M.fix(git_root)
   }
   for _, entry in ipairs(plan_entries) do
     local plan_name = M.extract_plan_name(entry.text)
-    local folder = plan_name
-      and (git_root .. '/docs/plans/' .. plan_name)
-    local section
-    if plan_name and folder and vim.fn.isdirectory(folder) == 1 then
-      -- Folder exists → classify by file presence (the auto-rule).
-      section = M.classify_plan(git_root, plan_name)
-    else
-      -- No folder → respect the user's manual section choice. Un-numbered
-      -- entries and new plans (orphan adoptions) default to `## next plans`.
-      -- Plans previously in `## backlog` (now-removed) flow to `## next plans`.
-      local cur = current_section[plan_name or entry.text]
-      if cur == 'in progress' or cur == 'planned'
-          or cur == 'specified' or cur == 'next plans' then
-        section = cur
-      else
-        section = 'next plans'
-      end
-    end
+    -- classify_plan scans ALL worktrees, so a plan with spec.md in a
+    -- sibling worktree (work-in-progress there) lands in `## specified`
+    -- and is preserved from gap-fill renumbering. No folder anywhere
+    -- means classify_plan returns `next plans` (the default).
+    local section = (plan_name
+        and M.classify_plan(git_root, plan_name, worktree_roots))
+      or 'next plans'
     table.insert(classified[section], entry)
   end
 

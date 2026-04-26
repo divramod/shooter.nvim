@@ -177,7 +177,20 @@ describe('shooter.plans.metaplan', function()
       assert.truthy(out:find('- 0003-gamma', 1, true))
     end)
 
-    it('in-progress/planned/backlog/done numbers reserve too', function()
+    it('in-progress / planned / specified / done numbers reserve gap-fill', function()
+      -- Seed folders so auto-classify keeps these plans where they belong:
+      --   0001-active: hal.yml started_at → in progress (number reserved)
+      --   0003-coming-soon: masterplan.md → planned (reserved)
+      --   0005-on-hold: spec.md → specified (reserved)
+      --   0002-finished: in `## done` (sticky, reserved)
+      vim.fn.mkdir(repo .. '/docs/plans/0001-active', 'p')
+      utils.write_file(repo .. '/docs/plans/0001-active/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
+      vim.fn.mkdir(repo .. '/docs/plans/0003-coming-soon', 'p')
+      utils.write_file(repo .. '/docs/plans/0003-coming-soon/masterplan.md',
+        '# masterplan\n')
+      vim.fn.mkdir(repo .. '/docs/plans/0005-on-hold', 'p')
+      utils.write_file(repo .. '/docs/plans/0005-on-hold/spec.md', '# spec\n')
       write_plan(table.concat({
         '## in progress',
         '- 0001-active',
@@ -185,11 +198,12 @@ describe('shooter.plans.metaplan', function()
         '## planned',
         '- 0003-coming-soon',
         '',
+        '## specified',
+        '- 0005-on-hold',
+        '',
         '## next plans',
         '- alpha',
         '- beta',
-        '',
-        '- 0005-on-hold',
         '',
         '## done',
         '- 0002-finished (2026-01-01 00:00:00)',
@@ -202,7 +216,17 @@ describe('shooter.plans.metaplan', function()
       assert.truthy(out:find('- 0006-beta', 1, true))
     end)
 
-    it('does not renumber ## in progress, ## planned, or ## backlog', function()
+    it('plans in in progress / planned / specified are not renumbered', function()
+      -- Folders + appropriate marker file → auto-classify keeps them.
+      vim.fn.mkdir(repo .. '/docs/plans/0004-repo-root-cleanup', 'p')
+      utils.write_file(repo .. '/docs/plans/0004-repo-root-cleanup/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
+      vim.fn.mkdir(repo .. '/docs/plans/0006-planned-feature', 'p')
+      utils.write_file(repo .. '/docs/plans/0006-planned-feature/masterplan.md',
+        '# masterplan\n')
+      vim.fn.mkdir(repo .. '/docs/plans/0003-ios-improvements', 'p')
+      utils.write_file(repo .. '/docs/plans/0003-ios-improvements/spec.md',
+        '# spec\n')
       write_plan(table.concat({
         '## in progress',
         '- 0004-repo-root-cleanup',
@@ -210,6 +234,7 @@ describe('shooter.plans.metaplan', function()
         '## planned',
         '- 0006-planned-feature',
         '',
+        '## specified',
         '- 0003-ios-improvements',
         '',
       }, '\n'))
@@ -276,7 +301,15 @@ describe('shooter.plans.metaplan', function()
       assert.is_true(utils.file_exists(path))
     end)
 
-    it('keeps `## planned` entries in canonical position; extras move to shotfile', function()
+    it('keeps `## planned` entries in canonical position; extras move to idea', function()
+      -- Folder + hal.yml started_at → 0001-active classified as in progress.
+      vim.fn.mkdir(repo .. '/docs/plans/0001-active', 'p')
+      utils.write_file(repo .. '/docs/plans/0001-active/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
+      -- Folder + masterplan.md → 0007-future-feature classified as planned.
+      vim.fn.mkdir(repo .. '/docs/plans/0007-future-feature', 'p')
+      utils.write_file(repo .. '/docs/plans/0007-future-feature/masterplan.md',
+        '# masterplan\n')
       write_plan(table.concat({
         '## in progress',
         '- 0001-active',
@@ -296,16 +329,16 @@ describe('shooter.plans.metaplan', function()
       assert.is_nil(out:find('with notes', 1, true))
       assert.is_nil(out:find('sub-note that travels with planned entry',
         1, true))
-      -- Canonical order: in progress < planned < next plans < backlog < done
+      -- Canonical order: in progress < planned < specified < next plans < done
       local i_prog = out:find('## in progress', 1, true)
       local i_planned = out:find('## planned', 1, true)
+      local i_specified = out:find('## specified', 1, true)
       local i_next = out:find('## next plans', 1, true)
-      local i_back = out:find('## backlog', 1, true)
       local i_done = out:find('## done', 1, true)
       assert.is_true(i_prog < i_planned)
-      assert.is_true(i_planned < i_next)
-      assert.is_true(i_next < i_back)
-      assert.is_true(i_back < i_done)
+      assert.is_true(i_planned < i_specified)
+      assert.is_true(i_specified < i_next)
+      assert.is_true(i_next < i_done)
       -- next plans gap-fill: reserved {1, 7}. Smallest free is 2.
       assert.truthy(out:find('- 0002-alpha', 1, true))
       -- Planned plan's shotfile carries paren content + child note as bullets.
@@ -318,52 +351,74 @@ describe('shooter.plans.metaplan', function()
     end)
   end)
 
-  describe('fix (adopt orphan docs/plans folders)', function()
-    it('adds docs/plans folders not referenced anywhere into ## in progress', function()
-      -- Metaplan has nothing; docs/plans has three folders.
+  describe('fix (auto-classify orphan docs/plans folders)', function()
+    it('orphan folders auto-classify by file presence', function()
+      -- Three orphan folders, each with a different marker file.
       vim.fn.mkdir(repo .. '/docs/plans/0001-alpha', 'p')
+      utils.write_file(repo .. '/docs/plans/0001-alpha/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
       vim.fn.mkdir(repo .. '/docs/plans/0002-beta', 'p')
+      utils.write_file(repo .. '/docs/plans/0002-beta/masterplan.md', '# x\n')
       vim.fn.mkdir(repo .. '/docs/plans/0003-gamma', 'p')
-      write_plan('## in progress\n\n## next plans\n\n## backlog\n\n## done\n')
+      utils.write_file(repo .. '/docs/plans/0003-gamma/spec.md', '# x\n')
+      write_plan('## in progress\n\n## next plans\n\n## done\n')
       assert.is_true(metaplan.fix(repo))
       local mp = read_plan()
       local ip = mp:match('## in progress\n(.-)\n## planned')
-      assert.truthy(ip)
-      assert.truthy(ip:find('- 0001-alpha', 1, true))
-      assert.truthy(ip:find('- 0002-beta', 1, true))
-      assert.truthy(ip:find('- 0003-gamma', 1, true))
+      assert.truthy(ip and ip:find('- 0001-alpha', 1, true))
+      local pl = mp:match('## planned\n(.-)\n## specified')
+      assert.truthy(pl and pl:find('- 0002-beta', 1, true))
+      local sp = mp:match('## specified\n(.-)\n## next plans')
+      assert.truthy(sp and sp:find('- 0003-gamma', 1, true))
     end)
 
-    it('does not adopt folders already in any metaplan section', function()
-      vim.fn.mkdir(repo .. '/docs/plans/0001-already-in-progress', 'p')
-      vim.fn.mkdir(repo .. '/docs/plans/0002-already-done', 'p')
-      vim.fn.mkdir(repo .. '/docs/plans/0003-already-backlog', 'p')
-      vim.fn.mkdir(repo .. '/docs/plans/0004-already-next', 'p')
-      -- A new orphan that should get adopted.
-      vim.fn.mkdir(repo .. '/docs/plans/0005-brand-new', 'p')
-      write_plan(table.concat({
-        '## in progress', '- 0001-already-in-progress',
-        '## next plans',  '- 0004-already-next',
-        '## backlog',     '- 0003-already-backlog',
-        '## done',        '- 0002-already-done (2026-01-01 00:00:00)',
-      }, '\n'))
+    it('orphan folder with only idea.md (or empty) → next plans', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0007-lonely', 'p')
+      utils.write_file(repo .. '/docs/plans/0007-lonely/idea.md', '# x\n')
+      write_plan('## in progress\n\n## next plans\n\n## done\n')
       assert.is_true(metaplan.fix(repo))
       local mp = read_plan()
-      local ip = mp:match('## in progress\n(.-)\n## planned')
-      assert.truthy(ip:find('- 0001-already-in-progress', 1, true))
-      assert.truthy(ip:find('- 0005-brand-new', 1, true))
-      -- Originals stayed in their sections (in progress didn't absorb them).
-      assert.is_nil(ip:find('0003-already-backlog', 1, true))
-      assert.is_nil(ip:find('0002-already-done', 1, true))
-      assert.is_nil(ip:find('0004-already-next', 1, true))
+      local np = mp:match('## next plans\n(.-)\n## done')
+      assert.truthy(np and np:find('- 0007-lonely', 1, true))
     end)
 
-    it('sorts ## in progress alphabetically by full NNNN-slug text', function()
-      -- Pre-existing in-progress entries in NON-alphabetical order.
-      vim.fn.mkdir(repo .. '/docs/plans/0004-apple', 'p')
-      vim.fn.mkdir(repo .. '/docs/plans/0001-zebra', 'p')
-      -- Orphan that must land in the middle by full-text sort.
-      vim.fn.mkdir(repo .. '/docs/plans/0003-mango', 'p')
+    it('does not duplicate an existing entry', function()
+      vim.fn.mkdir(repo .. '/docs/plans/0001-foo', 'p')
+      utils.write_file(repo .. '/docs/plans/0001-foo/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
+      write_plan('## in progress\n- 0001-foo\n')
+      assert.is_true(metaplan.fix(repo))
+      local mp = read_plan()
+      local _, count = mp:gsub('0001%-foo', '')
+      assert.equals(1, count)
+    end)
+
+    it('is idempotent — second pf does not duplicate', function()
+      -- Plan with hal.yml started_at → classifies as in progress and
+      -- keeps its number across runs (no renumbering for in progress).
+      vim.fn.mkdir(repo .. '/docs/plans/0007-lonely', 'p')
+      utils.write_file(repo .. '/docs/plans/0007-lonely/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
+      write_plan('## in progress\n\n## next plans\n\n## done\n')
+      assert.is_true(metaplan.fix(repo))
+      assert.is_true(metaplan.fix(repo))
+      local mp = read_plan()
+      local _, count = mp:gsub('0007%-lonely', '')
+      assert.equals(1, count)
+    end)
+
+    it('sorts in progress / planned / specified alphabetically', function()
+      -- Each plan gets a different marker file so they classify into the
+      -- expected section. Test asserts within-section alphabetical sort.
+      for _, info in ipairs({
+        { '0004-apple', 'hal.yml',       'started_at: 2026-01-01T00:00:00Z\n' },
+        { '0001-zebra', 'hal.yml',       'started_at: 2026-01-01T00:00:00Z\n' },
+        { '0003-mango', 'hal.yml',       'started_at: 2026-01-01T00:00:00Z\n' },
+      }) do
+        vim.fn.mkdir(repo .. '/docs/plans/' .. info[1], 'p')
+        utils.write_file(
+          repo .. '/docs/plans/' .. info[1] .. '/' .. info[2], info[3])
+      end
       write_plan(table.concat({
         '## in progress',
         '- 0004-apple',
@@ -372,64 +427,27 @@ describe('shooter.plans.metaplan', function()
       assert.is_true(metaplan.fix(repo))
       local mp = read_plan()
       local ip = mp:match('## in progress\n(.-)\n## planned')
-      -- Full-text (number-first) sort: 0001-zebra → 0003-mango → 0004-apple.
       local i_zebra = ip:find('0001-zebra', 1, true)
       local i_mango = ip:find('0003-mango', 1, true)
       local i_apple = ip:find('0004-apple', 1, true)
-      assert.is_truthy(i_zebra)
-      assert.is_truthy(i_mango)
-      assert.is_truthy(i_apple)
       assert.is_true(i_zebra < i_mango)
       assert.is_true(i_mango < i_apple)
     end)
-
-    it('is idempotent — second pf does not duplicate the adopted entry', function()
-      vim.fn.mkdir(repo .. '/docs/plans/0007-lonely', 'p')
-      write_plan('## in progress\n\n## next plans\n\n## backlog\n\n## done\n')
-      assert.is_true(metaplan.fix(repo))
-      assert.is_true(metaplan.fix(repo))
-      local mp = read_plan()
-      local _, count = mp:gsub('0007%-lonely', '')
-      assert.equals(1, count)
-    end)
   end)
 
-  describe('fix (idea.md sync + folder rename)', function()
+  describe('fix (folder rename + classification)', function()
     local plans_dir = repo .. '/docs/plans'
 
-    it('creates idea.md stub for every referenced plan', function()
-      write_plan(table.concat({
-        '## in progress',
-        '- 0001-alpha',
-        '',
-        '## next plans',
-        '- beta',
-        '',
-        '- 0003-gamma',
-        '',
-        '## done',
-        '- 0002-delta (2026-01-01 00:00:00)',
-        '',
-      }, '\n'))
-      assert.is_true(metaplan.fix(repo))
-      assert.is_true(utils.file_exists(plans_dir .. '/0001-alpha/idea.md'))
-      -- Reserved {1,2,3}. beta gap-fills to smallest free (4).
-      assert.is_true(utils.file_exists(plans_dir .. '/0004-beta/idea.md'))
-      assert.is_true(utils.file_exists(plans_dir .. '/0003-gamma/idea.md'))
-      assert.is_true(utils.file_exists(plans_dir .. '/0002-delta/idea.md'))
-      -- New files carry the canonical title (docs/plans/<plan>/idea).
-      local content = utils.read_file(plans_dir .. '/0004-beta/idea.md')
-      assert.truthy(content:find('# docs/plans/0004%-beta/idea'))
-    end)
-
     it('renames a drifted plan FOLDER when next plans is renumbered', function()
-      -- Plan folder lives at 0009-merge-hal-skills. Folder 0004-seeded
-      -- reserves 4 → gap-fill picks 1 for the next-plans entry, so the
-      -- folder must be renamed 0009-* → 0001-*.
+      -- Plan folder lives at 0009-merge-hal-skills with only idea.md →
+      -- classifies as `## next plans` (renumberable). Folder 0004-seeded
+      -- with spec.md reserves 4 → gap-fill picks 1 for the next-plans
+      -- entry, so the folder is renamed 0009-* → 0001-*.
       vim.fn.mkdir(plans_dir .. '/0009-merge-hal-skills', 'p')
       utils.write_file(plans_dir .. '/0009-merge-hal-skills/idea.md',
         '# docs/plans/0009-merge-hal-skills/idea\n\nbody\n')
       vim.fn.mkdir(plans_dir .. '/0004-seeded', 'p')
+      utils.write_file(plans_dir .. '/0004-seeded/spec.md', '# spec\n')
       write_plan('## next plans\n- 0009-merge-hal-skills\n')
 
       assert.is_true(metaplan.fix(repo))
@@ -441,24 +459,30 @@ describe('shooter.plans.metaplan', function()
       assert.truthy(content:find('body', 1, true))
     end)
 
-    it('LOCKED plan (folder has spec.md) is NOT renumbered', function()
-      -- 0009-foo has spec.md → locked. Folder 0004-seeded reserves 4. The
-      -- locked entry keeps its 0009 even though gap-fill would otherwise
-      -- assign 0001.
+    it('plan with spec.md auto-moves to ## specified (not renumbered)', function()
+      -- 0009-foo has spec.md → classifies as `specified`, not next plans.
+      -- Auto-classification supersedes the old "spec.md lock" mechanism:
+      -- specified plans never go through gap-fill, so their number is
+      -- effectively stable.
       vim.fn.mkdir(plans_dir .. '/0009-foo', 'p')
       utils.write_file(plans_dir .. '/0009-foo/spec.md', '# spec\n')
       vim.fn.mkdir(plans_dir .. '/0004-seeded', 'p')
+      utils.write_file(plans_dir .. '/0004-seeded/spec.md', '# spec\n')
       write_plan('## next plans\n- 0009-foo\n- bar\n')
       assert.is_true(metaplan.fix(repo))
       local mp = read_plan()
-      -- 0009-foo stays locked at 0009; bar gap-fills (reserved {4, 9} → 1).
-      assert.truthy(mp:find('- 0009-foo', 1, true))
+      -- 0009-foo lands in ## specified at 0009; bar (no folder) gap-fills
+      -- (reserved {4, 9} → 1).
+      local sp = mp:match('## specified\n(.-)\n## next plans')
+      assert.truthy(sp and sp:find('- 0009-foo', 1, true))
       assert.truthy(mp:find('- 0001-bar', 1, true))
       assert.is_true(utils.dir_exists(plans_dir .. '/0009-foo'))
     end)
 
     it('leaves an already-correct idea.md in place', function()
       vim.fn.mkdir(plans_dir .. '/0001-alpha', 'p')
+      utils.write_file(plans_dir .. '/0001-alpha/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
       local p = plans_dir .. '/0001-alpha/idea.md'
       utils.write_file(p, '# docs/plans/0001-alpha/idea\n\nnotes\n')
       write_plan('## in progress\n- 0001-alpha\n')
@@ -496,7 +520,6 @@ describe('shooter.plans.metaplan', function()
         '## next plans',
         '- 0005-merge',
         '',
-        '',
         '## done',
         '- 0001-old (2026-01-01 00:00:00)',
         '',
@@ -522,8 +545,8 @@ describe('shooter.plans.metaplan', function()
 
     it('refuses to re-mark an entry already in ## done', function()
       setup_basic()
-      -- Line 12 is the existing done entry
-      local ok, err = metaplan.mark_done(repo, 12)
+      -- Line 11 is the existing done entry (`- 0001-old (...)`)
+      local ok, err = metaplan.mark_done(repo, 11)
       assert.is_false(ok)
       assert.truthy(err:find('already in done'))
     end)
