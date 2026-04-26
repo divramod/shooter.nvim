@@ -83,7 +83,33 @@ The full `luacov.report.out` from baseline run is committed at `docs/plans/0001-
 
 ## LOC Inventory
 
-> Filled in by Phase 000 T005. Lists every file > 350 LOC with `kind: split-candidate | exception`.
+**Source:** `find lua -name '*.lua' -exec wc -l {} +` (Phase 000 T005).
+
+**Soft cap:** 350 LOC. Files over the cap must be split unless listed in `ALLOWED_LARGE_FILES:` below with rationale.
+
+| LOC  | path                                          | kind             | phase | notes                                                              |
+|------|-----------------------------------------------|------------------|-------|--------------------------------------------------------------------|
+| 1584 | lua/shooter/plans/metaplan.lua                | split-candidate  | 001   | top offender — clear seams (parse/render/categories/numbering/rename) |
+| 1190 | lua/shooter/commands.lua                      | split-candidate? | 002   | dispatcher — Phase 002 T006 decides split vs. exception            |
+|  795 | lua/shooter/core/shot_actions.lua             | split-candidate  | 002   | per action class                                                   |
+|  620 | lua/shooter/telescope/pickers.lua             | split-candidate  | 003   | per picker (shotfile/plan/link/project/cli)                        |
+|  529 | lua/shooter/telescope/helpers.lua             | split-candidate  | 003   | sorter/filter/format/icon — also coverage anchor (0.71% baseline)  |
+|  513 | lua/shooter/syntax.lua                        | split-candidate  | 004   | per syntax group                                                   |
+|  456 | lua/shooter/core/files.lua                    | split-candidate  | 002   | git-detect / path-ops / repo-walk                                  |
+|  416 | lua/shooter/core/ext_config.lua               | split-candidate  | 002   | parse / validate / merge                                           |
+|  378 | lua/shooter/tools/git_worktree.lua            | split-candidate  | 004   | list / create / delete                                             |
+|  377 | lua/shooter/tmux/toggle_panes.lua             | split-candidate  | 004   | layout / state / actions                                           |
+|  369 | lua/shooter/health.lua                        | split-candidate  | 004   | per-check section (tmux/claude/hal/shotfile)                       |
+
+Total: **11 split-candidates**. No exceptions yet — `commands.lua`'s decision is deferred to Phase 002 T006 once the file is read.
+
+### Just-under-cap (review-only, no split planned)
+
+- `lua/shooter/help.lua` — 314 LOC
+- `lua/shooter/analytics/data.lua` — 313 LOC
+- `lua/shooter/core/shotfile_fix.lua` — 312 LOC
+
+These are within the cap but close. If a per-area phase finds a clean seam, splitting is welcome but not required.
 
 ## ALLOWED_LARGE_FILES
 

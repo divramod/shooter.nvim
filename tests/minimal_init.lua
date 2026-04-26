@@ -8,6 +8,7 @@ vim.cmd([[set packpath=/tmp/nvim/site]])
 -- Package root for installing test dependencies
 local package_root = '/tmp/nvim/site/pack'
 local plenary_path = package_root .. '/packer/start/plenary.nvim'
+local telescope_path = package_root .. '/packer/start/telescope.nvim'
 local luacov_path = package_root .. '/packer/start/luacov'
 
 -- Install plenary if not present
@@ -17,6 +18,16 @@ if vim.fn.isdirectory(plenary_path) == 0 then
     'git', 'clone', '--depth=1',
     'https://github.com/nvim-lua/plenary.nvim',
     plenary_path,
+  })
+end
+
+-- Install telescope if not present (hard runtime dep of shooter)
+if vim.fn.isdirectory(telescope_path) == 0 then
+  print('Installing telescope.nvim for tests...')
+  vim.fn.system({
+    'git', 'clone', '--depth=1',
+    'https://github.com/nvim-telescope/telescope.nvim',
+    telescope_path,
   })
 end
 
@@ -50,8 +61,9 @@ else
   print('warning: luacov failed to load; coverage will not be recorded: ' .. tostring(cov_err))
 end
 
--- Add plenary to runtime
+-- Add plenary + telescope to runtime
 vim.cmd([[runtime! plugin/plenary.vim]])
+vim.opt.runtimepath:append(telescope_path)
 
 -- Add shooter.nvim to runtime (current directory)
 vim.cmd([[set rtp+=.]])

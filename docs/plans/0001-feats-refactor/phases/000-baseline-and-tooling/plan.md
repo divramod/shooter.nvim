@@ -79,27 +79,27 @@ Foundation phase. No source-code logic changes. Produces the artifacts the per-a
     - [ ] reviewed
     - [ ] shipped
 
-- [ ] **T005** — LOC inventory and exception list
+- [x] **T005** — LOC inventory and exception list
   - **Acceptance:** `baseline.md § LOC Inventory` lists every file > 350 LOC with kind (`split-candidate` or `exception`). Exceptions populate `ALLOWED_LARGE_FILES:` with rationale.
   - **Verify:** `find lua -name '*.lua' -exec wc -l {} + | awk '$1 > 350 && $2 != "total" {print $2}' | while read f; do grep -q "$f" docs/plans/0001-feats-refactor/baseline.md || exit 1; done`
   - **Files:** `docs/plans/0001-feats-refactor/baseline.md`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T006** — Smoke-require enumerator
+- [x] **T006** — Smoke-require enumerator
   - **Acceptance:** `scripts/smoke_require.lua` enumerates every `lua/shooter/**/*.lua` as a require path and asserts each loads on a fresh Neovim.
   - **Verify:** `nvim --headless -u tests/minimal_init.lua -c "luafile docs/plans/0001-feats-refactor/scripts/smoke_require.lua" -c "qa!" 2>&1 | grep -E "^OK |^FAIL " | tee /tmp/smoke.log; ! grep -q "^FAIL " /tmp/smoke.log`
   - **Files:** `docs/plans/0001-feats-refactor/scripts/smoke_require.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 ## Risks
 
