@@ -326,6 +326,13 @@ function M.setup()
         vim.bo[ev.buf].autoread = true
       elseif files_mod.is_masterplan(filepath) then
         files_mod.track_last_shotfile(filepath)
+        -- <CR> on a masterplan plan line opens (or creates) the plan's
+        -- shotfile under docs/shotfiles/docs/plans/, same as <space>pe.
+        vim.keymap.set('n', '<CR>', '<Cmd>HalShooterPlanEdit<CR>', {
+          buffer = ev.buf,
+          silent = true,
+          desc = 'Open plan shotfile (create if missing)',
+        })
       end
     end,
   })

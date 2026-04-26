@@ -144,7 +144,9 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   ps        Open spec.md          Open docs/plans/<NNNN-slug>/spec.md
   pe / e    Edit plan shotfile    Open/rename/create the plan's shotfile
                                   under docs/shotfiles/docs/plans/
-                                  (e is a top-level alias for pe)
+                                  (e is a top-level alias for pe; pressing
+                                  <CR> on a plan line in masterplan.md does
+                                  the same)
   pn        New plan              Prompt for a title, create
                                   docs/plans/<NNNN-slug>/plan.md at the next
                                   free number (max known plan number + 1).
