@@ -1,0 +1,9 @@
+automode: running
+started_at: "2026-04-26"
+tier: large
+tier_source: deterministic
+cadence: phase
+retry_budget: 3
+on_retry_exhaustion: fail
+auto_downgrade: true
+last_action: "/hal:automode started; phase 000 T001 in progress"
