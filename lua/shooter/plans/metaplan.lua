@@ -41,9 +41,11 @@ end
 -- that file marks the plan as "an agent has started working on it" and
 -- freezes its number from gap-fill / folder rename. Scans ALL worktrees
 -- because work-in-progress in any sibling worktree must be respected.
-function M.is_plan_locked(git_root, plan_name)
+-- Pass an explicit `worktree_roots` list to avoid the per-call
+-- `git worktree list` subprocess when calling in a loop (fix() does this).
+function M.is_plan_locked(git_root, plan_name, worktree_roots)
   if not git_root or not plan_name or plan_name == '' then return false end
-  for _, root in ipairs(M.list_worktree_roots(git_root)) do
+  for _, root in ipairs(worktree_roots or M.list_worktree_roots(git_root)) do
     if vim.fn.filereadable(root .. '/docs/plans/'
         .. plan_name .. '/spec.md') == 1 then
       return true
@@ -324,16 +326,20 @@ end
 --     sections
 --   * NNNN entries from `## next plans` whose folder contains spec.md
 --     (locked — agents have started; do not renumber)
-function M.collect_used_numbers(git_root, sections)
+-- Pass `worktree_roots` to avoid the redundant `git worktree list` subprocess
+-- when calling in a tight loop (fix() does this — single git call per pf).
+function M.collect_used_numbers(git_root, sections, worktree_roots)
   local used = {}
   local function add(n) if n and n > 0 then used[n] = true end end
+
+  worktree_roots = worktree_roots or M.list_worktree_roots(git_root)
 
   -- Partition `## next plans` entries: locked (spec.md present) vs tentative.
   local tentative_set = {}
   for _, entry in ipairs((sections or {})['next plans'] or {}) do
     local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
     if pn then
-      if M.is_plan_locked(git_root, pn) then
+      if M.is_plan_locked(git_root, pn, worktree_roots) then
         add(tonumber(pn:match('^(%d%d%d%d)%-')))
       else
         tentative_set[pn] = true
@@ -341,7 +347,7 @@ function M.collect_used_numbers(git_root, sections)
     end
   end
 
-  for _, root in ipairs(M.list_worktree_roots(git_root)) do
+  for _, root in ipairs(worktree_roots) do
     local plans_dir = root .. '/docs/plans'
     if vim.fn.isdirectory(plans_dir) == 1 then
       for _, name in ipairs(vim.fn.readdir(plans_dir)) do
@@ -727,7 +733,9 @@ end
 -- idea.md / masterplan.md to match. Skipped when the new folder already
 -- exists in MAIN. Each worktree gets its own commit. Returns ok_bool, msg
 -- (msg lists cascaded WTs and any skipped ones with reasons).
-local function rename_plan_folder(git_root, old_name, new_name)
+-- Pass `worktree_roots` to skip the redundant `git worktree list` subprocess
+-- when calling in a tight loop (fix() does this — single git call per pf).
+local function rename_plan_folder(git_root, old_name, new_name, worktree_roots)
   if old_name == new_name then return true, 'unchanged' end
   local plans_rel = 'docs/plans'
   local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
@@ -782,7 +790,7 @@ local function rename_plan_folder(git_root, old_name, new_name)
 
   -- 2. Cascade to other worktrees. Skip dirty WTs with a warning.
   local cascaded, skipped = {}, {}
-  for _, wt_root in ipairs(M.list_worktree_roots(git_root)) do
+  for _, wt_root in ipairs(worktree_roots or M.list_worktree_roots(git_root)) do
     local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
     if wt_realpath ~= main_realpath
         and vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. old_name) == 1 then
@@ -824,6 +832,14 @@ function M.fix(git_root)
   if not git_root or git_root == '' then return false, 'no git root' end
   local path = M.get_path(git_root)
   vim.fn.mkdir(git_root .. '/docs/plans', 'p')
+
+  -- Single source of truth for worktree roots within this fix() invocation:
+  -- compute once and pass down to is_plan_locked, collect_used_numbers, and
+  -- the folder-rename cascade. Without this, hal's 4-worktree × 40-next-plans
+  -- workload triggers ~80 redundant `git worktree list` subprocess calls.
+  local utils = require('shooter.utils')
+  utils.echo('pf: scanning worktrees…')
+  local worktree_roots = M.list_worktree_roots(git_root)
 
   local bufnr = find_loaded_buf(path)
   local content
@@ -891,13 +907,56 @@ function M.fix(git_root)
   end
 
   -- Build lock predicate: a `## next plans` entry whose folder has spec.md
-  -- is locked and won't be renumbered.
+  -- (in any worktree) is locked and won't be renumbered. Memoize per plan
+  -- so collect_used_numbers + render don't re-scan the worktrees twice each.
+  local lock_cache = {}
+  local function is_locked_cached(plan_name)
+    if lock_cache[plan_name] == nil then
+      lock_cache[plan_name] = M.is_plan_locked(git_root, plan_name,
+        worktree_roots)
+    end
+    return lock_cache[plan_name]
+  end
   local function is_locked(entry)
     local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-    return pn and M.is_plan_locked(git_root, pn) or false
+    return pn and is_locked_cached(pn) or false
   end
 
-  local used = M.collect_used_numbers(git_root, parsed.sections)
+  utils.echo('pf: computing used numbers…')
+  -- Inline collect_used_numbers logic so we share lock_cache with render.
+  local used = {}
+  do
+    local function add(n) if n and n > 0 then used[n] = true end end
+    local tentative_set = {}
+    for _, entry in ipairs(parsed.sections['next plans'] or {}) do
+      local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+      if pn then
+        if is_locked_cached(pn) then
+          add(tonumber(pn:match('^(%d%d%d%d)%-')))
+        else
+          tentative_set[pn] = true
+        end
+      end
+    end
+    for _, root in ipairs(worktree_roots) do
+      local plans_dir = root .. '/docs/plans'
+      if vim.fn.isdirectory(plans_dir) == 1 then
+        for _, name in ipairs(vim.fn.readdir(plans_dir)) do
+          local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+          if pname and not tentative_set[pname] then
+            add(tonumber(pname:match('^(%d%d%d%d)%-')))
+          end
+        end
+      end
+    end
+    for _, sect in ipairs({ 'in progress', 'planned', 'backlog', 'done' }) do
+      for _, entry in ipairs(parsed.sections[sect] or {}) do
+        add(tonumber(entry.text:match('^(%d%d%d%d)%-')))
+      end
+    end
+  end
+
+  utils.echo('pf: rendering metaplan…')
   local new = M.render(parsed, M.get_title(git_root),
     { used_numbers = used, is_locked = is_locked })
 
@@ -910,18 +969,26 @@ function M.fix(git_root)
   end
 
   -- Rename plan folders for renumbered (unlocked) `## next plans` entries.
-  local warnings = {}
+  local renames = {}
   for i, entry in ipairs(parsed.sections['next plans'] or {}) do
     local pre = next_pre[i]
     local post = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
     if pre and post and pre ~= post then
-      local ok, err = rename_plan_folder(git_root, pre, post)
-      if not ok and err then table.insert(warnings, err) end
+      table.insert(renames, { pre = pre, post = post })
     end
+  end
+  if #renames > 0 then
+    utils.echo('pf: renaming ' .. #renames .. ' plan folder(s)…')
+  end
+  local warnings = {}
+  for _, r in ipairs(renames) do
+    local ok, err = rename_plan_folder(git_root, r.pre, r.post, worktree_roots)
+    if not ok and err then table.insert(warnings, err) end
   end
 
   -- Make sure every referenced plan has a docs/plans/<plan>/idea.md (creates
   -- folder + title-only stub when missing).
+  utils.echo('pf: syncing idea.md stubs…')
   for _, section_name in ipairs(SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
       local plan_name = M.extract_plan_name(entry.text)
@@ -930,6 +997,7 @@ function M.fix(git_root)
       end
     end
   end
+  utils.echo('pf: done')
 
   if #warnings > 0 then
     return true, 'warnings: ' .. table.concat(warnings, '; ')
