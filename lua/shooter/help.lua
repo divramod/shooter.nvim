@@ -129,11 +129,15 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
                                   gap-fill `## next plans` (each entry gets
                                   the smallest unused NNNN; folders in any
                                   worktree count as committed), slugify
-                                  pre-paren names, preserve (description)
-                                  suffix and indented child notes, and
-                                  reconcile every plan's shotfile in
-                                  docs/shotfiles/docs/plans/ (rename on drift,
-                                  create if missing, adapt title to new name).
+                                  pre-paren names, MOVE any (description) and
+                                  indented child notes from plan entries into
+                                  the matching plan shotfile under `## shot N`
+                                  (appends to the open shot if any, else
+                                  creates a new shot above the topmost
+                                  shooted one), and reconcile every plan's
+                                  shotfile in docs/shotfiles/docs/plans/
+                                  (rename on drift, create if missing, adapt
+                                  title to new name).
   pd        Mark done             Move plan under cursor to the top of
                                   `## done` with a timestamp, carrying its
                                   indented child notes along.

@@ -128,6 +128,69 @@ local function render_entry(entry, out)
   end
 end
 
+-- True iff `s` is a `(YYYY-MM-DD HH:MM:SS)` timestamp paren — used to skip
+-- the metadata timestamp on `## done` entries when extracting the user's
+-- description-paren content for plan-shotfile injection.
+local function is_timestamp_paren(s)
+  return type(s) == 'string'
+    and s:match('^%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)$') ~= nil
+end
+
+-- Extract the FIRST description-paren `(...)` group from `text`, ignoring any
+-- terminal `(YYYY-MM-DD HH:MM:SS)` timestamp. Returns the inner text (no
+-- surrounding parens) or nil. The remainder of the entry (with the matched
+-- paren removed, but the timestamp tail preserved) is returned alongside.
+local function extract_description_paren(text)
+  if type(text) ~= 'string' or text == '' then return nil, text end
+  -- Walk paren groups left-to-right, picking the first non-timestamp.
+  local cursor, before = 1, ''
+  while cursor <= #text do
+    local s, e = text:find('%b()', cursor)
+    if not s then break end
+    local paren = text:sub(s, e)
+    if is_timestamp_paren(paren) then
+      cursor = e + 1
+    else
+      local inner = paren:sub(2, -2):match('^%s*(.-)%s*$')
+      if not inner or inner == '' then return nil, text end
+      before = text:sub(1, s - 1):match('^(.-)%s*$') or ''
+      local after = text:sub(e + 1):match('^%s*(.*)$') or ''
+      local cleaned = before
+      if after ~= '' then
+        cleaned = cleaned == '' and after or (cleaned .. ' ' .. after)
+      end
+      return inner, cleaned
+    end
+  end
+  return nil, text
+end
+
+-- Convert child-note lines from a parsed masterplan entry into bullet lines
+-- suitable for inclusion under a `## shot N` heading. Drops blank lines and
+-- de-indents one level (2 spaces) so the top-level notes become top-level
+-- bullets while sub-notes stay nested. Returns a list of strings.
+local function dedent_child_notes(children)
+  local out = {}
+  for _, line in ipairs(children or {}) do
+    if line:match('%S') then
+      local stripped = line:gsub('^  ', '', 1)
+      table.insert(out, stripped)
+    end
+  end
+  return out
+end
+
+-- Extract description-paren content + child notes from a parsed entry. Returns
+-- (paren_inner, note_lines, cleaned_text, had_extras_bool). When `had_extras`
+-- is false the entry has nothing to move into a plan shotfile.
+function M.extract_extras(entry)
+  if type(entry) ~= 'table' then return nil, {}, '', false end
+  local paren, cleaned = extract_description_paren(entry.text or '')
+  local notes = dedent_child_notes(entry.children)
+  local had = (paren ~= nil) or (#notes > 0)
+  return paren, notes, cleaned or entry.text, had
+end
+
 -- Names currently listed in `## next plans` (set of "NNNN-slug" strings).
 -- Used to exclude docs/plans folders that correspond to not-yet-started plans
 -- from the max-number calculation.
@@ -357,6 +420,123 @@ function M.ensure_plan_shotfile(git_root, plan_name)
   return true, 'created'
 end
 
+local SHOT_HEADER = '^##%s+x?%s*shot%s+(%d+)'
+local OPEN_SHOT_HEADER = '^##%s+shot%s+(%d+)'
+
+-- Inject the user's description-paren + child notes for `plan_name` into its
+-- plan shotfile. If the topmost shot in the file is open (`## shot N` without
+-- `x`/timestamp), append the bullet lines at the end of that shot's body.
+-- Otherwise insert a new `## shot K` section (K = max existing shot # + 1, or
+-- 1) above the topmost existing shot — or at the top of the body when the
+-- file has no shots yet. No-op when both `paren_text` is nil/empty and
+-- `note_lines` is empty. Returns ok_bool.
+function M.apply_extras_to_shotfile(git_root, plan_name, paren_text, note_lines)
+  if not git_root or git_root == '' then return false end
+  if not plan_name or plan_name == '' then return false end
+  note_lines = note_lines or {}
+  local has_paren = paren_text and paren_text ~= ''
+  if not has_paren and #note_lines == 0 then return true end
+
+  -- Make sure the shotfile exists (handles drift/rename too).
+  local ok = M.ensure_plan_shotfile(git_root, plan_name)
+  if not ok then return false end
+
+  local path = git_root .. '/docs/shotfiles/docs/plans/'
+    .. plan_name .. '.md'
+  local bufnr = find_loaded_buf(path)
+  local lines
+  if bufnr then
+    lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  else
+    lines = vim.split(read_file(path) or '', '\n', { plain = true })
+  end
+
+  -- Locate the topmost shot header and decide append-vs-insert.
+  local first_shot_line, first_shot_open
+  local max_n = 0
+  for i, line in ipairs(lines) do
+    local n = line:match(SHOT_HEADER)
+    if n then
+      n = tonumber(n)
+      if n and n > max_n then max_n = n end
+      if not first_shot_line then
+        first_shot_line = i
+        first_shot_open = line:match(OPEN_SHOT_HEADER) ~= nil
+      end
+    end
+  end
+
+  local bullets = {}
+  if has_paren then table.insert(bullets, '- ' .. paren_text) end
+  for _, n in ipairs(note_lines) do
+    -- note already starts with `- ` (top-level bullet) since dedent_child_notes
+    -- stripped only one level; otherwise prefix with bullet for safety.
+    if n:match('^%-%s+') or n:match('^%s+%-%s+') then
+      table.insert(bullets, n)
+    else
+      table.insert(bullets, '- ' .. n)
+    end
+  end
+
+  if first_shot_line and first_shot_open then
+    -- Append at end of the open shot's body.
+    local shot_end = #lines
+    for j = first_shot_line + 1, #lines do
+      if lines[j]:match(SHOT_HEADER) then shot_end = j - 1; break end
+    end
+    while shot_end > first_shot_line and lines[shot_end] == '' do
+      shot_end = shot_end - 1
+    end
+    for k = #bullets, 1, -1 do
+      table.insert(lines, shot_end + 1, bullets[k])
+    end
+  else
+    -- Insert a new shot section.
+    local new_n = max_n + 1
+    local block = { '## shot ' .. new_n }
+    for _, b in ipairs(bullets) do table.insert(block, b) end
+    table.insert(block, '')
+
+    if first_shot_line then
+      -- Insert above the topmost (shooted) shot, with a blank separator.
+      local insert_at = first_shot_line
+      while insert_at > 1 and lines[insert_at - 1] == '' do
+        insert_at = insert_at - 1
+      end
+      for k = #block, 1, -1 do
+        table.insert(lines, insert_at, block[k])
+      end
+      -- Ensure exactly one blank line between the new block and the next shot.
+      if lines[insert_at + #block] ~= '' then
+        table.insert(lines, insert_at + #block, '')
+      end
+    else
+      -- No shots yet: append after the title (and any leading blanks).
+      local insert_at = 1
+      if lines[1] and lines[1]:match('^#%s') then
+        insert_at = 2
+        while lines[insert_at] == '' do insert_at = insert_at + 1 end
+      end
+      -- Make sure there's a blank line separating title from the new shot.
+      if insert_at > 1 and lines[insert_at - 1] ~= '' then
+        table.insert(lines, insert_at, '')
+        insert_at = insert_at + 1
+      end
+      for k = #block, 1, -1 do
+        table.insert(lines, insert_at, block[k])
+      end
+    end
+  end
+
+  if bufnr then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+  else
+    write_file(path, table.concat(lines, '\n'))
+  end
+  return true
+end
+
 -- Append `- <plan_name>` under `## next plans` in masterplan.md. If the
 -- masterplan file or the section is missing, it's created on the fly. No-op
 -- when the plan is already listed. Reads/writes the buffer in-place when one
@@ -490,6 +670,23 @@ function M.fix(git_root)
     table.sort(parsed.sections['in progress'], function(a, b)
       return a.text < b.text
     end)
+  end
+
+  -- Move any description-paren content + indented child notes from each plan
+  -- entry into the corresponding plan shotfile (under `## shot N`), then
+  -- mutate the parsed entry in place so render writes the cleaned masterplan.
+  for _, section_name in ipairs(SECTIONS) do
+    for _, entry in ipairs(parsed.sections[section_name] or {}) do
+      local plan_name = M.extract_plan_name(entry.text)
+      if plan_name then
+        local paren, notes, cleaned, had = M.extract_extras(entry)
+        if had then
+          M.apply_extras_to_shotfile(git_root, plan_name, paren, notes)
+          entry.text = cleaned
+          entry.children = {}
+        end
+      end
+    end
   end
 
   local used = M.collect_used_numbers(git_root, parsed.sections)

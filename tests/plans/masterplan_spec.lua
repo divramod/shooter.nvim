@@ -83,8 +83,9 @@ describe('shooter.plans.masterplan', function()
         '- 0006-dev (worktrees, databases, common tools)', 1, true))
     end)
 
-    it('preserves (description) suffix on already-numbered entries', function()
+    it('strips (description) suffix into the plan shotfile, gap-fills the entry', function()
       -- Folder 0024-seeded reserves 24; entry gap-fills to smallest free (1).
+      -- The (agent.md, ...) description is moved to the plan shotfile.
       vim.fn.mkdir(repo .. '/docs/plans/0024-seeded', 'p')
       write_plan(table.concat({
         '## next plans',
@@ -93,8 +94,14 @@ describe('shooter.plans.masterplan', function()
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
-      assert.truthy(out:find(
-        '- 0001-context (agent.md, memory, decisions, instructions)',
+      -- Masterplan entry no longer carries the paren content.
+      assert.truthy(out:find('- 0001-context', 1, true))
+      assert.is_nil(out:find('agent.md', 1, true))
+      -- Plan shotfile gained a `## shot 1` with the paren content as a bullet.
+      local shot = utils.read_file(
+        repo .. '/docs/shotfiles/docs/plans/0001-context.md')
+      assert.truthy(shot:find('## shot 1', 1, true))
+      assert.truthy(shot:find('- agent.md, memory, decisions, instructions',
         1, true))
     end)
 
@@ -250,7 +257,7 @@ describe('shooter.plans.masterplan', function()
       assert.is_true(utils.file_exists(path))
     end)
 
-    it('preserves `## planned` entries verbatim and in canonical position', function()
+    it('keeps `## planned` entries in canonical position; extras move to shotfile', function()
       write_plan(table.concat({
         '## in progress',
         '- 0001-active',
@@ -265,9 +272,11 @@ describe('shooter.plans.masterplan', function()
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
-      -- Planned entry kept verbatim, including paren and child note
-      assert.truthy(out:find('- 0007-future-feature (with notes)', 1, true))
-      assert.truthy(out:find('  - sub-note that travels with planned entry', 1, true))
+      -- Planned entry kept (number unchanged) but paren + child notes moved out
+      assert.truthy(out:find('- 0007-future-feature', 1, true))
+      assert.is_nil(out:find('with notes', 1, true))
+      assert.is_nil(out:find('sub-note that travels with planned entry',
+        1, true))
       -- Canonical order: in progress < planned < next plans < backlog < done
       local i_prog = out:find('## in progress', 1, true)
       local i_planned = out:find('## planned', 1, true)
@@ -280,6 +289,13 @@ describe('shooter.plans.masterplan', function()
       assert.is_true(i_back < i_done)
       -- next plans gap-fill: reserved {1, 7}. Smallest free is 2.
       assert.truthy(out:find('- 0002-alpha', 1, true))
+      -- Planned plan's shotfile carries paren content + child note as bullets.
+      local shot = utils.read_file(
+        repo .. '/docs/shotfiles/docs/plans/0007-future-feature.md')
+      assert.truthy(shot:find('## shot 1', 1, true))
+      assert.truthy(shot:find('- with notes', 1, true))
+      assert.truthy(shot:find(
+        '- sub-note that travels with planned entry', 1, true))
     end)
   end)
 
@@ -880,6 +896,249 @@ describe('shooter.plans.masterplan', function()
       os.execute('rm -rf ' .. nogit .. ' && mkdir -p ' .. nogit)
       assert.same({ nogit }, masterplan.list_worktree_roots(nogit))
       os.execute('rm -rf ' .. nogit)
+    end)
+  end)
+
+  describe('extract_extras', function()
+    it('returns nil paren and empty notes when entry has neither', function()
+      local p, n, c, had = masterplan.extract_extras({
+        text = '0001-foo', children = {} })
+      assert.is_nil(p)
+      assert.same({}, n)
+      assert.equals('0001-foo', c)
+      assert.is_false(had)
+    end)
+
+    it('extracts paren content and dedents one level of children', function()
+      local p, n, c, had = masterplan.extract_extras({
+        text = '0001-foo (some desc)',
+        children = {
+          '  - first note',
+          '    - nested kept indented',
+          '  - second note',
+        },
+      })
+      assert.equals('some desc', p)
+      assert.same({ '- first note', '  - nested kept indented',
+        '- second note' }, n)
+      assert.equals('0001-foo', c)
+      assert.is_true(had)
+    end)
+
+    it('preserves a trailing (timestamp) on done entries', function()
+      local p, _, c = masterplan.extract_extras({
+        text = '0001-foo (some desc) (2026-04-23 06:12:00)',
+        children = {} })
+      assert.equals('some desc', p)
+      assert.equals('0001-foo (2026-04-23 06:12:00)', c)
+    end)
+
+    it('does NOT extract a sole timestamp paren (treats as metadata)', function()
+      local p, _, c, had = masterplan.extract_extras({
+        text = '0001-foo (2026-04-23 06:12:00)',
+        children = {} })
+      assert.is_nil(p)
+      assert.equals('0001-foo (2026-04-23 06:12:00)', c)
+      assert.is_false(had)
+    end)
+
+    it('extracts only child notes when there is no paren', function()
+      local p, n, c, had = masterplan.extract_extras({
+        text = '0002-bar',
+        children = { '  - just a note' },
+      })
+      assert.is_nil(p)
+      assert.same({ '- just a note' }, n)
+      assert.equals('0002-bar', c)
+      assert.is_true(had)
+    end)
+  end)
+
+  describe('apply_extras_to_shotfile', function()
+    local plan = '0042-feature-parity'
+    local shot_path = repo .. '/docs/shotfiles/docs/plans/' .. plan .. '.md'
+
+    local function read_shot()
+      return utils.read_file(shot_path) or ''
+    end
+
+    it('creates ## shot 1 when the file has only a title', function()
+      assert.is_true(masterplan.apply_extras_to_shotfile(repo, plan,
+        'somethin here', { '- every feature implemented in api tui swift kotlin next' }))
+      local body = read_shot()
+      assert.truthy(body:find('## shot 1', 1, true))
+      assert.truthy(body:find('- somethin here', 1, true))
+      assert.truthy(body:find(
+        '- every feature implemented in api tui swift kotlin next', 1, true))
+      -- Title preserved.
+      assert.truthy(body:find('# docs/plans/0042%-feature%-parity'))
+    end)
+
+    it('appends to an existing open ## shot 1', function()
+      vim.fn.mkdir(repo .. '/docs/shotfiles/docs/plans', 'p')
+      utils.write_file(shot_path, table.concat({
+        '# docs/plans/' .. plan,
+        '',
+        '## shot 1',
+        '- pre-existing bullet',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.apply_extras_to_shotfile(repo, plan,
+        'new desc', {}))
+      local body = read_shot()
+      -- Both bullets live under shot 1, in original-then-new order
+      local idx_old = body:find('- pre-existing bullet', 1, true)
+      local idx_new = body:find('- new desc', 1, true)
+      assert.is_true(idx_old < idx_new)
+      -- No new shot 2 was created
+      assert.is_nil(body:find('## shot 2', 1, true))
+    end)
+
+    it('creates a new ## shot N above a shooted ## x shot N-1', function()
+      vim.fn.mkdir(repo .. '/docs/shotfiles/docs/plans', 'p')
+      utils.write_file(shot_path, table.concat({
+        '# docs/plans/' .. plan,
+        '',
+        '## x shot 1 folder structure (2026-04-23 06:48:43)',
+        '- old bullet',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.apply_extras_to_shotfile(repo, plan,
+        'fresh extras', {}))
+      local body = read_shot()
+      local idx_new = body:find('## shot 2', 1, true)
+      local idx_old = body:find('## x shot 1', 1, true)
+      assert.is_truthy(idx_new)
+      assert.is_truthy(idx_old)
+      -- New shot is ABOVE the shooted one
+      assert.is_true(idx_new < idx_old)
+      assert.truthy(body:find('- fresh extras', 1, true))
+    end)
+
+    it('is a no-op when both paren and notes are empty', function()
+      vim.fn.mkdir(repo .. '/docs/shotfiles/docs/plans', 'p')
+      utils.write_file(shot_path, '# docs/plans/' .. plan .. '\n\n')
+      assert.is_true(masterplan.apply_extras_to_shotfile(repo, plan, nil, {}))
+      assert.equals('# docs/plans/' .. plan .. '\n\n', read_shot())
+    end)
+  end)
+
+  describe('fix (extras → plan shotfile)', function()
+    it('moves paren and child notes into ## shot 1 and cleans masterplan', function()
+      write_plan(table.concat({
+        '## next plans',
+        '- 0001-feature-parity (somethin here)',
+        '  - every feature in api tui swift kotlin next',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.fix(repo))
+      local mp = read_plan()
+      -- Masterplan: only the bare entry remains.
+      assert.truthy(mp:find('- 0001-feature-parity', 1, true))
+      assert.is_nil(mp:find('somethin here', 1, true))
+      assert.is_nil(mp:find('every feature in api tui', 1, true))
+      -- Shotfile: shot 1 with the moved bullets.
+      local shot = utils.read_file(
+        repo .. '/docs/shotfiles/docs/plans/0001-feature-parity.md')
+      assert.truthy(shot:find('## shot 1', 1, true))
+      assert.truthy(shot:find('- somethin here', 1, true))
+      assert.truthy(shot:find('- every feature in api tui swift kotlin next',
+        1, true))
+    end)
+
+    it('is a no-op when masterplan plans have no parens or notes', function()
+      write_plan('## in progress\n- 0001-bare\n')
+      assert.is_true(masterplan.fix(repo))
+      assert.is_true(masterplan.fix(repo))  -- second pass stays clean
+      local mp = read_plan()
+      assert.truthy(mp:find('- 0001-bare', 1, true))
+      -- Shotfile is title-only stub (no shots created).
+      local shot = utils.read_file(
+        repo .. '/docs/shotfiles/docs/plans/0001-bare.md') or ''
+      assert.is_nil(shot:find('## shot ', 1, true))
+    end)
+
+    it('appends to existing open shot when user re-adds parens later', function()
+      -- First pass: extracts (one) into the new shot 1.
+      write_plan('## in progress\n- 0001-foo (one)\n')
+      assert.is_true(masterplan.fix(repo))
+      local shot_path = repo .. '/docs/shotfiles/docs/plans/0001-foo.md'
+      assert.truthy(utils.read_file(shot_path):find('- one', 1, true))
+      -- User re-adds parens to the same plan.
+      write_plan('## in progress\n- 0001-foo (two)\n')
+      assert.is_true(masterplan.fix(repo))
+      local shot = utils.read_file(shot_path) or ''
+      -- Both bullets live under a single shot 1.
+      assert.truthy(shot:find('- one', 1, true))
+      assert.truthy(shot:find('- two', 1, true))
+      assert.is_nil(shot:find('## shot 2', 1, true))
+    end)
+
+    it('creates shot 2 above a shooted shot 1 when extras come back', function()
+      vim.fn.mkdir(repo .. '/docs/shotfiles/docs/plans', 'p')
+      utils.write_file(repo
+        .. '/docs/shotfiles/docs/plans/0001-foo.md', table.concat({
+          '# docs/plans/0001-foo',
+          '',
+          '## x shot 1 folder structure (2026-04-23 06:48:43)',
+          '- old bullet',
+          '',
+        }, '\n'))
+      write_plan('## in progress\n- 0001-foo (new desc)\n')
+      assert.is_true(masterplan.fix(repo))
+      local shot = utils.read_file(
+        repo .. '/docs/shotfiles/docs/plans/0001-foo.md') or ''
+      local idx_new = shot:find('## shot 2', 1, true)
+      local idx_old = shot:find('## x shot 1', 1, true)
+      assert.is_truthy(idx_new)
+      assert.is_truthy(idx_old)
+      assert.is_true(idx_new < idx_old)
+      assert.truthy(shot:find('- new desc', 1, true))
+    end)
+
+    it('preserves done timestamp; only description moves', function()
+      write_plan(table.concat({
+        '## done',
+        '- 0001-cleanup (description here) (2026-04-23 06:12:00)',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.fix(repo))
+      local mp = read_plan()
+      -- Timestamp preserved, description gone.
+      assert.truthy(mp:find('- 0001-cleanup (2026-04-23 06:12:00)', 1, true))
+      assert.is_nil(mp:find('description here', 1, true))
+      -- Shotfile got the description.
+      local shot = utils.read_file(
+        repo .. '/docs/shotfiles/docs/plans/0001-cleanup.md')
+      assert.truthy(shot:find('- description here', 1, true))
+    end)
+
+    it('processes plans across all sections in one pass', function()
+      write_plan(table.concat({
+        '## in progress',
+        '- 0001-active (alpha)',
+        '',
+        '## planned',
+        '- 0002-soon',
+        '  - sub note for soon',
+        '',
+        '## next plans',
+        '- 0003-tentative (beta)',
+        '',
+      }, '\n'))
+      assert.is_true(masterplan.fix(repo))
+      local d = repo .. '/docs/shotfiles/docs/plans'
+      assert.truthy(utils.read_file(d .. '/0001-active.md'):find(
+        '- alpha', 1, true))
+      assert.truthy(utils.read_file(d .. '/0002-soon.md'):find(
+        '- sub note for soon', 1, true))
+      assert.truthy(utils.read_file(d .. '/0003-tentative.md'):find(
+        '- beta', 1, true))
+      -- Masterplan no longer contains any extras.
+      local mp = read_plan()
+      assert.is_nil(mp:find('alpha', 1, true))
+      assert.is_nil(mp:find('beta', 1, true))
+      assert.is_nil(mp:find('sub note for soon', 1, true))
     end)
   end)
 
