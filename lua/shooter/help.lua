@@ -166,8 +166,12 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pE / E    Pick plan shotfile    Telescope picker of
                                   docs/shotfiles/docs/plans/*.md, sorted
                                   newest-first by mtime with alphabetical
-                                  tiebreak; each row carries a "(<age>)"
-                                  suffix. (E is a top-level alias for pE)
+                                  tiebreak. Each row is prefixed with the
+                                  masterplan section code — [ip] in progress,
+                                  [pl] planned, [np] next plans, [bl] backlog,
+                                  [do] done, [--] not in masterplan — and
+                                  suffixed with "(<age>)".
+                                  (E is a top-level alias for pE)
 
 TOOLS NAMESPACE (l prefix)
   lt        Token counter         Count tokens in file using ttok

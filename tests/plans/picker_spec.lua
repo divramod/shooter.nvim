@@ -161,4 +161,61 @@ describe('shooter.plans.picker', function()
       assert.equals(entries[1].display, entries[1].ordinal)
     end)
   end)
+
+  describe('plan_categories', function()
+    local mp_path = repo .. '/docs/plans/masterplan.md'
+
+    it('maps each masterplan plan to its 2-char section code', function()
+      mkfile(mp_path, table.concat({
+        '# masterplan test',
+        '',
+        '## in progress',
+        '- 0001-active',
+        '',
+        '## planned',
+        '- 0002-coming-soon',
+        '',
+        '## next plans',
+        '- 0003-tentative',
+        '',
+        '## backlog',
+        '- 0004-on-hold',
+        '',
+        '## done',
+        '- 0005-finished (2026-04-01 10:00:00)',
+        '',
+      }, '\n'))
+      local cats = plan_picker.plan_categories(repo)
+      assert.equals('ip', cats['0001-active'])
+      assert.equals('pl', cats['0002-coming-soon'])
+      assert.equals('np', cats['0003-tentative'])
+      assert.equals('bl', cats['0004-on-hold'])
+      assert.equals('do', cats['0005-finished'])
+    end)
+
+    it('returns empty table when masterplan is missing', function()
+      assert.same({}, plan_picker.plan_categories(repo))
+    end)
+
+    it('returns empty table for nil or empty git_root', function()
+      assert.same({}, plan_picker.plan_categories(nil))
+      assert.same({}, plan_picker.plan_categories(''))
+    end)
+
+    it('skips lines with no plan reference', function()
+      mkfile(mp_path, table.concat({
+        '## in progress',
+        '- 0001-real',
+        '- a plain note with no plan',
+        '  - indented child not a top entry',
+        '',
+      }, '\n'))
+      local cats = plan_picker.plan_categories(repo)
+      assert.equals('ip', cats['0001-real'])
+      -- No spurious entries
+      local count = 0
+      for _ in pairs(cats) do count = count + 1 end
+      assert.equals(1, count)
+    end)
+  end)
 end)

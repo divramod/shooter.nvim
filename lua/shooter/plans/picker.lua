@@ -4,6 +4,17 @@
 
 local M = {}
 
+-- Masterplan section name → 2-char display code used by `pE` rows.
+local SECTION_TO_CODE = {
+  ['in progress'] = 'ip',
+  ['planned']     = 'pl',
+  ['next plans']  = 'np',
+  ['backlog']     = 'bl',
+  ['done']        = 'do',
+}
+-- Code used for plan shotfiles whose plan is not referenced in the masterplan.
+local UNKNOWN_CODE = '--'
+
 -- Recursively find all files named `<basename>.md` under `<git_root>/docs/plans`.
 -- Returns list of absolute paths sorted by relative path.
 function M.find(git_root, basename)
@@ -18,6 +29,27 @@ function M.find(git_root, basename)
   if vim.v.shell_error ~= 0 then return {} end
   table.sort(out)
   return out
+end
+
+-- Build a `{ plan_name -> 2-char section code }` map by parsing the
+-- masterplan. Returns an empty table when the masterplan is missing — in
+-- that case every plan shotfile gets the UNKNOWN_CODE.
+function M.plan_categories(git_root)
+  if not git_root or git_root == '' then return {} end
+  local masterplan = require('shooter.plans.masterplan')
+  local f = io.open(masterplan.get_path(git_root), 'r')
+  if not f then return {} end
+  local content = f:read('*a') or ''
+  f:close()
+  local parsed = masterplan.parse(content)
+  local map = {}
+  for section_name, code in pairs(SECTION_TO_CODE) do
+    for _, entry in ipairs(parsed.sections[section_name] or {}) do
+      local pn = masterplan.extract_plan_name(entry.text)
+      if pn then map[pn] = code end
+    end
+  end
+  return map
 end
 
 -- List `*.md` files directly under `<git_root>/docs/shotfiles/docs/plans`.
@@ -133,8 +165,10 @@ end
 
 -- Open a telescope picker of docs/shotfiles/docs/plans/*.md (the per-plan
 -- shotfiles managed by `pe`/`pf`) and edit the selected file. Entries are
--- sorted newest-first by mtime, alphabetically by filename when ages tie,
--- with a "(<age>)" suffix appended to each row.
+-- sorted newest-first by mtime (alphabetical tiebreak), each row prefixed
+-- with the masterplan section code (`[ip]`/`[pl]`/`[np]`/`[bl]`/`[do]`,
+-- or `[--]` when the plan isn't in the masterplan) and suffixed with
+-- "(<age>)".
 function M.open_shotfiles(git_root)
   local paths = M.find_shotfiles(git_root)
   if #paths == 0 then
@@ -145,6 +179,13 @@ function M.open_shotfiles(git_root)
   local entries = make_entries(paths,
     git_root .. '/docs/shotfiles/docs/plans/')
   M.sort_by_age_with_tiebreak(entries)
+  local categories = M.plan_categories(git_root)
+  for _, e in ipairs(entries) do
+    local plan_name = e.path:match('([^/]+)%.md$') or ''
+    local code = categories[plan_name] or UNKNOWN_CODE
+    e.display = string.format('[%s] %s', code, e.display)
+    e.ordinal = e.display
+  end
   show_picker(entries, {
     prompt_title  = 'Plan shotfiles',
     preview_title = 'plan shotfile',
