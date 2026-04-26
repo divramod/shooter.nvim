@@ -115,29 +115,32 @@ TMUX NAMESPACE (t prefix)
   PANE TOGGLE (t0-9)
   t0-9      Toggle pane           Toggle visibility of tmux pane #0-9
 
-PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
+PLAN NAMESPACE (p prefix) — metaplan + per-plan ops + pickers
   Everything plan-related lives under <space>p. Lowercase letters act
-  on the plan referenced on the CURRENT LINE in masterplan.md;
+  on the plan referenced on the CURRENT LINE in metaplan.md;
   uppercase letters open a telescope picker across all plans.
 
-  MASTERPLAN FILE OPS
-  pm        Open masterplan       Open docs/plans/masterplan.md
-                                  (runs Fix on open — always tidy)
-  pf        Fix masterplan        Normalize title (# masterplan <repo> (<alias>)),
+  METAPLAN FILE OPS
+  pM        Open metaplan         Open docs/plans/metaplan.md (global index;
+                                  runs Fix on open — always tidy)
+  pf        Fix metaplan          Normalize title (# metaplan <repo> (<alias>)),
                                   ensure the 5 sections in order (in progress /
                                   planned / next plans / backlog / done),
                                   gap-fill `## next plans` (each entry gets
                                   the smallest unused NNNN; folders in any
-                                  worktree count as committed), slugify
-                                  pre-paren names, MOVE any (description) and
-                                  indented child notes from plan entries into
-                                  the matching plan shotfile under `## shot N`
-                                  (appends to the open shot if any, else
-                                  creates a new shot above the topmost
-                                  shooted one), and reconcile every plan's
-                                  shotfile in docs/shotfiles/docs/plans/
-                                  (rename on drift, create if missing, adapt
-                                  title to new name).
+                                  worktree count as committed; plans whose
+                                  folder has spec.md are LOCKED — kept as-is
+                                  and their numbers reserved), rename plan
+                                  FOLDERS on disk for renumbered entries,
+                                  slugify pre-paren names, MOVE any
+                                  (description) and indented child notes
+                                  from plan entries into the matching plan's
+                                  idea.md under `## shot N` (appends to the
+                                  open shot if any, else creates a new shot
+                                  above the topmost shooted one), and
+                                  ensure every plan has a docs/plans/
+                                  <NNNN-slug>/idea.md (creates a stub when
+                                  missing).
   pd        Mark done             Move plan under cursor to the top of
                                   `## done` with a timestamp, carrying its
                                   indented child notes along.
@@ -146,38 +149,44 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pp        Open plan.md          Open docs/plans/<NNNN-slug>/plan.md
   pc        Open context.md       Open docs/plans/<NNNN-slug>/context.md
   ps        Open spec.md          Open docs/plans/<NNNN-slug>/spec.md
-  pe / e    Edit plan shotfile    Open/rename/create the plan's shotfile
-                                  under docs/shotfiles/docs/plans/
-                                  (e is a top-level alias for pe; pressing
-                                  <CR> on a plan line in masterplan.md does
+                                  (echos a friendly message if missing)
+  pm        Open masterplan.md    Open docs/plans/<NNNN-slug>/masterplan.md
+                                  (echos a friendly message if missing)
+  pi / i    Open idea.md          Open/create docs/plans/<NNNN-slug>/idea.md.
+                                  idea.md IS a shotfile — full shot syntax,
+                                  <space>n / <space>1-9 etc. work inside.
+                                  (i is a top-level alias for pi; pressing
+                                  <CR> on a plan line in metaplan.md does
                                   the same)
   pn        New plan              Prompt for a title, create
-                                  docs/plans/<NNNN-slug>/plan.md at the next
-                                  free number (max known plan number + 1).
-  pr        Rename plan           Prompt with the current NNNN-slug (editable);
-                                  renames docs/plans/<old>/ → docs/plans/<new>/
-                                  (git mv), the shotfile, updates all titles,
-                                  rewrites the masterplan line, and commits.
-  pD        Delete plan           Delete docs/plans/<name>/ and/or the plan's
-                                  shotfile. Confirms separately for folder and
-                                  shotfile when either contains more than a
-                                  title; stubs are removed without prompting.
-                                  Removes the masterplan entry when the folder
-                                  is gone, runs fix(), and commits.
+                                  docs/plans/<NNNN-slug>/plan.md at the
+                                  smallest free number (gap-fill aware).
+  pr        Rename plan           Prompt with the current NNNN-slug
+                                  (editable); renames docs/plans/<old>/ →
+                                  docs/plans/<new>/ (git mv) — taking
+                                  plan.md / context.md / spec.md / idea.md
+                                  along — updates titles, rewrites the
+                                  metaplan line, and commits.
+  pD        Delete plan           Delete docs/plans/<name>/ folder (incl.
+                                  plan.md/context.md/spec.md/idea.md) and
+                                  the metaplan entry. Confirms when the
+                                  folder has non-stub content; stubs are
+                                  removed without prompting. Runs fix() and
+                                  commits.
 
   PICKERS (over all plans)
   pP        Pick plan.md          Telescope picker of docs/plans/**/plan.md
   pC        Pick context.md       Telescope picker of docs/plans/**/context.md
   pS        Pick spec.md          Telescope picker of docs/plans/**/spec.md
-  pE / E    Pick plan shotfile    Telescope picker of
-                                  docs/shotfiles/docs/plans/*.md, sorted
+  pI / I    Pick idea.md          Telescope picker of
+                                  docs/plans/<NNNN-slug>/idea.md, sorted
                                   newest-first by mtime with alphabetical
                                   tiebreak. Each row is prefixed with the
-                                  masterplan section code — [ip] in progress,
+                                  metaplan section code — [ip] in progress,
                                   [pl] planned, [np] next plans, [bl] backlog,
-                                  [do] done, [--] not in masterplan — and
+                                  [do] done, [--] not in metaplan — and
                                   suffixed with "(<age>)".
-                                  (E is a top-level alias for pE)
+                                  (I is a top-level alias for pI)
 
 TOOLS NAMESPACE (l prefix)
   lt        Token counter         Count tokens in file using ttok
@@ -242,16 +251,18 @@ SMART PASTE (global, disable with keymaps.smart_paste = false)
 
 FOLDER STRUCTURE
   docs/shotfiles/           <- shotfiles root
-  docs/shotfiles/docs/plans <- per-plan shotfiles (managed by pe/pf)
   docs/shotfiles/archive/   <- completed/archived
   docs/shotfiles/backlog/   <- future tasks
   docs/shotfiles/done/      <- finished tasks
   docs/shotfiles/reqs/      <- requirements
   docs/shotfiles/test/      <- testing
   docs/shotfiles/wait/      <- waiting/blocked
-  docs/plans/masterplan.md               <- high-level plan index
-  docs/plans/<NNNN-slug>/                <- per-plan folder with plan.md /
-                                            context.md / spec.md
+  docs/plans/metaplan.md       <- high-level plan index (sections: in
+                                  progress / planned / next plans /
+                                  backlog / done)
+  docs/plans/<NNNN-slug>/      <- per-plan folder with plan.md /
+                                  context.md / spec.md / idea.md
+                                  (idea.md is managed by pe/pf)
 
 PROJECT SUPPORT
   If a 'projects/' folder exists at git root, shooter becomes project-aware:

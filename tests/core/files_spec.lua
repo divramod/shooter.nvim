@@ -196,32 +196,71 @@ describe('shooter.core.files', function()
     end)
   end)
 
-  describe('is_masterplan / is_last_trackable', function()
-    it('is_masterplan matches docs/plans/masterplan.md anywhere', function()
-      assert.is_true(files.is_masterplan(test_root .. '/docs/plans/masterplan.md'))
-      assert.is_true(files.is_masterplan('/any/path/docs/plans/masterplan.md'))
+  describe('is_metaplan / is_last_trackable', function()
+    it('is_metaplan matches docs/plans/metaplan.md anywhere', function()
+      assert.is_true(files.is_metaplan(test_root .. '/docs/plans/metaplan.md'))
+      assert.is_true(files.is_metaplan('/any/path/docs/plans/metaplan.md'))
     end)
 
-    it('is_masterplan rejects other files', function()
-      assert.is_false(files.is_masterplan(test_root .. '/docs/plans/0005-foo/plan.md'))
-      assert.is_false(files.is_masterplan(test_root .. '/masterplan.md'))
-      assert.is_false(files.is_masterplan(nil))
+    it('is_metaplan rejects other files', function()
+      assert.is_false(files.is_metaplan(test_root .. '/docs/plans/0005-foo/plan.md'))
+      assert.is_false(files.is_metaplan(test_root .. '/metaplan.md'))
+      assert.is_false(files.is_metaplan(nil))
     end)
 
-    it('is_last_trackable accepts shotfiles AND masterplan.md', function()
+    it('is_last_trackable accepts shotfiles AND metaplan.md', function()
       local shotfile = test_root .. '/docs/shotfiles/feats.md'
       utils.write_file(shotfile, '# feats\n')
       assert.is_true(files.is_last_trackable(shotfile))
-      assert.is_true(files.is_last_trackable(test_root .. '/docs/plans/masterplan.md'))
+      assert.is_true(files.is_last_trackable(test_root .. '/docs/plans/metaplan.md'))
       assert.is_false(files.is_last_trackable(test_root .. '/random.md'))
+    end)
+
+    it('is_last_trackable accepts per-plan idea/spec/masterplan files', function()
+      assert.is_true(files.is_last_trackable(
+        test_root .. '/docs/plans/0001-foo/idea.md'))
+      assert.is_true(files.is_last_trackable(
+        test_root .. '/docs/plans/0007-bar/spec.md'))
+      assert.is_true(files.is_last_trackable(
+        test_root .. '/docs/plans/0099-baz/masterplan.md'))
+      -- plan.md and context.md are NOT last-trackable
+      assert.is_false(files.is_last_trackable(
+        test_root .. '/docs/plans/0001-foo/plan.md'))
+      assert.is_false(files.is_last_trackable(
+        test_root .. '/docs/plans/0001-foo/context.md'))
+      -- Non-NNNN plan dir is rejected
+      assert.is_false(files.is_last_trackable(
+        test_root .. '/docs/plans/scratch/idea.md'))
+    end)
+
+    it('is_plan_idea matches only docs/plans/<NNNN-slug>/idea.md', function()
+      assert.is_true(files.is_plan_idea(
+        '/any/docs/plans/0001-foo/idea.md'))
+      assert.is_false(files.is_plan_idea(
+        '/any/docs/plans/0001-foo/spec.md'))
+      assert.is_false(files.is_plan_idea(
+        '/any/docs/plans/scratch/idea.md'))
+      assert.is_false(files.is_plan_idea(nil))
+    end)
+
+    it('is_in_prompts_folder treats plan idea.md as a shotfile', function()
+      -- Need a real git_root for is_in_prompts_folder; the test_root setup
+      -- already provides one through the surrounding describe block.
+      local idea = test_root .. '/docs/plans/0001-foo/idea.md'
+      assert.is_true(files.is_in_prompts_folder(idea))
+      -- spec.md and per-plan masterplan.md are NOT shotfiles
+      assert.is_false(files.is_in_prompts_folder(
+        test_root .. '/docs/plans/0001-foo/spec.md'))
+      assert.is_false(files.is_in_prompts_folder(
+        test_root .. '/docs/plans/0001-foo/masterplan.md'))
     end)
   end)
 
-  describe('track_last_shotfile + find_last_file (masterplan)', function()
-    it('tracks masterplan.md and returns it from find_last_file', function()
-      local mp = test_root .. '/docs/plans/masterplan.md'
+  describe('track_last_shotfile + find_last_file (metaplan)', function()
+    it('tracks metaplan.md and returns it from find_last_file', function()
+      local mp = test_root .. '/docs/plans/metaplan.md'
       vim.fn.mkdir(test_root .. '/docs/plans', 'p')
-      utils.write_file(mp, '# masterplan\n')
+      utils.write_file(mp, '# metaplan\n')
       files.track_last_shotfile(mp)
       assert.equals(mp, files.find_last_file())
     end)

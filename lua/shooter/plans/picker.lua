@@ -1,10 +1,11 @@
 -- Telescope pickers over plan-related markdown files.
---   M.open(...)           — docs/plans/**/<basename>.md  (plan / context / spec)
---   M.open_shotfiles(...) — docs/shotfiles/docs/plans/*.md  (per-plan shotfiles)
+--   M.open(...)       — docs/plans/**/<basename>.md (plan / context / spec / idea)
+--   M.open_ideas(...) — docs/plans/<NNNN-slug>/idea.md, mtime-sorted with
+--                       a `[ip]`/`[pl]`/... metaplan-section prefix
 
 local M = {}
 
--- Masterplan section name → 2-char display code used by `pE` rows.
+-- Metaplan section name → 2-char display code used by `pE` rows.
 local SECTION_TO_CODE = {
   ['in progress'] = 'ip',
   ['planned']     = 'pl',
@@ -12,7 +13,7 @@ local SECTION_TO_CODE = {
   ['backlog']     = 'bl',
   ['done']        = 'do',
 }
--- Code used for plan shotfiles whose plan is not referenced in the masterplan.
+-- Code used for ideas whose plan is not referenced in the metaplan.
 local UNKNOWN_CODE = '--'
 
 -- Recursively find all files named `<basename>.md` under `<git_root>/docs/plans`.
@@ -32,36 +33,40 @@ function M.find(git_root, basename)
 end
 
 -- Build a `{ plan_name -> 2-char section code }` map by parsing the
--- masterplan. Returns an empty table when the masterplan is missing — in
+-- metaplan. Returns an empty table when the metaplan is missing — in
 -- that case every plan shotfile gets the UNKNOWN_CODE.
 function M.plan_categories(git_root)
   if not git_root or git_root == '' then return {} end
-  local masterplan = require('shooter.plans.masterplan')
-  local f = io.open(masterplan.get_path(git_root), 'r')
+  local metaplan = require('shooter.plans.metaplan')
+  local f = io.open(metaplan.get_path(git_root), 'r')
   if not f then return {} end
   local content = f:read('*a') or ''
   f:close()
-  local parsed = masterplan.parse(content)
+  local parsed = metaplan.parse(content)
   local map = {}
   for section_name, code in pairs(SECTION_TO_CODE) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
-      local pn = masterplan.extract_plan_name(entry.text)
+      local pn = metaplan.extract_plan_name(entry.text)
       if pn then map[pn] = code end
     end
   end
   return map
 end
 
--- List `*.md` files directly under `<git_root>/docs/shotfiles/docs/plans`.
--- Returns list of absolute paths sorted by name.
-function M.find_shotfiles(git_root)
+-- List every docs/plans/<NNNN-slug>/idea.md file (across all plan folders).
+-- Returns list of absolute paths sorted by plan name.
+function M.find_ideas(git_root)
   if not git_root or git_root == '' then return {} end
-  local root = git_root .. '/docs/shotfiles/docs/plans'
+  local root = git_root .. '/docs/plans'
   if vim.fn.isdirectory(root) ~= 1 then return {} end
   local out = {}
   for _, name in ipairs(vim.fn.readdir(root)) do
-    if name:match('%.md$') then
-      table.insert(out, root .. '/' .. name)
+    if name:match('^%d%d%d%d%-[%l%d][%w%-]*$')
+        and vim.fn.isdirectory(root .. '/' .. name) == 1 then
+      local idea = root .. '/' .. name .. '/idea.md'
+      if vim.fn.filereadable(idea) == 1 then
+        table.insert(out, idea)
+      end
     end
   end
   table.sort(out)
@@ -163,32 +168,37 @@ function M.open(git_root, basename)
   })
 end
 
--- Open a telescope picker of docs/shotfiles/docs/plans/*.md (the per-plan
--- shotfiles managed by `pe`/`pf`) and edit the selected file. Entries are
--- sorted newest-first by mtime (alphabetical tiebreak), each row prefixed
--- with the masterplan section code (`[ip]`/`[pl]`/`[np]`/`[bl]`/`[do]`,
--- or `[--]` when the plan isn't in the masterplan) and suffixed with
--- "(<age>)".
-function M.open_shotfiles(git_root)
-  local paths = M.find_shotfiles(git_root)
+-- Open a telescope picker of docs/plans/<NNNN-slug>/idea.md files (the
+-- per-plan idea files managed by `pe`/`pf`) and edit the selected file.
+-- Entries are sorted newest-first by mtime (alphabetical tiebreak), each
+-- row prefixed with the metaplan section code (`[ip]`/`[pl]`/`[np]`/
+-- `[bl]`/`[do]`, or `[--]` when the plan isn't in the metaplan) and
+-- suffixed with "(<age>)".
+function M.open_ideas(git_root)
+  local paths = M.find_ideas(git_root)
   if #paths == 0 then
     require('shooter.utils').echo(
-      'No plan shotfiles under docs/shotfiles/docs/plans/')
+      'No idea.md files under docs/plans/')
     return
   end
-  local entries = make_entries(paths,
-    git_root .. '/docs/shotfiles/docs/plans/')
+  -- Display string is the plan name (parent folder), since the filename is
+  -- always "idea.md" and would be useless for picking.
+  local entries = {}
+  for _, p in ipairs(paths) do
+    local plan_name = p:match('docs/plans/([^/]+)/idea%.md$') or p
+    table.insert(entries, { path = p, display = plan_name, ordinal = plan_name })
+  end
   M.sort_by_age_with_tiebreak(entries)
   local categories = M.plan_categories(git_root)
   for _, e in ipairs(entries) do
-    local plan_name = e.path:match('([^/]+)%.md$') or ''
+    local plan_name = e.path:match('docs/plans/([^/]+)/idea%.md$') or ''
     local code = categories[plan_name] or UNKNOWN_CODE
     e.display = string.format('[%s] %s', code, e.display)
     e.ordinal = e.display
   end
   show_picker(entries, {
-    prompt_title  = 'Plan shotfiles',
-    preview_title = 'plan shotfile',
+    prompt_title  = 'Plan ideas',
+    preview_title = 'idea.md',
   })
 end
 

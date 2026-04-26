@@ -42,20 +42,42 @@ local function _load_last_shotfile()
   return nil
 end
 
--- docs/plans/masterplan.md is also trackable so < >l can return to it when
+-- docs/plans/metaplan.md is also trackable so < >l can return to it when
 -- it was the last thing the user opened.
-function M.is_masterplan(path)
-  return path ~= nil and path:match('/docs/plans/masterplan%.md$') ~= nil
+function M.is_metaplan(path)
+  return path ~= nil and path:match('/docs/plans/metaplan%.md$') ~= nil
 end
 
--- Predicate used by track/load/find for the "last opened file" flow:
--- either a shotfile under the main worktree's shotfiles tree, or
--- docs/plans/masterplan.md.
+-- True for `docs/plans/<NNNN-slug>/<kind>.md` where kind is one of the
+-- per-plan files we want < >l / the shotfile picker to track.
+function M.is_plan_file(path, kind)
+  if not path then return false end
+  local pattern = '/docs/plans/%d%d%d%d%-[%l%d][%w%-]*/'
+    .. (kind or '[a-z]+') .. '%.md$'
+  return path:match(pattern) ~= nil
+end
+
+-- Per-plan idea.md: the only plan-folder file that is treated as a SHOTFILE
+-- (full shot syntax + shot commands like <space>n / <space>1-9). spec.md and
+-- per-plan masterplan.md are last-trackable but plain markdown.
+function M.is_plan_idea(path)
+  return M.is_plan_file(path, 'idea')
+end
+
+-- Predicate used by track/load/find for the "last opened file" flow.
+-- A path is "last-trackable" when reopening it makes sense as a return
+-- target: a shotfile, the global metaplan, or any per-plan idea / spec /
+-- masterplan file.
 function M.is_last_trackable(path)
-  return M.is_in_prompts_folder(path) or M.is_masterplan(path)
+  if not path then return false end
+  return M.is_in_prompts_folder(path)
+    or M.is_metaplan(path)
+    or M.is_plan_file(path, 'idea')
+    or M.is_plan_file(path, 'spec')
+    or M.is_plan_file(path, 'masterplan')
 end
 
--- Called by syntax.lua on BufEnter for shotfiles (and for masterplan.md).
+-- Called by syntax.lua on BufEnter for shotfiles (and for metaplan.md).
 -- Only tracks files that would be valid targets for < >l, so we never bring
 -- the user back to an unrelated buffer.
 function M.track_last_shotfile(filepath)
@@ -180,6 +202,10 @@ function M.is_in_prompts_folder(path)
   if path:find(git_root .. '/projects/.+/docs/shotfiles') then
     return true
   end
+  -- Per-plan idea.md is also a shotfile (gets shot syntax + shot commands).
+  if M.is_plan_idea(path) then
+    return true
+  end
   return false
 end
 
@@ -259,6 +285,12 @@ function M.title_from_path(filepath)
   local match = filepath:match('/docs/shotfiles/(.+)$')
   if match then
     return match:gsub('%.md$', '')
+  end
+  -- Plan-folder files (plan.md / context.md / spec.md / idea.md): title is
+  -- "docs/plans/<NNNN-slug>/<basename>".
+  local plan_match = filepath:match('/(docs/plans/[^/]+/[^/]+)$')
+  if plan_match then
+    return plan_match:gsub('%.md$', '')
   end
   return vim.fn.fnamemodify(filepath, ':t:r')
 end
@@ -341,7 +373,7 @@ end
 -- Uses tracked shotfile (set by BufEnter autocmd) first, falls back to ls -t
 function M.find_last_file(project)
   -- Primary: return Neovim-tracked last shotfile (must live under main,
-  -- or be docs/plans/masterplan.md)
+  -- or be docs/plans/metaplan.md)
   if _last_shotfile and vim.fn.filereadable(_last_shotfile) == 1
       and M.is_last_trackable(_last_shotfile) then
     return _last_shotfile

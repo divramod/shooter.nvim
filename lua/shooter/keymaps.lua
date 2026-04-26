@@ -158,26 +158,27 @@ function M.setup()
   end
 
   -- ============================================================
-  -- PLAN NAMESPACE (p prefix) — masterplan + per-plan + pickers
+  -- PLAN NAMESPACE (p prefix) — metaplan + per-plan + pickers
   -- ============================================================
-  -- Masterplan file + cursor-based plan ops
-  map('n', 'pm', ':HalShooterMasterplanOpen<cr>',         'Open docs/plans/masterplan.md')
-  map('n', 'pf', ':HalShooterMasterplanFix<cr>',          'Fix masterplan (renumber, slugify, title, sync)')
-  map('n', 'pd', ':HalShooterMasterplanMarkDone<cr>',     'Mark plan under cursor as done')
-  map('n', 'pp', ':HalShooterMasterplanOpenPlan<cr>',     'Open plan.md for plan under cursor')
-  map('n', 'pc', ':HalShooterMasterplanOpenContext<cr>',  'Open context.md for plan under cursor')
-  map('n', 'ps', ':HalShooterMasterplanOpenSpec<cr>',     'Open spec.md for plan under cursor')
-  map('n', 'pe', ':HalShooterPlanEdit<cr>',               'Edit plan shotfile (create/rename/open)')
-  map('n', 'e',  ':HalShooterPlanEdit<cr>',               'Edit plan shotfile (alias for pe)')
-  map('n', 'pn', ':HalShooterPlanNew<cr>',                'New plan under docs/plans/<NNNN-slug>/plan.md')
-  map('n', 'pr', ':HalShooterPlanRename<cr>',             'Rename plan under cursor (folder + shotfile + masterplan)')
-  map('n', 'pD', ':HalShooterPlanDelete<cr>',             'Delete plan under cursor (confirm content; then commit)')
+  -- Metaplan file + cursor-based plan ops
+  map('n', 'pM', ':HalShooterMetaplanOpen<cr>',         'Open docs/plans/metaplan.md (global metaplan)')
+  map('n', 'pf', ':HalShooterMetaplanFix<cr>',          'Fix metaplan (renumber, slugify, title, sync)')
+  map('n', 'pd', ':HalShooterMetaplanMarkDone<cr>',     'Mark plan under cursor as done')
+  map('n', 'pp', ':HalShooterMetaplanOpenPlan<cr>',     'Open plan.md for plan under cursor')
+  map('n', 'pc', ':HalShooterMetaplanOpenContext<cr>',  'Open context.md for plan under cursor')
+  map('n', 'ps', ':HalShooterMetaplanOpenSpec<cr>',     'Open spec.md for plan under cursor (msg if missing)')
+  map('n', 'pm', ':HalShooterMetaplanOpenMasterplan<cr>', 'Open masterplan.md for plan under cursor (msg if missing)')
+  map('n', 'pi', ':HalShooterPlanOpenIdea<cr>',         'Open idea.md for plan under cursor (create if missing)')
+  map('n', 'i',  ':HalShooterPlanOpenIdea<cr>',         'Open plan idea.md (alias for pi)')
+  map('n', 'pn', ':HalShooterPlanNew<cr>',              'New plan under docs/plans/<NNNN-slug>/plan.md')
+  map('n', 'pr', ':HalShooterPlanRename<cr>',           'Rename plan under cursor (folder + metaplan)')
+  map('n', 'pD', ':HalShooterPlanDelete<cr>',           'Delete plan under cursor (confirm content; then commit)')
   -- Pickers (uppercase to disambiguate from cursor-based ops)
-  map('n', 'pP', ':HalShooterPlanPickerPlan<cr>',         'Pick docs/plans/**/plan.md')
-  map('n', 'pC', ':HalShooterPlanPickerContext<cr>',      'Pick docs/plans/**/context.md')
-  map('n', 'pS', ':HalShooterPlanPickerSpec<cr>',         'Pick docs/plans/**/spec.md')
-  map('n', 'pE', ':HalShooterPlanPickerShotfile<cr>',     'Pick docs/shotfiles/docs/plans/*.md (plan shotfile)')
-  map('n', 'E',  ':HalShooterPlanPickerShotfile<cr>',     'Pick plan shotfile (alias for pE)')
+  map('n', 'pP', ':HalShooterPlanPickerPlan<cr>',       'Pick docs/plans/**/plan.md')
+  map('n', 'pC', ':HalShooterPlanPickerContext<cr>',    'Pick docs/plans/**/context.md')
+  map('n', 'pS', ':HalShooterPlanPickerSpec<cr>',       'Pick docs/plans/**/spec.md')
+  map('n', 'pI', ':HalShooterPlanPickerIdea<cr>',       'Pick docs/plans/<NNNN-slug>/idea.md')
+  map('n', 'I',  ':HalShooterPlanPickerIdea<cr>',       'Pick plan idea (alias for pI)')
 
   -- ============================================================
   -- TOOLS NAMESPACE (l prefix)

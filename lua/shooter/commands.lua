@@ -378,22 +378,22 @@ local function setup_plan_commands()
   create_cmd('HalShooterPlanPickerSpec',    function() open('spec')    end,
     { desc = 'Pick a docs/plans/**/spec.md file' })
 
-  create_cmd('HalShooterPlanPickerShotfile', function()
+  create_cmd('HalShooterPlanPickerIdea', function()
     local git_root = files.get_git_root()
     if not git_root then
       utils.echo('Not in a git repo')
       return
     end
-    plan_picker.open_shotfiles(git_root)
-  end, { desc = 'Pick a docs/shotfiles/docs/plans/*.md plan shotfile' })
+    plan_picker.open_ideas(git_root)
+  end, { desc = 'Pick a docs/plans/<NNNN-slug>/idea.md' })
 
-  -- HalShooterPlanEdit — open/create/rename shotfile for plan under cursor
-  create_cmd('HalShooterPlanEdit', function()
-    local masterplan = require('shooter.plans.masterplan')
+  -- HalShooterPlanOpenIdea — open/create idea.md for plan under cursor
+  create_cmd('HalShooterPlanOpenIdea', function()
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then utils.echo('Not in a git repo'); return end
     local line = vim.api.nvim_get_current_line()
-    local ok, msg = masterplan.edit_plan_at_line(git_root, line)
+    local ok, msg = metaplan.edit_plan_at_line(git_root, line)
     if not ok then
       utils.echo('PlanEdit: ' .. (msg or 'unknown'))
     else
@@ -403,12 +403,12 @@ local function setup_plan_commands()
 
   -- HalShooterPlanNew — create a new docs/plans/<NNNN-slug>/plan.md
   create_cmd('HalShooterPlanNew', function(opts)
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then utils.echo('Not in a git repo'); return end
     local function create(title)
       if not title or title == '' then return end
-      local ok, path_or_err = masterplan.new_plan(git_root, title)
+      local ok, path_or_err = metaplan.new_plan(git_root, title)
       if not ok then
         utils.echo('PlanNew: ' .. (path_or_err or 'unknown'))
         return
@@ -422,13 +422,13 @@ local function setup_plan_commands()
     end
   end, { nargs = '?', desc = 'Create new plan under docs/plans/<NNNN-slug>/' })
 
-  -- HalShooterPlanRename — rename the plan under the cursor in masterplan.md
+  -- HalShooterPlanRename — rename the plan under the cursor in metaplan.md
   create_cmd('HalShooterPlanRename', function()
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then utils.echo('Not in a git repo'); return end
     local line = vim.api.nvim_get_current_line()
-    local old_name = masterplan.extract_plan_name(line)
+    local old_name = metaplan.extract_plan_name(line)
     if not old_name then
       utils.echo('PlanRename: cursor not on a plan line')
       return
@@ -437,71 +437,45 @@ local function setup_plan_commands()
       function(new_name)
         if not new_name or new_name == '' then return end
         if new_name == old_name then return end
-        local ok, msg = masterplan.rename_plan(git_root, old_name, new_name)
+        local ok, msg = metaplan.rename_plan(git_root, old_name, new_name)
         utils.echo(ok and ('plan: ' .. msg) or ('PlanRename: ' .. (msg or 'unknown')))
       end)
-  end, { desc = 'Rename plan under cursor (folder + shotfile + masterplan)' })
+  end, { desc = 'Rename plan under cursor (folder + shotfile + metaplan)' })
 
-  -- HalShooterPlanDelete — delete the plan under the cursor in masterplan.md.
-  -- Folder and shotfile are each confirmed separately when they contain more
-  -- than a title; stub-only artifacts are removed without prompting.
+  -- HalShooterPlanDelete — delete the plan under the cursor in metaplan.md.
+  -- Removes docs/plans/<name>/ (containing plan.md / context.md / spec.md /
+  -- idea.md) and the metaplan entry. Confirms when the folder has non-stub
+  -- content beyond a single title; stub-only folders are removed without
+  -- prompting.
   create_cmd('HalShooterPlanDelete', function()
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then utils.echo('Not in a git repo'); return end
     local line = vim.api.nvim_get_current_line()
-    local name = masterplan.extract_plan_name(line)
+    local name = metaplan.extract_plan_name(line)
     if not name then
       utils.echo('PlanDelete: cursor not on a plan line')
       return
     end
 
     local folder = git_root .. '/docs/plans/' .. name
-    local shotfile = git_root .. '/docs/shotfiles/docs/plans/'
-      .. name .. '.md'
     local folder_exists = vim.fn.isdirectory(folder) == 1
-    local shotfile_exists = vim.fn.filereadable(shotfile) == 1
     local folder_has_content = folder_exists
-      and masterplan.folder_has_content(folder)
-    local shotfile_has_content = shotfile_exists
-      and not masterplan.is_stub_file(shotfile)
+      and metaplan.folder_has_content(folder)
 
-    -- Chain the two confirmation prompts, then invoke delete_plan with the
-    -- resolved choices. A missing artifact is a "no-op delete" (opts flag
-    -- set to true; delete_plan tolerates missing paths).
-    local function run(folder_ok, shotfile_ok)
-      if not folder_ok and not shotfile_ok
-         and not folder_exists and not shotfile_exists then
-        -- Nothing to delete on disk; still drop the masterplan entry.
-        folder_ok = true; shotfile_ok = true
-      end
-      if not folder_ok and not shotfile_ok then
-        utils.echo('PlanDelete: aborted')
-        return
-      end
-      local ok, msg = masterplan.delete_plan(git_root, name,
-        { folder = folder_ok, shotfile = shotfile_ok })
+    local function run(folder_ok)
+      local ok, msg = metaplan.delete_plan(git_root, name,
+        { folder = folder_ok })
       utils.echo(ok and ('plan: ' .. msg) or ('PlanDelete: ' .. (msg or 'unknown')))
     end
 
-    local function prompt_shotfile(folder_ok)
-      if not shotfile_exists then run(folder_ok, false); return end
-      if not shotfile_has_content then run(folder_ok, true); return end
-      vim.ui.input({ prompt = 'delete shotfile ' .. name .. '.md (has content)? type yes: ' },
-        function(ans) run(folder_ok, ans == 'yes') end)
-    end
-
-    if not folder_exists then
-      prompt_shotfile(false)
-      return
-    end
-    if not folder_has_content then
-      prompt_shotfile(true)
+    if not folder_exists or not folder_has_content then
+      run(true)
       return
     end
     vim.ui.input({ prompt = 'delete folder docs/plans/' .. name .. '/ (has content)? type yes: ' },
-      function(ans) prompt_shotfile(ans == 'yes') end)
-  end, { desc = 'Delete plan under cursor (folder + shotfile + masterplan)' })
+      function(ans) run(ans == 'yes') end)
+  end, { desc = 'Delete plan under cursor (folder + metaplan entry)' })
 end
 
 -- Setup Tool namespace commands (l prefix in keymaps)
@@ -849,78 +823,80 @@ local function setup_utility_commands()
     vim.cmd('edit ' .. vim.fn.fnameescape(inbox_path))
   end, { desc = 'Open INBOX.md at git root' })
 
-  -- Masterplan (docs/plans/masterplan.md at git root)
-  create_cmd('HalShooterMasterplanOpen', function()
+  -- Metaplan (docs/plans/metaplan.md at git root)
+  create_cmd('HalShooterMetaplanOpen', function()
     local files = require('shooter.core.files')
     local utils = require('shooter.utils')
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then
       utils.echo('Not in a git repo')
       return
     end
-    masterplan.fix(git_root)
-    vim.cmd('edit ' .. vim.fn.fnameescape(masterplan.get_path(git_root)))
-  end, { desc = 'Open docs/plans/masterplan.md at git root (fix on open)' })
+    metaplan.fix(git_root)
+    vim.cmd('edit ' .. vim.fn.fnameescape(metaplan.get_path(git_root)))
+  end, { desc = 'Open docs/plans/metaplan.md at git root (fix on open)' })
 
-  -- HalShooterMasterplanFix — normalize title, sections, numbering, slugs,
+  -- HalShooterMetaplanFix — normalize title, sections, numbering, slugs,
   -- sync plan shotfiles, then git-add+commit (no push) the plan folders.
-  create_cmd('HalShooterMasterplanFix', function()
+  create_cmd('HalShooterMetaplanFix', function()
     local files = require('shooter.core.files')
     local utils = require('shooter.utils')
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then
       utils.echo('Not in a git repo')
       return
     end
-    local ok, err = masterplan.fix(git_root)
+    local ok, err = metaplan.fix(git_root)
     if not ok then
-      utils.echo('masterplan fix failed: ' .. (err or ''))
+      utils.echo('metaplan fix failed: ' .. (err or ''))
       return
     end
-    local cok, cmsg, committed = masterplan.commit_plans(git_root)
+    local cok, cmsg, committed = metaplan.commit_plans(git_root)
     if not cok then
-      utils.echo('masterplan: fixed; commit failed: ' .. (cmsg or ''))
+      utils.echo('metaplan: fixed; commit failed: ' .. (cmsg or ''))
     elseif committed then
-      utils.echo('masterplan: fixed + committed')
+      utils.echo('metaplan: fixed + committed')
     else
-      utils.echo('masterplan: fixed (' .. (cmsg or 'no changes to commit') .. ')')
+      utils.echo('metaplan: fixed (' .. (cmsg or 'no changes to commit') .. ')')
     end
-  end, { desc = 'Fix masterplan.md and commit docs/plans + plan shotfiles' })
+  end, { desc = 'Fix metaplan.md and commit docs/plans + plan shotfiles' })
 
-  -- HalShooterMasterplanOpen{Plan,Context,Spec} — open the docs/plans/<plan>/
-  -- <kind>.md file for the plan under cursor
+  -- HalShooterMetaplanOpen{Plan,Context,Spec,Masterplan} — open the
+  -- docs/plans/<plan>/<kind>.md file for the plan under cursor
   local function open_plan_file(kind)
     local files = require('shooter.core.files')
     local utils = require('shooter.utils')
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then utils.echo('Not in a git repo'); return end
     local line = vim.api.nvim_get_current_line()
-    local ok, msg = masterplan.open_plan_file(git_root, line, kind)
-    if not ok then utils.echo('masterplan: ' .. (msg or 'unknown')) end
+    local ok, msg = metaplan.open_plan_file(git_root, line, kind)
+    if not ok then utils.echo('metaplan: ' .. (msg or 'unknown')) end
   end
-  create_cmd('HalShooterMasterplanOpenPlan',    function() open_plan_file('plan')    end,
+  create_cmd('HalShooterMetaplanOpenPlan',       function() open_plan_file('plan')       end,
     { desc = 'Open docs/plans/<plan>/plan.md for plan under cursor' })
-  create_cmd('HalShooterMasterplanOpenContext', function() open_plan_file('context') end,
+  create_cmd('HalShooterMetaplanOpenContext',    function() open_plan_file('context')    end,
     { desc = 'Open docs/plans/<plan>/context.md for plan under cursor' })
-  create_cmd('HalShooterMasterplanOpenSpec',    function() open_plan_file('spec')    end,
+  create_cmd('HalShooterMetaplanOpenSpec',       function() open_plan_file('spec')       end,
     { desc = 'Open docs/plans/<plan>/spec.md for plan under cursor' })
+  create_cmd('HalShooterMetaplanOpenMasterplan', function() open_plan_file('masterplan') end,
+    { desc = 'Open docs/plans/<plan>/masterplan.md for plan under cursor' })
 
-  -- HalShooterMasterplanMarkDone — move plan under cursor to ## done
-  create_cmd('HalShooterMasterplanMarkDone', function()
+  -- HalShooterMetaplanMarkDone — move plan under cursor to ## done
+  create_cmd('HalShooterMetaplanMarkDone', function()
     local files = require('shooter.core.files')
     local utils = require('shooter.utils')
-    local masterplan = require('shooter.plans.masterplan')
+    local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
     if not git_root then
       utils.echo('Not in a git repo')
       return
     end
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local ok, err = masterplan.mark_done(git_root, lnum)
-    utils.echo(ok and 'masterplan: marked done' or ('masterplan mark done failed: ' .. (err or '')))
+    local ok, err = metaplan.mark_done(git_root, lnum)
+    utils.echo(ok and 'metaplan: marked done' or ('metaplan mark done failed: ' .. (err or '')))
   end, { desc = 'Move plan under cursor to ## done with timestamp' })
 
   -- HalShooterGitPush — add/commit/push the shotfiles tree

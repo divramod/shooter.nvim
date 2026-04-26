@@ -283,6 +283,38 @@ function M.get_prompt_files(folder_filter_or_opts, project)
     end
   end
 
+  -- Helper: add per-plan idea.md / spec.md / masterplan.md from
+  -- docs/plans/<NNNN-slug>/ (alongside metaplan.md). These are picker-
+  -- visible plan files: idea.md is a real shotfile, while spec.md and
+  -- per-plan masterplan.md are plain markdown that we still want
+  -- reachable via the picker / <space>l.
+  local function add_plan_files(git_root)
+    local plans_dir = git_root .. '/docs/plans'
+    if vim.fn.isdirectory(plans_dir) ~= 1 then return end
+    local mp = plans_dir .. '/metaplan.md'
+    if vim.fn.filereadable(mp) == 1 and not seen[mp] then
+      seen[mp] = true
+      table.insert(results, { display = 'docs/plans/metaplan.md',
+        path = mp, project = nil })
+    end
+    for _, name in ipairs(vim.fn.readdir(plans_dir)) do
+      if name:match('^%d%d%d%d%-[%l%d][%w%-]*$')
+          and vim.fn.isdirectory(plans_dir .. '/' .. name) == 1 then
+        for _, kind in ipairs({ 'idea', 'spec', 'masterplan' }) do
+          local p = plans_dir .. '/' .. name .. '/' .. kind .. '.md'
+          if vim.fn.filereadable(p) == 1 and not seen[p] then
+            seen[p] = true
+            table.insert(results, {
+              display = 'docs/plans/' .. name .. '/' .. kind .. '.md',
+              path = p,
+              project = nil,
+            })
+          end
+        end
+      end
+    end
+  end
+
   -- Determine which projects to include
   if opts.include_all_projects then
     -- Include root + all projects
@@ -291,6 +323,8 @@ function M.get_prompt_files(folder_filter_or_opts, project)
     local git_root = git_worktree.get_main_worktree() or files_mod.get_git_root() or utils.cwd()
     -- Add root prompts
     add_from_prompts_dir(git_root .. '/docs/shotfiles', '', nil)
+    -- Add per-plan files (metaplan + idea/spec/masterplan)
+    add_plan_files(git_root)
     -- Add all project prompts (also from main worktree)
     local projects_dir = git_root .. '/projects'
     if vim.fn.isdirectory(projects_dir) == 1 then

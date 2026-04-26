@@ -1,8 +1,9 @@
--- Masterplan file helpers: parse / fix / mark_done for docs/plans/masterplan.md.
--- The fix pass normalizes title, canonical section order, slug + sequential
--- numbering in `## next plans`, and trims excess blank lines. Content after
--- the first `(` on an entry line is preserved verbatim, and indented child
--- lines (notes/subnotes) travel with their parent entry.
+-- Metaplan file helpers: parse / fix / mark_done for docs/plans/metaplan.md.
+-- The fix pass normalizes title, canonical section order, gap-fills the
+-- numbering in `## next plans`, renames any drifted plan FOLDER on disk
+-- (skipping plans whose folder already contains spec.md — those are locked),
+-- and moves description-paren + indented child notes from each entry into
+-- the matching plan's idea.md under `## shot N`.
 
 local M = {}
 
@@ -10,12 +11,11 @@ local SECTIONS = { 'in progress', 'planned', 'next plans', 'backlog', 'done' }
 local TIMESTAMP_TAIL = '%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)$'
 local COMMIT_PATHS = {
   'docs/plans',
-  'docs/shotfiles/docs/plans',
 }
-local COMMIT_MSG = 'chore(plans): sync masterplan + plan shotfiles'
+local COMMIT_MSG = 'chore(plans): sync metaplan + plan ideas'
 
 function M.get_path(git_root)
-  return git_root .. '/docs/plans/masterplan.md'
+  return git_root .. '/docs/plans/metaplan.md'
 end
 
 function M.get_alias(git_root)
@@ -32,9 +32,18 @@ function M.get_title(git_root)
   local repo = vim.fn.fnamemodify(git_root, ':t')
   local alias = M.get_alias(git_root)
   if alias then
-    return string.format('# masterplan %s (%s)', repo, alias)
+    return string.format('# metaplan %s (%s)', repo, alias)
   end
-  return string.format('# masterplan %s', repo)
+  return string.format('# metaplan %s', repo)
+end
+
+-- True if the plan folder docs/plans/<plan_name>/ contains a spec.md — that
+-- file marks the plan as "an agent has started working on it" and freezes
+-- its number from gap-fill / folder rename.
+function M.is_plan_locked(git_root, plan_name)
+  if not git_root or not plan_name or plan_name == '' then return false end
+  return vim.fn.filereadable(git_root .. '/docs/plans/'
+    .. plan_name .. '/spec.md') == 1
 end
 
 -- Slugify: lowercase, collapse non-alphanumeric runs to single '-', trim.
@@ -165,7 +174,7 @@ local function extract_description_paren(text)
   return nil, text
 end
 
--- Convert child-note lines from a parsed masterplan entry into bullet lines
+-- Convert child-note lines from a parsed metaplan entry into bullet lines
 -- suitable for inclusion under a `## shot N` heading. Drops blank lines and
 -- de-indents one level (2 spaces) so the top-level notes become top-level
 -- bullets while sub-notes stay nested. Returns a list of strings.
@@ -189,18 +198,6 @@ function M.extract_extras(entry)
   local notes = dedent_child_notes(entry.children)
   local had = (paren ~= nil) or (#notes > 0)
   return paren, notes, cleaned or entry.text, had
-end
-
--- Names currently listed in `## next plans` (set of "NNNN-slug" strings).
--- Used to exclude docs/plans folders that correspond to not-yet-started plans
--- from the max-number calculation.
-local function next_plan_names(sections)
-  local set = {}
-  for _, entry in ipairs((sections or {})['next plans'] or {}) do
-    local name = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-    if name then set[name] = true end
-  end
-  return set
 end
 
 -- Enumerate every worktree of the repo at git_root. Returns a deduped array
@@ -231,21 +228,35 @@ end
 -- the union of:
 --   * NNNN-* folder names under docs/plans/ across every worktree of the repo
 --     (so a plan started in another worktree still reserves its number), with
---     folders matching MAIN's `## next plans` entries excluded (those are
---     tentative placeholders created by new_plan and renamed by fix)
---   * NNNN entries in MAIN masterplan's in progress / planned / backlog / done
+--     folders matching MAIN's TENTATIVE `## next plans` entries excluded
+--     (those are placeholders created by new_plan and renamed by fix)
+--   * NNNN entries in MAIN metaplan's in progress / planned / backlog / done
 --     sections
+--   * NNNN entries from `## next plans` whose folder contains spec.md
+--     (locked — agents have started; do not renumber)
 function M.collect_used_numbers(git_root, sections)
   local used = {}
   local function add(n) if n and n > 0 then used[n] = true end end
 
-  local next_set = next_plan_names(sections)
+  -- Partition `## next plans` entries: locked (spec.md present) vs tentative.
+  local tentative_set = {}
+  for _, entry in ipairs((sections or {})['next plans'] or {}) do
+    local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+    if pn then
+      if M.is_plan_locked(git_root, pn) then
+        add(tonumber(pn:match('^(%d%d%d%d)%-')))
+      else
+        tentative_set[pn] = true
+      end
+    end
+  end
+
   for _, root in ipairs(M.list_worktree_roots(git_root)) do
     local plans_dir = root .. '/docs/plans'
     if vim.fn.isdirectory(plans_dir) == 1 then
       for _, name in ipairs(vim.fn.readdir(plans_dir)) do
         local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-        if pname and not next_set[pname] then
+        if pname and not tentative_set[pname] then
           add(tonumber(pname:match('^(%d%d%d%d)%-')))
         end
       end
@@ -265,7 +276,7 @@ end
 -- I.e. the number that gap-fill would assign to the k-th `## next plans`
 -- entry, given a committed used set. Used by `next_free_plan_number` so
 -- `new_plan` picks the same number `fix` would assign to a newly appended
--- entry (preventing folder/masterplan divergence).
+-- entry (preventing folder/metaplan divergence).
 function M.next_plans_number_at(used, k)
   used = used or {}
   if not k or k < 1 then k = 1 end
@@ -286,7 +297,7 @@ function M.next_free_plan_number(git_root, sections)
   return M.next_plans_number_at(used, #current + 1)
 end
 
--- Render parsed + title back to canonical masterplan content.
+-- Render parsed + title back to canonical metaplan content.
 -- `## next plans` entries are renumbered using gap-fill: each entry gets the
 -- smallest N >= 1 not in `opts.used_numbers` and not yet assigned in this
 -- pass. When `used_numbers` is omitted, falls back to sequential renumbering
@@ -316,9 +327,15 @@ function M.render(parsed, title, opts)
       for k, v in pairs(opts.used_numbers) do used[k] = v end
       local cursor = 0
       for _, entry in ipairs(next_plans) do
-        repeat cursor = cursor + 1 until not used[cursor]
-        used[cursor] = true
-        rewrite(entry, cursor)
+        if opts.is_locked and opts.is_locked(entry) then
+          -- Locked entry: keep its committed NNNN, only re-slugify.
+          local n = tonumber(entry.text:match('^(%d%d%d%d)%-'))
+          if n then rewrite(entry, n) end
+        else
+          repeat cursor = cursor + 1 until not used[cursor]
+          used[cursor] = true
+          rewrite(entry, cursor)
+        end
       end
     else
       local start = tonumber(next_plans[1].text:match('^(%d%d%d%d)%-')) or 1
@@ -382,36 +399,29 @@ local function write_file(path, content)
   return true
 end
 
--- Reconcile the shotfile for a single plan under
--- docs/shotfiles/docs/plans: rename on number drift, create if absent,
--- and keep the `# <path>` title in sync. Idempotent. Returns ok_bool, action.
-function M.ensure_plan_shotfile(git_root, plan_name)
-  local files = require('shooter.core.files')
-  local action, target, old_path = M.resolve_plan_file(git_root, plan_name)
-  if not action then return false, target end  -- target holds error string
+-- Path to the idea.md for a plan: docs/plans/<plan_name>/idea.md.
+function M.idea_path(git_root, plan_name)
+  return git_root .. '/docs/plans/' .. plan_name .. '/idea.md'
+end
 
-  if action == 'exists' then
+-- Make sure docs/plans/<plan_name>/idea.md exists, creating the plan folder
+-- and a title-only stub file when missing. Keeps the `# <path>` title in
+-- sync with the canonical idea.md path. Idempotent. Returns ok_bool, action
+-- where action is one of 'exists' | 'created' (no rename action — folder
+-- renames are handled by fix() and rename_plan, not by this helper).
+function M.ensure_plan_idea(git_root, plan_name)
+  if not git_root or not plan_name or plan_name == '' then
+    return false, 'no git_root/plan_name'
+  end
+  local files = require('shooter.core.files')
+  local target = M.idea_path(git_root, plan_name)
+
+  if vim.fn.filereadable(target) == 1 then
     files.update_file_title(target, files.title_from_path(target))
     return true, 'exists'
   end
 
-  if action == 'rename' then
-    local rename = require('shooter.core.rename')
-    local bufnr = vim.fn.bufnr(old_path)
-    if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-      if vim.bo[bufnr].modified then
-        vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
-      end
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-    local ok, err = rename.perform_rename(old_path, plan_name .. '.md')
-    if not ok then return false, err or 'rename failed' end
-    files.update_file_title(target, files.title_from_path(target))
-    return true, 'renamed'
-  end
-
-  -- action == 'new'
-  vim.fn.mkdir(git_root .. '/docs/shotfiles/docs/plans', 'p')
+  vim.fn.mkdir(git_root .. '/docs/plans/' .. plan_name, 'p')
   local title = files.title_from_path(target)
   local f = io.open(target, 'w')
   if not f then return false, 'cannot create ' .. target end
@@ -424,25 +434,24 @@ local SHOT_HEADER = '^##%s+x?%s*shot%s+(%d+)'
 local OPEN_SHOT_HEADER = '^##%s+shot%s+(%d+)'
 
 -- Inject the user's description-paren + child notes for `plan_name` into its
--- plan shotfile. If the topmost shot in the file is open (`## shot N` without
--- `x`/timestamp), append the bullet lines at the end of that shot's body.
--- Otherwise insert a new `## shot K` section (K = max existing shot # + 1, or
--- 1) above the topmost existing shot — or at the top of the body when the
--- file has no shots yet. No-op when both `paren_text` is nil/empty and
--- `note_lines` is empty. Returns ok_bool.
-function M.apply_extras_to_shotfile(git_root, plan_name, paren_text, note_lines)
+-- idea.md (docs/plans/<plan_name>/idea.md). If the topmost shot in the file
+-- is open (`## shot N` without `x`/timestamp), append the bullet lines at
+-- the end of that shot's body. Otherwise insert a new `## shot K` section
+-- (K = max existing shot # + 1, or 1) above the topmost existing shot — or
+-- at the top of the body when the file has no shots yet. No-op when both
+-- `paren_text` is nil/empty and `note_lines` is empty. Returns ok_bool.
+function M.apply_extras_to_idea(git_root, plan_name, paren_text, note_lines)
   if not git_root or git_root == '' then return false end
   if not plan_name or plan_name == '' then return false end
   note_lines = note_lines or {}
   local has_paren = paren_text and paren_text ~= ''
   if not has_paren and #note_lines == 0 then return true end
 
-  -- Make sure the shotfile exists (handles drift/rename too).
-  local ok = M.ensure_plan_shotfile(git_root, plan_name)
+  -- Make sure the idea.md exists (creates plan folder + stub if missing).
+  local ok = M.ensure_plan_idea(git_root, plan_name)
   if not ok then return false end
 
-  local path = git_root .. '/docs/shotfiles/docs/plans/'
-    .. plan_name .. '.md'
+  local path = M.idea_path(git_root, plan_name)
   local bufnr = find_loaded_buf(path)
   local lines
   if bufnr then
@@ -537,8 +546,8 @@ function M.apply_extras_to_shotfile(git_root, plan_name, paren_text, note_lines)
   return true
 end
 
--- Append `- <plan_name>` under `## next plans` in masterplan.md. If the
--- masterplan file or the section is missing, it's created on the fly. No-op
+-- Append `- <plan_name>` under `## next plans` in metaplan.md. If the
+-- metaplan file or the section is missing, it's created on the fly. No-op
 -- when the plan is already listed. Reads/writes the buffer in-place when one
 -- is loaded.
 local function append_to_next_plans(git_root, plan_name)
@@ -569,7 +578,7 @@ local function append_to_next_plans(git_root, plan_name)
   end
 
   if not np_start then
-    -- Masterplan is missing `## next plans` — append the section inline.
+    -- Metaplan is missing `## next plans` — append the section inline.
     -- (Using M.fix here would re-enter the adopt-orphan step, which would
     -- claim the new plan's folder for `## in progress` before we get a
     -- chance to register it in `## next plans`.)
@@ -594,10 +603,10 @@ local function append_to_next_plans(git_root, plan_name)
   end
 end
 
--- Create a new docs/plans/<NNNN-slug>/plan.md, add the plan to the masterplan
+-- Create a new docs/plans/<NNNN-slug>/plan.md, add the plan to the metaplan
 -- under `## next plans`, and run fix() to reconcile everything (canonical
 -- sections, renumbering, plan-shotfile sync). Number is the next free one
--- across docs/plans folders and all masterplan sections.
+-- across docs/plans folders and all metaplan sections.
 -- Returns ok_bool, path_or_error.
 function M.new_plan(git_root, title)
   if not git_root or git_root == '' then return false, 'no git root' end
@@ -621,10 +630,56 @@ function M.new_plan(git_root, title)
   return true, path
 end
 
--- Fix masterplan.md: rewrites via parse/render and syncs each plan's shotfile.
--- Start number for `## next plans` is max(existing plan numbers) + 1 so it
--- never collides with plans already started. After renumbering, every plan in
--- every section gets its shotfile reconciled.
+-- Rename a plan's folder docs/plans/<old>/ → docs/plans/<new>/ during
+-- gap-fill renumbering. Updates the title in plan.md / context.md / spec.md /
+-- idea.md to match. Skipped when the folder is locked (spec.md present) or
+-- when the new folder already exists. Returns ok_bool, msg.
+local function rename_plan_folder(git_root, old_name, new_name)
+  if old_name == new_name then return true, 'unchanged' end
+  local plans_rel = 'docs/plans'
+  local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
+  local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
+  if vim.fn.isdirectory(old_folder) ~= 1 then return true, 'no folder' end
+  if vim.fn.isdirectory(new_folder) == 1 then
+    return false, new_folder .. ' already exists'
+  end
+
+  -- Save+close any loaded buffers under the old folder so the rename
+  -- doesn't collide with stale buffer state.
+  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+    local bufnr = vim.fn.bufnr(old_folder .. '/' .. kind .. '.md')
+    if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+      if vim.bo[bufnr].modified then
+        vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+      end
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end
+
+  local _, err = vim.fn.system({ 'git', '-C', git_root, 'mv',
+    plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+  if vim.v.shell_error ~= 0 then
+    if not os.rename(old_folder, new_folder) then
+      return false, 'failed to rename ' .. old_folder
+    end
+  end
+
+  -- Update the canonical title in each known plan-folder file.
+  local files = require('shooter.core.files')
+  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+    local p = new_folder .. '/' .. kind .. '.md'
+    if vim.fn.filereadable(p) == 1 then
+      files.update_file_title(p, files.title_from_path(p))
+    end
+  end
+  return true
+end
+
+-- Fix metaplan.md: rewrites via parse/render, gap-fills `## next plans` (each
+-- entry gets the smallest unused NNNN; locked entries — those whose plan
+-- folder already has spec.md — keep their number), renames any drifted plan
+-- FOLDER on disk to match its post-render name, and creates a stub idea.md
+-- in any plan folder that doesn't have one yet.
 function M.fix(git_root)
   if not git_root or git_root == '' then return false, 'no git root' end
   local path = M.get_path(git_root)
@@ -640,10 +695,10 @@ function M.fix(git_root)
 
   local parsed = M.parse(content)
 
-  -- Adopt any docs/plans/NNNN-<slug>/ folder that the masterplan doesn't
+  -- Adopt any docs/plans/NNNN-<slug>/ folder that the metaplan doesn't
   -- reference yet into `## in progress`. Agents sometimes create a fresh
   -- plan folder (bumping the next free number) without updating the
-  -- masterplan — this keeps the two sides in sync.
+  -- metaplan — this keeps the two sides in sync.
   local referenced = {}
   for _, section_name in ipairs(SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
@@ -673,15 +728,15 @@ function M.fix(git_root)
   end
 
   -- Move any description-paren content + indented child notes from each plan
-  -- entry into the corresponding plan shotfile (under `## shot N`), then
-  -- mutate the parsed entry in place so render writes the cleaned masterplan.
+  -- entry into the corresponding plan's idea.md (under `## shot N`), then
+  -- mutate the parsed entry in place so render writes the cleaned metaplan.
   for _, section_name in ipairs(SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
       local plan_name = M.extract_plan_name(entry.text)
       if plan_name then
         local paren, notes, cleaned, had = M.extract_extras(entry)
         if had then
-          M.apply_extras_to_shotfile(git_root, plan_name, paren, notes)
+          M.apply_extras_to_idea(git_root, plan_name, paren, notes)
           entry.text = cleaned
           entry.children = {}
         end
@@ -689,8 +744,22 @@ function M.fix(git_root)
     end
   end
 
+  -- Snapshot `## next plans` pre-render so we can rename folders after.
+  local next_pre = {}
+  for i, entry in ipairs(parsed.sections['next plans'] or {}) do
+    next_pre[i] = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+  end
+
+  -- Build lock predicate: a `## next plans` entry whose folder has spec.md
+  -- is locked and won't be renumbered.
+  local function is_locked(entry)
+    local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+    return pn and M.is_plan_locked(git_root, pn) or false
+  end
+
   local used = M.collect_used_numbers(git_root, parsed.sections)
-  local new = M.render(parsed, M.get_title(git_root), { used_numbers = used })
+  local new = M.render(parsed, M.get_title(git_root),
+    { used_numbers = used, is_locked = is_locked })
 
   if bufnr then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false,
@@ -700,50 +769,31 @@ function M.fix(git_root)
     if not write_file(path, new) then return false, 'cannot write ' .. path end
   end
 
-  -- Sync plan shotfiles with the post-render (renumbered) plan names, and
-  -- collect the set of canonical shotfile names the masterplan expects.
-  local expected = {}
+  -- Rename plan folders for renumbered (unlocked) `## next plans` entries.
+  local warnings = {}
+  for i, entry in ipairs(parsed.sections['next plans'] or {}) do
+    local pre = next_pre[i]
+    local post = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+    if pre and post and pre ~= post then
+      local ok, err = rename_plan_folder(git_root, pre, post)
+      if not ok and err then table.insert(warnings, err) end
+    end
+  end
+
+  -- Make sure every referenced plan has a docs/plans/<plan>/idea.md (creates
+  -- folder + title-only stub when missing).
   for _, section_name in ipairs(SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
       local plan_name = M.extract_plan_name(entry.text)
       if plan_name then
-        M.ensure_plan_shotfile(git_root, plan_name)
-        expected[plan_name .. '.md'] = true
+        M.ensure_plan_idea(git_root, plan_name)
       end
     end
   end
 
-  -- Orphan sweep under docs/shotfiles/docs/plans: remove files
-  -- that are NOT listed in the masterplan under two rules:
-  --   1. Title-only stubs → always deleted (pure debris from prior renumbers).
-  --   2. NNNN-<slug>.md whose slug matches an active plan → deleted (the
-  --      active file is canonical for that slug; the orphan is a duplicate
-  --      left over when an earlier pf renumbered the plan).
-  -- Files that don't match either rule (e.g. unique user content with no
-  -- corresponding masterplan plan, or a NNNN-slug with no active same-slug
-  -- counterpart) are preserved for manual triage.
-  local plans_dir = git_root .. '/docs/shotfiles/docs/plans'
-  if vim.fn.isdirectory(plans_dir) == 1 then
-    local active_by_slug = {}
-    for expected_name, _ in pairs(expected) do
-      local slug = expected_name:match('^%d%d%d%d%-(.+)%.md$')
-      if slug then active_by_slug[slug] = true end
-    end
-    for _, name in ipairs(vim.fn.readdir(plans_dir)) do
-      if name:match('%.md$') and not expected[name] then
-        local orphan_path = plans_dir .. '/' .. name
-        local orphan_content = read_file(orphan_path) or ''
-        local stripped = orphan_content
-          :gsub('^#[^\n]*\n?', '')
-          :gsub('^%s+', '')
-        local slug = name:match('^%d%d%d%d%-(.+)%.md$')
-        if stripped == '' or (slug and active_by_slug[slug]) then
-          os.remove(orphan_path)
-        end
-      end
-    end
+  if #warnings > 0 then
+    return true, 'warnings: ' .. table.concat(warnings, '; ')
   end
-
   return true
 end
 
@@ -830,56 +880,29 @@ function M.extract_plan_name(line)
   return line:match('(%d%d%d%d%-[%l%d][%w%-]*)')
 end
 
--- Resolve where a plan's shotfile lives under docs/shotfiles/docs/plans.
--- Returns (action, target_path, old_path):
---   action = 'exists' → target_path already exists
---   action = 'rename' → an NNNN-<slug>.md with a different number exists;
---                       it lives at old_path and should be renamed to target_path
---   action = 'new'    → no existing file; target_path should be created
-function M.resolve_plan_file(git_root, plan_name)
-  if not git_root or git_root == '' then return nil, 'no git root' end
-  if not plan_name or plan_name == '' then return nil, 'no plan name' end
-
-  local plans_dir = git_root .. '/docs/shotfiles/docs/plans'
-  local target = plans_dir .. '/' .. plan_name .. '.md'
-
-  if vim.fn.filereadable(target) == 1 then
-    return 'exists', target
-  end
-
-  local slug = plan_name:match('^%d%d%d%d%-(.+)$')
-  if slug and vim.fn.isdirectory(plans_dir) == 1 then
-    local pattern = plans_dir .. '/[0-9][0-9][0-9][0-9]-' .. slug .. '.md'
-    local matches = vim.fn.glob(pattern, false, true)
-    if matches and #matches > 0 then
-      return 'rename', target, matches[1]
-    end
-  end
-
-  return 'new', target
-end
-
--- Open/rename/create the shotfile corresponding to the plan referenced on the
--- given line. Returns ok_bool, action_string (or error string when ok=false).
+-- Open/create the idea.md corresponding to the plan referenced on the given
+-- line. Returns ok_bool, action_string (or error string when ok=false).
+-- action_string is 'opened' when the file already existed, otherwise
+-- 'created' (created the plan folder and a title-only stub).
 function M.edit_plan_at_line(git_root, line)
   if not git_root or git_root == '' then return false, 'no git root' end
   local plan_name = M.extract_plan_name(line)
   if not plan_name then return false, 'no plan on current line' end
 
-  local ok, msg = M.ensure_plan_shotfile(git_root, plan_name)
+  local ok, msg = M.ensure_plan_idea(git_root, plan_name)
   if not ok then return false, msg end
 
-  local target = git_root .. '/docs/shotfiles/docs/plans/'
-    .. plan_name .. '.md'
-  vim.cmd('edit ' .. vim.fn.fnameescape(target))
+  vim.cmd('edit ' .. vim.fn.fnameescape(M.idea_path(git_root, plan_name)))
   return true, msg == 'exists' and 'opened' or msg
 end
 
--- Open docs/plans/<NNNN-slug>/<kind>.md for the plan referenced on the given
--- line. `kind` must be 'plan' | 'context' | 'spec'. Returns ok_bool, msg.
+-- Open docs/plans/<NNNN-slug>/<kind>.md for the plan referenced on the
+-- given line. `kind` must be 'plan' | 'context' | 'spec' | 'masterplan'.
+-- Returns ok_bool, msg.
 function M.open_plan_file(git_root, line, kind)
   if not git_root or git_root == '' then return false, 'no git root' end
-  if kind ~= 'plan' and kind ~= 'context' and kind ~= 'spec' then
+  if kind ~= 'plan' and kind ~= 'context' and kind ~= 'spec'
+      and kind ~= 'masterplan' then
     return false, 'invalid kind: ' .. tostring(kind)
   end
   local plan_name = M.extract_plan_name(line)
@@ -892,9 +915,8 @@ function M.open_plan_file(git_root, line, kind)
   return true, 'opened'
 end
 
--- Flush any modified buffers whose file lives under docs/plans/ or
--- docs/shotfiles/docs/plans/, so `git add` sees the latest
--- content the user actually typed.
+-- Flush any modified buffers whose file lives under docs/plans/, so
+-- `git add` sees the latest content the user actually typed.
 local function flush_plans_buffers(git_root)
   local resolved_root = vim.uv.fs_realpath(git_root) or git_root
   local prefixes = {}
@@ -1025,11 +1047,11 @@ local function replace_title_reference(path, needle, replacement)
   end
 end
 
--- Locate the masterplan line whose plan reference matches `name` and replace
+-- Locate the metaplan line whose plan reference matches `name` and replace
 -- the name with `new_name`. Preserves anything else on the line (parens,
 -- trailing text) and leaves indented child notes untouched. Updates a loaded
 -- buffer in place when one exists.
-function M.rewrite_masterplan_line(git_root, old_name, new_name)
+function M.rewrite_metaplan_line(git_root, old_name, new_name)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not old_name or old_name == '' then return false, 'no old name' end
   if not new_name or new_name == '' then return false, 'no new name' end
@@ -1040,7 +1062,7 @@ function M.rewrite_masterplan_line(git_root, old_name, new_name)
     lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   else
     local content = read_file(path)
-    if not content then return false, 'masterplan not found' end
+    if not content then return false, 'metaplan not found' end
     lines = vim.split(content, '\n', { plain = true })
   end
 
@@ -1052,7 +1074,7 @@ function M.rewrite_masterplan_line(git_root, old_name, new_name)
       break
     end
   end
-  if not found then return false, 'plan not in masterplan: ' .. old_name end
+  if not found then return false, 'plan not in metaplan: ' .. old_name end
 
   if bufnr then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -1065,10 +1087,10 @@ function M.rewrite_masterplan_line(git_root, old_name, new_name)
   return true
 end
 
--- Remove the first masterplan entry whose plan reference matches `name`,
+-- Remove the first metaplan entry whose plan reference matches `name`,
 -- along with its indented child notes (and any trailing blank line in the
 -- child block). No-op when no matching entry exists.
-function M.remove_masterplan_entry(git_root, name)
+function M.remove_metaplan_entry(git_root, name)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not name or name == '' then return false, 'no plan name' end
   local path = M.get_path(git_root)
@@ -1126,9 +1148,9 @@ local function close_buf_for(path)
 end
 
 -- Rename a plan in every place it is referenced: the docs/plans/<old>/
--- folder, the shotfile <old>.md, the masterplan line, and every title inside
--- the folder's files + shotfile. Commits all changed files with a rename
--- message. No-op parts (missing folder / missing shotfile) are tolerated.
+-- folder (which contains plan.md / context.md / spec.md / idea.md, all
+-- carried along by the folder rename), and the metaplan line. Commits all
+-- changed files with a rename message. No-op when the folder is missing.
 function M.rename_plan(git_root, old_name, new_name)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not old_name or old_name == '' then return false, 'no old name' end
@@ -1139,23 +1161,16 @@ function M.rename_plan(git_root, old_name, new_name)
   end
 
   local plans_rel = 'docs/plans'
-  local shotfiles_rel = 'docs/shotfiles/docs/plans'
   local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
   local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
-  local old_shotfile = git_root .. '/' .. shotfiles_rel .. '/' .. old_name .. '.md'
-  local new_shotfile = git_root .. '/' .. shotfiles_rel .. '/' .. new_name .. '.md'
 
   if vim.fn.isdirectory(new_folder) == 1 then
     return false, new_folder .. ' already exists'
   end
-  if vim.fn.filereadable(new_shotfile) == 1 then
-    return false, new_shotfile .. ' already exists'
-  end
 
-  for _, kind in ipairs({ 'plan', 'context', 'spec' }) do
+  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
     close_buf_for(old_folder .. '/' .. kind .. '.md')
   end
-  close_buf_for(old_shotfile)
 
   if vim.fn.isdirectory(old_folder) == 1 then
     local _, err = git(git_root, { 'mv',
@@ -1165,26 +1180,18 @@ function M.rename_plan(git_root, old_name, new_name)
         return false, 'failed to rename ' .. old_folder
       end
     end
-    for _, kind in ipairs({ 'plan', 'context', 'spec' }) do
-      replace_title_reference(new_folder .. '/' .. kind .. '.md',
-        old_name, new_name)
-    end
-  end
-
-  if vim.fn.filereadable(old_shotfile) == 1 then
-    local _, err = git(git_root, { 'mv',
-      shotfiles_rel .. '/' .. old_name .. '.md',
-      shotfiles_rel .. '/' .. new_name .. '.md' })
-    if err ~= 0 then
-      if not os.rename(old_shotfile, new_shotfile) then
-        return false, 'failed to rename ' .. old_shotfile
+    -- Update titles: each file's `# docs/plans/<old>/...` heading.
+    local files = require('shooter.core.files')
+    for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+      local p = new_folder .. '/' .. kind .. '.md'
+      if vim.fn.filereadable(p) == 1 then
+        replace_title_reference(p, old_name, new_name)
+        files.update_file_title(p, files.title_from_path(p))
       end
     end
-    local files = require('shooter.core.files')
-    files.update_file_title(new_shotfile, files.title_from_path(new_shotfile))
   end
 
-  local ok, err = M.rewrite_masterplan_line(git_root, old_name, new_name)
+  local ok, err = M.rewrite_metaplan_line(git_root, old_name, new_name)
   if not ok then return false, err end
 
   local cok, cmsg, committed = M.commit_plans(git_root,
@@ -1193,23 +1200,22 @@ function M.rename_plan(git_root, old_name, new_name)
   return true, committed and 'renamed' or 'renamed (nothing to commit)'
 end
 
--- Delete a plan. `opts.folder` and `opts.shotfile` select which artifacts to
--- remove; both default to false (caller decides based on content / user
--- confirmation). The masterplan entry is removed iff the folder is gone
--- afterwards — otherwise fix() would just re-adopt it. fix() always runs to
--- resort / resync, and everything is committed with a delete message.
+-- Delete a plan: removes its docs/plans/<name>/ folder (which contains
+-- plan.md / context.md / spec.md / idea.md) and the metaplan entry. The
+-- metaplan entry is dropped iff the folder is gone afterwards — otherwise
+-- fix() would just re-adopt it. `opts.folder` defaults to true. fix() always
+-- runs to resort / resync, and everything is committed with a delete message.
 function M.delete_plan(git_root, name, opts)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not name or name == '' then return false, 'no plan name' end
   opts = opts or {}
+  if opts.folder == nil then opts.folder = true end
 
   local plans_rel = 'docs/plans'
-  local shotfiles_rel = 'docs/shotfiles/docs/plans'
   local folder = git_root .. '/' .. plans_rel .. '/' .. name
-  local shotfile = git_root .. '/' .. shotfiles_rel .. '/' .. name .. '.md'
 
   if opts.folder and vim.fn.isdirectory(folder) == 1 then
-    for _, kind in ipairs({ 'plan', 'context', 'spec' }) do
+    for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
       close_buf_for(folder .. '/' .. kind .. '.md')
     end
     local _, err = git(git_root, { 'rm', '-rf', '--',
@@ -1219,29 +1225,18 @@ function M.delete_plan(git_root, name, opts)
     end
   end
 
-  if opts.shotfile and vim.fn.filereadable(shotfile) == 1 then
-    close_buf_for(shotfile)
-    local _, err = git(git_root, { 'rm', '--',
-      shotfiles_rel .. '/' .. name .. '.md' })
-    if err ~= 0 then
-      os.remove(shotfile)
-    end
-  end
-
-  -- Only drop the masterplan entry when the folder is gone, so fix() doesn't
+  -- Only drop the metaplan entry when the folder is gone, so fix() doesn't
   -- re-adopt a still-present folder and resurrect the plan.
   if vim.fn.isdirectory(folder) ~= 1 then
-    local ok, err = M.remove_masterplan_entry(git_root, name)
+    local ok, err = M.remove_metaplan_entry(git_root, name)
     if not ok then return false, err end
   end
 
   local fok, ferr = M.fix(git_root)
   if not fok then return false, ferr end
 
-  local msg = 'chore(plans): delete ' .. name
-  if opts.folder and not opts.shotfile then msg = msg .. ' (folder only)' end
-  if opts.shotfile and not opts.folder then msg = msg .. ' (shotfile only)' end
-  local cok, cmsg, committed = M.commit_plans(git_root, msg)
+  local cok, cmsg, committed = M.commit_plans(git_root,
+    'chore(plans): delete ' .. name)
   if not cok then return false, cmsg end
   return true, committed and 'deleted' or 'deleted (nothing to commit)'
 end

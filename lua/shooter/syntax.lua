@@ -308,7 +308,7 @@ function M.setup()
   local group = vim.api.nvim_create_augroup('HalShooterSyntax', { clear = true })
 
   -- Apply highlighting when entering prompts files; also track
-  -- docs/plans/masterplan.md for < >l (last opened file) without applying
+  -- docs/plans/metaplan.md for < >l (last opened file) without applying
   -- shotfile syntax to it.
   vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
     group = group,
@@ -324,14 +324,14 @@ function M.setup()
         show_shotfile_info(ev.buf)
         -- Enable autoread so checktime polling picks up external writes (e.g. iOS app)
         vim.bo[ev.buf].autoread = true
-      elseif files_mod.is_masterplan(filepath) then
+      elseif files_mod.is_metaplan(filepath) then
         files_mod.track_last_shotfile(filepath)
-        -- <CR> on a masterplan plan line opens (or creates) the plan's
-        -- shotfile under docs/shotfiles/docs/plans/, same as <space>pe.
-        vim.keymap.set('n', '<CR>', '<Cmd>HalShooterPlanEdit<CR>', {
+        -- <CR> on a metaplan plan line opens (or creates) the plan's
+        -- idea.md under docs/plans/<plan>/, same as <space>pe.
+        vim.keymap.set('n', '<CR>', '<Cmd>HalShooterPlanOpenIdea<CR>', {
           buffer = ev.buf,
           silent = true,
-          desc = 'Open plan shotfile (create if missing)',
+          desc = 'Open plan idea.md (create if missing)',
         })
       end
     end,
