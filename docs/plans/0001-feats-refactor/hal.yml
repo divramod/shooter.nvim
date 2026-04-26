@@ -7,4 +7,7 @@ cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:automode resumed at phase 002 T001 (core/ seam-map across commands/shot_actions/files/ext_config/shotfile_fix)"
+automode: paused
+paused_at: "2026-04-27"
+halt_reason: "session-budget — phase 002 T001-T004 shipped (seam plan + 36 char tests + files.lua split into 6 sub-modules). Remaining: T005 (ext_config split), T006 (commands split), T007 (shot_actions split), T008 (security), T009 (verify)."
+last_action: "/hal:ship phase 002 T004 — files.lua split into 6 sub-modules (max 124 LOC); resume at phase 002 T005 (ext_config split)"

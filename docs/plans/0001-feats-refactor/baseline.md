@@ -69,6 +69,14 @@ Salient details:
 
 The full `luacov.report.out` from baseline run is committed at `docs/plans/0001-feats-refactor/baseline-coverage.txt` for reproducibility.
 
+### Gaps escalated to Phase 005 T002
+
+Per-file 80% gates that are structurally hard to lift in their owning phase (functions need real buffer / filesystem / tmux state that's expensive to fixture per-test). These get pushed in Phase 005 T002 alongside the global 80% closure:
+
+- **`lua/shooter/commands.lua`** — currently 35.45% post-T003. The `commands_registration_spec.lua` exercises `M.setup()` which loads every `setup_<area>_commands` block, but most individual command callbacks are never invoked. Phase 005 will either invoke each `:HalShooter*` command in a stubbed env or document the gap as `ALLOWED_BELOW_THRESHOLD` with rationale.
+- **`lua/shooter/core/shot_actions.lua`** — currently 47.37%. Many functions (yank/extract/navigate/create-from-claude) need realistic shotfile buffer state. Phase 005 invests in fixture infrastructure or accepts an exception.
+- **`lua/shooter/core/shotfile_fix.lua`** — currently 62.05%. Per the seam plan it's review-only (no split). Coverage push is straightforward in Phase 005 once a shotfile fixture helper exists.
+
 ## Security Inventory
 
 **Source:** Audit greps run in Phase 000 T004 (raw output: `/tmp/secaudit.log` regen with the commands in spec.md § Commands).

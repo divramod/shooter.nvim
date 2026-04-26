@@ -92,27 +92,27 @@ lua/shooter/core/files/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T003** — Characterization tests for `commands.lua` + `shot_actions.lua` + `shotfile_fix.lua`
+- [x] **T003** — Characterization tests for `commands.lua` + `shot_actions.lua` + `shotfile_fix.lua`
   - **Acceptance:** Coverage of the three files ≥ 80%.
   - **Verify:** Tests green; `awk '/lua\/shooter\/(commands|core\/(shot_actions|shotfile_fix))/' luacov.report.out` ≥ 80%.
   - **Files:** `tests/core/shot_actions_*_spec.lua`, `tests/core/shotfile_fix_spec.lua`, `tests/commands_*_spec.lua`
   - **Size:** XL
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T004** — Split `core/files.lua`
+- [x] **T004** — Split `core/files.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module; existing callers see no change.
   - **Verify:** `find lua/shooter/core/files -name '*.lua' -exec wc -l {} + | awk '$1>350{exit 1}'`; tests + smoke green.
   - **Files:** `lua/shooter/core/files/*.lua`, `lua/shooter/core/files.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T005** — Split `core/ext_config.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module.
