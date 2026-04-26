@@ -1,13 +1,20 @@
 # feats
 
-## shot 34 < >pf improvements
+## shot 36 < >pf improvements
 pf should automatically search all worktrees to see, if there are new plans in them
 
-## shot 33 move improvements into new followup plan
+## shot 35 move improvements into new followup plan
 
-## shot 32 < >pa
+## shot 34 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 33 < >pE < >E (2026-04-26 10:04:02)
+i want you to a a plan telescope picker.
+it should list the docs/shotfiles/docs/plans to open them
+
+## x shot 32 < >pe (2026-04-26 08:59:57)
+please map < >pe also to < >e
 
 ## x shot 31 improve < >pf command (2026-04-26 08:29:15)
 i want to add a new category in the masterplan file.
@@ -99,14 +106,14 @@ i may add additional functionality there in the future.
 
 independent from the plan functionality, please also map < >H to the help for the hal plugin and ensure, that all functionality for all commands is explained in the hal help.
 
-## x shot 20 < >ms < >mc < >mp (2026-04-24 05:13:29)
+## x shot 20 < >pe < >mf improvements (2026-04-24 05:13:29)
+the pe command worked correctly, except for the fact, that it put the plan to .hal/util/shooter/shotfiles/plans, instead of to .../shotfiles/docs/plans. please adapt this for both commands
+
+## x shot 19 < >ms < >mc < >mp (2026-04-24 05:13:29)
 create the commands to open the following files, when the cursor is on a line with a plan in the masterplan
 < >ms opens the docs/plans/NNNN-.../spec.md file for the plan in the line under the cursor (writes a message if there is no plan or spec file)
 < >mc opens the docs/plans/NNNN-.../context.md file for the plan in the line under the cursor (writes a message if there is no plan or context file)
 < >mp opens the docs/plans/NNNN-.../plan.md file for the plan in the line under the cursor (writes a message if there is no plan or plan file)
-
-## x shot 19 < >pe < >mf improvements (2026-04-24 05:13:29)
-the pe command worked correctly, except for the fact, that it put the plan to .hal/util/shooter/shotfiles/plans, instead of to .../shotfiles/docs/plans. please adapt this for both commands
 
 ## x shot 18 < >mf improvements (2026-04-24 05:05:32)
 i want to extend the functionality of the masterplan fix command.
