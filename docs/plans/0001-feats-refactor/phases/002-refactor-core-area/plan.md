@@ -70,27 +70,27 @@ lua/shooter/core/files/
 
 ## Tasks
 
-- [ ] **T001** — Read & seam-map each split-candidate
+- [x] **T001** — Read & seam-map each split-candidate
   - **Acceptance:** `seams.md` lists per-file seam plan and an `ALLOWED_LARGE_FILES` decision (split / exception) with rationale for each of the five files. `commands.lua` decision documented explicitly.
   - **Verify:** `phases/002-refactor-core-area/seams.md` exists with all five files listed.
   - **Files:** `docs/plans/0001-feats-refactor/phases/002-refactor-core-area/seams.md`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T002** — Characterization tests for `core/files.lua` + `core/ext_config.lua`
+- [x] **T002** — Characterization tests for `core/files.lua` + `core/ext_config.lua`
   - **Acceptance:** Coverage of the two files ≥ 80%; existing tests in `tests/core/` not duplicated; new tests use tmpdir fixtures.
   - **Verify:** Tests green; relevant lines in `luacov.report.out` ≥ 80%.
   - **Files:** `tests/core/files_*_spec.lua`, `tests/core/ext_config_*_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T003** — Characterization tests for `commands.lua` + `shot_actions.lua` + `shotfile_fix.lua`
   - **Acceptance:** Coverage of the three files ≥ 80%.
