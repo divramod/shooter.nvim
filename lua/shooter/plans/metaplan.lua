@@ -754,9 +754,6 @@ function M.fix(git_root)
   local path = M.get_path(git_root)
   vim.fn.mkdir(git_root .. '/docs/plans', 'p')
 
-  local utils = require('shooter.utils')
-  utils.echo('pf: scanning worktrees…')
-
   -- worktree_roots is used ONLY to seed the "used numbers" set so
   -- gap-fill avoids collisions with plans started in other worktrees.
   -- pf never edits worktrees — main is canonical for plan management.
@@ -840,7 +837,6 @@ function M.fix(git_root)
   end
 
   -- 4. Auto-classify each plan into a section by file presence.
-  utils.echo('pf: classifying plans…')
   local classified = {
     ['in progress'] = {},
     ['planned'] = {},
@@ -889,10 +885,8 @@ function M.fix(git_root)
     next_pre[i] = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
   end
 
-  utils.echo('pf: computing used numbers…')
   local used = M.collect_used_numbers(git_root, parsed.sections, worktree_roots)
 
-  utils.echo('pf: rendering metaplan…')
   local new = M.render(parsed, M.get_title(git_root), { used_numbers = used })
 
   if bufnr then
@@ -915,14 +909,13 @@ function M.fix(git_root)
       table.insert(renames, { pre = pre, post = post })
     end
   end
-  if #renames > 0 then
-    utils.echo('pf: renaming ' .. #renames .. ' plan folder(s) in main…')
-  end
   for _, r in ipairs(renames) do
     rename_plan_folder(git_root, r.pre, r.post)
   end
 
-  utils.echo('pf: done')
+  -- fix() emits no cmdline output of its own — the caller controls all
+  -- user-visible messaging so vim's hit-enter prompt isn't triggered by
+  -- a long sequence of progress messages.
   return true
 end
 
