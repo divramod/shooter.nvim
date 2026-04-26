@@ -1,5 +1,6 @@
--- Telescope pickers over docs/plans/**/<basename>.md files.
--- Used by HalShooterPlanPickerPlan / PlanPickerContext / PlanPickerSpec.
+-- Telescope pickers over plan-related markdown files.
+--   M.open(...)           — docs/plans/**/<basename>.md  (plan / context / spec)
+--   M.open_shotfiles(...) — docs/shotfiles/docs/plans/*.md  (per-plan shotfiles)
 
 local M = {}
 
@@ -19,15 +20,25 @@ function M.find(git_root, basename)
   return out
 end
 
--- Open a telescope picker of the matches and edit the selected file.
-function M.open(git_root, basename)
-  local paths = M.find(git_root, basename)
-  if #paths == 0 then
-    require('shooter.utils').echo(
-      string.format('No %s.md files under docs/plans/', basename))
-    return
+-- List `*.md` files directly under `<git_root>/docs/shotfiles/docs/plans`.
+-- Returns list of absolute paths sorted by name.
+function M.find_shotfiles(git_root)
+  if not git_root or git_root == '' then return {} end
+  local root = git_root .. '/docs/shotfiles/docs/plans'
+  if vim.fn.isdirectory(root) ~= 1 then return {} end
+  local out = {}
+  for _, name in ipairs(vim.fn.readdir(root)) do
+    if name:match('%.md$') then
+      table.insert(out, root .. '/' .. name)
+    end
   end
+  table.sort(out)
+  return out
+end
 
+-- Show a telescope picker over `paths` and edit the selected file.
+-- `prefix` is stripped from each path for display/sort key.
+local function show_picker(paths, opts)
   local pickers = require('telescope.pickers')
   local finders = require('telescope.finders')
   local conf = require('telescope.config').values
@@ -36,19 +47,18 @@ function M.open(git_root, basename)
   local previewers = require('telescope.previewers')
   local utils = require('shooter.utils')
 
-  local prefix = git_root .. '/docs/plans/'
   pickers.new({}, {
-    prompt_title = 'Plans: ' .. basename .. '.md',
+    prompt_title = opts.prompt_title,
     finder = finders.new_table({
       results = paths,
       entry_maker = function(path)
-        local rel = path:sub(#prefix + 1)
+        local rel = path:sub(#opts.prefix + 1)
         return { value = path, display = rel, ordinal = rel, path = path }
       end,
     }),
     sorter = conf.generic_sorter({}),
     previewer = previewers.new_buffer_previewer({
-      title = basename .. '.md',
+      title = opts.preview_title,
       define_preview = function(self, entry)
         local content = utils.read_file(entry.path) or ''
         vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false,
@@ -69,6 +79,38 @@ function M.open(git_root, basename)
       return true
     end,
   }):find()
+end
+
+-- Open a telescope picker of docs/plans/**/<basename>.md and edit the
+-- selected file.
+function M.open(git_root, basename)
+  local paths = M.find(git_root, basename)
+  if #paths == 0 then
+    require('shooter.utils').echo(
+      string.format('No %s.md files under docs/plans/', basename))
+    return
+  end
+  show_picker(paths, {
+    prompt_title  = 'Plans: ' .. basename .. '.md',
+    preview_title = basename .. '.md',
+    prefix        = git_root .. '/docs/plans/',
+  })
+end
+
+-- Open a telescope picker of docs/shotfiles/docs/plans/*.md (the per-plan
+-- shotfiles managed by `pe`/`pf`) and edit the selected file.
+function M.open_shotfiles(git_root)
+  local paths = M.find_shotfiles(git_root)
+  if #paths == 0 then
+    require('shooter.utils').echo(
+      'No plan shotfiles under docs/shotfiles/docs/plans/')
+    return
+  end
+  show_picker(paths, {
+    prompt_title  = 'Plan shotfiles',
+    preview_title = 'plan shotfile',
+    prefix        = git_root .. '/docs/shotfiles/docs/plans/',
+  })
 end
 
 return M

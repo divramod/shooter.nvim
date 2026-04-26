@@ -378,6 +378,15 @@ local function setup_plan_commands()
   create_cmd('HalShooterPlanPickerSpec',    function() open('spec')    end,
     { desc = 'Pick a docs/plans/**/spec.md file' })
 
+  create_cmd('HalShooterPlanPickerShotfile', function()
+    local git_root = files.get_git_root()
+    if not git_root then
+      utils.echo('Not in a git repo')
+      return
+    end
+    plan_picker.open_shotfiles(git_root)
+  end, { desc = 'Pick a docs/shotfiles/docs/plans/*.md plan shotfile' })
+
   -- HalShooterPlanEdit — open/create/rename shotfile for plan under cursor
   create_cmd('HalShooterPlanEdit', function()
     local masterplan = require('shooter.plans.masterplan')

@@ -69,4 +69,33 @@ describe('shooter.plans.picker', function()
       assert.is_true(paths[2] < paths[3])
     end)
   end)
+
+  describe('find_shotfiles', function()
+    local shot_dir = repo .. '/docs/shotfiles/docs/plans'
+
+    it('returns empty list when the shotfile dir is missing', function()
+      assert.same({}, plan_picker.find_shotfiles(repo))
+    end)
+
+    it('returns empty list when git_root is nil or empty', function()
+      assert.same({}, plan_picker.find_shotfiles(nil))
+      assert.same({}, plan_picker.find_shotfiles(''))
+    end)
+
+    it('lists only direct-child .md files, sorted by name', function()
+      mkfile(shot_dir .. '/0003-zeta.md')
+      mkfile(shot_dir .. '/0001-alpha.md')
+      mkfile(shot_dir .. '/0002-beta.md')
+      -- Non-md should be ignored
+      mkfile(shot_dir .. '/notes.txt')
+      -- Nested directory should be ignored (flat listing)
+      mkfile(shot_dir .. '/sub/0099-nested.md')
+
+      local paths = plan_picker.find_shotfiles(repo)
+      assert.equals(3, #paths)
+      assert.equals(shot_dir .. '/0001-alpha.md', paths[1])
+      assert.equals(shot_dir .. '/0002-beta.md', paths[2])
+      assert.equals(shot_dir .. '/0003-zeta.md', paths[3])
+    end)
+  end)
 end)

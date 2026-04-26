@@ -142,8 +142,9 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pp        Open plan.md          Open docs/plans/<NNNN-slug>/plan.md
   pc        Open context.md       Open docs/plans/<NNNN-slug>/context.md
   ps        Open spec.md          Open docs/plans/<NNNN-slug>/spec.md
-  pe        Edit plan shotfile    Open/rename/create the plan's shotfile
+  pe / e    Edit plan shotfile    Open/rename/create the plan's shotfile
                                   under docs/shotfiles/docs/plans/
+                                  (e is a top-level alias for pe)
   pn        New plan              Prompt for a title, create
                                   docs/plans/<NNNN-slug>/plan.md at the next
                                   free number (max known plan number + 1).
@@ -162,6 +163,9 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pP        Pick plan.md          Telescope picker of docs/plans/**/plan.md
   pC        Pick context.md       Telescope picker of docs/plans/**/context.md
   pS        Pick spec.md          Telescope picker of docs/plans/**/spec.md
+  pE / E    Pick plan shotfile    Telescope picker of
+                                  docs/shotfiles/docs/plans/*.md
+                                  (E is a top-level alias for pE)
 
 TOOLS NAMESPACE (l prefix)
   lt        Token counter         Count tokens in file using ttok
