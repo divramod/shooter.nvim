@@ -68,16 +68,16 @@ Foundation phase. No source-code logic changes. Produces the artifacts the per-a
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T004** — Security-audit inventory
+- [x] **T004** — Security-audit inventory
   - **Acceptance:** `baseline.md § Security Inventory` lists every site for: shell-outs (`vim.fn.system`/`systemlist`/`io.popen`/`jobstart`), path-traversal-prone interpolation, `loadstring`/`load`/`dofile`/`loadfile`, `vim.fn.tempname`/`os.tmpname`/`/tmp/` writes, file-mode setters. Each entry: file:line, kind, risk-class (high/med/low), notes.
-  - **Verify:** `awk '/## Security Inventory/,/^## /' docs/plans/0001-feats-refactor/baseline.md | grep -cE ':[0-9]+ '` — non-zero count.
+  - **Verify:** `awk '/^## Security Inventory/{flag=1; next} /^## /{flag=0} flag' docs/plans/0001-feats-refactor/baseline.md | grep -cE ':[0-9]+'` — non-zero count.
   - **Files:** `docs/plans/0001-feats-refactor/baseline.md`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [x] **T005** — LOC inventory and exception list
   - **Acceptance:** `baseline.md § LOC Inventory` lists every file > 350 LOC with kind (`split-candidate` or `exception`). Exceptions populate `ALLOWED_LARGE_FILES:` with rationale.

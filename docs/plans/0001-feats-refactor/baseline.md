@@ -71,15 +71,70 @@ The full `luacov.report.out` from baseline run is committed at `docs/plans/0001-
 
 ## Security Inventory
 
-> Filled in by Phase 000 T004. Will contain a line-by-line catalogue of:
->
-> - Shell-out sites: `vim.fn.system`, `vim.fn.systemlist`, `io.popen`, `vim.fn.jobstart`
-> - Path-handling sites: file/dir rename/move, untrusted path interpolation
-> - Dynamic code execution: `loadstring`, `load(`, `dofile`, `loadfile`
-> - Temp-file handling: `vim.fn.tempname`, `os.tmpname`, `/tmp/` writes
-> - File-permission setters
->
-> Format per row: `<file>:<line> | <kind> | <risk: high|med|low> | <notes>`.
+**Source:** Audit greps run in Phase 000 T004 (raw output: `/tmp/secaudit.log` regen with the commands in spec.md § Commands).
+
+**Headline findings:**
+
+- **~95 shell-out sites** total. Roughly **35 high-risk** (string-interpolation with caller-controlled paths or commands), **40 medium-risk** (string-form with bounded inputs), **20 low-risk / safe** (table-form `vim.fn.system({...})` or fixed string).
+- **Dynamic code execution: clean.** No `loadstring`, `load(<userdata>)`, `dofile`, or `loadfile` calls. `M.load(...)` matches in the grep are function definitions, not exec sites. Success Criterion #4 is trivially satisfied today and just needs to stay that way.
+- **Temp-file handling: 2 TOCTOU-prone sites** (`tmux/keys.lua:15`, `tmux/send.lua:62` — both use `os.tmpname()` which creates a predictable name and is race-vulnerable). Plus **2 predictable-path sites** in shell scripts under `tmux/toggle_panes.lua:351,356` (`/tmp/shooter-pane-$PANE_ID`, `/tmp/shooter-folder-$PANE_ID` — safe iff `$PANE_ID` is validated server-side, which needs verification).
+- **File permissions: not used.** No `chmod`, `vim.fn.setfperm`, or `setfperm`. Files inherit process umask. The plugin doesn't write secret-bearing files, so this is acceptable; just noting that any future secret-write must explicitly set restrictive perms.
+
+### High-risk shell-out sites (Phase 1+ must fix)
+
+Each row: file:line — pattern — phase — concrete fix.
+
+| file:line                                          | pattern                                      | phase | fix |
+|----------------------------------------------------|----------------------------------------------|-------|-----|
+| `core/project.lua:45`                              | `io.popen('ls -1 "' .. projects_dir .. '"')` | 002   | replace with `vim.fn.readdir` (no shell) |
+| `core/repos.lua:39`                                | `io.popen('ls -d "' .. expanded_dir .. '"/*/ ')` | 002 | `vim.fn.readdir` + filter |
+| `core/shot_actions.lua:779`                        | `'tmux send-keys -t ' .. right_pane`         | 002   | validate `right_pane` matches `^%[a-zA-Z0-9_]+$` |
+| `core/shot_actions.lua:789`                        | `'tmux select-pane -t ' .. right_pane`       | 002   | same validation |
+| `health.lua:226`                                   | `string.format('find "%s" …', full_path)`    | 004   | `vim.fn.system({'find', full_path, ...})` table-form |
+| `inbox/init.lua:33`                                | `'find "' .. expanded_dir .. '"…'`           | (root)| same — table-form |
+| `utils.lua:128`                                    | `io.popen(cmd)` — `cmd` from caller          | 002   | rename helper, document caller-must-shellescape contract |
+| `utils.lua:204`                                    | `'grep -l "shooter" "' .. plugins_dir .. '"…'`| 002  | table-form |
+| `dashboard/data.lua:123,191`                       | `'ls -1 "' .. projects_dir`                  | (root)| `vim.fn.readdir` |
+| `telescope/helpers.lua:415,438,510`                | `'ls -1 "' .. *_dir .. '"'`                  | 003   | `vim.fn.readdir` |
+| `analytics/data.lua:155,186,206`                   | `'ls -d "' .. expanded_dir / 'find "…"'`     | 004   | `vim.fn.readdir` / `vim.fs.find` |
+| `tmux/script_panes.lua:22,53,65`                   | `string.format("test -x '%s'", path)` etc.   | 004   | `vim.loop.fs_stat` for the test-x; table-form for ls |
+| `tmux/shell.lua:8,46`                              | `string.format("…", …)` shell-outs           | 004   | table-form |
+| `tmux/panes.lua:21,33,129`                         | `string.format("tmux …", …)`                 | 004   | table-form `{'tmux', ...}` |
+| `tmux/detect.lua:139`                              | `string.format("tmux list-panes …grep -x '%s'", pane_id)` | 004 | validate pane_id; replace with substring match in Lua |
+| `tmux/wrapper.lua:8,19`                            | `'tmux ' .. cmd` / `script_path .. ' …'`     | 004   | table-form; for `script_path`, `vim.fn.shellescape` |
+| `tmux/send.lua:56`                                 | `cmd .. " 2>/dev/null"` — caller-controlled  | 004   | document contract or refactor caller |
+| `tmux/hidden_session.lua:12`                       | `cmd .. ' 2>/dev/null'`                      | 004   | same |
+| `tmux/watch.lua:19`                                | `'tmux ' .. cmd .. ' 2>/dev/null'`           | 004   | table-form |
+| `tmux/toggle_panes.lua:23`                         | `cmd .. ' 2>/dev/null'`                      | 004   | document caller contract |
+| `images.lua:40`                                    | `'tmux split-window…' .. tmpfile .. ' ; …'.. wait_channel .. '"'` | (root) | the `;` here is *especially* dangerous — table-form + table-of-args |
+| `images.lua:41`                                    | `'tmux wait-for ' .. wait_channel`           | (root)| validate wait_channel |
+| `commands.lua:722,1080,1095`                       | `io.popen(cmd)` / `string.format(...)`       | 002   | table-form / readdir |
+| `providers/init.lua:50,66,90,116,139`              | `io.popen(string.format(…, pane_id / pattern))` | (root)| validate pane_id; pattern is a known set |
+| `providers/codex.lua:31`                           | `{"sh", "-c", cmd .. " 2>/dev/null"}`        | (root)| `cmd` is shell-interpreted; refactor to direct exec |
+| `providers/copilot.lua:26`, `providers/opencode.lua:28`, `providers/gemini.lua:31` | same pattern as codex | (root)| same |
+| `telescope/toggle_panes_picker.lua:22`             | `io.popen(string.format(…))`                 | 003   | table-form |
+
+### Medium-risk shell-out sites
+
+These are string-form but with bounded / no-user-input. Audit during the relevant phase; replace with table-form when convenient. Examples: `core/files.lua:104,111,120` (no interpolation), `syntax.lua:296`, `core/ext_config.lua:90`, `telescope/pickers.lua:533`, `health.lua:87,111` (fixed strings), `tmux/operations.lua:13,40`, `tmux/watch.lua:8,39,69`, `health/tools.lua:15,40,59`, `tools/clipboard_image.lua:26,34,44` (script-rel + shellescape), `tools/git_worktree.lua:18,50,170,172` (uses `shellescape`).
+
+### Low-risk / safe (already table-form)
+
+`tmux/create.lua:43,48,71,74`, `core/shotfile_fix.lua:203,208,214,262,264,278`, `plans/metaplan.lua:278,797`, `tools/links.lua:94`, `tmux/operations.lua:13`, `core/shot_actions.lua:768` (table-form). Keep as the template for migrations.
+
+### Tempfile findings
+
+| file:line                            | issue                                               | fix |
+|--------------------------------------|-----------------------------------------------------|-----|
+| `tmux/keys.lua:15`                   | `os.tmpname()` — race + predictable                 | `vim.fn.tempname()` (Neovim's, more secure) |
+| `tmux/send.lua:62`                   | same                                                | same |
+| `tmux/toggle_panes.lua:351,356`      | predictable `/tmp/shooter-pane-$PANE_ID` (shell)    | use `mktemp` + ensure `$PANE_ID` is validated upstream |
+
+### Unhandled categories (clean)
+
+- **Dynamic exec:** no findings ✓
+- **File-perm setters:** no findings ✓ (acceptable — no secret-write)
+- **Path-traversal in user-controlled rename:** see `plans/metaplan.lua` (rename ops); in scope for Phase 001 T005 testing.
 
 ## LOC Inventory
 
