@@ -42,3 +42,5 @@ envfiles/
 
 # Claude Code worktree slot marker (local runtime state)
 .claude-context
+luacov.stats.out
+luacov.report.out

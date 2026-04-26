@@ -38,7 +38,15 @@ package.path = luacov_path .. '/src/?.lua;'
 -- Start luacov BEFORE shooter modules load so they are instrumented.
 -- pcall: tests still run if coverage tooling is unavailable.
 local cov_ok, cov_err = pcall(require, 'luacov')
-if not cov_ok then
+if cov_ok then
+  -- Neovim doesn't run Lua atexit hooks on :qa, so wire shutdown explicitly.
+  local runner_ok, runner = pcall(require, 'luacov.runner')
+  if runner_ok then
+    vim.api.nvim_create_autocmd('VimLeavePre', {
+      callback = function() pcall(runner.shutdown) end,
+    })
+  end
+else
   print('warning: luacov failed to load; coverage will not be recorded: ' .. tostring(cov_err))
 end
 

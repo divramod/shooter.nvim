@@ -57,16 +57,16 @@ Foundation phase. No source-code logic changes. Produces the artifacts the per-a
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T003** — Capture coverage baseline
+- [x] **T003** — Capture coverage baseline
   - **Acceptance:** Full test suite runs under luacov; `luacov.report.out` generated; per-module + total % copied into `baseline.md § Coverage Baseline`.
   - **Verify:** `test -s luacov.report.out && grep -E '^Total' luacov.report.out`
   - **Files:** `docs/plans/0001-feats-refactor/baseline.md`, generated `luacov.report.out`
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T004** — Security-audit inventory
   - **Acceptance:** `baseline.md § Security Inventory` lists every site for: shell-outs (`vim.fn.system`/`systemlist`/`io.popen`/`jobstart`), path-traversal-prone interpolation, `loadstring`/`load`/`dofile`/`loadfile`, `vim.fn.tempname`/`os.tmpname`/`/tmp/` writes, file-mode setters. Each entry: file:line, kind, risk-class (high/med/low), notes.

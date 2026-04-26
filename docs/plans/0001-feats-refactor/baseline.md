@@ -28,7 +28,46 @@ Salient details:
 
 ## Coverage Baseline
 
-> Filled in by Phase 000 T003. Will contain per-module + total coverage percentages from `luacov.report.out`.
+**Source:** `luacov.report.out` (Phase 000 T003).
+
+**Total coverage: 59.92%** (3995 hit / 6667 total lines instrumented in `lua/shooter/`).
+
+**Test suite status:** 50 spec files; all green (no `Failed:` or `Errors:` lines in run log).
+
+**Target:** 80% absolute (per spec). Gap: **20.08 pp**.
+
+### Lowest-coverage files (priority for new tests)
+
+| coverage | file                                               | hit / missed |
+|----------|----------------------------------------------------|--------------|
+|   0.71%  | `lua/shooter/telescope/helpers.lua`                | 2 / 281      |
+|   1.74%  | `lua/shooter/telescope/toggle_panes_picker.lua`    | 2 / 113      |
+|   6.90%  | `lua/shooter/tools/response_viewer/claude.lua`     | 4 / 54       |
+|   7.78%  | `lua/shooter/tmux/operations.lua`                  | 13 / 154     |
+|   9.38%  | `lua/shooter/tmux/keys.lua`                        | 3 / 29       |
+|  12.62%  | `lua/shooter/tmux/send.lua`                        | 13 / 90      |
+|  14.63%  | `lua/shooter/tmux/shell.lua`                       | 6 / 35       |
+|  16.07%  | `lua/shooter/tmux/messages.lua`                    | 9 / 47       |
+|  21.13%  | `lua/shooter/tmux/toggle_panes.lua`                | 30 / 112     |
+|  21.57%  | `lua/shooter/tools/git_worktree_oil.lua`           | 22 / 80      |
+
+### Highest-coverage files (already in good shape; sentinel reference)
+
+- `lua/shooter/telescope/recency.lua` — **100.00%** (38/38)
+- `lua/shooter/analytics/report.lua` — **98.80%** (82/83)
+- `lua/shooter/core/fix_titles.lua` — **97.73%** (86/88)
+- `lua/shooter/tools/response_viewer/opencode.lua` — **94.79%** (91/96)
+- `lua/shooter/core/git_push.lua` — **93.10%** (81/87)
+
+### Implications for per-area phases
+
+- **`telescope/helpers.lua` (0.71%)** is also a Phase 003 split-target. Phase 003's tests-first task gets the 80%-local-coverage gate; this is where most of the 20pp global lift will come from (the file is 281 missed lines).
+- **`tmux/*` modules (7-21%)** drag global down by ~5-7pp. These mostly shell out to tmux; without a live tmux, they're hard to characterize. Phase 004 must either pin behavior with `pending()` guards on tmux-required tests, or accept a per-module exception in `ALLOWED_LARGE_FILES:`.
+- **`tools/response_viewer/claude.lua` (6.9%)** is small (54 missed) and a quick win — likely UI scaffolding without much logic. Targetable in Phase 004 or Phase 005.
+
+### Coverage report archive
+
+The full `luacov.report.out` from baseline run is committed at `docs/plans/0001-feats-refactor/baseline-coverage.txt` for reproducibility.
 
 ## Security Inventory
 
