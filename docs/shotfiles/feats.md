@@ -1,6 +1,27 @@
 # feats
 
-## shot 41 < >pf improvements
+## shot 44 < >pf improvements
+it would be awesome, if we can move plans, which are already in progress
+
+## shot 43 move improvements into new followup plan
+
+## shot 42 < >pa
+i want you to add a new plan command < >pa, which archives a plan.
+when in the masterplan.md file, 
+
+## x shot 41 < >n in an idea.md file not working (2026-04-26 15:04:15)
+the idea.md files are also shotfiles.
+so all the shotfiles commands should also work there.
+please add this to the plan
+
+## x shot 40 plan improvements (2026-04-26 15:02:05)
+< >pe should be renamed to < >pi, for opening the plans idea file
+< >ps should be openening the plans spec file (if there is none, write a short message)
+< >pm should be opening the plans masterplan file docs/plans/NNNN-<feat>/masterplan.md
+
+also, the open last shotfile command should also take the docs/plans/NNNN-<feat>/idea.md | spec.md | masterplan.md file into account, the same goes for the shotfile picker.
+
+## x shot 39 < >pf improvements (2026-04-26 13:48:18)
 i want to go further with the plan feature improvements in shooter.
 the following things i want to be addressed next:
 
@@ -22,11 +43,7 @@ this has deep impact, as now < >pf is not only renaming files anymore, it will r
 
 their is a clear barrier, when plans cannot be moved (renumbered) anymore. its when they have a spec.md file already inside. this is a clear indication, that some agents already started working on the plan.
 
-## shot 40 move improvements into new followup plan
-
-## shot 39 < >pa
-i want you to add a new plan command < >pa, which archives a plan.
-when in the masterplan.md file, 
+when you implemented all of that, we also need a migration path for all opted in hal repos in ~/a, so that you move ~/a/<repo>/docs/plans/masterplan.md to metaplan.md and move all the ~/a/<repo>/docs/shotfiles/docs/plans/NNNN-<feat>.md files to ~/a/<repo>/docs/plans/NNNN-<feat>/idea.md and adapt the content accordingly, so that all the plans are in the new structure and the old files are removed, but the history is preserved in git, so you would need to git add and commit docs/plans and docs/shotfiles in every repo before and after the migration with senseful commit messages, so that the history is clear and understandable.
 
 ## x shot 38 improve < >pf (2026-04-26 13:31:16)
 my next plans section looks like this
@@ -243,14 +260,14 @@ i may add additional functionality there in the future.
 
 independent from the plan functionality, please also map < >H to the help for the hal plugin and ensure, that all functionality for all commands is explained in the hal help.
 
-## x shot 20 < >pe < >mf improvements (2026-04-24 05:13:29)
-the pe command worked correctly, except for the fact, that it put the plan to .hal/util/shooter/shotfiles/plans, instead of to .../shotfiles/docs/plans. please adapt this for both commands
-
-## x shot 19 < >ms < >mc < >mp (2026-04-24 05:13:29)
+## x shot 20 < >ms < >mc < >mp (2026-04-24 05:13:29)
 create the commands to open the following files, when the cursor is on a line with a plan in the masterplan
 < >ms opens the docs/plans/NNNN-.../spec.md file for the plan in the line under the cursor (writes a message if there is no plan or spec file)
 < >mc opens the docs/plans/NNNN-.../context.md file for the plan in the line under the cursor (writes a message if there is no plan or context file)
 < >mp opens the docs/plans/NNNN-.../plan.md file for the plan in the line under the cursor (writes a message if there is no plan or plan file)
+
+## x shot 19 < >pe < >mf improvements (2026-04-24 05:13:29)
+the pe command worked correctly, except for the fact, that it put the plan to .hal/util/shooter/shotfiles/plans, instead of to .../shotfiles/docs/plans. please adapt this for both commands
 
 ## x shot 18 < >mf improvements (2026-04-24 05:05:32)
 i want to extend the functionality of the masterplan fix command.
