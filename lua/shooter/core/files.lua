@@ -42,17 +42,26 @@ local function _load_last_shotfile()
   return nil
 end
 
--- docs/plans/metaplan.md is also trackable so < >l can return to it when
--- it was the last thing the user opened.
+-- docs/plans/metaplan.md is trackable so < >l can return to it when
+-- it was the last thing the user opened. Restricted to the MAIN worktree —
+-- a metaplan.md in a numbered worktree is intentionally NOT recognised so
+-- < >l never resurfaces a worktree copy.
 function M.is_metaplan(path)
-  return path ~= nil and path:match('/docs/plans/metaplan%.md$') ~= nil
+  if not path then return false end
+  local main_root = M.get_git_root()
+  if not main_root then return false end
+  return path == main_root .. '/docs/plans/metaplan.md'
 end
 
--- True for `docs/plans/<NNNN-slug>/<kind>.md` where kind is one of the
--- per-plan files we want < >l / the shotfile picker to track.
+-- True for `<main_root>/docs/plans/<NNNN-slug>/<kind>.md` where kind is one
+-- of the per-plan files we want < >l / the shotfile picker to track. Same
+-- main-worktree-only restriction as is_metaplan.
 function M.is_plan_file(path, kind)
   if not path then return false end
-  local pattern = '/docs/plans/%d%d%d%d%-[%l%d][%w%-]*/'
+  local main_root = M.get_git_root()
+  if not main_root then return false end
+  local pattern = '^' .. vim.pesc(main_root)
+    .. '/docs/plans/%d%d%d%d%-[%l%d][%w%-]*/'
     .. (kind or '[a-z]+') .. '%.md$'
   return path:match(pattern) ~= nil
 end

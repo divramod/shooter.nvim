@@ -473,7 +473,7 @@ local function setup_plan_commands()
       run(true)
       return
     end
-    vim.ui.input({ prompt = 'delete folder docs/plans/' .. name .. '/ (has content)? type yes: ' },
+    vim.ui.input({ prompt = 'delete ' .. name .. '? yes/no: ' },
       function(ans) run(ans == 'yes') end)
   end, { desc = 'Delete plan under cursor (folder + metaplan entry)' })
 end

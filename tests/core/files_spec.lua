@@ -197,9 +197,12 @@ describe('shooter.core.files', function()
   end)
 
   describe('is_metaplan / is_last_trackable', function()
-    it('is_metaplan matches docs/plans/metaplan.md anywhere', function()
+    it('is_metaplan matches docs/plans/metaplan.md only in main worktree', function()
       assert.is_true(files.is_metaplan(test_root .. '/docs/plans/metaplan.md'))
-      assert.is_true(files.is_metaplan('/any/path/docs/plans/metaplan.md'))
+      -- A metaplan.md outside the main worktree (e.g. inside another
+      -- worktree's checkout) is NOT recognised — this keeps <space>l from
+      -- ever resurfacing a worktree copy.
+      assert.is_false(files.is_metaplan('/any/other/path/docs/plans/metaplan.md'))
     end)
 
     it('is_metaplan rejects other files', function()
@@ -233,13 +236,16 @@ describe('shooter.core.files', function()
         test_root .. '/docs/plans/scratch/idea.md'))
     end)
 
-    it('is_plan_idea matches only docs/plans/<NNNN-slug>/idea.md', function()
+    it('is_plan_idea matches only main-worktree idea.md', function()
       assert.is_true(files.is_plan_idea(
-        '/any/docs/plans/0001-foo/idea.md'))
+        test_root .. '/docs/plans/0001-foo/idea.md'))
       assert.is_false(files.is_plan_idea(
-        '/any/docs/plans/0001-foo/spec.md'))
+        test_root .. '/docs/plans/0001-foo/spec.md'))
       assert.is_false(files.is_plan_idea(
-        '/any/docs/plans/scratch/idea.md'))
+        test_root .. '/docs/plans/scratch/idea.md'))
+      -- Worktree copies are intentionally rejected.
+      assert.is_false(files.is_plan_idea(
+        '/some/other/worktree/docs/plans/0001-foo/idea.md'))
       assert.is_false(files.is_plan_idea(nil))
     end)
 
