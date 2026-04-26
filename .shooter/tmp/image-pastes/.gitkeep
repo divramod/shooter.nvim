@@ -1,0 +1,2 @@
+# This file ensures the images directory is tracked by git
+# Images in this folder are gitignored to keep the repo clean
