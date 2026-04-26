@@ -15,12 +15,27 @@ describe('shooter.plans.metaplan', function()
     return utils.read_file(path) or ''
   end
 
+  -- Wipe any leaked buffers from prior tests so loaded buffers can't shadow
+  -- the on-disk metaplan written by a fresh write_plan().
+  local function wipe_repo_buffers()
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(buf) then
+        local name = vim.api.nvim_buf_get_name(buf)
+        if name ~= '' and name:find(repo, 1, true) then
+          vim.cmd('silent! bwipeout! ' .. buf)
+        end
+      end
+    end
+  end
+
   before_each(function()
+    wipe_repo_buffers()
     os.execute('rm -rf ' .. repo)
     os.execute('mkdir -p ' .. repo)
   end)
 
   after_each(function()
+    wipe_repo_buffers()
     os.execute('rm -rf ' .. repo)
   end)
 
@@ -61,6 +76,7 @@ describe('shooter.plans.metaplan', function()
       -- Seed docs/plans with a folder at 0004; gap-fill skips it but uses
       -- 0001..0003 first, then 0005, 0006 — committed numbers reserved.
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      utils.write_file(repo .. '/docs/plans/0004-seeded/spec.md', '# spec\n')
       write_plan(table.concat({
         '# old title',
         '',
@@ -87,6 +103,7 @@ describe('shooter.plans.metaplan', function()
       -- Folder 0024-seeded reserves 24; entry gap-fills to smallest free (1).
       -- The (agent.md, ...) description is moved to the plan shotfile.
       vim.fn.mkdir(repo .. '/docs/plans/0024-seeded', 'p')
+      utils.write_file(repo .. '/docs/plans/0024-seeded/spec.md', '# spec\n')
       write_plan(table.concat({
         '## next plans',
         '- 0025-context (agent.md, memory, decisions, instructions)',
@@ -148,7 +165,9 @@ describe('shooter.plans.metaplan', function()
 
     it('docs/plans folders reserve their numbers from gap-fill', function()
       vim.fn.mkdir(repo .. '/docs/plans/0007-foo', 'p')
+      utils.write_file(repo .. '/docs/plans/0007-foo/spec.md', '# spec\n')
       vim.fn.mkdir(repo .. '/docs/plans/0012-bar', 'p')
+      utils.write_file(repo .. '/docs/plans/0012-bar/spec.md', '# spec\n')
       write_plan('## next plans\n- alpha\n- beta\n- gamma\n')
       assert.is_true(metaplan.fix(repo))
       local out = read_plan()
@@ -170,7 +189,6 @@ describe('shooter.plans.metaplan', function()
         '- alpha',
         '- beta',
         '',
-        '## backlog',
         '- 0005-on-hold',
         '',
         '## done',
@@ -192,7 +210,6 @@ describe('shooter.plans.metaplan', function()
         '## planned',
         '- 0006-planned-feature',
         '',
-        '## backlog',
         '- 0003-ios-improvements',
         '',
       }, '\n'))
@@ -221,18 +238,20 @@ describe('shooter.plans.metaplan', function()
       local out = read_plan()
       local i_prog = out:find('## in progress', 1, true)
       local i_planned = out:find('## planned', 1, true)
+      local i_specified = out:find('## specified', 1, true)
       local i_next = out:find('## next plans', 1, true)
-      local i_back = out:find('## backlog', 1, true)
       local i_done = out:find('## done', 1, true)
       assert.is_truthy(i_prog)
       assert.is_truthy(i_planned)
+      assert.is_truthy(i_specified)
       assert.is_truthy(i_next)
-      assert.is_truthy(i_back)
       assert.is_truthy(i_done)
       assert.is_true(i_prog < i_planned)
-      assert.is_true(i_planned < i_next)
-      assert.is_true(i_next < i_back)
-      assert.is_true(i_back < i_done)
+      assert.is_true(i_planned < i_specified)
+      assert.is_true(i_specified < i_next)
+      assert.is_true(i_next < i_done)
+      -- backlog has been dropped from canonical sections
+      assert.is_nil(out:find('## backlog', 1, true))
     end)
 
     it('collapses multiple blank lines between plans to single blanks', function()
@@ -386,7 +405,6 @@ describe('shooter.plans.metaplan', function()
         '## next plans',
         '- beta',
         '',
-        '## backlog',
         '- 0003-gamma',
         '',
         '## done',
@@ -478,7 +496,6 @@ describe('shooter.plans.metaplan', function()
         '## next plans',
         '- 0005-merge',
         '',
-        '## backlog',
         '',
         '## done',
         '- 0001-old (2026-01-01 00:00:00)',
@@ -552,7 +569,6 @@ describe('shooter.plans.metaplan', function()
         '## next plans',
         '- 0005-other',
         '',
-        '## backlog',
         '',
         '## done',
         '',
@@ -649,6 +665,7 @@ describe('shooter.plans.metaplan', function()
     it('creates docs/plans/<NNNN-slug>/plan.md with gap-fill', function()
       -- Folder 0004 reserves 4; smallest free is 1.
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      utils.write_file(repo .. '/docs/plans/0004-seeded/spec.md', '# spec\n')
       local ok, path = metaplan.new_plan(repo, 'My Fresh Plan')
       assert.is_true(ok, path)
       assert.equals(repo .. '/docs/plans/0001-my-fresh-plan/plan.md', path)
@@ -691,6 +708,7 @@ describe('shooter.plans.metaplan', function()
 
     it('runs fix(): folder and metaplan number stay in sync', function()
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      utils.write_file(repo .. '/docs/plans/0004-seeded/spec.md', '# spec\n')
       write_plan('## done\n- 0003-old (2026-01-01 00:00:00)\n')
       local ok, path = metaplan.new_plan(repo, 'alpha')
       assert.is_true(ok)
@@ -724,11 +742,11 @@ describe('shooter.plans.metaplan', function()
   describe('collect_used_numbers', function()
     it('ignores docs/plans folders that match `## next plans` entries', function()
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
+      utils.write_file(repo .. '/docs/plans/0004-seeded/spec.md', '# spec\n')
       vim.fn.mkdir(repo .. '/docs/plans/0007-future', 'p')
       local parsed = metaplan.parse(table.concat({
         '## in progress', '- 0004-seeded',
         '## next plans', '- 0007-future',
-        '## backlog', '',
         '## done', '',
       }, '\n'))
       local used = metaplan.collect_used_numbers(repo, parsed.sections)
@@ -742,7 +760,6 @@ describe('shooter.plans.metaplan', function()
         '## in progress', '- 0002-active',
         '## planned', '- 0011-coming-next',
         '## next plans', '',
-        '## backlog', '',
         '## done', '',
       }, '\n'))
       local used = metaplan.collect_used_numbers(repo, parsed.sections)
@@ -1622,17 +1639,15 @@ describe('shooter.plans.metaplan', function()
       assert.is_true(utils.dir_exists(gitrepo .. '/docs/plans/0005-blocked'))
     end)
 
-    it('plan_deletable: only idea.md (or empty) → ok', function()
+    it('delete_plan_preflight: only idea.md (or empty) → ok', function()
       vim.fn.mkdir(gitrepo .. '/docs/plans/0001-only-idea', 'p')
-      utils.write_file(gitrepo .. '/docs/plans/0001-only-idea/idea.md',
-        '# x\n')
-      assert.is_true(metaplan.plan_deletable(gitrepo, '0001-only-idea'))
+      utils.write_file(gitrepo .. '/docs/plans/0001-only-idea/idea.md', '# x\n')
+      assert.is_true(metaplan.delete_plan_preflight(gitrepo, '0001-only-idea'))
       vim.fn.mkdir(gitrepo .. '/docs/plans/0002-empty', 'p')
-      assert.is_true(metaplan.plan_deletable(gitrepo, '0002-empty'))
+      assert.is_true(metaplan.delete_plan_preflight(gitrepo, '0002-empty'))
       vim.fn.mkdir(gitrepo .. '/docs/plans/0003-with-spec', 'p')
-      utils.write_file(gitrepo .. '/docs/plans/0003-with-spec/spec.md',
-        '# spec\n')
-      local ok, reason = metaplan.plan_deletable(gitrepo, '0003-with-spec')
+      utils.write_file(gitrepo .. '/docs/plans/0003-with-spec/spec.md', '# spec\n')
+      local ok, reason = metaplan.delete_plan_preflight(gitrepo, '0003-with-spec')
       assert.is_false(ok)
       assert.truthy(reason:find('spec.md', 1, true))
     end)

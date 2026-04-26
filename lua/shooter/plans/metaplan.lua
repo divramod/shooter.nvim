@@ -7,7 +7,13 @@
 
 local M = {}
 
-local SECTIONS = { 'in progress', 'planned', 'next plans', 'backlog', 'done' }
+-- Section order is also the precedence order used by classify_plan. Done is
+-- sticky (the user marks plans done via <space>pd; fix() never auto-moves
+-- plans into or out of done). Every other section is auto-managed: fix()
+-- re-classifies every plan on every run based on the files inside its
+-- docs/plans/<NNNN-slug>/ folder.
+local SECTIONS = { 'in progress', 'planned', 'specified', 'next plans', 'done' }
+local AUTO_SECTIONS = { 'in progress', 'planned', 'specified', 'next plans' }
 local TIMESTAMP_TAIL = '%s*%(%d%d%d%d%-%d%d%-%d%d%s+%d%d:%d%d:%d%d%)$'
 local COMMIT_PATHS = {
   'docs/plans',
@@ -37,21 +43,41 @@ function M.get_title(git_root)
   return string.format('# metaplan %s', repo)
 end
 
--- True if any worktree's `docs/plans/<plan_name>/` contains a spec.md —
--- that file marks the plan as "an agent has started working on it" and
--- freezes its number from gap-fill / folder rename. Scans ALL worktrees
--- because work-in-progress in any sibling worktree must be respected.
--- Pass an explicit `worktree_roots` list to avoid the per-call
--- `git worktree list` subprocess when calling in a loop (fix() does this).
-function M.is_plan_locked(git_root, plan_name, worktree_roots)
-  if not git_root or not plan_name or plan_name == '' then return false end
-  for _, root in ipairs(worktree_roots or M.list_worktree_roots(git_root)) do
-    if vim.fn.filereadable(root .. '/docs/plans/'
-        .. plan_name .. '/spec.md') == 1 then
-      return true
+-- Classify a plan into one of the auto-managed sections based on the files
+-- inside MAIN's docs/plans/<plan_name>/. Order of checks (most-committed
+-- first):
+--   * hal.yml has `started_at:` with a non-empty value → 'in progress'
+--   * masterplan.md present → 'planned'
+--   * spec.md present → 'specified'
+--   * else → 'next plans'
+-- `## done` is sticky — only mark_done puts a plan there, fix never
+-- auto-moves plans into or out of done.
+function M.classify_plan(git_root, plan_name)
+  if not git_root or not plan_name or plan_name == '' then
+    return 'next plans'
+  end
+  local folder = git_root .. '/docs/plans/' .. plan_name
+  local hal_yml = folder .. '/hal.yml'
+  if vim.fn.filereadable(hal_yml) == 1 then
+    local f = io.open(hal_yml, 'r')
+    if f then
+      local content = f:read('*a') or ''
+      f:close()
+      -- Look for a started_at: line with a date-like value (any digit
+      -- after the colon). Tolerates indented/quoted values.
+      if content:match('[\n^]%s*started_at:%s*[%w%d]')
+          or content:match('^started_at:%s*[%w%d]') then
+        return 'in progress'
+      end
     end
   end
-  return false
+  if vim.fn.filereadable(folder .. '/masterplan.md') == 1 then
+    return 'planned'
+  end
+  if vim.fn.filereadable(folder .. '/spec.md') == 1 then
+    return 'specified'
+  end
+  return 'next plans'
 end
 
 -- List the basenames of files inside <wt_root>/docs/plans/<plan_name>/.
@@ -67,75 +93,6 @@ function M.plan_files_in_worktree(wt_root, plan_name)
     table.insert(out, name)
   end
   return out
-end
-
--- Tier 1 — content rule for pD: a plan is deletable iff every worktree's
--- copy of the folder contains at most idea.md (and nothing else). Returns
--- ok_bool, reason_string. The reason names the offending worktree(s) and
--- file(s) so the user can act on them.
-function M.plan_deletable(git_root, plan_name)
-  if not git_root or not plan_name or plan_name == '' then
-    return false, 'no git root / plan name'
-  end
-  local offenders = {}
-  for _, root in ipairs(M.list_worktree_roots(git_root)) do
-    local files = M.plan_files_in_worktree(root, plan_name)
-    local extras = {}
-    for _, f in ipairs(files) do
-      if f ~= 'idea.md' then table.insert(extras, f) end
-    end
-    if #extras > 0 then
-      table.insert(offenders, {
-        wt = vim.fn.fnamemodify(root, ':t'),
-        files = extras,
-      })
-    end
-  end
-  if #offenders == 0 then return true end
-  local parts = {}
-  for _, o in ipairs(offenders) do
-    table.insert(parts,
-      o.wt .. ' has [' .. table.concat(o.files, ', ') .. ']')
-  end
-  return false, plan_name .. ': ' .. table.concat(parts, '; ')
-end
-
--- Tier 2 — uncommitted-changes guard: returns true iff `git status` shows
--- nothing inside `<wt_root>/docs/plans/<plan_name>/`.
-function M.worktree_status_clean(wt_root, plan_name)
-  if not wt_root or not plan_name then return true end
-  local rel = 'docs/plans/' .. plan_name
-  if vim.fn.isdirectory(wt_root .. '/' .. rel) ~= 1 then return true end
-  local out = vim.fn.system({ 'git', '-C', wt_root, 'status',
-    '--porcelain', '--', rel })
-  if vim.v.shell_error ~= 0 then return true end  -- not a git repo, treat as clean
-  for line in (out or ''):gmatch('[^\n]+') do
-    if line:match('%S') then return false end
-  end
-  return true
-end
-
--- Tier 3 — divergent-branch guard: returns true iff `<wt_root>` has no
--- commits on its current branch (relative to main) that touch
--- `docs/plans/<plan_name>/`. The "main" reference defaults to "main" (the
--- canonical branch). Falls back to "master" on legacy repos.
-function M.worktree_log_clean(wt_root, plan_name)
-  if not wt_root or not plan_name then return true end
-  local rel = 'docs/plans/' .. plan_name
-  if vim.fn.isdirectory(wt_root .. '/' .. rel) ~= 1 then return true end
-  -- If this WT is on main itself, no divergence by definition.
-  local branch = vim.fn.system({ 'git', '-C', wt_root, 'branch',
-    '--show-current' }):gsub('%s+$', '')
-  if branch == 'main' or branch == 'master' or branch == '' then return true end
-  -- Pick the existing main-ish branch as the base.
-  local base = 'main'
-  local _ = vim.fn.system({ 'git', '-C', wt_root, 'rev-parse',
-    '--verify', '--quiet', 'main' })
-  if vim.v.shell_error ~= 0 then base = 'master' end
-  local out = vim.fn.system({ 'git', '-C', wt_root, 'log', '--oneline',
-    base .. '..HEAD', '--', rel })
-  if vim.v.shell_error ~= 0 then return true end  -- can't compare, treat as clean
-  return (out or ''):match('%S') == nil
 end
 
 -- Slugify: lowercase, collapse non-alphanumeric runs to single '-', trim.
@@ -334,17 +291,14 @@ function M.collect_used_numbers(git_root, sections, worktree_roots)
 
   worktree_roots = worktree_roots or M.list_worktree_roots(git_root)
 
-  -- Partition `## next plans` entries: locked (spec.md present) vs tentative.
+  -- `## next plans` entries are tentative — their numbers can be reassigned
+  -- by gap-fill, so they don't count as "used". Plans elsewhere (in
+  -- progress / planned / specified / done) DO count. Plus every NNNN-* folder
+  -- in any worktree that doesn't match a tentative entry.
   local tentative_set = {}
   for _, entry in ipairs((sections or {})['next plans'] or {}) do
     local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-    if pn then
-      if M.is_plan_locked(git_root, pn, worktree_roots) then
-        add(tonumber(pn:match('^(%d%d%d%d)%-')))
-      else
-        tentative_set[pn] = true
-      end
-    end
+    if pn then tentative_set[pn] = true end
   end
 
   for _, root in ipairs(worktree_roots) do
@@ -360,7 +314,7 @@ function M.collect_used_numbers(git_root, sections, worktree_roots)
   end
 
   sections = sections or {}
-  for _, sect in ipairs({ 'in progress', 'planned', 'backlog', 'done' }) do
+  for _, sect in ipairs({ 'in progress', 'planned', 'specified', 'done' }) do
     for _, entry in ipairs(sections[sect] or {}) do
       add(tonumber(entry.text:match('^(%d%d%d%d)%-')))
     end
@@ -726,101 +680,53 @@ function M.new_plan(git_root, title)
   return true, path
 end
 
--- Rename a plan's folder docs/plans/<old>/ → docs/plans/<new>/ in MAIN
--- and cascade the rename to every other worktree that has the old folder
--- AND is "clean" for it (no uncommitted changes, no commits ahead of main
--- touching it). Updates the title in plan.md / context.md / spec.md /
--- idea.md / masterplan.md to match. Skipped when the new folder already
--- exists in MAIN. Each worktree gets its own commit. Returns ok_bool, msg
--- (msg lists cascaded WTs and any skipped ones with reasons).
--- Pass `worktree_roots` to skip the redundant `git worktree list` subprocess
--- when calling in a tight loop (fix() does this — single git call per pf).
-local function rename_plan_folder(git_root, old_name, new_name, worktree_roots)
+-- Rename a plan's folder docs/plans/<old>/ → docs/plans/<new>/ in MAIN.
+-- Worktrees are NOT touched — main is canonical for plan management;
+-- worktrees pick up the rename when the user merges main into them via
+-- /mfm. Updates the title in plan.md / context.md / spec.md / idea.md /
+-- masterplan.md to match. No-op when the old folder doesn't exist;
+-- refuses when the new folder already exists. Returns ok_bool, msg.
+local function rename_plan_folder(git_root, old_name, new_name)
   if old_name == new_name then return true, 'unchanged' end
   local plans_rel = 'docs/plans'
   local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
   local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
+  if vim.fn.isdirectory(old_folder) ~= 1 then return true, 'no folder' end
   if vim.fn.isdirectory(new_folder) == 1 then
     return false, new_folder .. ' already exists'
   end
 
-  local main_realpath = vim.uv.fs_realpath(git_root) or git_root
   local files = require('shooter.core.files')
 
-  local function rename_in(wt_root, commit_msg)
-    local old_p = wt_root .. '/' .. plans_rel .. '/' .. old_name
-    local new_p = wt_root .. '/' .. plans_rel .. '/' .. new_name
-    if vim.fn.isdirectory(old_p) ~= 1 then return false, 'no folder' end
-    if vim.fn.isdirectory(new_p) == 1 then return false, 'target exists' end
-    -- Save+close any loaded buffers under the old folder.
-    for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
-      local bufnr = vim.fn.bufnr(old_p .. '/' .. kind .. '.md')
-      if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-        if vim.bo[bufnr].modified then
-          vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
-        end
-        vim.api.nvim_buf_delete(bufnr, { force = true })
+  -- Save+close any loaded buffers under the old folder so the rename
+  -- doesn't collide with stale buffer state.
+  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+    local bufnr = vim.fn.bufnr(old_folder .. '/' .. kind .. '.md')
+    if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+      if vim.bo[bufnr].modified then
+        vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
       end
-    end
-    vim.fn.system({ 'git', '-C', wt_root, 'mv',
-      plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
-    if vim.v.shell_error ~= 0 then
-      if not os.rename(old_p, new_p) then return false, 'rename failed' end
-    end
-    for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
-      local p = new_p .. '/' .. kind .. '.md'
-      if vim.fn.filereadable(p) == 1 then
-        files.update_file_title(p, files.title_from_path(p))
-      end
-    end
-    if commit_msg then
-      vim.fn.system({ 'git', '-C', wt_root, 'commit', '-q', '-m', commit_msg,
-        '--', plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
-    end
-    return true
-  end
-
-  -- 1. Main rename (if folder exists). When fix() is the caller, the
-  --    metaplan render already wrote the new entry — so we don't commit
-  --    main here; fix's commit_plans pass picks it up at the end.
-  if vim.fn.isdirectory(old_folder) == 1 then
-    local ok, err = rename_in(git_root, nil)
-    if not ok then return false, err end
-  end
-
-  -- 2. Cascade to other worktrees. Skip dirty WTs with a warning.
-  local cascaded, skipped = {}, {}
-  for _, wt_root in ipairs(worktree_roots or M.list_worktree_roots(git_root)) do
-    local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
-    if wt_realpath ~= main_realpath
-        and vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. old_name) == 1 then
-      local wt_name = vim.fn.fnamemodify(wt_root, ':t')
-      if not M.worktree_status_clean(wt_root, old_name) then
-        table.insert(skipped, wt_name .. ' (uncommitted)')
-      elseif not M.worktree_log_clean(wt_root, old_name) then
-        table.insert(skipped, wt_name .. ' (divergent commits)')
-      else
-        local ok, err = rename_in(wt_root,
-          'chore(plans): mirror main — rename ' .. old_name
-          .. ' -> ' .. new_name)
-        if ok then table.insert(cascaded, wt_name)
-        else table.insert(skipped, wt_name .. ' (' .. (err or 'error') .. ')') end
-      end
+      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end
 
-  local msg = nil
-  if #cascaded > 0 or #skipped > 0 then
-    local parts = {}
-    if #cascaded > 0 then
-      table.insert(parts, 'cascaded: ' .. table.concat(cascaded, ', '))
+  vim.fn.system({ 'git', '-C', git_root, 'mv',
+    plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+  if vim.v.shell_error ~= 0 then
+    if not os.rename(old_folder, new_folder) then
+      return false, 'rename failed'
     end
-    if #skipped > 0 then
-      table.insert(parts, 'skipped: ' .. table.concat(skipped, ', '))
-    end
-    msg = table.concat(parts, '; ')
   end
-  return true, msg
+
+  -- Update the canonical title in each known plan-folder file.
+  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+    local p = new_folder .. '/' .. kind .. '.md'
+    if vim.fn.filereadable(p) == 1 then
+      files.update_file_title(p, files.title_from_path(p))
+    end
+  end
+
+  return true
 end
 
 -- Fix metaplan.md: rewrites via parse/render, gap-fills `## next plans` (each
@@ -833,12 +739,12 @@ function M.fix(git_root)
   local path = M.get_path(git_root)
   vim.fn.mkdir(git_root .. '/docs/plans', 'p')
 
-  -- Single source of truth for worktree roots within this fix() invocation:
-  -- compute once and pass down to is_plan_locked, collect_used_numbers, and
-  -- the folder-rename cascade. Without this, hal's 4-worktree × 40-next-plans
-  -- workload triggers ~80 redundant `git worktree list` subprocess calls.
   local utils = require('shooter.utils')
   utils.echo('pf: scanning worktrees…')
+
+  -- worktree_roots is used ONLY to seed the "used numbers" set so
+  -- gap-fill avoids collisions with plans started in other worktrees.
+  -- pf never edits worktrees — main is canonical for plan management.
   local worktree_roots = M.list_worktree_roots(git_root)
 
   local bufnr = find_loaded_buf(path)
@@ -851,114 +757,144 @@ function M.fix(git_root)
 
   local parsed = M.parse(content)
 
-  -- Adopt any docs/plans/NNNN-<slug>/ folder that the metaplan doesn't
-  -- reference yet into `## in progress`. Agents sometimes create a fresh
-  -- plan folder (bumping the next free number) without updating the
-  -- metaplan — this keeps the two sides in sync.
-  local referenced = {}
-  for _, section_name in ipairs(SECTIONS) do
+  -- 1. `## done` is sticky. Capture it first so reclassification doesn't
+  --    touch it.
+  local done_entries = parsed.sections['done'] or {}
+  local in_done = {}
+  for _, e in ipairs(done_entries) do
+    local pn = M.extract_plan_name(e.text)
+    if pn then in_done[pn] = true end
+  end
+
+  -- 2. Collect every plan we want to reclassify: every metaplan entry NOT
+  --    in done, plus every NNNN-<slug>/ folder in MAIN that isn't already
+  --    in the metaplan. Preserve next-plans insertion order so gap-fill is
+  --    stable across runs. Track each plan's current section so we can
+  --    keep no-folder plans where the user placed them.
+  local plan_entries = {}      -- ordered list of entry tables
+  local plan_index = {}        -- plan_name → index in plan_entries
+  local current_section = {}   -- plan_name (or entry.text) → original section
+  local next_plans_order = {}  -- key (plan_name or text) → original index
+  local function add_plan_entry(entry, section)
+    local pn = M.extract_plan_name(entry.text)
+    if pn then
+      if in_done[pn] or plan_index[pn] then return end
+      plan_index[pn] = #plan_entries + 1
+      current_section[pn] = section
+    else
+      -- Un-numbered entries (`- foo`) flow through to render's gap-fill.
+      current_section[entry.text] = section
+    end
+    table.insert(plan_entries, entry)
+  end
+  for i, entry in ipairs(parsed.sections['next plans'] or {}) do
+    local key = M.extract_plan_name(entry.text) or entry.text
+    next_plans_order[key] = i
+  end
+  for _, section_name in ipairs(AUTO_SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
-      local pn = M.extract_plan_name(entry.text)
-      if pn then referenced[pn] = true end
+      add_plan_entry(entry, section_name)
     end
   end
+  -- Also pick up entries from a deprecated `## backlog` section so user
+  -- data is preserved (auto-classified into the new sections).
+  for _, entry in ipairs(parsed.sections['backlog'] or {}) do
+    add_plan_entry(entry, 'backlog')
+  end
+  -- Adopt orphan folders in MAIN (folders whose plan isn't already in the
+  -- metaplan, and isn't in done). With auto-classification they'll land
+  -- in the right section by file presence — not blindly in `## in progress`.
   local docs_plans = git_root .. '/docs/plans'
   if vim.fn.isdirectory(docs_plans) == 1 then
-    parsed.sections['in progress'] = parsed.sections['in progress'] or {}
     for _, name in ipairs(vim.fn.readdir(docs_plans)) do
       local pn = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)$')
-      if pn and not referenced[pn]
+      if pn and not in_done[pn] and not plan_index[pn]
           and vim.fn.isdirectory(docs_plans .. '/' .. name) == 1 then
-        table.insert(parsed.sections['in progress'],
-          { text = pn, children = {} })
+        add_plan_entry({ text = pn, children = {} })
       end
     end
   end
 
-  -- Keep `## in progress` sorted alphabetically (stable), so adopted plans
-  -- land in the correct slot and the list stays tidy across runs.
-  if parsed.sections['in progress'] then
-    table.sort(parsed.sections['in progress'], function(a, b)
-      return a.text < b.text
-    end)
-  end
-
-  -- Move any description-paren content + indented child notes from each plan
-  -- entry into the corresponding plan's idea.md (under `## shot N`), then
-  -- mutate the parsed entry in place so render writes the cleaned metaplan.
-  for _, section_name in ipairs(SECTIONS) do
-    for _, entry in ipairs(parsed.sections[section_name] or {}) do
-      local plan_name = M.extract_plan_name(entry.text)
-      if plan_name then
-        local paren, notes, cleaned, had = M.extract_extras(entry)
-        if had then
-          M.apply_extras_to_idea(git_root, plan_name, paren, notes)
-          entry.text = cleaned
-          entry.children = {}
-        end
+  -- 3. Move description-paren + child notes into each plan's idea.md and
+  --    strip them from the metaplan entry.
+  for _, entry in ipairs(plan_entries) do
+    local plan_name = M.extract_plan_name(entry.text)
+    if plan_name then
+      local paren, notes, cleaned, had = M.extract_extras(entry)
+      if had then
+        M.apply_extras_to_idea(git_root, plan_name, paren, notes)
+        entry.text = cleaned
+        entry.children = {}
       end
     end
   end
 
-  -- Snapshot `## next plans` pre-render so we can rename folders after.
+  -- 4. Auto-classify each plan into a section by file presence.
+  utils.echo('pf: classifying plans…')
+  local classified = {
+    ['in progress'] = {},
+    ['planned'] = {},
+    ['specified'] = {},
+    ['next plans'] = {},
+  }
+  for _, entry in ipairs(plan_entries) do
+    local plan_name = M.extract_plan_name(entry.text)
+    local folder = plan_name
+      and (git_root .. '/docs/plans/' .. plan_name)
+    local section
+    if plan_name and folder and vim.fn.isdirectory(folder) == 1 then
+      -- Folder exists → classify by file presence (the auto-rule).
+      section = M.classify_plan(git_root, plan_name)
+    else
+      -- No folder → respect the user's manual section choice. Un-numbered
+      -- entries and new plans (orphan adoptions) default to `## next plans`.
+      -- Plans previously in `## backlog` (now-removed) flow to `## next plans`.
+      local cur = current_section[plan_name or entry.text]
+      if cur == 'in progress' or cur == 'planned'
+          or cur == 'specified' or cur == 'next plans' then
+        section = cur
+      else
+        section = 'next plans'
+      end
+    end
+    table.insert(classified[section], entry)
+  end
+
+  -- 5. Sort each auto-classified section. in progress / planned / specified
+  --    sort alphabetically by NNNN-slug. `## next plans` preserves the
+  --    user's original order; new plans (no original index) come last in
+  --    alphabetical order so gap-fill is deterministic.
+  for _, sec in ipairs({ 'in progress', 'planned', 'specified' }) do
+    table.sort(classified[sec], function(a, b) return a.text < b.text end)
+  end
+  table.sort(classified['next plans'], function(a, b)
+    local ka = M.extract_plan_name(a.text) or a.text
+    local kb = M.extract_plan_name(b.text) or b.text
+    local oa = next_plans_order[ka]
+    local ob = next_plans_order[kb]
+    if oa and ob then return oa < ob end
+    if oa then return true end
+    if ob then return false end
+    return a.text < b.text
+  end)
+
+  -- Replace parsed.sections with the classified result + sticky done.
+  parsed.sections = classified
+  parsed.sections['done'] = done_entries
+  parsed.order = SECTIONS
+
+  -- 6. Snapshot `## next plans` pre-render so we can rename folders after
+  --    the gap-fill renumbers entries.
   local next_pre = {}
   for i, entry in ipairs(parsed.sections['next plans'] or {}) do
     next_pre[i] = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
   end
 
-  -- Build lock predicate: a `## next plans` entry whose folder has spec.md
-  -- (in any worktree) is locked and won't be renumbered. Memoize per plan
-  -- so collect_used_numbers + render don't re-scan the worktrees twice each.
-  local lock_cache = {}
-  local function is_locked_cached(plan_name)
-    if lock_cache[plan_name] == nil then
-      lock_cache[plan_name] = M.is_plan_locked(git_root, plan_name,
-        worktree_roots)
-    end
-    return lock_cache[plan_name]
-  end
-  local function is_locked(entry)
-    local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-    return pn and is_locked_cached(pn) or false
-  end
-
   utils.echo('pf: computing used numbers…')
-  -- Inline collect_used_numbers logic so we share lock_cache with render.
-  local used = {}
-  do
-    local function add(n) if n and n > 0 then used[n] = true end end
-    local tentative_set = {}
-    for _, entry in ipairs(parsed.sections['next plans'] or {}) do
-      local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-      if pn then
-        if is_locked_cached(pn) then
-          add(tonumber(pn:match('^(%d%d%d%d)%-')))
-        else
-          tentative_set[pn] = true
-        end
-      end
-    end
-    for _, root in ipairs(worktree_roots) do
-      local plans_dir = root .. '/docs/plans'
-      if vim.fn.isdirectory(plans_dir) == 1 then
-        for _, name in ipairs(vim.fn.readdir(plans_dir)) do
-          local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-          if pname and not tentative_set[pname] then
-            add(tonumber(pname:match('^(%d%d%d%d)%-')))
-          end
-        end
-      end
-    end
-    for _, sect in ipairs({ 'in progress', 'planned', 'backlog', 'done' }) do
-      for _, entry in ipairs(parsed.sections[sect] or {}) do
-        add(tonumber(entry.text:match('^(%d%d%d%d)%-')))
-      end
-    end
-  end
+  local used = M.collect_used_numbers(git_root, parsed.sections, worktree_roots)
 
   utils.echo('pf: rendering metaplan…')
-  local new = M.render(parsed, M.get_title(git_root),
-    { used_numbers = used, is_locked = is_locked })
+  local new = M.render(parsed, M.get_title(git_root), { used_numbers = used })
 
   if bufnr then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false,
@@ -968,7 +904,10 @@ function M.fix(git_root)
     if not write_file(path, new) then return false, 'cannot write ' .. path end
   end
 
-  -- Rename plan folders for renumbered (unlocked) `## next plans` entries.
+  -- 7. Rename plan folders in MAIN for renumbered `## next plans` entries.
+  --    Worktrees are NEVER touched — main is canonical; worktrees pull via
+  --    /mfm when they want to sync. (`merge=ours` for metaplan.md in
+  --    .gitattributes prevents WT→main merge from clobbering this.)
   local renames = {}
   for i, entry in ipairs(parsed.sections['next plans'] or {}) do
     local pre = next_pre[i]
@@ -978,30 +917,13 @@ function M.fix(git_root)
     end
   end
   if #renames > 0 then
-    utils.echo('pf: renaming ' .. #renames .. ' plan folder(s)…')
+    utils.echo('pf: renaming ' .. #renames .. ' plan folder(s) in main…')
   end
-  local warnings = {}
   for _, r in ipairs(renames) do
-    local ok, err = rename_plan_folder(git_root, r.pre, r.post, worktree_roots)
-    if not ok and err then table.insert(warnings, err) end
+    rename_plan_folder(git_root, r.pre, r.post)
   end
 
-  -- Make sure every referenced plan has a docs/plans/<plan>/idea.md (creates
-  -- folder + title-only stub when missing).
-  utils.echo('pf: syncing idea.md stubs…')
-  for _, section_name in ipairs(SECTIONS) do
-    for _, entry in ipairs(parsed.sections[section_name] or {}) do
-      local plan_name = M.extract_plan_name(entry.text)
-      if plan_name then
-        M.ensure_plan_idea(git_root, plan_name)
-      end
-    end
-  end
   utils.echo('pf: done')
-
-  if #warnings > 0 then
-    return true, 'warnings: ' .. table.concat(warnings, '; ')
-  end
   return true
 end
 
@@ -1355,12 +1277,11 @@ local function close_buf_for(path)
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end
 
--- Rename a plan: rename `docs/plans/<old>/` → `docs/plans/<new>/` in MAIN
+-- Rename a plan in MAIN: rename `docs/plans/<old>/` → `docs/plans/<new>/`
 -- (carrying plan.md / context.md / spec.md / idea.md / masterplan.md
--- along), update titles, rewrite the metaplan line, and cascade the
--- folder rename to every worktree that has the old folder AND is clean
--- (no uncommitted changes, no commits ahead of main touching it). Each
--- worktree gets its own commit.  metaplan.md is NEVER edited in worktrees.
+-- along), update titles, rewrite the metaplan line, commit. Worktrees
+-- are NOT touched — main is canonical for plan management; worktrees
+-- pick up the rename when the user merges main into them via /mfm.
 function M.rename_plan(git_root, old_name, new_name)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not old_name or old_name == '' then return false, 'no old name' end
@@ -1371,7 +1292,6 @@ function M.rename_plan(git_root, old_name, new_name)
   end
 
   local plans_rel = 'docs/plans'
-  local main_realpath = vim.uv.fs_realpath(git_root) or git_root
   local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
   local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
 
@@ -1408,63 +1328,7 @@ function M.rename_plan(git_root, old_name, new_name)
   local cok, cmsg, committed = M.commit_plans(git_root,
     'chore(plans): rename ' .. old_name .. ' -> ' .. new_name)
   if not cok then return false, cmsg end
-
-  -- Cascade the folder rename to other worktrees. Skip dirty WTs.
-  local files_mod = require('shooter.core.files')
-  local cascaded, skipped = {}, {}
-  for _, wt_root in ipairs(M.list_worktree_roots(git_root)) do
-    local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
-    if wt_realpath ~= main_realpath
-        and vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. old_name) == 1 then
-      local wt_name = vim.fn.fnamemodify(wt_root, ':t')
-      if not M.worktree_status_clean(wt_root, old_name) then
-        table.insert(skipped, wt_name .. ' (uncommitted)')
-      elseif not M.worktree_log_clean(wt_root, old_name) then
-        table.insert(skipped, wt_name .. ' (divergent commits)')
-      elseif vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. new_name) == 1 then
-        table.insert(skipped, wt_name .. ' (target exists)')
-      else
-        for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
-          close_buf_for(wt_root .. '/' .. plans_rel .. '/' .. old_name
-            .. '/' .. kind .. '.md')
-        end
-        vim.fn.system({ 'git', '-C', wt_root, 'mv',
-          plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
-        local rename_ok = vim.v.shell_error == 0
-        if not rename_ok then
-          rename_ok = os.rename(
-            wt_root .. '/' .. plans_rel .. '/' .. old_name,
-            wt_root .. '/' .. plans_rel .. '/' .. new_name) ~= nil
-        end
-        if rename_ok then
-          for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
-            local p = wt_root .. '/' .. plans_rel .. '/' .. new_name
-              .. '/' .. kind .. '.md'
-            if vim.fn.filereadable(p) == 1 then
-              replace_title_reference(p, old_name, new_name)
-              files_mod.update_file_title(p, files_mod.title_from_path(p))
-            end
-          end
-          vim.fn.system({ 'git', '-C', wt_root, 'commit', '-q', '-m',
-            'chore(plans): mirror main — rename ' .. old_name
-              .. ' -> ' .. new_name,
-            '--', plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
-          table.insert(cascaded, wt_name)
-        else
-          table.insert(skipped, wt_name .. ' (rename failed)')
-        end
-      end
-    end
-  end
-
-  local base = committed and 'renamed' or 'renamed (nothing to commit)'
-  if #cascaded > 0 then
-    base = base .. ' (also in: ' .. table.concat(cascaded, ', ') .. ')'
-  end
-  if #skipped > 0 then
-    base = base .. ' [skipped: ' .. table.concat(skipped, ', ') .. ']'
-  end
-  return true, base
+  return true, committed and 'renamed' or 'renamed (nothing to commit)'
 end
 
 -- Pre-flight delete check across every worktree. Returns ok_bool,
@@ -1473,39 +1337,35 @@ end
 --   * Tier 2: each WT that has the folder must be status-clean inside it.
 --   * Tier 3: each WT that has the folder must have no commits on its
 --     branch (vs main) touching the folder.
--- With `force`: returns true unconditionally.
+-- Pre-flight delete check for MAIN's copy of the plan folder. Returns
+-- ok_bool, reason_string. Without `force`, the folder must contain only
+-- idea.md (or be empty / nonexistent) — anything else (plan.md, spec.md,
+-- masterplan.md, hal.yml, etc.) means the user has invested work and a
+-- normal delete would destroy it. `force=true` bypasses the rule.
+-- Worktrees are NOT inspected — main is canonical; worktrees pick up the
+-- delete via /mfm later (git's normal handling).
 function M.delete_plan_preflight(git_root, name, force)
   if force then return true end
-  local ok, reason = M.plan_deletable(git_root, name)
-  if not ok then return false, reason end
-  for _, root in ipairs(M.list_worktree_roots(git_root)) do
-    if vim.fn.isdirectory(root .. '/docs/plans/' .. name) == 1 then
-      if not M.worktree_status_clean(root, name) then
-        return false, 'worktree '
-          .. vim.fn.fnamemodify(root, ':t')
-          .. ' has uncommitted changes inside ' .. name
-      end
-      if not M.worktree_log_clean(root, name) then
-        return false, 'worktree '
-          .. vim.fn.fnamemodify(root, ':t')
-          .. " has commits ahead of main touching " .. name
-      end
-    end
+  local files = M.plan_files_in_worktree(git_root, name)
+  local extras = {}
+  for _, f in ipairs(files) do
+    if f ~= 'idea.md' then table.insert(extras, f) end
+  end
+  if #extras > 0 then
+    return false, name .. ' has [' .. table.concat(extras, ', ') .. ']'
   end
   return true
 end
 
--- Delete a plan in MAIN and cascade the deletion to every worktree that
--- has the folder. Each worktree gets its own commit ("chore(plans):
--- mirror main — delete <name>") on its branch, so a later /mtm finds a
--- consistent same-direction edit and merges trivially. The metaplan is
--- only edited in MAIN — worktree metaplans are NEVER touched (per the
--- design principle that main is canonical for metaplan.md).
+-- Delete a plan in MAIN: remove `docs/plans/<name>/` folder + the metaplan
+-- entry, run fix(), commit. Worktrees are NOT touched — main is canonical
+-- for plan management; worktrees pick up the delete when they /mfm. The
+-- `## done` section is sticky, so deleting a done plan also drops it from
+-- done (a true erase).
 --
 -- `opts.folder` (default true) — delete the folder; false to drop only
 --   the metaplan entry.
--- `opts.force` (default false) — bypass the three pre-flight tiers
---   (content rule, uncommitted-changes guard, divergent-branch guard).
+-- `opts.force` (default false) — bypass the content rule (only-idea.md).
 function M.delete_plan(git_root, name, opts)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not name or name == '' then return false, 'no plan name' end
@@ -1518,9 +1378,6 @@ function M.delete_plan(git_root, name, opts)
   end
 
   local plans_rel = 'docs/plans'
-  local main_realpath = vim.uv.fs_realpath(git_root) or git_root
-
-  -- 1. Delete in MAIN.
   local folder = git_root .. '/' .. plans_rel .. '/' .. name
   if opts.folder and vim.fn.isdirectory(folder) == 1 then
     for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
@@ -1530,48 +1387,19 @@ function M.delete_plan(git_root, name, opts)
     if err ~= 0 then vim.fn.delete(folder, 'rf') end
   end
 
-  -- 2. Drop metaplan entry (main only) when the folder is gone, so fix()
-  --    doesn't re-adopt a still-present folder.
+  -- Drop metaplan entry (main only) when the folder is gone, so fix()
+  -- doesn't re-adopt a still-present folder.
   if vim.fn.isdirectory(folder) ~= 1 then
     local ok, err = M.remove_metaplan_entry(git_root, name)
     if not ok then return false, err end
   end
 
-  -- 3. fix() + main commit.
   local fok, ferr = M.fix(git_root)
   if not fok then return false, ferr end
   local cok, cmsg, committed = M.commit_plans(git_root,
     'chore(plans): delete ' .. name)
   if not cok then return false, cmsg end
-
-  -- 4. Cascade to every other worktree that has the folder.
-  local cascaded = {}
-  if opts.folder then
-    for _, wt_root in ipairs(M.list_worktree_roots(git_root)) do
-      local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
-      if wt_realpath ~= main_realpath
-          and vim.fn.isdirectory(wt_root .. '/docs/plans/' .. name) == 1 then
-        local _, rm_err = vim.fn.system({ 'git', '-C', wt_root, 'rm',
-          '-rf', '--', plans_rel .. '/' .. name }), vim.v.shell_error
-        if rm_err ~= 0 then
-          vim.fn.delete(wt_root .. '/docs/plans/' .. name, 'rf')
-        end
-        local commit_msg = 'chore(plans): mirror main — delete ' .. name
-        vim.fn.system({ 'git', '-C', wt_root, 'commit', '-q', '-m',
-          commit_msg, '--', plans_rel .. '/' .. name })
-        if vim.v.shell_error == 0 then
-          table.insert(cascaded, vim.fn.fnamemodify(wt_root, ':t'))
-        end
-      end
-    end
-  end
-
-  local base_msg = committed and 'deleted' or 'deleted (nothing to commit)'
-  if #cascaded > 0 then
-    base_msg = base_msg .. ' (also in worktrees: '
-      .. table.concat(cascaded, ', ') .. ')'
-  end
-  return true, base_msg
+  return true, committed and 'deleted' or 'deleted (nothing to commit)'
 end
 
 return M
