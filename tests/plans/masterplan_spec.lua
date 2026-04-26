@@ -57,8 +57,9 @@ describe('shooter.plans.masterplan', function()
   end)
 
   describe('fix (renumbering in ## next plans)', function()
-    it('renumbers sequentially, slugifies pre-paren name, preserves parens', function()
-      -- Seed docs/plans with a folder at 0004, so next plans starts at 0005.
+    it('gap-fills, slugifies pre-paren name, preserves parens', function()
+      -- Seed docs/plans with a folder at 0004; gap-fill skips it but uses
+      -- 0001..0003 first, then 0005, 0006 — committed numbers reserved.
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
       write_plan(table.concat({
         '# old title',
@@ -74,16 +75,16 @@ describe('shooter.plans.masterplan', function()
 
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
-      assert.truthy(out:find('- 0005-merge-hal-skills', 1, true))
-      assert.truthy(out:find('- 0006-rs-app-fix', 1, true))
-      assert.truthy(out:find('- 0007-ts-lib-fix', 1, true))
-      assert.truthy(out:find('- 0008-conformity', 1, true))
+      assert.truthy(out:find('- 0001-merge-hal-skills', 1, true))
+      assert.truthy(out:find('- 0002-rs-app-fix', 1, true))
+      assert.truthy(out:find('- 0003-ts-lib-fix', 1, true))
+      assert.truthy(out:find('- 0005-conformity', 1, true))
       assert.truthy(out:find(
-        '- 0009-dev (worktrees, databases, common tools)', 1, true))
+        '- 0006-dev (worktrees, databases, common tools)', 1, true))
     end)
 
     it('preserves (description) suffix on already-numbered entries', function()
-      -- Seed max = 0024 so single entry renumbers to 0025.
+      -- Folder 0024-seeded reserves 24; entry gap-fills to smallest free (1).
       vim.fn.mkdir(repo .. '/docs/plans/0024-seeded', 'p')
       write_plan(table.concat({
         '## next plans',
@@ -93,7 +94,7 @@ describe('shooter.plans.masterplan', function()
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
       assert.truthy(out:find(
-        '- 0025-context (agent.md, memory, decisions, instructions)',
+        '- 0001-context (agent.md, memory, decisions, instructions)',
         1, true))
     end)
 
@@ -138,36 +139,42 @@ describe('shooter.plans.masterplan', function()
         1, true))
     end)
 
-    it('starting number comes from max(docs/plans folders) + 1', function()
+    it('docs/plans folders reserve their numbers from gap-fill', function()
       vim.fn.mkdir(repo .. '/docs/plans/0007-foo', 'p')
       vim.fn.mkdir(repo .. '/docs/plans/0012-bar', 'p')
-      write_plan('## next plans\n- alpha\n- beta\n')
+      write_plan('## next plans\n- alpha\n- beta\n- gamma\n')
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
-      assert.truthy(out:find('- 0013-alpha', 1, true))
-      assert.truthy(out:find('- 0014-beta', 1, true))
+      -- 7 and 12 are reserved → entries take 1, 2, 3
+      assert.truthy(out:find('- 0001-alpha', 1, true))
+      assert.truthy(out:find('- 0002-beta', 1, true))
+      assert.truthy(out:find('- 0003-gamma', 1, true))
     end)
 
-    it('starting number also considers in-progress/planned/backlog/done numbers', function()
-      -- docs/plans is empty; max comes from planned entry 0022
+    it('in-progress/planned/backlog/done numbers reserve too', function()
       write_plan(table.concat({
         '## in progress',
+        '- 0001-active',
         '',
         '## planned',
-        '- 0022-planned-thing',
+        '- 0003-coming-soon',
         '',
         '## next plans',
         '- alpha',
+        '- beta',
         '',
         '## backlog',
+        '- 0005-on-hold',
         '',
         '## done',
-        '- 0020-old-stuff (2026-01-01 00:00:00)',
+        '- 0002-finished (2026-01-01 00:00:00)',
         '',
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       local out = read_plan()
-      assert.truthy(out:find('- 0023-alpha', 1, true))
+      -- Reserved: {1, 2, 3, 5}. Smallest free: 4, then 6.
+      assert.truthy(out:find('- 0004-alpha', 1, true))
+      assert.truthy(out:find('- 0006-beta', 1, true))
     end)
 
     it('does not renumber ## in progress, ## planned, or ## backlog', function()
@@ -271,8 +278,8 @@ describe('shooter.plans.masterplan', function()
       assert.is_true(i_planned < i_next)
       assert.is_true(i_next < i_back)
       assert.is_true(i_back < i_done)
-      -- next plans renumbered starting at max(0001, 0007) + 1 = 0008
-      assert.truthy(out:find('- 0008-alpha', 1, true))
+      -- next plans gap-fill: reserved {1, 7}. Smallest free is 2.
+      assert.truthy(out:find('- 0002-alpha', 1, true))
     end)
   end)
 
@@ -372,7 +379,7 @@ describe('shooter.plans.masterplan', function()
       }, '\n'))
       assert.is_true(masterplan.fix(repo))
       assert.is_true(utils.file_exists(plans_dir .. '/0001-alpha.md'))
-      -- After renumbering with start = max(0001, 0002, 0003) + 1 = 0004, beta → 0004-beta
+      -- Reserved {1,2,3}. beta gap-fills to smallest free (4).
       assert.is_true(utils.file_exists(plans_dir .. '/0004-beta.md'))
       assert.is_true(utils.file_exists(plans_dir .. '/0003-gamma.md'))
       assert.is_true(utils.file_exists(plans_dir .. '/0002-delta.md'))
@@ -383,18 +390,19 @@ describe('shooter.plans.masterplan', function()
 
     it('renames a drifted plan shotfile when next plans is renumbered', function()
       vim.fn.mkdir(plans_dir, 'p')
-      -- Simulate drift: the file on disk is numbered 0009, but after renumbering
-      -- the plan will become 0005.
+      -- Simulate drift: the file on disk is numbered 0009. Gap-fill picks
+      -- smallest free for the next-plans entry (folder 0004-seeded reserves
+      -- 4, so the smallest free is 1).
       utils.write_file(plans_dir .. '/0009-merge-hal-skills.md',
         '# docs/plans/0009-merge-hal-skills\n\nbody\n')
-      vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')  -- forces start=5
+      vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
       write_plan('## next plans\n- 0009-merge-hal-skills\n')
 
       assert.is_true(masterplan.fix(repo))
       assert.is_false(utils.file_exists(plans_dir .. '/0009-merge-hal-skills.md'))
-      assert.is_true(utils.file_exists(plans_dir .. '/0005-merge-hal-skills.md'))
-      local content = utils.read_file(plans_dir .. '/0005-merge-hal-skills.md')
-      assert.truthy(content:find('# docs/plans/0005%-merge%-hal%-skills'))
+      assert.is_true(utils.file_exists(plans_dir .. '/0001-merge-hal-skills.md'))
+      local content = utils.read_file(plans_dir .. '/0001-merge-hal-skills.md')
+      assert.truthy(content:find('# docs/plans/0001%-merge%-hal%-skills'))
       assert.truthy(content:find('body', 1, true))
     end)
 
@@ -417,9 +425,11 @@ describe('shooter.plans.masterplan', function()
       utils.write_file(plans_dir .. '/conformity.md',
         '# docs/plans/conformity\n\ninteresting spec\n')
 
-      -- Seed docs/plans so max_plan_number=7, next plans starts at 0008
-      -- (keeps the fix-envfile plan at 0008 instead of renumbering to 0001).
-      vim.fn.mkdir(repo .. '/docs/plans/0007-seeded', 'p')
+      -- Seed docs/plans 0001..0007 so gap-fill picks 0008 for the next-plans
+      -- entry — keeps the fix-envfile plan at 0008 (not renumbered to 0001).
+      for i = 1, 7 do
+        vim.fn.mkdir(repo .. string.format('/docs/plans/%04d-seeded-%d', i, i), 'p')
+      end
       write_plan('## next plans\n- 0008-fix-envfile\n')
       assert.is_true(masterplan.fix(repo))
 
@@ -693,14 +703,15 @@ describe('shooter.plans.masterplan', function()
   end)
 
   describe('new_plan', function()
-    it('creates docs/plans/<NNNN-slug>/plan.md with the next free number', function()
+    it('creates docs/plans/<NNNN-slug>/plan.md with gap-fill', function()
+      -- Folder 0004 reserves 4; smallest free is 1.
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
       local ok, path = masterplan.new_plan(repo, 'My Fresh Plan')
       assert.is_true(ok, path)
-      assert.equals(repo .. '/docs/plans/0005-my-fresh-plan/plan.md', path)
+      assert.equals(repo .. '/docs/plans/0001-my-fresh-plan/plan.md', path)
       assert.is_true(utils.file_exists(path))
       local content = utils.read_file(path) or ''
-      assert.truthy(content:find('^# 0005%-my%-fresh%-plan'))
+      assert.truthy(content:find('^# 0001%-my%-fresh%-plan'))
     end)
 
     it('starts at 0001 when docs/plans is empty', function()
@@ -710,11 +721,11 @@ describe('shooter.plans.masterplan', function()
     end)
 
     it('also considers masterplan sections when picking the next number', function()
-      -- docs/plans is empty; masterplan has a ## done entry at 0020.
+      -- ## done at 0020 reserves 20; smallest free is 1.
       write_plan('## done\n- 0020-stuff (2026-01-01 00:00:00)\n')
       local ok, path = masterplan.new_plan(repo, 'alpha')
       assert.is_true(ok)
-      assert.equals(repo .. '/docs/plans/0021-alpha/plan.md', path)
+      assert.equals(repo .. '/docs/plans/0001-alpha/plan.md', path)
     end)
 
     it('refuses an empty or whitespace title', function()
@@ -729,29 +740,28 @@ describe('shooter.plans.masterplan', function()
       local ok = masterplan.new_plan(repo, 'fresh')
       assert.is_true(ok)
       local mp = read_plan()
-      -- Number picked is max(0002) + 1 = 0003; entry lands in next plans.
+      -- Reserved {2}; smallest free is 1; entry lands in next plans.
       assert.truthy(mp:find('## next plans', 1, true))
       local np = mp:match('## next plans.-\n(.-)\n##')
-      assert.truthy(np and np:find('- 0003-fresh', 1, true))
+      assert.truthy(np and np:find('- 0001-fresh', 1, true))
     end)
 
-    it('runs fix(): renumbering is idempotent and plan shotfile is created', function()
+    it('runs fix(): folder and masterplan number stay in sync', function()
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
       write_plan('## done\n- 0003-old (2026-01-01 00:00:00)\n')
       local ok, path = masterplan.new_plan(repo, 'alpha')
       assert.is_true(ok)
-      assert.equals(repo .. '/docs/plans/0005-alpha/plan.md', path)
+      -- Reserved {3, 4}; smallest free is 1.
+      assert.equals(repo .. '/docs/plans/0001-alpha/plan.md', path)
 
-      -- After fix, the next-plans entry keeps its 0005 number
-      -- (max_plan_number ignores the 0005-alpha folder because that plan is
-      -- in ## next plans).
       local mp = read_plan()
-      assert.truthy(mp:find('- 0005-alpha', 1, true))
-      assert.is_nil(mp:find('- 0006-alpha', 1, true))
+      assert.truthy(mp:find('- 0001-alpha', 1, true))
+      -- No drift between folder name and masterplan entry.
+      assert.is_nil(mp:find('- 0002-alpha', 1, true))
 
       -- Plan shotfile was synced.
       assert.is_true(utils.file_exists(
-        repo .. '/docs/shotfiles/docs/plans/0005-alpha.md'))
+        repo .. '/docs/shotfiles/docs/plans/0001-alpha.md'))
     end)
 
     it('does not duplicate the entry when run twice with the same title', function()
@@ -768,7 +778,7 @@ describe('shooter.plans.masterplan', function()
     end)
   end)
 
-  describe('max_plan_number (next-plans aware)', function()
+  describe('collect_used_numbers', function()
     it('ignores docs/plans folders that match `## next plans` entries', function()
       vim.fn.mkdir(repo .. '/docs/plans/0004-seeded', 'p')
       vim.fn.mkdir(repo .. '/docs/plans/0007-future', 'p')
@@ -778,10 +788,13 @@ describe('shooter.plans.masterplan', function()
         '## backlog', '',
         '## done', '',
       }, '\n'))
-      assert.equals(4, masterplan.max_plan_number(repo, parsed.sections))
+      local used = masterplan.collect_used_numbers(repo, parsed.sections)
+      assert.is_true(used[4])
+      -- 0007-future is a tentative next-plans placeholder → not committed.
+      assert.is_nil(used[7])
     end)
 
-    it('counts `## planned` entries toward the max', function()
+    it('includes `## planned` entries', function()
       local parsed = masterplan.parse(table.concat({
         '## in progress', '- 0002-active',
         '## planned', '- 0011-coming-next',
@@ -789,18 +802,149 @@ describe('shooter.plans.masterplan', function()
         '## backlog', '',
         '## done', '',
       }, '\n'))
-      assert.equals(11, masterplan.max_plan_number(repo, parsed.sections))
+      local used = masterplan.collect_used_numbers(repo, parsed.sections)
+      assert.is_true(used[2])
+      assert.is_true(used[11])
     end)
   end)
 
   describe('next_free_plan_number', function()
-    it('returns max across everything (including next plans) + 1', function()
+    it('returns the smallest free number using gap-fill', function()
+      -- Folder 0002 + done 0003 reserve {2,3}. Existing next plans entry
+      -- (0005-bar) takes the smallest free (1) under render's gap-fill, so
+      -- the NEW entry that new_plan would append next gets 4 (smallest free
+      -- after 1 is taken).
       vim.fn.mkdir(repo .. '/docs/plans/0002-foo', 'p')
       local parsed = masterplan.parse(table.concat({
         '## next plans', '- 0005-bar',
         '## done', '- 0003-baz (2026-01-01 00:00:00)',
       }, '\n'))
-      assert.equals(6, masterplan.next_free_plan_number(repo, parsed.sections))
+      assert.equals(4, masterplan.next_free_plan_number(repo, parsed.sections))
+    end)
+  end)
+
+  describe('next_plans_number_at', function()
+    it('returns smallest N where exactly k-1 smaller numbers are also free', function()
+      local mp = masterplan
+      assert.equals(1, mp.next_plans_number_at({}, 1))
+      assert.equals(2, mp.next_plans_number_at({}, 2))
+      -- {2, 3} reserved → free seq: 1, 4, 5, ...
+      assert.equals(1, mp.next_plans_number_at({ [2]=true, [3]=true }, 1))
+      assert.equals(4, mp.next_plans_number_at({ [2]=true, [3]=true }, 2))
+      assert.equals(5, mp.next_plans_number_at({ [2]=true, [3]=true }, 3))
+      -- Defaults k=1 when nil/zero.
+      assert.equals(1, mp.next_plans_number_at({}, nil))
+      assert.equals(1, mp.next_plans_number_at({}, 0))
+    end)
+  end)
+
+  describe('list_worktree_roots', function()
+    local gitrepo = '/tmp/shooter_masterplan_wtroots_test'
+    local wt2 = '/tmp/shooter_masterplan_wtroots_test_wt2'
+
+    before_each(function()
+      os.execute('rm -rf ' .. gitrepo .. ' ' .. wt2)
+      os.execute('mkdir -p ' .. gitrepo)
+      vim.fn.system({ 'git', '-C', gitrepo, 'init', '-q', '-b', 'main' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.email', 't@t' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.name', 't' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'commit.gpgsign', 'false' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'commit', '--allow-empty', '-q', '-m', 'init' })
+    end)
+
+    after_each(function()
+      os.execute('rm -rf ' .. gitrepo .. ' ' .. wt2)
+    end)
+
+    it('returns just git_root when no extra worktrees', function()
+      local roots = masterplan.list_worktree_roots(gitrepo)
+      assert.equals(1, #roots)
+      assert.equals(vim.uv.fs_realpath(gitrepo) or gitrepo, roots[1])
+    end)
+
+    it('returns all worktrees including secondaries', function()
+      vim.fn.system({ 'git', '-C', gitrepo, 'worktree', 'add', '-b', 'wt2', wt2 })
+      local roots = masterplan.list_worktree_roots(gitrepo)
+      assert.equals(2, #roots)
+      local resolved = {}
+      for _, r in ipairs(roots) do resolved[r] = true end
+      assert.is_true(resolved[vim.uv.fs_realpath(gitrepo) or gitrepo])
+      assert.is_true(resolved[vim.uv.fs_realpath(wt2) or wt2])
+    end)
+
+    it('falls back to {git_root} when git fails', function()
+      assert.same({}, masterplan.list_worktree_roots(nil))
+      assert.same({}, masterplan.list_worktree_roots(''))
+      -- Non-git directory: git command errors → fallback path.
+      local nogit = '/tmp/shooter_not_a_repo_xyz'
+      os.execute('rm -rf ' .. nogit .. ' && mkdir -p ' .. nogit)
+      assert.same({ nogit }, masterplan.list_worktree_roots(nogit))
+      os.execute('rm -rf ' .. nogit)
+    end)
+  end)
+
+  describe('fix (worktree-aware gap-fill)', function()
+    local gitrepo = '/tmp/shooter_masterplan_wtfix_test'
+    local wt2 = '/tmp/shooter_masterplan_wtfix_test_wt2'
+    local mp_path = gitrepo .. '/docs/plans/masterplan.md'
+
+    before_each(function()
+      os.execute('rm -rf ' .. gitrepo .. ' ' .. wt2)
+      os.execute('mkdir -p ' .. gitrepo)
+      vim.fn.system({ 'git', '-C', gitrepo, 'init', '-q', '-b', 'main' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.email', 't@t' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'user.name', 't' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'config', 'commit.gpgsign', 'false' })
+      vim.fn.system({ 'git', '-C', gitrepo, 'commit', '--allow-empty', '-q', '-m', 'init' })
+    end)
+
+    after_each(function()
+      os.execute('rm -rf ' .. gitrepo .. ' ' .. wt2)
+    end)
+
+    it('treats folders in other worktrees as committed (the user\'s case)', function()
+      -- Reproduce the user's hal scenario: main has 0001..0014 as folders,
+      -- a worktree has 0016, and 0015 is the only gap below max → fill it.
+      for i = 1, 14 do
+        vim.fn.mkdir(gitrepo
+          .. string.format('/docs/plans/%04d-seeded-%d', i, i), 'p')
+      end
+      utils.write_file(mp_path, table.concat({
+        '## in progress',
+        '- 0014-seeded-14',
+        '- 0016-fix-lifecycle-commands-and-skills',
+        '',
+        '## next plans',
+        '- 0017-refactore-doctor-and-envfile',
+        '- 0018-app-and-lib-improvements',
+        '',
+      }, '\n'))
+      vim.fn.system({ 'git', '-C', gitrepo, 'worktree', 'add', '-b', 'wt2', wt2 })
+      vim.fn.mkdir(wt2 .. '/docs/plans/0016-fix-lifecycle-commands-and-skills', 'p')
+
+      assert.is_true(masterplan.fix(gitrepo))
+      local mp = utils.read_file(mp_path)
+      -- Reserved {1..14, 16}. First gap is 15, then 17, 18, ...
+      -- First next-plans entry fills the 0015 gap.
+      assert.truthy(mp:find('- 0015-refactore-doctor-and-envfile', 1, true))
+      -- Second entry continues at 0017 (16 reserved by worktree folder).
+      assert.truthy(mp:find('- 0017-app-and-lib-improvements', 1, true))
+    end)
+
+    it('a worktree folder alone reserves its number', function()
+      -- Main worktree's docs/plans empty; wt2 has folder 0005-foo. Single
+      -- next-plans entry should skip 5 (worktree reserved it), NOT take it.
+      vim.fn.mkdir(gitrepo .. '/docs/plans', 'p')
+      utils.write_file(mp_path, '## next plans\n- alpha\n')
+      vim.fn.system({ 'git', '-C', gitrepo, 'worktree', 'add', '-b', 'wt2', wt2 })
+      vim.fn.mkdir(wt2 .. '/docs/plans/0005-foo', 'p')
+
+      assert.is_true(masterplan.fix(gitrepo))
+      local mp = utils.read_file(mp_path)
+      -- Reserved {5}. Smallest free is 1.
+      assert.truthy(mp:find('- 0001-alpha', 1, true))
+      -- And NOT 5
+      assert.is_nil(mp:find('- 0005-alpha', 1, true))
     end)
   end)
 

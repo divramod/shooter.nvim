@@ -140,22 +140,51 @@ local function next_plan_names(sections)
   return set
 end
 
--- Highest plan number that counts as "already used" — i.e. plans that are in
--- progress / backlog / done or have a docs/plans/ folder that is NOT merely a
--- placeholder for a `## next plans` entry. Used by fix() to pick the starting
--- number for next-plans renumbering so it never collides with a started plan,
--- yet also doesn't bump itself upward on every run.
-function M.max_plan_number(git_root, sections)
-  local max = 0
-  local function bump(n) if n and n > max then max = n end end
+-- Enumerate every worktree of the repo at git_root. Returns a deduped array
+-- of absolute paths (resolved via fs_realpath). Falls back to {git_root} when
+-- git is unavailable or no worktrees are reported.
+function M.list_worktree_roots(git_root)
+  if not git_root or git_root == '' then return {} end
+  local out = vim.fn.system({ 'git', '-C', git_root, 'worktree', 'list',
+    '--porcelain' })
+  if vim.v.shell_error ~= 0 then return { git_root } end
+  local seen, roots = {}, {}
+  for line in out:gmatch('[^\n]+') do
+    local path = line:match('^worktree%s+(.+)$')
+    if path then
+      local resolved = vim.uv.fs_realpath(path) or path
+      if not seen[resolved] and vim.fn.isdirectory(resolved) == 1 then
+        seen[resolved] = true
+        table.insert(roots, resolved)
+      end
+    end
+  end
+  if #roots == 0 then return { git_root } end
+  return roots
+end
+
+-- Build the set `{ [N] = true }` of plan numbers that are "already committed"
+-- and therefore must NOT be reassigned by `## next plans` gap-fill. The set is
+-- the union of:
+--   * NNNN-* folder names under docs/plans/ across every worktree of the repo
+--     (so a plan started in another worktree still reserves its number), with
+--     folders matching MAIN's `## next plans` entries excluded (those are
+--     tentative placeholders created by new_plan and renamed by fix)
+--   * NNNN entries in MAIN masterplan's in progress / planned / backlog / done
+--     sections
+function M.collect_used_numbers(git_root, sections)
+  local used = {}
+  local function add(n) if n and n > 0 then used[n] = true end end
 
   local next_set = next_plan_names(sections)
-  local plans_dir = git_root and (git_root .. '/docs/plans') or nil
-  if plans_dir and vim.fn.isdirectory(plans_dir) == 1 then
-    for _, name in ipairs(vim.fn.readdir(plans_dir)) do
-      local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-      if pname and not next_set[pname] then
-        bump(tonumber(pname:match('^(%d%d%d%d)%-')))
+  for _, root in ipairs(M.list_worktree_roots(git_root)) do
+    local plans_dir = root .. '/docs/plans'
+    if vim.fn.isdirectory(plans_dir) == 1 then
+      for _, name in ipairs(vim.fn.readdir(plans_dir)) do
+        local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+        if pname and not next_set[pname] then
+          add(tonumber(pname:match('^(%d%d%d%d)%-')))
+        end
       end
     end
   end
@@ -163,58 +192,75 @@ function M.max_plan_number(git_root, sections)
   sections = sections or {}
   for _, sect in ipairs({ 'in progress', 'planned', 'backlog', 'done' }) do
     for _, entry in ipairs(sections[sect] or {}) do
-      bump(tonumber(entry.text:match('^(%d%d%d%d)%-')))
+      add(tonumber(entry.text:match('^(%d%d%d%d)%-')))
     end
   end
-  return max
+  return used
 end
 
--- Next free plan number across EVERYTHING (docs/plans folders + every
--- masterplan section, including `## next plans`). Used by new_plan to pick a
--- number that won't collide with anything currently in the system.
+-- Smallest N >= 1 where exactly k-1 smaller numbers are also free in `used`.
+-- I.e. the number that gap-fill would assign to the k-th `## next plans`
+-- entry, given a committed used set. Used by `next_free_plan_number` so
+-- `new_plan` picks the same number `fix` would assign to a newly appended
+-- entry (preventing folder/masterplan divergence).
+function M.next_plans_number_at(used, k)
+  used = used or {}
+  if not k or k < 1 then k = 1 end
+  local n, count = 0, 0
+  while count < k do
+    n = n + 1
+    if not used[n] then count = count + 1 end
+  end
+  return n
+end
+
+-- Next free plan number for `new_plan`. Aligned with fix's gap-fill: returns
+-- the number a freshly-appended `## next plans` entry would be assigned by
+-- render() after fix runs.
 function M.next_free_plan_number(git_root, sections)
-  local max = 0
-  local function bump(n) if n and n > max then max = n end end
-
-  local plans_dir = git_root and (git_root .. '/docs/plans') or nil
-  if plans_dir and vim.fn.isdirectory(plans_dir) == 1 then
-    for _, name in ipairs(vim.fn.readdir(plans_dir)) do
-      bump(tonumber(name:match('^(%d%d%d%d)%-')))
-    end
-  end
-
-  sections = sections or {}
-  for _, sect in ipairs(SECTIONS) do
-    for _, entry in ipairs(sections[sect] or {}) do
-      bump(tonumber(entry.text:match('^(%d%d%d%d)%-')))
-    end
-  end
-  return max + 1
+  local used = M.collect_used_numbers(git_root, sections)
+  local current = (sections or {})['next plans'] or {}
+  return M.next_plans_number_at(used, #current + 1)
 end
 
 -- Render parsed + title back to canonical masterplan content.
--- `## next plans` entries are renumbered sequentially. The starting number is
--- opts.start_number when provided; otherwise falls back to the first entry's
--- NNNN- prefix (or 1). The pre-paren portion is slugified; anything from the
--- first `(` onwards plus child notes is preserved verbatim.
+-- `## next plans` entries are renumbered using gap-fill: each entry gets the
+-- smallest N >= 1 not in `opts.used_numbers` and not yet assigned in this
+-- pass. When `used_numbers` is omitted, falls back to sequential renumbering
+-- from the first entry's NNNN- prefix (or 1) so the function stays usable in
+-- isolation. The pre-paren portion is slugified; anything from the first `(`
+-- onwards plus child notes is preserved verbatim.
 function M.render(parsed, title, opts)
   opts = opts or {}
   local sections = parsed.sections
 
   local next_plans = sections['next plans'] or {}
   if #next_plans > 0 then
-    local start = opts.start_number
-      or tonumber(next_plans[1].text:match('^(%d%d%d%d)%-'))
-      or 1
-    for i, entry in ipairs(next_plans) do
+    local function rewrite(entry, n)
       local stripped = strip_prefix(entry.text)
       local name, rest = split_at_parens(stripped)
       local slug = M.slugify(name)
       if slug == '' then slug = 'plan' end
       if rest ~= '' then
-        entry.text = string.format('%04d-%s %s', start + i - 1, slug, rest)
+        entry.text = string.format('%04d-%s %s', n, slug, rest)
       else
-        entry.text = string.format('%04d-%s', start + i - 1, slug)
+        entry.text = string.format('%04d-%s', n, slug)
+      end
+    end
+
+    if opts.used_numbers then
+      local used = {}
+      for k, v in pairs(opts.used_numbers) do used[k] = v end
+      local cursor = 0
+      for _, entry in ipairs(next_plans) do
+        repeat cursor = cursor + 1 until not used[cursor]
+        used[cursor] = true
+        rewrite(entry, cursor)
+      end
+    else
+      local start = tonumber(next_plans[1].text:match('^(%d%d%d%d)%-')) or 1
+      for i, entry in ipairs(next_plans) do
+        rewrite(entry, start + i - 1)
       end
     end
   end
@@ -446,8 +492,8 @@ function M.fix(git_root)
     end)
   end
 
-  local start = M.max_plan_number(git_root, parsed.sections) + 1
-  local new = M.render(parsed, M.get_title(git_root), { start_number = start })
+  local used = M.collect_used_numbers(git_root, parsed.sections)
+  local new = M.render(parsed, M.get_title(git_root), { used_numbers = used })
 
   if bufnr then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false,

@@ -125,15 +125,15 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
                                   (runs Fix on open — always tidy)
   pf        Fix masterplan        Normalize title (# masterplan <repo> (<alias>)),
                                   ensure the 5 sections in order (in progress /
-                                  planned / next plans / backlog / done), renumber
-                                  `## next plans` starting at max(docs/plans
-                                  folders, started plans) + 1, slugify pre-paren
-                                  names, preserve (description) suffix and
-                                  indented child notes, and reconcile every
-                                  plan's shotfile in
-                                  docs/shotfiles/docs/plans/
-                                  (rename on drift, create if missing, adapt
-                                  title to new name).
+                                  planned / next plans / backlog / done),
+                                  gap-fill `## next plans` (each entry gets
+                                  the smallest unused NNNN; folders in any
+                                  worktree count as committed), slugify
+                                  pre-paren names, preserve (description)
+                                  suffix and indented child notes, and
+                                  reconcile every plan's shotfile in
+                                  docs/shotfiles/docs/plans/ (rename on drift,
+                                  create if missing, adapt title to new name).
   pd        Mark done             Move plan under cursor to the top of
                                   `## done` with a timestamp, carrying its
                                   indented child notes along.
