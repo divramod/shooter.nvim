@@ -1,13 +1,26 @@
 # feats
 
-## shot 37 < >pf improvements
+## shot 39 < >pf improvements
 pf should automatically search all worktrees to see, if there are new plans in them
 
-## shot 36 move improvements into new followup plan
+## shot 38 move improvements into new followup plan
 
-## shot 35 < >pa
+## shot 37 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 36 < >pe (2026-04-26 11:56:22)
+if i press enter on a line with a plan in the masterplan, it should open the corresponding plan file in .hal/util/shooter/shotfiles/plans, if it exists, if not, it should create a new file with the name of the plan and open it.
+
+## x shot 35 < >pE improvements (2026-04-26 11:33:17)
+/Users/mod/a/shooter.nvim/.shooter/tmp/image-pastes/clipboard_20260426_113208.png
+i like it already.
+as in the masterplan, the plans are sorted by category (in progress, next plans, backlog, done, planned), i want you to add to every plan the category
+ip - in progress
+pl - planned
+np - next plans
+bl - backlog
+do - done
 
 ## x shot 34 < >pE improvements (2026-04-26 10:11:24)
 i also want the sorting patterns from the shotifle picker, which also sorts by change age and then alphabetically, to be applied in the plan picker, when i run < >pE, so that i have a better overview of my plans and can find them faster, especially when there are many plans.
