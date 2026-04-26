@@ -1,7 +1,7 @@
 ---
 name: baseline-and-tooling
 description: Wire luacov, capture baseline coverage, audit security/LOC surface, write smoke-require loader.
-status: approved
+status: shipped
 phase_id: 000
 depends_on: []
 wave: 1

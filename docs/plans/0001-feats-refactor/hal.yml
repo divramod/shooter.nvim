@@ -1,9 +1,11 @@
-automode: running
+automode: paused
 started_at: "2026-04-26"
+paused_at: "2026-04-26"
+halt_reason: "session-budget — Phase 000 fully shipped; Phase 001 (metaplan.lua 1584-LOC split) needs its own session"
 tier: large
 tier_source: deterministic
 cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:automode started; phase 000 T001 in progress"
+last_action: "/hal:ship phase 000-baseline-and-tooling — all 6 tasks shipped; resume at phase 001 T001"
