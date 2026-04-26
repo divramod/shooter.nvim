@@ -72,9 +72,15 @@ function M.classify_plan(git_root, plan_name, worktree_roots)
         if f then
           local content = f:read('*a') or ''
           f:close()
-          if content:match('[\n^]%s*started_at:%s*[%w%d]')
-              or content:match('^started_at:%s*[%w%d]') then
-            has_started = true
+          -- Iterate lines so `%s` doesn't span newlines: an empty
+          -- `started_at:` followed by another field must NOT match.
+          -- Require the value to start with a digit (ISO date) — `null`,
+          -- `~`, quoted empties etc. don't qualify.
+          for line in content:gmatch('[^\n]+') do
+            if line:match('^%s*started_at:[ \t]*%d') then
+              has_started = true
+              break
+            end
           end
         end
       end
@@ -305,30 +311,78 @@ function M.collect_used_numbers(git_root, sections, worktree_roots)
   local function add(n) if n and n > 0 then used[n] = true end end
 
   worktree_roots = worktree_roots or M.list_worktree_roots(git_root)
+  sections = sections or {}
 
-  -- `## next plans` entries are tentative — their numbers can be reassigned
-  -- by gap-fill, so they don't count as "used". Plans elsewhere (in
-  -- progress / planned / specified / done) DO count. Plus every NNNN-* folder
-  -- in any worktree that doesn't match a tentative entry.
+  -- `## next plans` entries are tentative — their numbers can be
+  -- reassigned by gap-fill, so they don't count as "used".
+  --   * `tentative_set` (full NNNN-slug): used to filter MAIN's own
+  --     folders. An exact match means the folder is just a placeholder
+  --     about to be renumbered.
+  --   * `tentative_slugs` (slug-only): used to filter NON-main worktree
+  --     folders. A WT folder whose slug matches a tentative entry is a
+  --     stale copy of the same plan at a different NNNN.
   local tentative_set = {}
-  for _, entry in ipairs((sections or {})['next plans'] or {}) do
+  local tentative_slugs = {}
+  for _, entry in ipairs(sections['next plans'] or {}) do
     local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
     if pn then tentative_set[pn] = true end
+    local slug = entry.text:match('^%d%d%d%d%-([%l%d][%w%-]*)')
+    if slug then tentative_slugs[slug] = true end
+  end
+
+  -- Slugs main knows about (entries in non-tentative sections + main's
+  -- own folders). Used ONLY to filter non-main worktrees: a WT folder
+  -- whose slug matches main is the same plan at a stale NNNN — main
+  -- already accounts for its number, so the WT folder must not pollute
+  -- `used` with its (stale) NNNN. NOT used to filter main's own folders
+  -- against themselves (that would erase legitimate reservations).
+  local main_slugs = {}
+  for _, sect in ipairs({ 'in progress', 'planned', 'specified', 'done' }) do
+    for _, entry in ipairs(sections[sect] or {}) do
+      local slug = entry.text:match('^%d%d%d%d%-([%l%d][%w%-]*)')
+      if slug then main_slugs[slug] = true end
+    end
+  end
+  local main_resolved = git_root and (vim.uv.fs_realpath(git_root) or git_root)
+  if main_resolved then
+    local main_plans_dir = main_resolved .. '/docs/plans'
+    if vim.fn.isdirectory(main_plans_dir) == 1 then
+      for _, name in ipairs(vim.fn.readdir(main_plans_dir)) do
+        local slug = name:match('^%d%d%d%d%-([%l%d][%w%-]*)$')
+        if slug then main_slugs[slug] = true end
+      end
+    end
   end
 
   for _, root in ipairs(worktree_roots) do
+    local root_resolved = vim.uv.fs_realpath(root) or root
+    local is_main = (root_resolved == main_resolved)
     local plans_dir = root .. '/docs/plans'
     if vim.fn.isdirectory(plans_dir) == 1 then
       for _, name in ipairs(vim.fn.readdir(plans_dir)) do
-        local pname = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
-        if pname and not tentative_set[pname] then
-          add(tonumber(pname:match('^(%d%d%d%d)%-')))
+        local pname = name:match('^((%d%d%d%d)%-[%l%d][%w%-]*)$')
+        if pname then
+          local slug = name:match('^%d%d%d%d%-([%l%d][%w%-]*)$')
+          local skip
+          if is_main then
+            -- Main: skip ONLY tentative full-name matches (placeholder
+            -- about to be renumbered). Main's own folders never get
+            -- slug-exempted from themselves.
+            skip = tentative_set[pname]
+          else
+            -- Non-main WT: skip if slug matches a main slug or a
+            -- tentative slug — a (potentially stale) copy of a plan
+            -- main already accounts for.
+            skip = main_slugs[slug] or tentative_slugs[slug]
+          end
+          if not skip then
+            add(tonumber(name:match('^(%d%d%d%d)%-')))
+          end
         end
       end
     end
   end
 
-  sections = sections or {}
   for _, sect in ipairs({ 'in progress', 'planned', 'specified', 'done' }) do
     for _, entry in ipairs(sections[sect] or {}) do
       add(tonumber(entry.text:match('^(%d%d%d%d)%-')))
@@ -390,6 +444,18 @@ function M.render(parsed, title, opts)
     if opts.used_numbers then
       local used = {}
       for k, v in pairs(opts.used_numbers) do used[k] = v end
+      -- Pre-pass: reserve every locked entry's NNNN in `used` so the
+      -- gap-fill cursor doesn't collide with a locked slot. Without
+      -- this, a bare entry that comes BEFORE a locked entry could
+      -- claim the locked NNNN.
+      if opts.is_locked then
+        for _, entry in ipairs(next_plans) do
+          if opts.is_locked(entry) then
+            local n = tonumber(entry.text:match('^(%d%d%d%d)%-'))
+            if n then used[n] = true end
+          end
+        end
+      end
       local cursor = 0
       for _, entry in ipairs(next_plans) do
         if opts.is_locked and opts.is_locked(entry) then
@@ -689,6 +755,9 @@ function M.new_plan(git_root, title)
   if not write_file(path, '# ' .. plan_name .. '\n\n') then
     return false, 'cannot write ' .. path
   end
+  -- Also seed idea.md (the shotfile) so the plan-folder is usable from
+  -- the shotfile keymaps without an extra round-trip through fix().
+  M.ensure_plan_idea(git_root, plan_name)
 
   append_to_next_plans(git_root, plan_name)
   M.fix(git_root)
@@ -770,33 +839,111 @@ function M.fix(git_root)
   local parsed = M.parse(content)
 
   -- 1. `## done` is sticky. Capture it first so reclassification doesn't
-  --    touch it.
+  --    touch it. Track done SLUGS (not full NNNN-slug) so a stuttered
+  --    duplicate of the same plan at a different NNNN — common after
+  --    several broken pf runs — is recognized as already-done.
   local done_entries = parsed.sections['done'] or {}
-  local in_done = {}
+  local in_done_slugs = {}
   for _, e in ipairs(done_entries) do
-    local pn = M.extract_plan_name(e.text)
-    if pn then in_done[pn] = true end
+    local slug = (e.text or ''):match('%d%d%d%d%-([%l%d][%w%-]*)')
+    if slug then in_done_slugs[slug] = true end
   end
 
   -- 2. Collect every plan we want to reclassify: every metaplan entry NOT
   --    in done, plus every NNNN-<slug>/ folder in MAIN that isn't already
-  --    in the metaplan. Preserve next-plans insertion order so gap-fill is
-  --    stable across runs. Track each plan's current section so we can
-  --    keep no-folder plans where the user placed them.
-  local plan_entries = {}      -- ordered list of entry tables
-  local plan_index = {}        -- plan_name → index in plan_entries
-  local next_plans_order = {}  -- key (plan_name or text) → original index
+  --    in the metaplan. Dedupe FOLDER-LESS entries by SLUG so a slug that
+  --    appears at multiple NNNN (legacy stutter from broken pf runs)
+  --    collapses to a single entry — first-seen wins, so a slug in
+  --    `## in progress` outranks the same slug repeated in
+  --    `## next plans`. Folder-backed entries (each NNNN-slug has its own
+  --    plan folder in some worktree) are always kept — they're real,
+  --    distinct plans even if their slugs collide. Preserve next-plans
+  --    insertion order so gap-fill is stable across runs.
+  -- Snapshot folders that exist on disk BEFORE step 3 runs — step 3's
+  -- apply_extras call creates folders as a side effect, and a folder
+  -- created mid-fix must not lock its entry against gap-fill (the
+  -- entry's NNNN was aspirational, not "the user invested work here").
+  local pre_existing_folders = {}
+  for _, root in ipairs(worktree_roots) do
+    local plans_dir = root .. '/docs/plans'
+    if vim.fn.isdirectory(plans_dir) == 1 then
+      for _, name in ipairs(vim.fn.readdir(plans_dir)) do
+        local pn = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)$')
+        if pn and vim.fn.isdirectory(plans_dir .. '/' .. name) == 1 then
+          pre_existing_folders[pn] = true
+        end
+      end
+    end
+  end
+
+  -- Track each entry's original position (across all auto sections +
+  -- backlog) so the post-classify sort of `## next plans` preserves the
+  -- order the user wrote — entries that started in `## in progress`
+  -- come before entries that started in `## next plans`. Without this,
+  -- alphabetical fallback would shuffle the gap-fill order and rename
+  -- folders unnecessarily. Keyed by the entry TABLE (not plan_name) so
+  -- non-NNNN entries (e.g. `- some plan (description)`) also get
+  -- positioned for the sort.
+  -- Also track which entries originally lived in `## next plans` —
+  -- those are explicitly renumberable by gap-fill.
+  local original_position = {}      -- entry → 1..N
+  local original_in_next_plans = {} -- entry → true
+  do
+    local pos = 0
+    for _, section_name in ipairs(AUTO_SECTIONS) do
+      for _, entry in ipairs(parsed.sections[section_name] or {}) do
+        pos = pos + 1
+        original_position[entry] = pos
+        if section_name == 'next plans' then
+          original_in_next_plans[entry] = true
+        end
+      end
+    end
+    for _, entry in ipairs(parsed.sections['backlog'] or {}) do
+      pos = pos + 1
+      original_position[entry] = pos
+    end
+  end
+
+  local plan_entries = {}            -- ordered list of entry tables
+  local seen_plan_names = {}         -- full NNNN-slug → true
+  local folder_backed_slugs = {}     -- slug → true (any folder-backed entry)
+  local seen_folderless_slugs = {}   -- slug → true (kept folder-less entries)
+  local function entry_has_folder(plan_name)
+    if not plan_name then return false end
+    for _, root in ipairs(worktree_roots) do
+      if vim.fn.isdirectory(root .. '/docs/plans/' .. plan_name) == 1 then
+        return true
+      end
+    end
+    return false
+  end
   local function add_plan_entry(entry)
-    local pn = M.extract_plan_name(entry.text)
-    if pn then
-      if in_done[pn] or plan_index[pn] then return end
-      plan_index[pn] = #plan_entries + 1
+    local plan_name = M.extract_plan_name(entry.text or '')
+    if plan_name then
+      local slug = plan_name:match('^%d%d%d%d%-(.*)$')
+      -- Same full NNNN-slug seen twice (metaplan entry + orphan-adopt
+      -- for the same folder, two stutter copies, etc.) is always a dup.
+      if seen_plan_names[plan_name] then return end
+      if slug and in_done_slugs[slug] then return end
+      if entry_has_folder(plan_name) then
+        -- Real plan with a folder — always keep, even if slug collides
+        -- with another folder-backed plan.
+        seen_plan_names[plan_name] = true
+        if slug then folder_backed_slugs[slug] = true end
+        table.insert(plan_entries, entry)
+        return
+      end
+      -- Folder-less stub: dedupe by slug against folder-backed and
+      -- prior folder-less entries.
+      if slug and (folder_backed_slugs[slug]
+          or seen_folderless_slugs[slug]) then
+        return
+      end
+      seen_plan_names[plan_name] = true
+      if slug then seen_folderless_slugs[slug] = true end
     end
     table.insert(plan_entries, entry)
-  end
-  for i, entry in ipairs(parsed.sections['next plans'] or {}) do
-    local key = M.extract_plan_name(entry.text) or entry.text
-    next_plans_order[key] = i
   end
   for _, section_name in ipairs(AUTO_SECTIONS) do
     for _, entry in ipairs(parsed.sections[section_name] or {}) do
@@ -808,33 +955,36 @@ function M.fix(git_root)
   for _, entry in ipairs(parsed.sections['backlog'] or {}) do
     add_plan_entry(entry)
   end
-  -- Adopt orphan folders in MAIN (folders whose plan isn't already in the
-  -- metaplan, and isn't in done). With auto-classification they'll land
-  -- in the right section by file presence — not blindly in `## in progress`.
+  -- Adopt orphan folders in MAIN. add_plan_entry dedupes by slug, so a
+  -- folder whose slug is already in the metaplan (under any NNNN) is
+  -- skipped. With auto-classification they land in the right section by
+  -- file presence — not blindly in `## in progress`.
   local docs_plans = git_root .. '/docs/plans'
   if vim.fn.isdirectory(docs_plans) == 1 then
     for _, name in ipairs(vim.fn.readdir(docs_plans)) do
       local pn = name:match('^(%d%d%d%d%-[%l%d][%w%-]*)$')
-      if pn and not in_done[pn] and not plan_index[pn]
-          and vim.fn.isdirectory(docs_plans .. '/' .. name) == 1 then
+      if pn and vim.fn.isdirectory(docs_plans .. '/' .. name) == 1 then
         add_plan_entry({ text = pn, children = {} })
       end
     end
   end
 
   -- 3. Move description-paren + child notes into each plan's idea.md and
-  --    strip them from the metaplan entry.
-  for _, entry in ipairs(plan_entries) do
+  --    strip them from the metaplan entry. Done entries are processed
+  --    too — extract_extras knows to skip the `(YYYY-MM-DD HH:MM:SS)`
+  --    timestamp paren, so only the user's description content moves.
+  local function extract_into_idea(entry)
     local plan_name = M.extract_plan_name(entry.text)
-    if plan_name then
-      local paren, notes, cleaned, had = M.extract_extras(entry)
-      if had then
-        M.apply_extras_to_idea(git_root, plan_name, paren, notes)
-        entry.text = cleaned
-        entry.children = {}
-      end
+    if not plan_name then return end
+    local paren, notes, cleaned, had = M.extract_extras(entry)
+    if had then
+      M.apply_extras_to_idea(git_root, plan_name, paren, notes)
+      entry.text = cleaned
+      entry.children = {}
     end
   end
+  for _, entry in ipairs(plan_entries) do extract_into_idea(entry) end
+  for _, entry in ipairs(done_entries) do extract_into_idea(entry) end
 
   -- 4. Auto-classify each plan into a section by file presence.
   local classified = {
@@ -863,14 +1013,12 @@ function M.fix(git_root)
     table.sort(classified[sec], function(a, b) return a.text < b.text end)
   end
   table.sort(classified['next plans'], function(a, b)
-    local ka = M.extract_plan_name(a.text) or a.text
-    local kb = M.extract_plan_name(b.text) or b.text
-    local oa = next_plans_order[ka]
-    local ob = next_plans_order[kb]
+    local oa = original_position[a]
+    local ob = original_position[b]
     if oa and ob then return oa < ob end
-    if oa then return true end
-    if ob then return false end
-    return a.text < b.text
+    if oa then return true end   -- entries with an original metaplan
+    if ob then return false end  -- position outrank orphan-adopted ones
+    return a.text < b.text       -- two orphans → alphabetical
   end)
 
   -- Replace parsed.sections with the classified result + sticky done.
@@ -887,7 +1035,23 @@ function M.fix(git_root)
 
   local used = M.collect_used_numbers(git_root, parsed.sections, worktree_roots)
 
-  local new = M.render(parsed, M.get_title(git_root), { used_numbers = used })
+  -- An entry is locked (kept at its NNNN, skipped by gap-fill) when it
+  -- represents existing work the user committed to: the folder existed
+  -- BEFORE fix() ran AND the entry was either orphan-adopted (folder
+  -- present without a metaplan entry) or originally lived in a
+  -- non-next-plans section. Entries that originally appeared in
+  -- `## next plans` are explicitly renumberable — gap-fill may move
+  -- them to canonical slots. The pre-fix snapshot guards against step
+  -- 3's apply_extras side-effect creating a folder mid-fix.
+  local function is_locked(entry)
+    local pn = entry.text:match('^(%d%d%d%d%-[%l%d][%w%-]*)')
+    if not pn then return false end
+    if original_in_next_plans[entry] then return false end
+    return pre_existing_folders[pn] == true
+  end
+
+  local new = M.render(parsed, M.get_title(git_root),
+    { used_numbers = used, is_locked = is_locked })
 
   if bufnr then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false,
@@ -1038,24 +1202,47 @@ function M.open_plan_file(git_root, line, kind)
 end
 
 -- Flush any modified buffers whose file lives under docs/plans/, so
--- `git add` sees the latest content the user actually typed.
+-- `git add` sees the latest content the user actually typed. Creates
+-- the parent directory first so a brand-new phase file (e.g.
+-- docs/plans/<plan>/phases/<NNN-slug>/plan.md whose directory doesn't
+-- exist on disk yet) writes successfully — otherwise `:write` would
+-- fail silently and `git add -A` would never see the new file.
 local function flush_plans_buffers(git_root)
+  -- Build prefixes from BOTH the realpath-resolved root and the raw
+  -- root, so a buffer name written as /tmp/... still matches when
+  -- git_root resolves to /private/tmp/... (macOS) and vice versa.
   local resolved_root = vim.uv.fs_realpath(git_root) or git_root
   local prefixes = {}
   for _, rel in ipairs(COMMIT_PATHS) do
     table.insert(prefixes, resolved_root .. '/' .. rel .. '/')
+    if resolved_root ~= git_root then
+      table.insert(prefixes, git_root .. '/' .. rel .. '/')
+    end
+  end
+  local function under_plans(name)
+    if name == '' then return false end
+    for _, prefix in ipairs(prefixes) do
+      if name:sub(1, #prefix) == prefix then return true end
+    end
+    -- For an existing file whose parent dir is symlinked, also try the
+    -- realpath form against the resolved prefix.
+    local resolved = vim.uv.fs_realpath(name)
+    if resolved and resolved ~= name then
+      for _, prefix in ipairs(prefixes) do
+        if resolved:sub(1, #prefix) == prefix then return true end
+      end
+    end
+    return false
   end
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified then
       local name = vim.api.nvim_buf_get_name(buf)
-      local resolved = name ~= '' and (vim.uv.fs_realpath(name) or name) or ''
-      if resolved ~= '' then
-        for _, prefix in ipairs(prefixes) do
-          if resolved:sub(1, #prefix) == prefix then
-            vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
-            break
-          end
+      if under_plans(name) then
+        local parent = vim.fn.fnamemodify(name, ':h')
+        if parent ~= '' and vim.fn.isdirectory(parent) ~= 1 then
+          vim.fn.mkdir(parent, 'p')
         end
+        vim.api.nvim_buf_call(buf, function() vim.cmd('silent! write') end)
       end
     end
   end

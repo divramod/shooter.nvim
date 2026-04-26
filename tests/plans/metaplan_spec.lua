@@ -407,6 +407,66 @@ describe('shooter.plans.metaplan', function()
       assert.equals(1, count)
     end)
 
+    it('collapses dup-slug folder-less stubs in ## next plans (user case)', function()
+      -- Reproduces shot 42: the user's metaplan picked up the same slug at
+      -- multiple NNNN over several broken pf runs. Each entry has no folder
+      -- on disk, so they're stubs that should collapse to a single first-seen
+      -- entry — gap-fill then renumbers it to the smallest free slot.
+      write_plan(table.concat({
+        '## next plans',
+        '- 0070-merge-shooter-nvim',
+        '- 0113-merge-shooter-nvim',
+        '- 0114-merge-shooter-nvim',
+        '',
+      }, '\n'))
+      assert.is_true(metaplan.fix(repo))
+      local mp = read_plan()
+      local _, count = mp:gsub('merge%-shooter%-nvim', '')
+      assert.equals(1, count)
+      -- Renumbered to 0001 (smallest free).
+      assert.truthy(mp:find('- 0001-merge-shooter-nvim', 1, true))
+    end)
+
+    it('keeps two folder-backed entries with the same slug', function()
+      -- The new_plan-twice case: two real plans with the same slug at
+      -- different NNNN both have their own folders and must both be kept.
+      vim.fn.mkdir(repo .. '/docs/plans/0001-twice', 'p')
+      utils.write_file(repo .. '/docs/plans/0001-twice/plan.md', '# 0001-twice\n')
+      vim.fn.mkdir(repo .. '/docs/plans/0002-twice', 'p')
+      utils.write_file(repo .. '/docs/plans/0002-twice/plan.md', '# 0002-twice\n')
+      write_plan(table.concat({
+        '## next plans',
+        '- 0001-twice',
+        '- 0002-twice',
+        '',
+      }, '\n'))
+      assert.is_true(metaplan.fix(repo))
+      local mp = read_plan()
+      assert.truthy(mp:find('- 0001-twice', 1, true))
+      assert.truthy(mp:find('- 0002-twice', 1, true))
+    end)
+
+    it('treats empty `started_at:` as not-started (next plans, not in progress)', function()
+      -- Empty started_at must not classify as in progress. Previously the
+      -- regex spanned newlines and matched `started_at:\n  next: 2026-...`
+      -- as if started_at had a value.
+      vim.fn.mkdir(repo .. '/docs/plans/0001-empty-started', 'p')
+      utils.write_file(repo .. '/docs/plans/0001-empty-started/hal.yml',
+        'plan: 0001\nstarted_at:\ncreated_at: 2026-01-01T00:00:00Z\n')
+      write_plan('## next plans\n- 0001-empty-started\n')
+      assert.is_true(metaplan.fix(repo))
+      local mp = read_plan()
+      -- Stays in next plans, not promoted to in progress.
+      local np_at = mp:find('## next plans', 1, true)
+      local ip_at = mp:find('## in progress', 1, true)
+      local plan_at = mp:find('- 0001-empty-started', 1, true)
+      assert.is_truthy(plan_at)
+      assert.is_truthy(np_at)
+      assert.is_truthy(ip_at)
+      -- The plan line appears AFTER `## next plans`, not after `## in progress`.
+      assert.is_true(plan_at > np_at)
+    end)
+
     it('sorts in progress / planned / specified alphabetically', function()
       -- Each plan gets a different marker file so they classify into the
       -- expected section. Test asserts within-section alphabetical sort.
@@ -545,8 +605,8 @@ describe('shooter.plans.metaplan', function()
 
     it('refuses to re-mark an entry already in ## done', function()
       setup_basic()
-      -- Line 11 is the existing done entry (`- 0001-old (...)`)
-      local ok, err = metaplan.mark_done(repo, 11)
+      -- Line 10 is the existing done entry (`- 0001-old (...)`)
+      local ok, err = metaplan.mark_done(repo, 10)
       assert.is_false(ok)
       assert.truthy(err:find('already in done'))
     end)
@@ -719,6 +779,12 @@ describe('shooter.plans.metaplan', function()
     end)
 
     it('appends the plan to ## next plans in metaplan.md', function()
+      -- 0002-current needs hal.yml + started_at to anchor it in
+      -- `## in progress` post-classify; otherwise it'd reclassify to
+      -- `## next plans` and gap-fill could reuse 0002 for the new plan.
+      vim.fn.mkdir(repo .. '/docs/plans/0002-current', 'p')
+      utils.write_file(repo .. '/docs/plans/0002-current/hal.yml',
+        'started_at: 2026-01-01T00:00:00Z\n')
       write_plan('## in progress\n- 0002-current\n')
       local ok = metaplan.new_plan(repo, 'fresh')
       assert.is_true(ok)
@@ -1221,6 +1287,38 @@ describe('shooter.plans.metaplan', function()
 
       local subject = git('log', '-1', '--format=%s')
       assert.truthy(subject:find('chore%(plans%): sync'))
+    end)
+
+    it('flushes a new-phase buffer whose parent directory does not exist yet', function()
+      -- Reproduces a pf failure where the user inserted a phase via :enew
+      -- (or :edit <newpath>) and typed content but never saved. The parent
+      -- directory didn't exist on disk, so :write would fail silently and
+      -- `git add -A` never saw the new file. flush_plans_buffers must
+      -- mkdir -p the parent before writing.
+      utils.write_file(mp_path, '# metaplan\n')
+      local plan_dir = gitrepo .. '/docs/plans/0001-foo'
+      vim.fn.mkdir(plan_dir, 'p')
+      utils.write_file(plan_dir .. '/idea.md', '# idea\n')
+      -- Phase folder NOT created on disk — only as a buffer name.
+      local phase_path = plan_dir .. '/phases/008-newly-inserted/plan.md'
+      assert.is_false(vim.fn.isdirectory(plan_dir .. '/phases') == 1)
+      local bufnr = vim.api.nvim_create_buf(false, false)
+      vim.api.nvim_buf_set_name(bufnr, phase_path)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { '# new phase' })
+      -- Buffer is modified, file does not exist.
+      assert.is_true(vim.bo[bufnr].modified)
+      assert.equals(0, vim.fn.filereadable(phase_path))
+
+      local ok, _, committed = metaplan.commit_plans(gitrepo)
+      assert.is_true(ok)
+      assert.is_true(committed)
+
+      -- Phase plan.md is on disk, in the staged commit.
+      assert.equals(1, vim.fn.filereadable(phase_path))
+      local files_in_commit = git('show', '--name-only', '--format=', 'HEAD')
+      assert.truthy(files_in_commit:find(
+        'docs/plans/0001%-foo/phases/008%-newly%-inserted/plan%.md'))
+      vim.api.nvim_buf_delete(bufnr, { force = true })
     end)
 
     it('reports no changes when plan folders are clean', function()
