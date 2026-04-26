@@ -46,16 +46,16 @@ Foundation phase. No source-code logic changes. Produces the artifacts the per-a
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T002** — Wire luacov auto-install in `tests/minimal_init.lua`
+- [x] **T002** — Wire luacov auto-install in `tests/minimal_init.lua`
   - **Acceptance:** Running tests installs luacov on first invocation if absent; subsequent invocations skip install. `require('luacov')` runs before `set rtp+=.`. A new `.luacov` config scopes coverage to `lua/shooter/**`.
   - **Verify:** `rm -rf /tmp/nvim/site/pack/packer/start/luacov; nvim --headless -u tests/minimal_init.lua -c "lua print(pcall(require,'luacov'))" -c "qa!" 2>&1 | grep -q "true"`
   - **Files:** `tests/minimal_init.lua`, `.luacov`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T003** — Capture coverage baseline
   - **Acceptance:** Full test suite runs under luacov; `luacov.report.out` generated; per-module + total % copied into `baseline.md § Coverage Baseline`.

@@ -1,0 +1,18 @@
+-- luacov configuration for shooter.nvim
+-- Scope coverage to product code under lua/shooter/.
+return {
+  include = {
+    'lua/shooter/',
+  },
+  exclude = {
+    'tests/',
+    '/tmp/',
+    'luacov',
+  },
+  reportfile = 'luacov.report.out',
+  statsfile = 'luacov.stats.out',
+  -- Run reporter automatically when the Lua VM exits.
+  runreport = true,
+  -- Delete stats after report so per-run coverage is fresh.
+  deletestats = false,
+}
