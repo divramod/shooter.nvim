@@ -1,13 +1,166 @@
 # feats
 
-## shot 44 < >pf improvements
+## shot 45 < >pf improvements
 it would be awesome, if we can move plans, which are already in progress
 
-## shot 43 move improvements into new followup plan
+## shot 44 move improvements into new followup plan
 
-## shot 42 < >pa
+## shot 43 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 42 fix (2026-04-26 16:56:24)
+now it looks really fucked.
+i ran it again and now everything is fucked up
+fix it
+```md
+# metaplan hal (hal)
+
+## in progress
+- 0022-rs-app-tui-refactoring
+- 0023-context-agent-md-memory-decisions-instructions
+- 0024-conformity
+- 0025-building-testing-coverage-and-artifacts
+- 0026-generated-folder
+- 0027-gitignore-per-language
+- 0028-improve-lifecycle-commands
+- 0029-fix-docker-compose
+- 0030-rs-lib-worktree-spread-out
+- 0031-deploy-from-main
+- 0033-shooter-improvements
+- 0034-merge-hal-ops
+- 0035-artifacts-as-own-topic
+- 0036-dev-worktrees-databases-common-tools
+- 0037-templates
+- 0038-codebase
+- 0039-domain
+- 0040-security
+- 0041-feature-parity
+- 0042-deployment
+- 0043-performance
+- 0044-error-handling-systematics
+- 0045-graph-database
+- 0046-vector-database
+- 0047-memory-system
+- 0048-gap-handling
+- 0049-llm-finetuning
+- 0050-project-and-planmanagement
+- 0051-inbox
+- 0052-cli-test-commands
+- 0053-util-init-commands
+- 0054-nx-turbo-switch
+- 0055-git-hooks-init
+- 0056-self-healing-and-improvement
+- test
+
+## planned
+
+## specified
+- 0003-ios-improvements
+- 0006-hooks-multi-cli-and-antigravity-smoke
+
+## next plans
+- 0015-migrate-lifecycle-skill-references-and-scripts
+- 0021-app-and-lib-improvements
+- 0032-worktree-clean-command
+- 0057-activate-cicd
+- 0058-secrets-ports-envs
+- 0059-hal-log-and-tracing-refactoring
+- 0060-rs-app-tui-refactoring
+- 0061-context-agent-md-memory-decisions-instructions
+- 0062-conformity
+- 0063-building-testing-coverage-and-artifacts
+- 0064-generated-folder
+- 0065-gitignore-per-language
+- 0066-improve-lifecycle-commands
+- 0067-fix-docker-compose
+- 0068-rs-lib-worktree-spread-out
+- 0069-deploy-from-main
+- 0070-merge-shooter-nvim
+- 0071-shooter-improvements
+- 0072-merge-hal-ops
+- 0073-artifacts-as-own-topic
+- 0074-dev-worktrees-databases-common-tools
+- 0075-templates
+- 0076-codebase
+- 0077-domain
+- 0078-security
+- 0079-feature-parity
+- 0080-deployment
+- 0081-performance
+- 0082-error-handling-systematics
+- 0083-graph-database
+- 0084-vector-database
+- 0085-memory-system
+- 0086-gap-handling
+- 0087-llm-finetuning
+- 0088-project-and-planmanagement
+- 0089-inbox
+- 0090-cli-test-commands
+- 0091-util-init-commands
+- 0092-nx-turbo-switch
+- 0093-git-hooks-init
+- 0094-self-healing-and-improvement
+- 0095-refactore-doctor-and-envfile
+- 0096-migrate-lifecycle-skill-references-and-scripts
+- 0097-app-and-lib-improvements
+- 0098-worktree-clean-command
+- 0099-activate-cicd
+- 0100-hal-log-and-tracing-refactoring
+- 0101-secrets-ports-envs
+- 0102-hal-log-and-tracing-refactoring
+- 0103-rs-app-tui-refactoring
+- 0104-context-agent-md-memory-decisions-instructions
+- 0105-conformity
+- 0106-building-testing-coverage-and-artifacts
+- 0107-generated-folder
+- 0108-gitignore-per-language
+- 0109-improve-lifecycle-commands
+- 0110-fix-docker-compose
+- 0111-rs-lib-worktree-spread-out
+- 0112-deploy-from-main
+- 0113-merge-shooter-nvim
+- 0114-merge-shooter-nvim
+- 0115-shooter-improvements
+- 0116-merge-hal-ops
+- 0117-artifacts-as-own-topic
+- 0118-dev-worktrees-databases-common-tools
+- 0119-templates
+- 0120-codebase
+- 0121-domain
+- 0122-security
+- 0123-feature-parity
+- 0124-deployment
+- 0125-performance
+- 0126-error-handling-systematics
+- 0127-graph-database
+- 0128-vector-database
+- 0129-memory-system
+- 0130-gap-handling
+- 0131-llm-finetuning
+- 0132-project-and-planmanagement
+- 0133-inbox
+- 0134-cli-test-commands
+- 0135-util-init-commands
+- 0136-nx-turbo-switch
+- 0137-git-hooks-init
+- 0138-self-healing-and-improvement
+
+## done
+- 0016-fix-lifecycle-commands-and-skills (2026-04-26 14:57:44)
+- 0014-md-app-hal-improvements (2026-04-26 14:57:39)
+- 0012-md-app-hal-merge-to-main-improvement (2026-04-26 12:19:08)
+- 0013-md-app-hal-automode-improvements (2026-04-26 11:55:24)
+- 0010-fix-rs-api-commands (2026-04-26 11:55:08)
+- 0011-add-automode-to-md-app-hal (2026-04-26 05:55:44)
+- 0008-rs-libs-improvements (2026-04-25 17:36:06)
+- 0009-refactore-md-skills (2026-04-25 17:36:04)
+- 0007-rust-refactoring (2026-04-25 06:01:26)
+- 0005-merge-hal-skills (2026-04-24 16:30:38)
+- 0004-repo-root-cleanup (2026-04-23 21:07:11)
+- 0002-refactore-folder-structure (2026-04-23 16:30:35)
+- 0001-refactoring-04 (2026-04-23 06:12:00)
+```
 
 ## x shot 41 < >n in an idea.md file not working (2026-04-26 15:04:15)
 the idea.md files are also shotfiles.
@@ -260,14 +413,14 @@ i may add additional functionality there in the future.
 
 independent from the plan functionality, please also map < >H to the help for the hal plugin and ensure, that all functionality for all commands is explained in the hal help.
 
-## x shot 20 < >ms < >mc < >mp (2026-04-24 05:13:29)
+## x shot 20 < >pe < >mf improvements (2026-04-24 05:13:29)
+the pe command worked correctly, except for the fact, that it put the plan to .hal/util/shooter/shotfiles/plans, instead of to .../shotfiles/docs/plans. please adapt this for both commands
+
+## x shot 19 < >ms < >mc < >mp (2026-04-24 05:13:29)
 create the commands to open the following files, when the cursor is on a line with a plan in the masterplan
 < >ms opens the docs/plans/NNNN-.../spec.md file for the plan in the line under the cursor (writes a message if there is no plan or spec file)
 < >mc opens the docs/plans/NNNN-.../context.md file for the plan in the line under the cursor (writes a message if there is no plan or context file)
 < >mp opens the docs/plans/NNNN-.../plan.md file for the plan in the line under the cursor (writes a message if there is no plan or plan file)
-
-## x shot 19 < >pe < >mf improvements (2026-04-24 05:13:29)
-the pe command worked correctly, except for the fact, that it put the plan to .hal/util/shooter/shotfiles/plans, instead of to .../shotfiles/docs/plans. please adapt this for both commands
 
 ## x shot 18 < >mf improvements (2026-04-24 05:05:32)
 i want to extend the functionality of the masterplan fix command.
