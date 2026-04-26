@@ -47,38 +47,38 @@ Each sub-module ≤ 350 LOC. `metaplan/init.lua` is re-export only. Existing `re
 
 ## Tasks
 
-- [ ] **T001** — Read & seam-identify `metaplan.lua`
+- [x] **T001** — Read & seam-identify `metaplan.lua`
   - **Acceptance:** Phase context updated with the precise function-list per seam (parse / render / categories / numbering / rename); seam plan committed before any test-writing begins.
   - **Verify:** `phases/001-refactor-plans-area/seams.md` exists and lists ≥ 5 seams with function counts.
   - **Files:** `docs/plans/0001-feats-refactor/phases/001-refactor-plans-area/seams.md`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T002** — Characterization tests for `plans/` (parse + categories)
+- [x] **T002** — Characterization tests for `plans/` (parse + categories)
   - **Acceptance:** `tests/plans/metaplan_parse_spec.lua` + `tests/plans/metaplan_categories_spec.lua` cover parse + category functions; combined module coverage for those functions ≥ 80%.
   - **Verify:** Test files run green; `luacov.report.out` shows ≥ 80% on parse + categories sections.
   - **Files:** `tests/plans/metaplan_parse_spec.lua`, `tests/plans/metaplan_categories_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T003** — Characterization tests for `plans/` (render + numbering + rename)
+- [x] **T003** — Characterization tests for `plans/` (render + numbering + rename)
   - **Acceptance:** Three additional `_spec.lua` files covering render, numbering, rename. Total `plans/` coverage ≥ 80%.
   - **Verify:** Test files green; aggregate `lua/shooter/plans/**` coverage ≥ 80% in `luacov.report.out`.
   - **Files:** `tests/plans/metaplan_render_spec.lua`, `tests/plans/metaplan_numbering_spec.lua`, `tests/plans/metaplan_rename_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T004** — Split `metaplan.lua` along identified seams
   - **Acceptance:** `lua/shooter/plans/metaplan/{init,parse,render,categories,numbering,rename}.lua` exist; each ≤ 350 LOC; `lua/shooter/plans/metaplan.lua` either deleted or replaced with `return require('shooter.plans.metaplan.init')` shim. All Phase 000 + Phase 001 tests still green. Smoke loader passes.
