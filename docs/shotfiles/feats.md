@@ -1,13 +1,16 @@
 # feats
 
-## shot 36 < >pf improvements
+## shot 37 < >pf improvements
 pf should automatically search all worktrees to see, if there are new plans in them
 
-## shot 35 move improvements into new followup plan
+## shot 36 move improvements into new followup plan
 
-## shot 34 < >pa
+## shot 35 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 34 < >pE improvements (2026-04-26 10:11:24)
+i also want the sorting patterns from the shotifle picker, which also sorts by change age and then alphabetically, to be applied in the plan picker, when i run < >pE, so that i have a better overview of my plans and can find them faster, especially when there are many plans.
 
 ## x shot 33 < >pE < >E (2026-04-26 10:04:02)
 i want you to a a plan telescope picker.
