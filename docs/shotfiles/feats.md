@@ -1,13 +1,52 @@
 # feats
 
-## shot 39 < >pf improvements
-pf should automatically search all worktrees to see, if there are new plans in them
+## shot 39 move improvements into new followup plan
 
-## shot 38 move improvements into new followup plan
-
-## shot 37 < >pa
+## shot 38 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 37 < >pf improvements (2026-04-26 12:53:03)
+pf should automatically search all worktrees to see, if there are new plans in them, which could have been added so the plan numbers stay unique.
+also, there is a case i had right now, where i have a gap in the plan numbers in ~/a/hal plan 0016 already exists in a worktree, but plan 0015 does not exist.
+i want to fill that gap
+in the hal masterplan.md it looks like this right now, after i ran < >pf
+
+```
+## in progress
+- 0014-md-app-hal-improvements
+- 0016-fix-lifecycle-commands-and-skills
+
+## planned
+- 0006-hooks-multi-cli-and-antigravity-smoke
+- 0003-ios-improvements
+
+## next plans
+- 0017-refactore-doctor-and-envfile
+- 0018-app-and-lib-improvements
+- 0019-worktree-clean-command
+- 0020-activate-cicd
+...
+```
+
+what it should look like is this:
+
+```
+## in progress
+- 0014-md-app-hal-improvements
+- 0016-fix-lifecycle-commands-and-skills
+
+## planned
+- 0006-hooks-multi-cli-and-antigravity-smoke
+- 0003-ios-improvements
+
+## next plans
+- 0015-refactore-doctor-and-envfile
+- 0017-app-and-lib-improvements
+- 0018-worktree-clean-command
+- 0019-activate-cicd
+...
+```
 
 ## x shot 36 < >pe (2026-04-26 11:56:22)
 if i press enter on a line with a plan in the masterplan, it should open the corresponding plan file in .hal/util/shooter/shotfiles/plans, if it exists, if not, it should create a new file with the name of the plan and open it.
