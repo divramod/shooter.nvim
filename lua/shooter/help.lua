@@ -164,8 +164,10 @@ PLAN NAMESPACE (p prefix) — masterplan + per-plan ops + pickers
   pC        Pick context.md       Telescope picker of docs/plans/**/context.md
   pS        Pick spec.md          Telescope picker of docs/plans/**/spec.md
   pE / E    Pick plan shotfile    Telescope picker of
-                                  docs/shotfiles/docs/plans/*.md
-                                  (E is a top-level alias for pE)
+                                  docs/shotfiles/docs/plans/*.md, sorted
+                                  newest-first by mtime with alphabetical
+                                  tiebreak; each row carries a "(<age>)"
+                                  suffix. (E is a top-level alias for pE)
 
 TOOLS NAMESPACE (l prefix)
   lt        Token counter         Count tokens in file using ttok

@@ -98,4 +98,67 @@ describe('shooter.plans.picker', function()
       assert.equals(shot_dir .. '/0003-zeta.md', paths[3])
     end)
   end)
+
+  describe('sort_by_age_with_tiebreak', function()
+    local shot_dir = repo .. '/docs/shotfiles/docs/plans'
+
+    it('sorts newest-first by mtime', function()
+      local paths = {
+        shot_dir .. '/old.md',
+        shot_dir .. '/middle.md',
+        shot_dir .. '/new.md',
+      }
+      for _, p in ipairs(paths) do mkfile(p) end
+      local now = os.time()
+      vim.loop.fs_utime(paths[1], now - 7200, now - 7200)  -- 2h old
+      vim.loop.fs_utime(paths[2], now - 3600, now - 3600)  -- 1h old
+      vim.loop.fs_utime(paths[3], now,        now)         -- newest
+
+      local entries = {}
+      for _, p in ipairs(paths) do
+        local rel = p:sub(#shot_dir + 2)
+        table.insert(entries, { path = p, display = rel, ordinal = rel })
+      end
+      plan_picker.sort_by_age_with_tiebreak(entries)
+      assert.truthy(entries[1].display:find('^new%.md '))
+      assert.truthy(entries[2].display:find('^middle%.md '))
+      assert.truthy(entries[3].display:find('^old%.md '))
+    end)
+
+    it('breaks mtime ties alphabetically by filename', function()
+      local paths = {
+        shot_dir .. '/zebra.md',
+        shot_dir .. '/apple.md',
+        shot_dir .. '/mango.md',
+      }
+      for _, p in ipairs(paths) do mkfile(p) end
+      local same = os.time() - 30  -- all same mtime
+      for _, p in ipairs(paths) do
+        vim.loop.fs_utime(p, same, same)
+      end
+
+      local entries = {}
+      for _, p in ipairs(paths) do
+        local rel = p:sub(#shot_dir + 2)
+        table.insert(entries, { path = p, display = rel, ordinal = rel })
+      end
+      plan_picker.sort_by_age_with_tiebreak(entries)
+      -- Same age → alphabetical
+      assert.truthy(entries[1].display:find('^apple%.md '))
+      assert.truthy(entries[2].display:find('^mango%.md '))
+      assert.truthy(entries[3].display:find('^zebra%.md '))
+    end)
+
+    it('appends a "(<age>)" suffix to each display string', function()
+      local p = shot_dir .. '/foo.md'
+      mkfile(p)
+      vim.loop.fs_utime(p, os.time() - 300, os.time() - 300)  -- 5m
+      local entries = { { path = p, display = 'foo.md', ordinal = 'foo.md' } }
+      plan_picker.sort_by_age_with_tiebreak(entries)
+      -- Suffix is "(<some age string>)" — exact format is recency.format_relative's
+      assert.truthy(entries[1].display:find('^foo%.md %(.+%)$'))
+      -- Ordinal is updated to mirror display so telescope filters on it.
+      assert.equals(entries[1].display, entries[1].ordinal)
+    end)
+  end)
 end)

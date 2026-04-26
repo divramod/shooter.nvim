@@ -36,9 +36,40 @@ function M.find_shotfiles(git_root)
   return out
 end
 
--- Show a telescope picker over `paths` and edit the selected file.
--- `prefix` is stripped from each path for display/sort key.
-local function show_picker(paths, opts)
+-- Build picker entries from `paths`, stripping `prefix` for display.
+-- Each entry: { path, display, ordinal }.
+local function make_entries(paths, prefix)
+  local entries = {}
+  for _, p in ipairs(paths) do
+    local rel = p:sub(#prefix + 1)
+    table.insert(entries, { path = p, display = rel, ordinal = rel })
+  end
+  return entries
+end
+
+-- Sort entries in-place by mtime descending with filename ascending tiebreak,
+-- then rewrite each entry's display to append "(<age>)" for quick recency
+-- scanning. Mirrors the shotfile picker's "change age, then alphabetical"
+-- behavior so plans cluster the same way users expect.
+function M.sort_by_age_with_tiebreak(entries)
+  local recency = require('shooter.telescope.recency')
+  for _, e in ipairs(entries) do
+    e._mtime = recency.file_mtime(e.path)
+  end
+  table.sort(entries, function(a, b)
+    if a._mtime ~= b._mtime then return a._mtime > b._mtime end
+    return (a.display or ''):lower() < (b.display or ''):lower()
+  end)
+  local now = os.time()
+  for _, e in ipairs(entries) do
+    e.display = recency.append_age(e.display, e._mtime, now)
+    e.ordinal = e.display
+  end
+  return entries
+end
+
+-- Show a telescope picker over `entries` and edit the selected file.
+local function show_picker(entries, opts)
   local pickers = require('telescope.pickers')
   local finders = require('telescope.finders')
   local conf = require('telescope.config').values
@@ -50,10 +81,14 @@ local function show_picker(paths, opts)
   pickers.new({}, {
     prompt_title = opts.prompt_title,
     finder = finders.new_table({
-      results = paths,
-      entry_maker = function(path)
-        local rel = path:sub(#opts.prefix + 1)
-        return { value = path, display = rel, ordinal = rel, path = path }
+      results = entries,
+      entry_maker = function(entry)
+        return {
+          value = entry.path,
+          display = entry.display,
+          ordinal = entry.ordinal or entry.display,
+          path = entry.path,
+        }
       end,
     }),
     sorter = conf.generic_sorter({}),
@@ -90,15 +125,16 @@ function M.open(git_root, basename)
       string.format('No %s.md files under docs/plans/', basename))
     return
   end
-  show_picker(paths, {
+  show_picker(make_entries(paths, git_root .. '/docs/plans/'), {
     prompt_title  = 'Plans: ' .. basename .. '.md',
     preview_title = basename .. '.md',
-    prefix        = git_root .. '/docs/plans/',
   })
 end
 
 -- Open a telescope picker of docs/shotfiles/docs/plans/*.md (the per-plan
--- shotfiles managed by `pe`/`pf`) and edit the selected file.
+-- shotfiles managed by `pe`/`pf`) and edit the selected file. Entries are
+-- sorted newest-first by mtime, alphabetically by filename when ages tie,
+-- with a "(<age>)" suffix appended to each row.
 function M.open_shotfiles(git_root)
   local paths = M.find_shotfiles(git_root)
   if #paths == 0 then
@@ -106,10 +142,12 @@ function M.open_shotfiles(git_root)
       'No plan shotfiles under docs/shotfiles/docs/plans/')
     return
   end
-  show_picker(paths, {
+  local entries = make_entries(paths,
+    git_root .. '/docs/shotfiles/docs/plans/')
+  M.sort_by_age_with_tiebreak(entries)
+  show_picker(entries, {
     prompt_title  = 'Plan shotfiles',
     preview_title = 'plan shotfile',
-    prefix        = git_root .. '/docs/shotfiles/docs/plans/',
   })
 end
 
