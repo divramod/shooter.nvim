@@ -1,10 +1,92 @@
 # feats
 
-## shot 39 move improvements into new followup plan
+## shot 41 < >pf improvements
+i want to go further with the plan feature improvements in shooter.
+the following things i want to be addressed next:
 
-## shot 38 < >pa
+### three kinds of plan files
+1. docs/plans/masterplan.md should become docs/plans/metaplan.md
+2. docs/shotfiles/docs/plans/NNNN-<feat>.md should become docs/plans/NNNN-<feat>/idea.md
+
+so instead of putting the ideas for a plan into the shotfiles folder, they should be put into the plan folder already as idea.md file.
+
+if the plan folder does not exist right now, it should be created and the idea.md file should be created in it with the content from the masterplan, then metaplan.md
+
+please go into deep thinking mode, analyze and plan deeply on how to implement it, what it could affect, and then implement it carefully, so that nothing breaks and the structure is clean and logical.
+ 
+i want to keep all the functionality you built until here, but adapt it to the new structure, so that the idea files are now in docs/plans and not in the shotfiles folder anymore.
+
+also rename the commands accordingly, masterplan is now metaplan
+
+this has deep impact, as now < >pf is not only renaming files anymore, it will rename folders in docs/plans then.
+
+their is a clear barrier, when plans cannot be moved (renumbered) anymore. its when they have a spec.md file already inside. this is a clear indication, that some agents already started working on the plan.
+
+## shot 40 move improvements into new followup plan
+
+## shot 39 < >pa
 i want you to add a new plan command < >pa, which archives a plan.
 when in the masterplan.md file, 
+
+## x shot 38 improve < >pf (2026-04-26 13:31:16)
+my next plans section looks like this
+
+```md
+## next plans 
+...
+- 0041-feature-parity (somethin here)
+  - every feature needs to be implemented in api tui swift kotlin next
+- 0042-deployment
+- 0043-performance
+- 0044-error-handling-systematics
+- 0045-graph-database
+- 0046-vector-database
+- 0047-memory-system
+- 0048-gap-handling
+  - gap closure plans should be approvable when they have been moved into a own plan phase or spec so that plans can be closed
+- 0049-llm-finetuning
+- 0050-project-and-planmanagement
+- 0051-inbox
+- 0052-cli-test-commands
+  - every cli command should have a test command that can be used in ci and locally to verify functionality
+- 0053-util-init-commands
+  - like redis init mongo init postgres init mysql init how does that combine with dev init
+- 0054-nx-turbo-switch
+- 0055-git-hooks-init
+```
+in plan 0041 i have something in parentheses and a subnote with more details.
+when < >pf is ran, i want you to these things inside the docs/shotfiles/docs/plans/0041-feature-parity.md file like this:
+
+```md
+# docs/plans/0041-feature-parity
+
+## shot 1 
+- something here
+- every feature needs to be implemented in api tui swift kotlin next
+```
+
+then, it should be removed from the masterplan (parentheses text and subnotes)
+
+i want to be able to always add new things in the masterplan.md for plans.
+if i put things in parentheses again, it should be added to the list under ## shot 1 in the plan file.
+
+if the shot 1 is already shooted, it looks something like this then:
+```
+## x shot 1 folder structure (2026-04-23 06:48:43)
+- ...
+```
+then a new shot should be created above it
+
+```
+## shot 2 
+- ...
+
+## x shot 1 folder structure (2026-04-23 06:48:43)
+- ...
+```
+
+this should work in all categories of the masterplan.
+please think deeply about this and how to implement it carefully, so that nothing gots broken and come up with a good plan.
 
 ## x shot 37 < >pf improvements (2026-04-26 12:53:03)
 pf should automatically search all worktrees to see, if there are new plans in them, which could have been added so the plan numbers stay unique.
