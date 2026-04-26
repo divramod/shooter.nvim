@@ -161,6 +161,14 @@ function M.rename_plan(git_root, old_name, new_name)
   if not old_name or old_name == '' then return false, 'no old name' end
   if not new_name or new_name == '' then return false, 'no new name' end
   if old_name == new_name then return false, 'name unchanged' end
+  -- Defense-in-depth: validate BOTH names. The NNNN-slug regex structurally
+  -- rejects path-traversal (..), separators (/), and shell metacharacters.
+  -- old_name is normally extracted from metaplan lines via the same regex,
+  -- so this only matters for programmatic callers — but the cost is one
+  -- pattern match.
+  if not old_name:match('^%d%d%d%d%-[%l%d][%w%-]*$') then
+    return false, 'invalid old plan name (need NNNN-slug)'
+  end
   if not new_name:match('^%d%d%d%d%-[%l%d][%w%-]*$') then
     return false, 'invalid plan name (need NNNN-slug)'
   end

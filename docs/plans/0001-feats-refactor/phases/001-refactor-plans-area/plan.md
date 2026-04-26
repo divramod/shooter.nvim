@@ -1,7 +1,7 @@
 ---
 name: refactor-plans-area
 description: Tests-first then split lua/shooter/plans/metaplan.lua (1584 LOC); fix plans/-area security findings.
-status: approved
+status: shipped
 phase_id: 001
 depends_on: ["000"]
 wave: 2
@@ -91,27 +91,27 @@ Each sub-module ≤ 350 LOC. `metaplan/init.lua` is re-export only. Existing `re
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T005** — Plans/-area security fixes
+- [x] **T005** — Plans/-area security fixes
   - **Acceptance:** Every plans/ finding from `baseline.md § Security Inventory` is fixed or explicitly deferred (with rationale). Path-traversal-prone rename ops use canonicalize + reject-`..` checks. Shell-outs use `shellescape` or table-form `vim.fn.system({...})`.
   - **Verify:** `! grep -nE "(vim\.fn\.system|io\.popen)\([\"'].*\.\..*[\"']\)" lua/shooter/plans/`; unit tests for canonicalization in `tests/plans/metaplan_rename_spec.lua` cover `..` rejection; tests green.
   - **Files:** `lua/shooter/plans/metaplan/rename.lua`, possibly `lua/shooter/plans/init.lua`, plus tests
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T006** — Verify final state
+- [x] **T006** — Verify final state
   - **Acceptance:** Full test suite green; `lua/shooter/plans/**` coverage ≥ 80%; no public-surface regressions.
   - **Verify:** Full `:PlenaryBustedDirectory tests/` green; smoke loader green; `awk '/^lua\/shooter\/plans/' luacov.report.out` shows ≥ 80%.
   - **Files:** —
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 ## Risks
 

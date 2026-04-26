@@ -2,11 +2,11 @@ automode: paused
 started_at: "2026-04-26"
 resumed_at: "2026-04-26"
 paused_at: "2026-04-26"
-halt_reason: "session-budget — Phase 001 T001/T002/T003 shipped (seam plan + 5 characterization spec files). T004 (XL: split metaplan.lua 1584→11 sub-modules) needs its own session."
+halt_reason: "session-budget — Phase 000 + Phase 001 shipped (12/38 tasks). Phase 002 (core/ refactor: commands.lua 1190 + shot_actions.lua 795 + files.lua 456 + ext_config.lua 416 + security fixes) needs its own session."
 tier: large
 tier_source: deterministic
 cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:ship phase 001 T003 — coverage 93.23% locked; resume at phase 001 T004 (XL split)"
+last_action: "/hal:ship phase 001-refactor-plans-area — metaplan.lua split into 12 sub-modules; resume at phase 002 T001"
