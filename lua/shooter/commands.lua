@@ -443,10 +443,14 @@ local function setup_plan_commands()
   end, { desc = 'Rename plan under cursor (folder + shotfile + metaplan)' })
 
   -- HalShooterPlanDelete — delete the plan under the cursor in metaplan.md.
-  -- Removes docs/plans/<name>/ (containing plan.md / context.md / spec.md /
-  -- idea.md) and the metaplan entry. Confirms when the folder has non-stub
-  -- content beyond a single title; stub-only folders are removed without
-  -- prompting.
+  -- Removes docs/plans/<name>/ in MAIN and cascades the deletion to every
+  -- worktree that has the folder. Three pre-flight tiers:
+  --   1. content rule: every WT's folder must contain only idea.md (or be
+  --      empty / nonexistent).
+  --   2. uncommitted-changes guard.
+  --   3. divergent-branch-commits guard.
+  -- A failed pre-flight prompts for force confirmation; on yes, all three
+  -- guards are bypassed and the plan is forcibly removed everywhere.
   create_cmd('HalShooterPlanDelete', function()
     local metaplan = require('shooter.plans.metaplan')
     local git_root = files.get_git_root()
@@ -458,24 +462,23 @@ local function setup_plan_commands()
       return
     end
 
-    local folder = git_root .. '/docs/plans/' .. name
-    local folder_exists = vim.fn.isdirectory(folder) == 1
-    local folder_has_content = folder_exists
-      and metaplan.folder_has_content(folder)
-
-    local function run(folder_ok)
+    local function run(force)
       local ok, msg = metaplan.delete_plan(git_root, name,
-        { folder = folder_ok })
+        { folder = true, force = force })
       utils.echo(ok and ('plan: ' .. msg) or ('PlanDelete: ' .. (msg or 'unknown')))
     end
 
-    if not folder_exists or not folder_has_content then
-      run(true)
+    local pre_ok, pre_reason = metaplan.delete_plan_preflight(git_root, name, false)
+    if not pre_ok then
+      vim.ui.input({
+        prompt = 'cannot delete cleanly — ' .. pre_reason
+          .. '. force delete? yes/no: ',
+      }, function(ans) if ans == 'yes' then run(true) end end)
       return
     end
     vim.ui.input({ prompt = 'delete ' .. name .. '? yes/no: ' },
-      function(ans) run(ans == 'yes') end)
-  end, { desc = 'Delete plan under cursor (folder + metaplan entry)' })
+      function(ans) if ans == 'yes' then run(false) end end)
+  end, { desc = 'Delete plan under cursor (cascade across worktrees; force on tier failure)' })
 end
 
 -- Setup Tool namespace commands (l prefix in keymaps)

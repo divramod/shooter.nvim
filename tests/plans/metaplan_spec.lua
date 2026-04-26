@@ -1595,14 +1595,46 @@ describe('shooter.plans.metaplan', function()
       git('add', '-A')
       git('commit', '-q', '-m', 'seed')
 
+      -- Plan has plan.md + idea.md → fails the "only idea.md" content
+      -- rule. Force-delete bypasses the three pre-flight tiers.
       local ok, msg = metaplan.delete_plan(gitrepo, '0005-goner',
-        { folder = true })
+        { folder = true, force = true })
       assert.is_true(ok, msg)
       assert.is_false(utils.dir_exists(gitrepo .. '/docs/plans/0005-goner'))
       local mp = utils.read_file(mp_path)
       assert.is_nil(mp:find('0005-goner', 1, true))
       local subject = git('log', '-1', '--format=%s')
       assert.truthy(subject:find('chore%(plans%): delete 0005%-goner'))
+    end)
+
+    it('refuses delete when plan has files beyond idea.md (no force)', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0005-blocked', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0005-blocked/plan.md',
+        '# 0005-blocked\n\nbody\n')
+      utils.write_file(mp_path, '## in progress\n- 0005-blocked\n')
+      git('add', '-A'); git('commit', '-q', '-m', 'seed')
+
+      local ok, err = metaplan.delete_plan(gitrepo, '0005-blocked',
+        { folder = true })
+      assert.is_false(ok)
+      assert.truthy(err:find('plan.md', 1, true))
+      -- Folder still there
+      assert.is_true(utils.dir_exists(gitrepo .. '/docs/plans/0005-blocked'))
+    end)
+
+    it('plan_deletable: only idea.md (or empty) → ok', function()
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0001-only-idea', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0001-only-idea/idea.md',
+        '# x\n')
+      assert.is_true(metaplan.plan_deletable(gitrepo, '0001-only-idea'))
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0002-empty', 'p')
+      assert.is_true(metaplan.plan_deletable(gitrepo, '0002-empty'))
+      vim.fn.mkdir(gitrepo .. '/docs/plans/0003-with-spec', 'p')
+      utils.write_file(gitrepo .. '/docs/plans/0003-with-spec/spec.md',
+        '# spec\n')
+      local ok, reason = metaplan.plan_deletable(gitrepo, '0003-with-spec')
+      assert.is_false(ok)
+      assert.truthy(reason:find('spec.md', 1, true))
     end)
 
     it('keeps metaplan entry when folder stays (folder=false)', function()

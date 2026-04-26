@@ -37,13 +37,103 @@ function M.get_title(git_root)
   return string.format('# metaplan %s', repo)
 end
 
--- True if the plan folder docs/plans/<plan_name>/ contains a spec.md — that
--- file marks the plan as "an agent has started working on it" and freezes
--- its number from gap-fill / folder rename.
+-- True if any worktree's `docs/plans/<plan_name>/` contains a spec.md —
+-- that file marks the plan as "an agent has started working on it" and
+-- freezes its number from gap-fill / folder rename. Scans ALL worktrees
+-- because work-in-progress in any sibling worktree must be respected.
 function M.is_plan_locked(git_root, plan_name)
   if not git_root or not plan_name or plan_name == '' then return false end
-  return vim.fn.filereadable(git_root .. '/docs/plans/'
-    .. plan_name .. '/spec.md') == 1
+  for _, root in ipairs(M.list_worktree_roots(git_root)) do
+    if vim.fn.filereadable(root .. '/docs/plans/'
+        .. plan_name .. '/spec.md') == 1 then
+      return true
+    end
+  end
+  return false
+end
+
+-- List the basenames of files inside <wt_root>/docs/plans/<plan_name>/.
+-- Returns {} if the folder is missing or empty. Sub-directories are
+-- collapsed to their basename (so a stray subfolder counts as "extra
+-- content" beyond idea.md, blocking pD's content rule).
+function M.plan_files_in_worktree(wt_root, plan_name)
+  local out = {}
+  if not wt_root or not plan_name then return out end
+  local folder = wt_root .. '/docs/plans/' .. plan_name
+  if vim.fn.isdirectory(folder) ~= 1 then return out end
+  for _, name in ipairs(vim.fn.readdir(folder)) do
+    table.insert(out, name)
+  end
+  return out
+end
+
+-- Tier 1 — content rule for pD: a plan is deletable iff every worktree's
+-- copy of the folder contains at most idea.md (and nothing else). Returns
+-- ok_bool, reason_string. The reason names the offending worktree(s) and
+-- file(s) so the user can act on them.
+function M.plan_deletable(git_root, plan_name)
+  if not git_root or not plan_name or plan_name == '' then
+    return false, 'no git root / plan name'
+  end
+  local offenders = {}
+  for _, root in ipairs(M.list_worktree_roots(git_root)) do
+    local files = M.plan_files_in_worktree(root, plan_name)
+    local extras = {}
+    for _, f in ipairs(files) do
+      if f ~= 'idea.md' then table.insert(extras, f) end
+    end
+    if #extras > 0 then
+      table.insert(offenders, {
+        wt = vim.fn.fnamemodify(root, ':t'),
+        files = extras,
+      })
+    end
+  end
+  if #offenders == 0 then return true end
+  local parts = {}
+  for _, o in ipairs(offenders) do
+    table.insert(parts,
+      o.wt .. ' has [' .. table.concat(o.files, ', ') .. ']')
+  end
+  return false, plan_name .. ': ' .. table.concat(parts, '; ')
+end
+
+-- Tier 2 — uncommitted-changes guard: returns true iff `git status` shows
+-- nothing inside `<wt_root>/docs/plans/<plan_name>/`.
+function M.worktree_status_clean(wt_root, plan_name)
+  if not wt_root or not plan_name then return true end
+  local rel = 'docs/plans/' .. plan_name
+  if vim.fn.isdirectory(wt_root .. '/' .. rel) ~= 1 then return true end
+  local out = vim.fn.system({ 'git', '-C', wt_root, 'status',
+    '--porcelain', '--', rel })
+  if vim.v.shell_error ~= 0 then return true end  -- not a git repo, treat as clean
+  for line in (out or ''):gmatch('[^\n]+') do
+    if line:match('%S') then return false end
+  end
+  return true
+end
+
+-- Tier 3 — divergent-branch guard: returns true iff `<wt_root>` has no
+-- commits on its current branch (relative to main) that touch
+-- `docs/plans/<plan_name>/`. The "main" reference defaults to "main" (the
+-- canonical branch). Falls back to "master" on legacy repos.
+function M.worktree_log_clean(wt_root, plan_name)
+  if not wt_root or not plan_name then return true end
+  local rel = 'docs/plans/' .. plan_name
+  if vim.fn.isdirectory(wt_root .. '/' .. rel) ~= 1 then return true end
+  -- If this WT is on main itself, no divergence by definition.
+  local branch = vim.fn.system({ 'git', '-C', wt_root, 'branch',
+    '--show-current' }):gsub('%s+$', '')
+  if branch == 'main' or branch == 'master' or branch == '' then return true end
+  -- Pick the existing main-ish branch as the base.
+  local base = 'main'
+  local _ = vim.fn.system({ 'git', '-C', wt_root, 'rev-parse',
+    '--verify', '--quiet', 'main' })
+  if vim.v.shell_error ~= 0 then base = 'master' end
+  local out = vim.fn.system({ 'git', '-C', wt_root, 'log', '--oneline',
+    base .. '..HEAD', '--', rel })
+  if vim.v.shell_error ~= 0 then return true end  -- can't compare, treat as clean
+  return (out or ''):match('%S') == nil
 end
 
 -- Slugify: lowercase, collapse non-alphanumeric runs to single '-', trim.
@@ -630,49 +720,99 @@ function M.new_plan(git_root, title)
   return true, path
 end
 
--- Rename a plan's folder docs/plans/<old>/ → docs/plans/<new>/ during
--- gap-fill renumbering. Updates the title in plan.md / context.md / spec.md /
--- idea.md to match. Skipped when the folder is locked (spec.md present) or
--- when the new folder already exists. Returns ok_bool, msg.
+-- Rename a plan's folder docs/plans/<old>/ → docs/plans/<new>/ in MAIN
+-- and cascade the rename to every other worktree that has the old folder
+-- AND is "clean" for it (no uncommitted changes, no commits ahead of main
+-- touching it). Updates the title in plan.md / context.md / spec.md /
+-- idea.md / masterplan.md to match. Skipped when the new folder already
+-- exists in MAIN. Each worktree gets its own commit. Returns ok_bool, msg
+-- (msg lists cascaded WTs and any skipped ones with reasons).
 local function rename_plan_folder(git_root, old_name, new_name)
   if old_name == new_name then return true, 'unchanged' end
   local plans_rel = 'docs/plans'
   local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
   local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
-  if vim.fn.isdirectory(old_folder) ~= 1 then return true, 'no folder' end
   if vim.fn.isdirectory(new_folder) == 1 then
     return false, new_folder .. ' already exists'
   end
 
-  -- Save+close any loaded buffers under the old folder so the rename
-  -- doesn't collide with stale buffer state.
-  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
-    local bufnr = vim.fn.bufnr(old_folder .. '/' .. kind .. '.md')
-    if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-      if vim.bo[bufnr].modified then
-        vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
-      end
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end
-
-  local _, err = vim.fn.system({ 'git', '-C', git_root, 'mv',
-    plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
-  if vim.v.shell_error ~= 0 then
-    if not os.rename(old_folder, new_folder) then
-      return false, 'failed to rename ' .. old_folder
-    end
-  end
-
-  -- Update the canonical title in each known plan-folder file.
+  local main_realpath = vim.uv.fs_realpath(git_root) or git_root
   local files = require('shooter.core.files')
-  for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
-    local p = new_folder .. '/' .. kind .. '.md'
-    if vim.fn.filereadable(p) == 1 then
-      files.update_file_title(p, files.title_from_path(p))
+
+  local function rename_in(wt_root, commit_msg)
+    local old_p = wt_root .. '/' .. plans_rel .. '/' .. old_name
+    local new_p = wt_root .. '/' .. plans_rel .. '/' .. new_name
+    if vim.fn.isdirectory(old_p) ~= 1 then return false, 'no folder' end
+    if vim.fn.isdirectory(new_p) == 1 then return false, 'target exists' end
+    -- Save+close any loaded buffers under the old folder.
+    for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+      local bufnr = vim.fn.bufnr(old_p .. '/' .. kind .. '.md')
+      if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+        if vim.bo[bufnr].modified then
+          vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write') end)
+        end
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end
+    vim.fn.system({ 'git', '-C', wt_root, 'mv',
+      plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+    if vim.v.shell_error ~= 0 then
+      if not os.rename(old_p, new_p) then return false, 'rename failed' end
+    end
+    for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+      local p = new_p .. '/' .. kind .. '.md'
+      if vim.fn.filereadable(p) == 1 then
+        files.update_file_title(p, files.title_from_path(p))
+      end
+    end
+    if commit_msg then
+      vim.fn.system({ 'git', '-C', wt_root, 'commit', '-q', '-m', commit_msg,
+        '--', plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+    end
+    return true
+  end
+
+  -- 1. Main rename (if folder exists). When fix() is the caller, the
+  --    metaplan render already wrote the new entry — so we don't commit
+  --    main here; fix's commit_plans pass picks it up at the end.
+  if vim.fn.isdirectory(old_folder) == 1 then
+    local ok, err = rename_in(git_root, nil)
+    if not ok then return false, err end
+  end
+
+  -- 2. Cascade to other worktrees. Skip dirty WTs with a warning.
+  local cascaded, skipped = {}, {}
+  for _, wt_root in ipairs(M.list_worktree_roots(git_root)) do
+    local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
+    if wt_realpath ~= main_realpath
+        and vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. old_name) == 1 then
+      local wt_name = vim.fn.fnamemodify(wt_root, ':t')
+      if not M.worktree_status_clean(wt_root, old_name) then
+        table.insert(skipped, wt_name .. ' (uncommitted)')
+      elseif not M.worktree_log_clean(wt_root, old_name) then
+        table.insert(skipped, wt_name .. ' (divergent commits)')
+      else
+        local ok, err = rename_in(wt_root,
+          'chore(plans): mirror main — rename ' .. old_name
+          .. ' -> ' .. new_name)
+        if ok then table.insert(cascaded, wt_name)
+        else table.insert(skipped, wt_name .. ' (' .. (err or 'error') .. ')') end
+      end
     end
   end
-  return true
+
+  local msg = nil
+  if #cascaded > 0 or #skipped > 0 then
+    local parts = {}
+    if #cascaded > 0 then
+      table.insert(parts, 'cascaded: ' .. table.concat(cascaded, ', '))
+    end
+    if #skipped > 0 then
+      table.insert(parts, 'skipped: ' .. table.concat(skipped, ', '))
+    end
+    msg = table.concat(parts, '; ')
+  end
+  return true, msg
 end
 
 -- Fix metaplan.md: rewrites via parse/render, gap-fills `## next plans` (each
@@ -1147,10 +1287,12 @@ local function close_buf_for(path)
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end
 
--- Rename a plan in every place it is referenced: the docs/plans/<old>/
--- folder (which contains plan.md / context.md / spec.md / idea.md, all
--- carried along by the folder rename), and the metaplan line. Commits all
--- changed files with a rename message. No-op when the folder is missing.
+-- Rename a plan: rename `docs/plans/<old>/` → `docs/plans/<new>/` in MAIN
+-- (carrying plan.md / context.md / spec.md / idea.md / masterplan.md
+-- along), update titles, rewrite the metaplan line, and cascade the
+-- folder rename to every worktree that has the old folder AND is clean
+-- (no uncommitted changes, no commits ahead of main touching it). Each
+-- worktree gets its own commit.  metaplan.md is NEVER edited in worktrees.
 function M.rename_plan(git_root, old_name, new_name)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not old_name or old_name == '' then return false, 'no old name' end
@@ -1161,6 +1303,7 @@ function M.rename_plan(git_root, old_name, new_name)
   end
 
   local plans_rel = 'docs/plans'
+  local main_realpath = vim.uv.fs_realpath(git_root) or git_root
   local old_folder = git_root .. '/' .. plans_rel .. '/' .. old_name
   local new_folder = git_root .. '/' .. plans_rel .. '/' .. new_name
 
@@ -1197,48 +1340,170 @@ function M.rename_plan(git_root, old_name, new_name)
   local cok, cmsg, committed = M.commit_plans(git_root,
     'chore(plans): rename ' .. old_name .. ' -> ' .. new_name)
   if not cok then return false, cmsg end
-  return true, committed and 'renamed' or 'renamed (nothing to commit)'
+
+  -- Cascade the folder rename to other worktrees. Skip dirty WTs.
+  local files_mod = require('shooter.core.files')
+  local cascaded, skipped = {}, {}
+  for _, wt_root in ipairs(M.list_worktree_roots(git_root)) do
+    local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
+    if wt_realpath ~= main_realpath
+        and vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. old_name) == 1 then
+      local wt_name = vim.fn.fnamemodify(wt_root, ':t')
+      if not M.worktree_status_clean(wt_root, old_name) then
+        table.insert(skipped, wt_name .. ' (uncommitted)')
+      elseif not M.worktree_log_clean(wt_root, old_name) then
+        table.insert(skipped, wt_name .. ' (divergent commits)')
+      elseif vim.fn.isdirectory(wt_root .. '/' .. plans_rel .. '/' .. new_name) == 1 then
+        table.insert(skipped, wt_name .. ' (target exists)')
+      else
+        for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+          close_buf_for(wt_root .. '/' .. plans_rel .. '/' .. old_name
+            .. '/' .. kind .. '.md')
+        end
+        vim.fn.system({ 'git', '-C', wt_root, 'mv',
+          plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+        local rename_ok = vim.v.shell_error == 0
+        if not rename_ok then
+          rename_ok = os.rename(
+            wt_root .. '/' .. plans_rel .. '/' .. old_name,
+            wt_root .. '/' .. plans_rel .. '/' .. new_name) ~= nil
+        end
+        if rename_ok then
+          for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
+            local p = wt_root .. '/' .. plans_rel .. '/' .. new_name
+              .. '/' .. kind .. '.md'
+            if vim.fn.filereadable(p) == 1 then
+              replace_title_reference(p, old_name, new_name)
+              files_mod.update_file_title(p, files_mod.title_from_path(p))
+            end
+          end
+          vim.fn.system({ 'git', '-C', wt_root, 'commit', '-q', '-m',
+            'chore(plans): mirror main — rename ' .. old_name
+              .. ' -> ' .. new_name,
+            '--', plans_rel .. '/' .. old_name, plans_rel .. '/' .. new_name })
+          table.insert(cascaded, wt_name)
+        else
+          table.insert(skipped, wt_name .. ' (rename failed)')
+        end
+      end
+    end
+  end
+
+  local base = committed and 'renamed' or 'renamed (nothing to commit)'
+  if #cascaded > 0 then
+    base = base .. ' (also in: ' .. table.concat(cascaded, ', ') .. ')'
+  end
+  if #skipped > 0 then
+    base = base .. ' [skipped: ' .. table.concat(skipped, ', ') .. ']'
+  end
+  return true, base
 end
 
--- Delete a plan: removes its docs/plans/<name>/ folder (which contains
--- plan.md / context.md / spec.md / idea.md) and the metaplan entry. The
--- metaplan entry is dropped iff the folder is gone afterwards — otherwise
--- fix() would just re-adopt it. `opts.folder` defaults to true. fix() always
--- runs to resort / resync, and everything is committed with a delete message.
+-- Pre-flight delete check across every worktree. Returns ok_bool,
+-- reason_string. Without `force`:
+--   * Tier 1: plan_deletable (every WT's folder must be empty or only-idea).
+--   * Tier 2: each WT that has the folder must be status-clean inside it.
+--   * Tier 3: each WT that has the folder must have no commits on its
+--     branch (vs main) touching the folder.
+-- With `force`: returns true unconditionally.
+function M.delete_plan_preflight(git_root, name, force)
+  if force then return true end
+  local ok, reason = M.plan_deletable(git_root, name)
+  if not ok then return false, reason end
+  for _, root in ipairs(M.list_worktree_roots(git_root)) do
+    if vim.fn.isdirectory(root .. '/docs/plans/' .. name) == 1 then
+      if not M.worktree_status_clean(root, name) then
+        return false, 'worktree '
+          .. vim.fn.fnamemodify(root, ':t')
+          .. ' has uncommitted changes inside ' .. name
+      end
+      if not M.worktree_log_clean(root, name) then
+        return false, 'worktree '
+          .. vim.fn.fnamemodify(root, ':t')
+          .. " has commits ahead of main touching " .. name
+      end
+    end
+  end
+  return true
+end
+
+-- Delete a plan in MAIN and cascade the deletion to every worktree that
+-- has the folder. Each worktree gets its own commit ("chore(plans):
+-- mirror main — delete <name>") on its branch, so a later /mtm finds a
+-- consistent same-direction edit and merges trivially. The metaplan is
+-- only edited in MAIN — worktree metaplans are NEVER touched (per the
+-- design principle that main is canonical for metaplan.md).
+--
+-- `opts.folder` (default true) — delete the folder; false to drop only
+--   the metaplan entry.
+-- `opts.force` (default false) — bypass the three pre-flight tiers
+--   (content rule, uncommitted-changes guard, divergent-branch guard).
 function M.delete_plan(git_root, name, opts)
   if not git_root or git_root == '' then return false, 'no git root' end
   if not name or name == '' then return false, 'no plan name' end
   opts = opts or {}
   if opts.folder == nil then opts.folder = true end
 
-  local plans_rel = 'docs/plans'
-  local folder = git_root .. '/' .. plans_rel .. '/' .. name
+  if opts.folder then
+    local ok, reason = M.delete_plan_preflight(git_root, name, opts.force)
+    if not ok then return false, reason end
+  end
 
+  local plans_rel = 'docs/plans'
+  local main_realpath = vim.uv.fs_realpath(git_root) or git_root
+
+  -- 1. Delete in MAIN.
+  local folder = git_root .. '/' .. plans_rel .. '/' .. name
   if opts.folder and vim.fn.isdirectory(folder) == 1 then
     for _, kind in ipairs({ 'plan', 'context', 'spec', 'idea', 'masterplan' }) do
       close_buf_for(folder .. '/' .. kind .. '.md')
     end
-    local _, err = git(git_root, { 'rm', '-rf', '--',
-      plans_rel .. '/' .. name })
-    if err ~= 0 then
-      vim.fn.delete(folder, 'rf')
-    end
+    local _, err = git(git_root, { 'rm', '-rf', '--', plans_rel .. '/' .. name })
+    if err ~= 0 then vim.fn.delete(folder, 'rf') end
   end
 
-  -- Only drop the metaplan entry when the folder is gone, so fix() doesn't
-  -- re-adopt a still-present folder and resurrect the plan.
+  -- 2. Drop metaplan entry (main only) when the folder is gone, so fix()
+  --    doesn't re-adopt a still-present folder.
   if vim.fn.isdirectory(folder) ~= 1 then
     local ok, err = M.remove_metaplan_entry(git_root, name)
     if not ok then return false, err end
   end
 
+  -- 3. fix() + main commit.
   local fok, ferr = M.fix(git_root)
   if not fok then return false, ferr end
-
   local cok, cmsg, committed = M.commit_plans(git_root,
     'chore(plans): delete ' .. name)
   if not cok then return false, cmsg end
-  return true, committed and 'deleted' or 'deleted (nothing to commit)'
+
+  -- 4. Cascade to every other worktree that has the folder.
+  local cascaded = {}
+  if opts.folder then
+    for _, wt_root in ipairs(M.list_worktree_roots(git_root)) do
+      local wt_realpath = vim.uv.fs_realpath(wt_root) or wt_root
+      if wt_realpath ~= main_realpath
+          and vim.fn.isdirectory(wt_root .. '/docs/plans/' .. name) == 1 then
+        local _, rm_err = vim.fn.system({ 'git', '-C', wt_root, 'rm',
+          '-rf', '--', plans_rel .. '/' .. name }), vim.v.shell_error
+        if rm_err ~= 0 then
+          vim.fn.delete(wt_root .. '/docs/plans/' .. name, 'rf')
+        end
+        local commit_msg = 'chore(plans): mirror main — delete ' .. name
+        vim.fn.system({ 'git', '-C', wt_root, 'commit', '-q', '-m',
+          commit_msg, '--', plans_rel .. '/' .. name })
+        if vim.v.shell_error == 0 then
+          table.insert(cascaded, vim.fn.fnamemodify(wt_root, ':t'))
+        end
+      end
+    end
+  end
+
+  local base_msg = committed and 'deleted' or 'deleted (nothing to commit)'
+  if #cascaded > 0 then
+    base_msg = base_msg .. ' (also in worktrees: '
+      .. table.concat(cascaded, ', ') .. ')'
+  end
+  return true, base_msg
 end
 
 return M
