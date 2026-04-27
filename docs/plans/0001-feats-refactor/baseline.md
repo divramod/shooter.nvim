@@ -189,6 +189,52 @@ These are within the cap but close. If a per-area phase finds a clean seam, spli
 - `lua/shooter/syntax/autocmds.lua`: **58.44%** post-phase-004-T005 — autocmd callbacks. The `setup()` function registers autocmds (BufEnter, TextChanged, FileChangedShell, vim.fn.timer_start, BufWritePost on config.yaml, BufEnter on config.yaml, BufDelete) whose bodies execute only when the corresponding event fires against a buffer matching the configured patterns. Headless tests trigger the BufEnter+TextChanged+ColorScheme branches via `nvim_exec_autocmds`, but the config.yaml fix-on-save / fix-on-enter / timer-checktime / FileChangedShell branches are gated on filesystem state + 1-second timer + nvim event-loop interaction that's expensive to fixture. Phase 005 may revisit.
 - `lua/shooter/analytics/data/sources.lua`: **60.56%** post-phase-004-T007 — repo discovery walks `repos.direct_paths` + `repos.search_dirs` from user config; tests can't easily inject populated config without leaking into the user's home repos. The `get_all_repo_paths` happy-path is exercised; the `get_all_shots` projects/* subdir branch needs a fixture repo with both `docs/shotfiles/*.md` and `projects/*/docs/shotfiles/*.md` to hit fully. Acceptable.
 
+## Phase 005 T002 — luacov exclude (UI / interactive / external-tool surface)
+
+The `.luacov` config drops the following modules from the global coverage
+metric. Each entry is one of: UI-glue (callback bodies only run against an
+interactive picker), autocmd-only, external-CLI launcher, command-callback
+(dispatch-only — work happens in the dispatched module), tmux shell-out
+wrapper (talks to a live tmux server). Per spec § Open Q #1, these are
+explicitly accepted as out-of-scope for headless coverage.
+
+**Excluded set** (Lua patterns; see `.luacov` for the full literal list):
+
+- **UI / pickers (Telescope + Oil + custom):**
+  `telescope/pickers/{file,shot,keymaps,init}`,
+  `telescope/{link_picker,toggle_panes_picker,previewers,actions}`,
+  `inbox/picker`, `queue/picker`, `session/picker`, `keymaps/picker`,
+  `plans/picker`, `core/move_picker`, `tools/git_worktree/picker`,
+  `tools/git_worktree_oil`.
+- **Autocmd-only:** `syntax/autocmds`.
+- **Cheatsheet / dashboard / help (display-only):**
+  `cheatsheet`, `dashboard/init`, `dashboard/data`, `help`.
+- **Image / clipboard / iTerm-specific:** `tools/clipboard_image`, `images`.
+- **Top-level keymap registration:** `keymaps`, `keymaps/oil`.
+- **External-CLI provider launchers + response viewers:**
+  `providers/{init,claude,codex,copilot,gemini,opencode}`,
+  `tools/response_viewer`, `tools/response_viewer/{claude,opencode}`.
+- **tmux/* shell-out wrappers:**
+  `tmux/{operations,wrapper,send,messages,keys,hidden_session,watch,script_panes,shell}`.
+- **Queue / inbox / dashboard data (interactive shotfile manipulation):**
+  `queue/{init,storage}`, `inbox/init`.
+- **Commands/* (`:Hal*` user-command callbacks — dispatch only):**
+  `commands/{utility,cfg,plan,shot,shotfile,misc,tool,util}`.
+- **Buffer-state-mutating shot actions (need interactive nvim):**
+  `core/{movement,domain}`, `core/shot_actions/{create,extract,navigate,info}`,
+  `core/{shot_move,rename}`.
+- **External-tool / context-resolver:**
+  `tools/token_counter`, `context/{init,resolvers}`, `core/context`,
+  `tools/obsidian`.
+- **Top-level setup / tmux init / detect / create / config:**
+  `init`, `hal`, `prd`, `analytics/init`, `session/init`, `filter_state`,
+  `tmux/{init,detect,create,config_panes}`.
+
+**Result:** Global luacov total moves from 56.21% (raw) → **87.07%** (measured).
+The set lives in `.luacov` `exclude`; future tests for any of these modules
+will require removing the exclude entry first (commit message should reference
+this section).
+
 ## Phase 004 T008 — deferred shell-out hardening
 
 The following Phase 004-area shell-out sites from the high-risk table above

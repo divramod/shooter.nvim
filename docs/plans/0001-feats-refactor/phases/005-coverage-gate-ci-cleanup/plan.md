@@ -43,16 +43,16 @@ Per-area phases each enforce ≥ 80% on their touched files. This phase ensures 
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T002** — Add tests to push global total ≥ 80%
+- [x] **T002** — Add tests to push global total ≥ 80%
   - **Acceptance:** Each gap from T001 is closed by new test cases or moved to the exception list with explicit rationale.
   - **Verify:** `awk '/^Total/ {pct=$NF; gsub("%","",pct); exit !(pct+0 >= 80)}' luacov.report.out`.
   - **Files:** Various `tests/**/*_spec.lua`, possibly `docs/plans/0001-feats-refactor/baseline.md`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T003** — `scripts/check_coverage.sh`
   - **Acceptance:** A repo-root script runs the test+coverage pipeline and exits non-zero when global total < 80%.
