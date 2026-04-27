@@ -32,16 +32,16 @@ Per-area phases each enforce ≥ 80% on their touched files. This phase ensures 
 
 ## Tasks
 
-- [ ] **T001** — Identify modules below 80%
+- [x] **T001** — Identify modules below 80%
   - **Acceptance:** A short report `phases/005-coverage-gate-ci-cleanup/coverage_gap.md` lists every file below 80% with: current %, lines uncovered, and which (if any) belong on the exception list vs. need new tests.
   - **Verify:** Report file exists and references current `luacov.report.out`.
   - **Files:** `docs/plans/0001-feats-refactor/phases/005-coverage-gate-ci-cleanup/coverage_gap.md`
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T002** — Add tests to push global total ≥ 80%
   - **Acceptance:** Each gap from T001 is closed by new test cases or moved to the exception list with explicit rationale.
