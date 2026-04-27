@@ -72,16 +72,16 @@ lua/shooter/analytics/data/
 
 ## Tasks
 
-- [ ] **T001** — Read & seam-map five files
+- [x] **T001** — Read & seam-map five files
   - **Acceptance:** `seams.md` lists per-file seam plan for syntax, toggle_panes, git_worktree, health, analytics/data.
   - **Verify:** `phases/004-refactor-tmux-tools-misc/seams.md` exists.
   - **Files:** `docs/plans/0001-feats-refactor/phases/004-refactor-tmux-tools-misc/seams.md`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T002** — Characterization tests for `syntax.lua` + `analytics/data.lua`
   - **Acceptance:** Both files ≥ 80% coverage.
