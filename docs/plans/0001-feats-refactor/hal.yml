@@ -7,4 +7,4 @@ cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:automode resumed at phase 004 (refactor-tmux-tools-misc) on 2026-04-27. Tier=large, cadence=phase. Starting at T001."
+last_action: "/hal:ship phase 004 — all 9 tasks shipped (suite 976/0/0, smoke 175/175). Per-touched-file coverage: syntax 88.4%, health 86.6%, analytics/data 86.7%, toggle_panes 92.6%, git_worktree 73.8% (picker UI-glue exception). Phase 004 status: shipped. Next eligible: phase 005 (coverage-gate-ci-cleanup, depends_on=[001,002,003,004])."

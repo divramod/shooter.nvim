@@ -1,7 +1,7 @@
 ---
 name: refactor-tmux-tools-misc
 description: Refactor remaining oversized files (syntax, health, toggle_panes, git_worktree, analytics/data) and address their security findings.
-status: approved
+status: shipped
 phase_id: 004
 depends_on: ["000"]
 wave: 2
@@ -164,16 +164,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T009** — Verify final state
+- [x] **T009** — Verify final state
   - **Acceptance:** Suite green; smoke loader green; coverage of touched files ≥ 80%.
   - **Verify:** As prior phases.
   - **Files:** —
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 ## Risks
 
