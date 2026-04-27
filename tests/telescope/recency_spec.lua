@@ -2,9 +2,9 @@ local recency = require('shooter.telescope.recency')
 
 describe('shooter.telescope.recency', function()
   describe('format_relative', function()
-    it('returns "just now" for < 60s', function()
-      assert.equals('just now', recency.format_relative(0))
-      assert.equals('just now', recency.format_relative(59))
+    it('formats seconds for < 60s', function()
+      assert.equals('0s ago', recency.format_relative(0))
+      assert.equals('59s ago', recency.format_relative(59))
     end)
 
     it('formats minutes', function()

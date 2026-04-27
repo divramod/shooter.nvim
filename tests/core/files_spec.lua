@@ -1,27 +1,34 @@
 -- Tests for shooter.core.files
 local files = require('shooter.core.files')
+local files_git = require('shooter.core.files.git')
 local utils = require('shooter.utils')
 local ext_config = require('shooter.core.ext_config')
 local storage = require('shooter.session.storage')
 
 -- Capture real get_git_root before the outer describe monkey-patches it, so
 -- nested specs can exercise the true main-worktree resolution.
-local real_get_git_root = files.get_git_root
+local real_get_git_root = files_git.get_git_root
 
 describe('shooter.core.files', function()
   local test_root = '/tmp/shooter_files_test'
   local original_get_git_root
 
+  -- Patch both the public surface and the sub-module: after the files.lua
+  -- split, internal callers (io.lua, predicate.lua, last_shotfile.lua) call
+  -- shooter.core.files.git.get_git_root() directly, so the public M.get_git_root
+  -- alone no longer covers them.
   before_each(function()
     os.execute('rm -rf ' .. test_root)
     os.execute('mkdir -p ' .. test_root)
-    original_get_git_root = files.get_git_root
+    original_get_git_root = files_git.get_git_root
     files.get_git_root = function() return test_root end
+    files_git.get_git_root = function() return test_root end
   end)
 
   after_each(function()
     os.execute('rm -rf ' .. test_root)
     files.get_git_root = original_get_git_root
+    files_git.get_git_root = original_get_git_root
   end)
 
   describe('create_file', function()
@@ -163,8 +170,10 @@ describe('shooter.core.files', function()
         .. 'commit -q --allow-empty -m init')
       os.execute('git -C ' .. main_root .. ' worktree add -q -b other '
         .. wt_root .. ' >/dev/null 2>&1')
-      -- Outer describe monkey-patches get_git_root; restore the real one.
+      -- Outer describe monkey-patches get_git_root; restore the real one
+      -- on both surfaces so the worktree-aware tests hit the real impl.
       files.get_git_root = real_get_git_root
+      files_git.get_git_root = real_get_git_root
     end)
 
     after_each(function()
@@ -308,6 +317,7 @@ describe('shooter.core.files', function()
       local sf = io.open(stale_file, 'w'); sf:write('# stale\n'); sf:close()
 
       files.get_git_root = real_get_git_root
+      files_git.get_git_root = real_get_git_root
       vim.cmd('cd ' .. main_root)
       local slug = storage.get_repo_slug(real_get_git_root()):gsub('/', '_')
       persisted_path = ext_config.last_shotfile_path(slug)

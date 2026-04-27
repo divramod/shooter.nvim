@@ -125,16 +125,16 @@ lua/shooter/core/files/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T006** — Resolve `commands.lua` (split or exception)
+- [x] **T006** — Resolve `commands.lua` (split or exception)
   - **Acceptance:** Per T001's decision: either split into `commands/` sub-modules with registration order preserved, OR add `ALLOWED_LARGE_FILES: lua/shooter/commands.lua` with rationale to `baseline.md`. User command registration must still work after T006 — every existing `:HalShooter…` command resolves on a fresh Neovim.
   - **Verify:** Smoke loader passes; a new test `tests/commands_registration_spec.lua` enumerates expected user commands and asserts all are registered post-setup.
   - **Files:** Either `lua/shooter/commands/*.lua` + shim, or only `docs/plans/0001-feats-refactor/baseline.md`; plus `tests/commands_registration_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T007** — Split `core/shot_actions.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module.

@@ -7,4 +7,4 @@ cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:automode resume — phase 002 T005 (ext_config split)"
+last_action: "/hal:ship phase 002 T006 — commands.lua split into 10 sub-modules + registration spec (drift guard); 2 small inline gaps fixed (recency_spec format drift, files_spec get_git_root post-split monkeypatch). Resume at phase 002 T007 (shot_actions split)."
