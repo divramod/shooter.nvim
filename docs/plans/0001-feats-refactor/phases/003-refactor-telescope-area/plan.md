@@ -53,9 +53,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** `docs/plans/0001-feats-refactor/phases/003-refactor-telescope-area/seams.md`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 - [ ] **T002** — Characterization tests for `helpers.lua` pure functions
@@ -64,9 +64,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** `tests/telescope/helpers_*_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 - [ ] **T003** — Characterization tests for `pickers.lua`
@@ -75,9 +75,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** `tests/telescope/pickers_*_spec.lua`, possibly `docs/plans/0001-feats-refactor/baseline.md`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 - [ ] **T004** — Split `helpers.lua`
@@ -86,9 +86,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** `lua/shooter/telescope/helpers/*.lua`, `lua/shooter/telescope/helpers.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 - [ ] **T005** — Split `pickers.lua`
@@ -97,9 +97,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** `lua/shooter/telescope/pickers/*.lua`, `lua/shooter/telescope/pickers.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 - [ ] **T006** — Telescope-area security fixes
@@ -108,9 +108,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** `lua/shooter/telescope/helpers/*.lua`, `tests/telescope/security_spec.lua`
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 - [ ] **T007** — Verify final state
@@ -119,9 +119,9 @@ Both `pickers/init.lua` and `helpers/init.lua` are re-export only.
   - **Files:** —
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
+    - [x] built
+    - [x] tested
+    - [x] reviewed
     - [ ] shipped
 
 ## Risks

@@ -177,3 +177,11 @@ These are within the cap but close. If a per-area phase finds a clean seam, spli
 ## ALLOWED_LARGE_FILES
 
 > Each entry is a file justified for exception from the 350-LOC soft cap. Format: `- <path>: <rationale>`. Empty until Phase 000 T005 / per-area phases populate it.
+
+## ALLOWED_BELOW_THRESHOLD
+
+> Per-file 80% coverage exceptions logged by per-area phases. Format: `- <path>: <coverage> — <rationale>`.
+
+- `lua/shooter/telescope/pickers/file.lua`: **55.75%** post-T005 — UI-glue. The `pickers_spec.lua` stubs telescope and asserts picker construction (title, layout, finder shape) for all entry points. The uncovered 44% is `attach_mappings` handler bodies (per-key callbacks: move-to-folder, rename, delete, session save/load, layout toggle, the `select_default:replace(...)` create-from-prompt fallback). Bodies only execute against a live telescope picker; headless invocation either short-circuits at `actions.close(prompt_bufnr)` or recurses back into `M.list_all_files(...)` and deadlocks. Per spec § Open Q #1 ("UI-glue requires interactive Neovim"). Phase 005 T002 may revisit.
+- `lua/shooter/telescope/pickers/shot.lua`: **60.50%** post-T005 — same rationale: `attach_mappings` handler bodies for shot send / toggle done / mode toggle.
+- `lua/shooter/telescope/pickers/keymaps.lua`: **56.10%** post-T005 — folder/session mapping callback bodies; same rationale.

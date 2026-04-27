@@ -19,19 +19,20 @@ local utils = require('shooter.utils')
 ---@param pane_target string Pane ID or session:window target
 ---@return string[] lines
 local function get_pane_history(pane_target)
-  local handle = io.popen(string.format(
-    "tmux capture-pane -p -t '%s' 2>/dev/null",
-    pane_target
-  ))
-  if not handle then
-    return { '(unable to capture pane content)' }
+  -- Validate pane target before passing to tmux. Pane IDs are like "%12";
+  -- session:window targets allow [a-zA-Z0-9_:.-]. Reject anything else to
+  -- prevent shell-metachar injection if pane_target is ever caller-derived.
+  if type(pane_target) ~= 'string'
+      or pane_target == ''
+      or not pane_target:match('^[%w_:.%-%%]+$') then
+    return { '(invalid pane target)' }
   end
-  local content = handle:read('*a')
-  handle:close()
-
-  local lines = {}
-  for line in content:gmatch('[^\n]*') do
-    lines[#lines + 1] = line
+  -- Table-form `vim.fn.systemlist` avoids shell parsing entirely.
+  local lines = vim.fn.systemlist({
+    'tmux', 'capture-pane', '-p', '-t', pane_target,
+  })
+  if vim.v.shell_error ~= 0 then
+    return { '(unable to capture pane content)' }
   end
   return lines
 end
