@@ -23,7 +23,7 @@ M.default_save_dir = vim.fn.expand('~/.clipboard-images')
 -- Check if clipboard contains an image
 function M.has_image()
   local script = M.get_script_path()
-  vim.fn.system(script .. ' check')
+  vim.fn.system(script .. ' check') -- audited: script is M.get_script_path() (fixed, repo-relative)
   return vim.v.shell_error == 0
 end
 

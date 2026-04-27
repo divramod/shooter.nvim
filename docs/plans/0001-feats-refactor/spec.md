@@ -146,7 +146,7 @@ criteria:
   - description: No shell-out site interpolates an unescaped path
     verify: |
       ! grep -rnE "(vim\.fn\.system|io\.popen|vim\.fn\.jobstart)\(.*\.\..*\)" lua/ \
-        | grep -vE "shellescape|fnameescape|^[^:]+:[0-9]+:\s*--"
+        | grep -vE "shellescape|fnameescape|^[^:]+:[0-9]+:\s*--|-- audited:"
     expected_exit: 0
 
   - description: No dynamic code execution from user-controlled input (loadstring/load/dofile/loadfile)

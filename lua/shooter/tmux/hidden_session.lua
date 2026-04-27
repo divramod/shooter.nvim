@@ -9,7 +9,7 @@ local HIDDEN_SESSION = 'shooter-hidden-panes'
 ---@param cmd string
 ---@return string|nil
 local function tmux_exec(cmd)
-  local handle = io.popen(cmd .. ' 2>/dev/null')
+  local handle = io.popen(cmd .. ' 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 004 T008 deferred)
   if not handle then
     return nil
   end

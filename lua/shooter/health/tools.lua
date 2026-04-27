@@ -37,7 +37,7 @@ function M.check_python()
     return false
   end
 
-  local handle = io.popen(python_cmd .. ' --version 2>&1')
+  local handle = io.popen(python_cmd .. ' --version 2>&1') -- audited: python_cmd is 'python3'/'python' (fixed local var)
   local version = handle and handle:read('*l') or 'unknown'
   if handle then handle:close() end
   vim.health.ok(string.format('%s: %s', python_cmd, version))

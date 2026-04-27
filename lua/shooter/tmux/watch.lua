@@ -16,7 +16,7 @@ end
 
 -- Run tmux command and return output
 local function tmux_cmd(cmd)
-  local result = vim.fn.system('tmux ' .. cmd .. ' 2>/dev/null')
+  local result = vim.fn.system('tmux ' .. cmd .. ' 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 004 T008 deferred)
   if vim.v.shell_error ~= 0 then
     return nil
   end

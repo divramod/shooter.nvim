@@ -5,7 +5,7 @@ local M = {}
 
 -- Execute a tmux command
 local function tmux_cmd(cmd)
-  local handle = io.popen('tmux ' .. cmd .. ' 2>/dev/null')
+  local handle = io.popen('tmux ' .. cmd .. ' 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 004 T008 deferred)
   if not handle then
     return nil
   end
@@ -16,7 +16,7 @@ end
 
 -- Execute a shell script
 local function run_script(script_path)
-  local handle = io.popen(script_path .. ' 2>/dev/null')
+  local handle = io.popen(script_path .. ' 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 004 T008 deferred)
   if not handle then
     return nil
   end

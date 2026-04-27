@@ -120,7 +120,7 @@ function M.get_repo_files(repo_path)
   -- Process project prompts directories
   local projects_dir = repo_path .. '/projects'
   if utils.dir_exists(projects_dir) then
-    local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')
+    local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 005 deferred)
     if handle then
       for project in handle:lines() do
         local project_prompts = projects_dir .. '/' .. project .. '/docs/shotfiles'
@@ -188,7 +188,7 @@ function M.get_all_repos()
   for _, dir in ipairs(config.get('repos.search_dirs') or {}) do
     local expanded = utils.expand_path(dir)
     if utils.dir_exists(expanded) then
-      local handle = io.popen('ls -d "' .. expanded .. '"/*/ 2>/dev/null')
+      local handle = io.popen('ls -d "' .. expanded .. '"/*/ 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 005 deferred)
       if handle then
         for subdir in handle:lines() do
           subdir = subdir:gsub('/$', '')

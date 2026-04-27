@@ -108,7 +108,7 @@ end
 -- Load config from file
 ---@param git_root string
 ---@return table[]|nil List of pane configs, or nil if no config
-function M.load(git_root)
+function M.load(git_root) -- audited: function definition, not loadstring/load() exec
   if not git_root then
     return nil
   end
@@ -148,7 +148,7 @@ end
 function M.get_current()
   local files = require('shooter.core.files')
   local git_root = files.get_git_root()
-  local yaml_panes = M.load(git_root) or {}
+  local yaml_panes = M.load(git_root) or {} -- audited: M.load is shooter.tmux.config_panes.load, not loadstring
 
   -- Get auto-generated script panes
   local auto_panes = script_panes.get_script_panes()

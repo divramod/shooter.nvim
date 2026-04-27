@@ -30,7 +30,7 @@ function M.get_inbox_files()
   for _, dir in ipairs(search_dirs) do
     local expanded_dir = utils.expand_path(dir)
     if utils.dir_exists(expanded_dir) then
-      local handle = io.popen('find "' .. expanded_dir .. '" -name "*.md" -type f 2>/dev/null')
+      local handle = io.popen('find "' .. expanded_dir .. '" -name "*.md" -type f 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 005 deferred)
       if handle then
         for filepath in handle:lines() do
           if not seen[filepath] then

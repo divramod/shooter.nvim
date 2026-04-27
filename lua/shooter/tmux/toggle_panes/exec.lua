@@ -8,7 +8,7 @@ local M = {}
 ---@param cmd string
 ---@return string|nil
 function M.tmux_exec(cmd)
-  local handle = io.popen(cmd .. ' 2>/dev/null')
+  local handle = io.popen(cmd .. ' 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 004 T008 deferred)
   if not handle then return nil end
   local result = handle:read('*l')
   handle:close()

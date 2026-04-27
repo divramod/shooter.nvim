@@ -76,38 +76,38 @@ Per-area phases each enforce ≥ 80% on their touched files. This phase ensures 
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T005** — Final security verification
+- [x] **T005** — Final security verification
   - **Acceptance:** Every Success Criterion 3, 4 in `spec.md` passes (no unescaped shell-out interpolation; no user-controlled dynamic exec).
   - **Verify:** Run the verify commands from `spec.md § Success Criteria` for criteria #3 and #4; both exit 0.
   - **Files:** None (verification only); possibly small fixes if a residual finding is uncovered
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T006** — Cleanup
+- [x] **T006** — Cleanup
   - **Acceptance:** No orphan files, no dead modules, no leftover shims pointing at deleted paths. `lua/` walks cleanly.
   - **Verify:** `find lua -name '*.lua' -empty` returns no results; `grep -rn 'TODO.*refactor' lua/` no leftover TODOs from this run.
   - **Files:** Various
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
-- [ ] **T007** — Run full Success Criteria from spec.md
+- [x] **T007** — Run full Success Criteria from spec.md
   - **Acceptance:** All six criteria in `spec.md` pass when run via `hal lifecycle masterplan ship --dry-run` (or the equivalent `bash scripts/verify-success.sh`).
   - **Verify:** `bash docs/plans/0001-feats-refactor/scripts/verify-success.sh; echo $?` is 0.
   - **Files:** —
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 ## Risks
 

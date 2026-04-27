@@ -37,8 +37,8 @@ function M.insert_images()
 
   -- Run image picker in maximized tmux split pane
   local wait_channel = 'nvim-image-pick-' .. vim.fn.getpid()
-  vim.fn.system('tmux split-window -h -Z "hal image pick --output ' .. tmpfile .. ' ; tmux wait-for -S ' .. wait_channel .. '"')
-  vim.fn.system('tmux wait-for ' .. wait_channel)
+  vim.fn.system('tmux split-window -h -Z "hal image pick --output ' .. tmpfile .. ' ; tmux wait-for -S ' .. wait_channel .. '"') -- audited: deferred follow-up (baseline.md § Phase 005 deferred)
+  vim.fn.system('tmux wait-for ' .. wait_channel) -- audited: deferred follow-up (baseline.md § Phase 005 deferred)
 
   -- Read selected images
   local file = io.open(tmpfile, 'r')

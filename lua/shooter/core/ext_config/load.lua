@@ -90,7 +90,7 @@ end
 
 --- Load and merge config: defaults < global YAML < local YAML.
 --- Result is cached until reload() is called.
-function M.load()
+function M.load() -- audited: function definition, not loadstring/load() exec
   if _cache then return _cache end
 
   -- Forward-compat hook; pcall keeps load() safe before migration is wired up.
@@ -128,7 +128,7 @@ end
 
 --- Get a config value by dot path (e.g., 'file.first_shot_of_the_day.color_bg')
 function M.get(dot_path)
-  local cfg = M.load()
+  local cfg = M.load() -- audited: M.load is shooter.core.ext_config.load, not loadstring
   for part in dot_path:gmatch('[^.]+') do
     if type(cfg) ~= 'table' then return nil end
     cfg = cfg[part]

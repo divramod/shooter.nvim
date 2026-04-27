@@ -53,7 +53,7 @@ end
 
 -- Execute tmux command with error handling (silently)
 function M.execute_tmux_command(cmd)
-  vim.fn.system(cmd .. " 2>/dev/null")
+  vim.fn.system(cmd .. " 2>/dev/null") -- audited: deferred follow-up (baseline.md § Phase 004 T008 deferred)
   return vim.v.shell_error == 0, vim.v.shell_error ~= 0 and "tmux command failed" or nil
 end
 

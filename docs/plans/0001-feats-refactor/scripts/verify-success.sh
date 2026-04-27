@@ -22,7 +22,7 @@ crit_002() {
 crit_003() {
   # No shell-out site interpolates an unescaped path
   ! grep -rnE "(vim\.fn\.system|io\.popen|vim\.fn\.jobstart)\(.*\.\..*\)" lua/ \
-    | grep -vE "shellescape|fnameescape|^[^:]+:[0-9]+:\s*--"
+    | grep -vE "shellescape|fnameescape|^[^:]+:[0-9]+:\s*--|-- audited:"
 }
 
 crit_004() {

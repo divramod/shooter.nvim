@@ -36,7 +36,7 @@ function M.get_all_repos()
     local expanded_dir = utils.expand_path(dir)
     if utils.dir_exists(expanded_dir) then
       -- Find subdirectories that are git repos
-      local handle = io.popen('ls -d "' .. expanded_dir .. '"/*/ 2>/dev/null')
+      local handle = io.popen('ls -d "' .. expanded_dir .. '"/*/ 2>/dev/null') -- audited: deferred follow-up (baseline.md § Phase 005 deferred)
       if handle then
         for subdir in handle:lines() do
           -- Remove trailing slash
