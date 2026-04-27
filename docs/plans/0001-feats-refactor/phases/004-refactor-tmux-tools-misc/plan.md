@@ -116,16 +116,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T005** — Split `syntax.lua`
+- [x] **T005** — Split `syntax.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module.
   - **Verify:** `find lua/shooter/syntax -name '*.lua' -exec wc -l {} + | awk '$1>350{exit 1}'`; tests + smoke green.
   - **Files:** `lua/shooter/syntax/*.lua`, `lua/shooter/syntax.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T006** — Split `health.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module; `health.check` entry preserved.
