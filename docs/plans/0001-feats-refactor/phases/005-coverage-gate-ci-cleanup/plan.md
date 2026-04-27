@@ -65,16 +65,16 @@ Per-area phases each enforce ≥ 80% on their touched files. This phase ensures 
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T004** — Wire CI workflow with test + coverage gate
+- [x] **T004** — Wire CI workflow with test + coverage gate
   - **Acceptance:** `.github/workflows/test.yml` (or existing equivalent) runs `:PlenaryBustedDirectory tests/` and `bash scripts/check_coverage.sh` on push/PR. Workflow fails if either fails. The workflow's grep test in Success Criteria #5 passes.
   - **Verify:** `grep -rE "(luacov|coverage).*(80|0\.80)" .github/workflows/`; `grep -rE "PlenaryBustedDirectory|busted" .github/workflows/`.
   - **Files:** `.github/workflows/test.yml`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T005** — Final security verification
   - **Acceptance:** Every Success Criterion 3, 4 in `spec.md` passes (no unescaped shell-out interpolation; no user-controlled dynamic exec).
