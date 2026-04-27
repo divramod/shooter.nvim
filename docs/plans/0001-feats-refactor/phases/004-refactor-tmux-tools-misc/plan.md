@@ -127,16 +127,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T006** — Split `health.lua`
+- [x] **T006** — Split `health.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module; `health.check` entry preserved.
   - **Verify:** `:checkhealth shooter` works; tests + smoke green.
   - **Files:** `lua/shooter/health/*.lua`, `lua/shooter/health.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T007** — Split `tmux/toggle_panes.lua` + `tools/git_worktree.lua` + `analytics/data.lua`
   - **Acceptance:** All three split per T001; each sub-module ≤ 350 LOC.
