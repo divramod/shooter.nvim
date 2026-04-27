@@ -295,6 +295,23 @@ local function check_queue_file()
   return true
 end
 
+-- Expose internal checks for tests + future sub-module split (T006).
+-- These mirror the surface the post-split health/init.lua will re-export.
+M._checks = {
+  telescope = check_telescope,
+  oil_nvim = check_oil_nvim,
+  vim_tmux_navigator = check_vim_tmux_navigator,
+  gp_nvim = check_gp_nvim,
+  iterm = check_iterm,
+  tmux_installed = check_tmux_installed,
+  in_tmux = check_in_tmux,
+  claude_process = check_claude_process,
+  global_context = check_global_context,
+  project_context = check_project_context,
+  prompts_directory = check_prompts_directory,
+  queue_file = check_queue_file,
+}
+
 -- Main health check function
 function M.check()
   vim.health.start('shooter.nvim')

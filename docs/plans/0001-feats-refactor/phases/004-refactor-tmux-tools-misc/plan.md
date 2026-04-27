@@ -94,16 +94,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T003** — Characterization tests for `health.lua`
+- [x] **T003** — Characterization tests for `health.lua`
   - **Acceptance:** ≥ 80% coverage; checks must `pending()` when their tool is absent (e.g. `tmux -V` failing → skip, not error).
   - **Verify:** Tests green on a minimal env (no tmux); coverage report.
   - **Files:** `tests/health_*_spec.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T004** — Characterization tests for `tmux/toggle_panes.lua` + `tools/git_worktree.lua`
   - **Acceptance:** ≥ 80% coverage; tests `pending()` outside tmux/git env.
