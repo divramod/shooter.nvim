@@ -54,16 +54,16 @@ Per-area phases each enforce ≥ 80% on their touched files. This phase ensures 
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T003** — `scripts/check_coverage.sh`
+- [x] **T003** — `scripts/check_coverage.sh`
   - **Acceptance:** A repo-root script runs the test+coverage pipeline and exits non-zero when global total < 80%.
   - **Verify:** `bash scripts/check_coverage.sh; echo $?` is 0 today; manually editing the threshold to 99 returns non-zero.
   - **Files:** `scripts/check_coverage.sh`
   - **Size:** S
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T004** — Wire CI workflow with test + coverage gate
   - **Acceptance:** `.github/workflows/test.yml` (or existing equivalent) runs `:PlenaryBustedDirectory tests/` and `bash scripts/check_coverage.sh` on push/PR. Workflow fails if either fails. The workflow's grep test in Success Criteria #5 passes.
