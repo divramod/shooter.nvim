@@ -185,3 +185,36 @@ These are within the cap but close. If a per-area phase finds a clean seam, spli
 - `lua/shooter/telescope/pickers/file.lua`: **55.75%** post-T005 — UI-glue. The `pickers_spec.lua` stubs telescope and asserts picker construction (title, layout, finder shape) for all entry points. The uncovered 44% is `attach_mappings` handler bodies (per-key callbacks: move-to-folder, rename, delete, session save/load, layout toggle, the `select_default:replace(...)` create-from-prompt fallback). Bodies only execute against a live telescope picker; headless invocation either short-circuits at `actions.close(prompt_bufnr)` or recurses back into `M.list_all_files(...)` and deadlocks. Per spec § Open Q #1 ("UI-glue requires interactive Neovim"). Phase 005 T002 may revisit.
 - `lua/shooter/telescope/pickers/shot.lua`: **60.50%** post-T005 — same rationale: `attach_mappings` handler bodies for shot send / toggle done / mode toggle.
 - `lua/shooter/telescope/pickers/keymaps.lua`: **56.10%** post-T005 — folder/session mapping callback bodies; same rationale.
+
+## Phase 004 T008 — deferred shell-out hardening
+
+The following Phase 004-area shell-out sites from the high-risk table above
+are **deferred to a follow-up plan**. T008 explicitly hardened the four
+deliverables called out in `phases/004-refactor-tmux-tools-misc/plan.md`
+(`health.lua` lines 87/111/226 → table-form; `tools/git_worktree.lua` →
+table-form; `analytics/data.lua` → `vim.fn.readdir` + `vim.fs.find`;
+`syntax.lua:296` → table-form via `syntax/info.lua`). The remaining
+`tmux/*` wrappers are tracked here so phase 005 (or a dedicated plan)
+can sweep them:
+
+- `tmux/wrapper.lua:8,19` — `io.popen('tmux ' .. cmd .. ' 2>/dev/null')` wrapper.
+  All current internal callers pass static literal commands; risk is theoretical
+  (the wrapper is permissive but no caller-controlled value reaches it today).
+- `tmux/send.lua:56,153,176-179` — `vim.fn.system(cmd .. ' 2>/dev/null')` where
+  `cmd` chains together tmux send-keys/load-buffer/paste-buffer with interpolated
+  `pane_id`, `tmpfile`, and `filepath`. **`filepath` in `send_file_reference`
+  IS caller-controlled.** Hardening requires refactoring the chained-shell
+  pattern into a sequence of table-form `vim.fn.system({...})` calls (medium
+  effort; behavior-preserving).
+- `tmux/hidden_session.lua:12` — same wrapper pattern as `wrapper.lua`. Internal
+  callers all use `HIDDEN_SESSION` constant or `pane_id` from tmux output.
+- `tmux/watch.lua:19` — same wrapper pattern.
+- `tmux/toggle_panes/exec.lua:5,16` — same wrapper pattern (post-T007).
+- `tmux/script_panes.lua:22,53,65` — `string.format("test -x '%s'", path)` etc.
+- `tmux/panes.lua:21,33,129` — `string.format("tmux …", …)`.
+- `tmux/detect.lua:139` — `string.format("tmux list-panes …grep -x '%s'", pane_id)`;
+  `pane_id` should be validated to `^%%?[%w_]+$` before this call.
+- `tmux/shell.lua:8,46` — `string.format("…", …)` shell-outs.
+
+Spec gap-classifier rating: **small** (per-file, no public API change). Tracked
+under Phase 005 cleanup or a dedicated `0002-tmux-shell-out-hardening` plan.

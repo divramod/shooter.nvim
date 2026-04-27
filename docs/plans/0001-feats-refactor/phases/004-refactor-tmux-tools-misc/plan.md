@@ -149,7 +149,7 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T008** — Tmux/tools/health/analytics/root security fixes
+- [x] **T008** — Tmux/tools/health/analytics/root security fixes
   - **Acceptance:** Every Phase-004-area finding from `baseline.md` fixed or deferred. Specific known sites:
     - `lua/shooter/health.lua:87,111,226` — `io.popen` with interpolation; replace with table-form `vim.fn.system`.
     - `lua/shooter/tools/git_worktree.lua` — git shell-outs; table-form.
@@ -159,10 +159,10 @@ lua/shooter/analytics/data/
   - **Files:** Listed sites + `tests/security/area_004_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T009** — Verify final state
   - **Acceptance:** Suite green; smoke loader green; coverage of touched files ≥ 80%.
