@@ -21,7 +21,7 @@ Per the spec, this run is `tier: large` — per-task B/T/R/S, per-task ship gate
 |-----|------------------------------|--------------------------------------------------------------------------|---------------|------|--------|
 | 000 | baseline-and-tooling         | Wire luacov, capture baseline, audit security/LOC surface, smoke loader. | —             | 1    | draft  |
 | 001 | refactor-plans-area          | Tests-first then split `plans/metaplan.lua` (1584); plans/ security.     | 000           | 2    | draft  |
-| 002 | refactor-core-area           | core/: split commands/shot_actions/files/ext_config; core/ security.     | 000           | 2    | draft  |
+| 002 | refactor-core-area           | core/: split commands/shot_actions/files/ext_config; core/ security.     | 000           | 2    | shipped |
 | 003 | refactor-telescope-area      | telescope/: split pickers/helpers; telescope security.                   | 000           | 2    | draft  |
 | 004 | refactor-tmux-tools-misc     | tmux/tools/analytics/root: syntax/health/toggle_panes/git_worktree/data. | 000           | 2    | draft  |
 | 005 | coverage-gate-ci-cleanup     | Push to 80% global; wire CI gate; final security verification; cleanup.  | 001,002,003,004 | 3  | draft  |
