@@ -209,22 +209,22 @@ function M.create_shot_from_claude()
   local right_pane = vim.fn.system('tmux display-message -p -t "{right}" "#{pane_id}"')
   right_pane = vim.trim(right_pane)
 
-  if right_pane == '' or right_pane:match('can.t') or right_pane:match('error') then
+  -- Defence against shell injection if tmux output is ever attacker-controlled:
+  -- pane ids are always %<digits>. Reject anything else.
+  if not right_pane:match('^%%%d+$') then
     utils.echo('No right pane found')
     os.remove(tmp_file)
     os.remove(script_file)
     return
   end
 
-  vim.fn.system('tmux send-keys -t ' .. right_pane .. ' Escape')
-  vim.fn.system(
-    'tmux send-keys -t ' .. right_pane
-    .. ' ":luafile ' .. script_file .. '" Enter'
-  )
+  vim.fn.system({ 'tmux', 'send-keys', '-t', right_pane, 'Escape' })
+  vim.fn.system({ 'tmux', 'send-keys', '-t', right_pane,
+    ':luafile ' .. script_file, 'Enter' })
 
   vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
 
-  vim.fn.system('tmux select-pane -t ' .. right_pane)
+  vim.fn.system({ 'tmux', 'select-pane', '-t', right_pane })
 
   vim.cmd('wq')
 end

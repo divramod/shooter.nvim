@@ -7,4 +7,4 @@ cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:ship phase 002 T007 — shot_actions.lua split into 7 sub-modules + insertion helper (max 232 LOC). Resume at phase 002 T008 (core/ security fixes)."
+last_action: "/hal:ship phase 002 T008 — core/ security fixes (project.list_projects vim.fn.readdir; shot_actions pane-id regex + argv form; utils.find_config_file pure-Lua scan; utils.system argv form) + tests/core/security_spec.lua (10 tests). Resume at phase 002 T009 (verify final state)."

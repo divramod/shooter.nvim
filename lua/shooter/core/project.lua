@@ -42,15 +42,14 @@ function M.list_projects()
   for _, folder in ipairs(exclude) do exclude_set[folder] = true end
 
   local projects = {}
-  local handle = io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')
-  if handle then
-    for name in handle:lines() do
+  -- Use vim.fn.readdir to avoid shell-injection via projects_dir interpolation.
+  if vim.fn.isdirectory(projects_dir) == 1 then
+    for _, name in ipairs(vim.fn.readdir(projects_dir)) do
       local path = projects_dir .. '/' .. name
       if vim.fn.isdirectory(path) == 1 and not exclude_set[name] then
         table.insert(projects, { name = name, path = path })
       end
     end
-    handle:close()
   end
   table.sort(projects, function(a, b) return a.name < b.name end)
   return projects

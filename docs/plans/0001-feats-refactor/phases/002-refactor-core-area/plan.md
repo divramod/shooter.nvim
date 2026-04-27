@@ -147,7 +147,7 @@ lua/shooter/core/files/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T008** — Core/-area security fixes
+- [x] **T008** — Core/-area security fixes
   - **Acceptance:** Every core/ finding from `baseline.md` fixed or deferred. Specific known issues to address:
     - `lua/shooter/core/shot_actions.lua:768-779` — tmux send-keys with interpolated pane id; verify pane id is sanitized.
     - `lua/shooter/core/project.lua:45` — `io.popen('ls -1 "' .. projects_dir .. '" 2>/dev/null')` — replace with `vim.fn.readdir` or shellescape.
@@ -157,10 +157,10 @@ lua/shooter/core/files/
   - **Files:** Listed sites + `tests/core/security_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T009** — Verify final state
   - **Acceptance:** Full suite green; coverage of `lua/shooter/core/**` + `lua/shooter/commands*` ≥ 80%; smoke loader green; user-command registration test green.

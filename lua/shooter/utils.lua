@@ -123,8 +123,14 @@ function M.get_filename(path)
   return vim.fn.fnamemodify(path, ':t')
 end
 
--- Execute system command and return output
+-- Execute a system command and return output. Prefer the list form
+-- ({ 'cmd', 'arg1', 'arg2' }) — args are passed verbatim to the kernel and
+-- are not subject to shell-quoting issues. The string form is retained for
+-- back-compat and pipe-using sites; do NOT interpolate user input into it.
 function M.system(cmd)
+  if type(cmd) == 'table' then
+    return vim.fn.system(cmd)
+  end
   local handle = io.popen(cmd)
   if not handle then
     return nil
@@ -134,7 +140,7 @@ function M.system(cmd)
   return result
 end
 
--- Execute system command (lines as array)
+-- Execute system command (lines as array). Accepts list or string form.
 function M.systemlist(cmd)
   return vim.fn.systemlist(cmd)
 end
@@ -198,14 +204,19 @@ function M.find_config_file()
   for _, path in ipairs(candidates) do
     if M.file_exists(path) then return path end
   end
-  -- Fallback: grep for shooter in plugins dir
+  -- Fallback: scan plugins dir for any .lua file mentioning "shooter".
+  -- Pure Lua to avoid shell-injection via plugins_dir interpolation.
   local plugins_dir = nvim_config .. '/lua/plugins'
   if M.dir_exists(plugins_dir) then
-    local handle = io.popen('grep -l "shooter" "' .. plugins_dir .. '"/*.lua 2>/dev/null | head -1')
-    if handle then
-      local result = handle:read('*l')
-      handle:close()
-      if result and result ~= '' then return result end
+    for _, path in ipairs(vim.fn.glob(plugins_dir .. '/*.lua', false, true)) do
+      local f = io.open(path, 'r')
+      if f then
+        local content = f:read('*a')
+        f:close()
+        if content and content:find('shooter', 1, true) then
+          return path
+        end
+      end
     end
   end
   return nil
