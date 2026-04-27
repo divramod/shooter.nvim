@@ -138,16 +138,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T007** — Split `tmux/toggle_panes.lua` + `tools/git_worktree.lua` + `analytics/data.lua`
+- [x] **T007** — Split `tmux/toggle_panes.lua` + `tools/git_worktree.lua` + `analytics/data.lua`
   - **Acceptance:** All three split per T001; each sub-module ≤ 350 LOC.
   - **Verify:** Aggregate `find … -exec wc -l {} +`; tests + smoke green.
   - **Files:** `lua/shooter/tmux/toggle_panes/*.lua`, `lua/shooter/tools/git_worktree/*.lua`, `lua/shooter/analytics/data/*.lua`, plus shims
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T008** — Tmux/tools/health/analytics/root security fixes
   - **Acceptance:** Every Phase-004-area finding from `baseline.md` fixed or deferred. Specific known sites:
