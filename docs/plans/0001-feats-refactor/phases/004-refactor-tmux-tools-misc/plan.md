@@ -105,16 +105,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T004** — Characterization tests for `tmux/toggle_panes.lua` + `tools/git_worktree.lua`
+- [x] **T004** — Characterization tests for `tmux/toggle_panes.lua` + `tools/git_worktree.lua`
   - **Acceptance:** ≥ 80% coverage; tests `pending()` outside tmux/git env.
   - **Verify:** Tests green in a minimal env; coverage report.
   - **Files:** `tests/tmux/toggle_panes_*_spec.lua`, `tests/tools/git_worktree_*_spec.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T005** — Split `syntax.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module.
