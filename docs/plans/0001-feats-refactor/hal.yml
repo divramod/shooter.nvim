@@ -1,13 +1,10 @@
 automode: running
 started_at: "2026-04-26"
-resumed_at: "2026-04-26"
+resumed_at: "2026-04-27"
 tier: large
 tier_source: deterministic
 cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-automode: paused
-paused_at: "2026-04-27"
-halt_reason: "session-budget — phase 002 T001-T004 shipped (seam plan + 36 char tests + files.lua split into 6 sub-modules). Remaining: T005 (ext_config split), T006 (commands split), T007 (shot_actions split), T008 (security), T009 (verify)."
-last_action: "/hal:ship phase 002 T004 — files.lua split into 6 sub-modules (max 124 LOC); resume at phase 002 T005 (ext_config split)"
+last_action: "/hal:automode resume — phase 002 T005 (ext_config split)"

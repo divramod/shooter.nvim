@@ -114,16 +114,16 @@ lua/shooter/core/files/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T005** — Split `core/ext_config.lua`
+- [x] **T005** — Split `core/ext_config.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module.
   - **Verify:** `find lua/shooter/core/ext_config -name '*.lua' -exec wc -l {} + | awk '$1>350{exit 1}'`; tests + smoke green.
   - **Files:** `lua/shooter/core/ext_config/*.lua`, `lua/shooter/core/ext_config.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T006** — Resolve `commands.lua` (split or exception)
   - **Acceptance:** Per T001's decision: either split into `commands/` sub-modules with registration order preserved, OR add `ALLOWED_LARGE_FILES: lua/shooter/commands.lua` with rationale to `baseline.md`. User command registration must still work after T006 — every existing `:HalShooter…` command resolves on a fresh Neovim.
