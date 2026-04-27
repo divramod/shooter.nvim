@@ -1,8 +1,9 @@
 ---
 name: feats-refactor
 description: Refactor shooter.nvim — split overgrown modules, audit shell-out security, raise coverage to 80%; tests-first per area.
-status: in_progress
+status: shipped
 created: 2026-04-26
+shipped: 2026-04-26
 tier: large
 tier_source: deterministic
 ---

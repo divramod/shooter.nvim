@@ -1,7 +1,7 @@
 ---
 name: coverage-gate-ci-cleanup
 description: Push coverage to ≥ 80% global; wire CI luacov gate; final security verification; cleanup.
-status: approved
+status: shipped
 phase_id: 005
 depends_on: ["001", "002", "003", "004"]
 wave: 3
