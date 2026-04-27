@@ -1,4 +1,4 @@
-automode: running
+automode: paused
 started_at: "2026-04-26"
 resumed_at: "2026-04-27"
 tier: large
@@ -8,3 +8,5 @@ retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
 last_action: "/hal:ship phase 003 — all 7 tasks shipped (suite 832/0/0, smoke 146/146). Phase 003 status: shipped. Next eligible: phase 004 (refactor-tmux-tools-misc, depends_on=[000])."
+paused_at: "2026-04-27"
+halt_reason: "phase 003 shipped end-to-end; pausing per session budget. Phase 004 (5 split-targets ~1.95k LOC + 6+ shell-out fixes + 9 tasks) exceeds remaining session capacity. Resume with /hal:automode 0001 to continue at phase 004."
