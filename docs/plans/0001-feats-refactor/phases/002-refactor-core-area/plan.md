@@ -136,16 +136,16 @@ lua/shooter/core/files/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T007** — Split `core/shot_actions.lua`
+- [x] **T007** — Split `core/shot_actions.lua`
   - **Acceptance:** Per T001's seam plan; ≤ 350 LOC per sub-module.
   - **Verify:** `find lua/shooter/core/shot_actions -name '*.lua' -exec wc -l {} + | awk '$1>350{exit 1}'`; tests + smoke green.
   - **Files:** `lua/shooter/core/shot_actions/*.lua`, `lua/shooter/core/shot_actions.lua`
   - **Size:** L
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T008** — Core/-area security fixes
   - **Acceptance:** Every core/ finding from `baseline.md` fixed or deferred. Specific known issues to address:
