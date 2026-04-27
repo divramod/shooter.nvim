@@ -454,6 +454,16 @@ function M.setup()
   })
 end
 
+-- Expose internal helpers for tests + future sub-module split (T005).
+-- These mirror the surface the post-split init.lua will re-export.
+M.is_fence_delimiter = is_fence_delimiter
+M.build_code_block_map = build_code_block_map
+M.split_executed_header = split_executed_header
+M.is_prompts_file = is_prompts_file
+M.apply_syntax = function(bufnr) return apply_syntax(bufnr) end
+M.define_highlights = define_highlights
+M.show_shotfile_info = function(bufnr) return show_shotfile_info(bufnr) end
+
 -- Reapply syntax highlighting to all loaded shotfile buffers
 -- Also applies ext_config YAML overrides for all highlight groups
 function M.reapply_all()

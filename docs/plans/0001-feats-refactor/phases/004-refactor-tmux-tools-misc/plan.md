@@ -83,16 +83,16 @@ lua/shooter/analytics/data/
     - [x] reviewed
     - [x] shipped
 
-- [ ] **T002** — Characterization tests for `syntax.lua` + `analytics/data.lua`
+- [x] **T002** — Characterization tests for `syntax.lua` + `analytics/data.lua`
   - **Acceptance:** Both files ≥ 80% coverage.
   - **Verify:** Tests green; coverage report.
   - **Files:** `tests/syntax_spec.lua`, `tests/analytics/data_*_spec.lua`
   - **Size:** M
   - **State:**
-    - [ ] built
-    - [ ] tested
-    - [ ] reviewed
-    - [ ] shipped
+    - [x] built
+    - [x] tested
+    - [x] reviewed
+    - [x] shipped
 
 - [ ] **T003** — Characterization tests for `health.lua`
   - **Acceptance:** ≥ 80% coverage; checks must `pending()` when their tool is absent (e.g. `tmux -V` failing → skip, not error).
