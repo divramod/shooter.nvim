@@ -7,4 +7,4 @@ cadence: phase
 retry_budget: 3
 on_retry_exhaustion: fail
 auto_downgrade: true
-last_action: "/hal:automode resume phase 003 (refactor-telescope-area); merge-from-main rc=0; starting T001 seam-map"
+last_action: "/hal:ship phase 003 — all 7 tasks shipped (suite 832/0/0, smoke 146/146). Phase 003 status: shipped. Next eligible: phase 004 (refactor-tmux-tools-misc, depends_on=[000])."
