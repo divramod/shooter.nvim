@@ -1,5 +1,5 @@
 <!-- THIS IS A HAL PROJECT. run hal project --help to understand what it means -->
-<!-- hal-version: 0.3.3 -->
+<!-- hal-version: 0.3.32 -->
 
 ## Verify Your Work
 
